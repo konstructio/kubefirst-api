@@ -1,0 +1,236 @@
+basePath: /api/v1
+definitions:
+  types.AWSDomainValidateResponse:
+    properties:
+      validated:
+        type: boolean
+    type: object
+  types.AWSProfilesResponse:
+    properties:
+      profiles:
+        items:
+          type: string
+        type: array
+    type: object
+  types.ClusterCreateDefinition:
+    properties:
+      admin_email:
+        type: string
+      cloud_provider:
+        enum:
+        - aws
+        - civo
+        type: string
+      cluster_name:
+        type: string
+      domain_name:
+        type: string
+      git_provider:
+        type: string
+      github_owner:
+        type: string
+    required:
+    - admin_email
+    - cloud_provider
+    - cluster_name
+    - domain_name
+    - git_provider
+    - github_owner
+    type: object
+  types.ClusterDefinition:
+    properties:
+      admin_email:
+        type: string
+      cloud_provider:
+        type: string
+      cluster_name:
+        type: string
+      domain_name:
+        type: string
+      git_provider:
+        type: string
+      github_owner:
+        type: string
+    type: object
+  types.JSONFailureResponse:
+    properties:
+      error:
+        example: err
+        type: string
+    type: object
+  types.JSONHealthResponse:
+    properties:
+      status:
+        example: healthy
+        type: string
+    type: object
+  types.JSONSuccessResponse:
+    properties:
+      message:
+        example: success
+        type: string
+    type: object
+host: localhost:port
+info:
+  contact:
+    email: kubefirst@kubefirst.com
+    name: Kubefirst
+  description: Kubefirst API
+  title: Kubefirst API
+  version: "1.0"
+paths:
+  /aws/domain/validate/:domain:
+    get:
+      consumes:
+      - application/json
+      description: Returns status of whether or not an AWS hosted zone is validated
+        for use with Kubefirst
+      parameters:
+      - description: Domain name, no trailing dot
+        in: path
+        name: domain
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.AWSDomainValidateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Returns status of whether or not an AWS hosted zone is validated for
+        use with Kubefirst
+      tags:
+      - aws
+  /aws/profiles:
+    get:
+      consumes:
+      - application/json
+      description: Returns a list of configured AWS profiles
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.AWSProfilesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Returns a list of configured AWS profiles
+      tags:
+      - aws
+  /cluster:
+    get:
+      consumes:
+      - application/json
+      description: Return all known configured Kubefirst clusters
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/types.ClusterDefinition'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Return all known configured Kubefirst clusters
+      tags:
+      - cluster
+    post:
+      consumes:
+      - application/json
+      description: Create a Kubefirst cluster
+      parameters:
+      - description: Cluster create request in JSON format
+        in: body
+        name: def
+        required: true
+        schema:
+          $ref: '#/definitions/types.ClusterCreateDefinition'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/types.JSONSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Create a Kubefirst cluster
+      tags:
+      - cluster
+  /cluster/:cluster_name:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a Kubefirst cluster
+      parameters:
+      - description: Cluster name
+        in: path
+        name: cluster_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/types.JSONSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Delete a Kubefirst cluster
+      tags:
+      - cluster
+    get:
+      consumes:
+      - application/json
+      description: Create a Kubefirst cluster
+      parameters:
+      - description: Cluster name
+        in: path
+        name: cluster_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ClusterDefinition'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Create a Kubefirst cluster
+      tags:
+      - cluster
+  /health:
+    get:
+      description: Return health status if the application is running.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.JSONHealthResponse'
+      summary: Return health status if the application is running.
+      tags:
+      - health
+swagger: "2.0"
