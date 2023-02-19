@@ -1,0 +1,353 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Kubefirst API",
+        "title": "Kubefirst API",
+        "contact": {
+            "name": "Kubefirst",
+            "email": "kubefirst@kubefirst.com"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:port",
+    "basePath": "/api/v1",
+    "paths": {
+        "/aws/domain/validate/:domain": {
+            "get": {
+                "description": "Returns status of whether or not an AWS hosted zone is validated for use with Kubefirst",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "aws"
+                ],
+                "summary": "Returns status of whether or not an AWS hosted zone is validated for use with Kubefirst",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Domain name, no trailing dot",
+                        "name": "domain",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.AWSDomainValidateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONFailureResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/aws/profiles": {
+            "get": {
+                "description": "Returns a list of configured AWS profiles",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "aws"
+                ],
+                "summary": "Returns a list of configured AWS profiles",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.AWSProfilesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONFailureResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/cluster": {
+            "get": {
+                "description": "Return all known configured Kubefirst clusters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "Return all known configured Kubefirst clusters",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/types.ClusterDefinition"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONFailureResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a Kubefirst cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "Create a Kubefirst cluster",
+                "parameters": [
+                    {
+                        "description": "Cluster create request in JSON format",
+                        "name": "def",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.ClusterCreateDefinition"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONFailureResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/cluster/:cluster_name": {
+            "get": {
+                "description": "Create a Kubefirst cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "Create a Kubefirst cluster",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cluster name",
+                        "name": "cluster_name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.ClusterDefinition"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONFailureResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a Kubefirst cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "Delete a Kubefirst cluster",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cluster name",
+                        "name": "cluster_name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONFailureResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "Return health status if the application is running.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Return health status if the application is running.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONHealthResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "types.AWSDomainValidateResponse": {
+            "type": "object",
+            "properties": {
+                "validated": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "types.AWSProfilesResponse": {
+            "type": "object",
+            "properties": {
+                "profiles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "types.ClusterCreateDefinition": {
+            "type": "object",
+            "required": [
+                "admin_email",
+                "cloud_provider",
+                "cluster_name",
+                "domain_name",
+                "git_provider",
+                "github_owner"
+            ],
+            "properties": {
+                "admin_email": {
+                    "type": "string"
+                },
+                "cloud_provider": {
+                    "type": "string",
+                    "enum": [
+                        "aws",
+                        "civo"
+                    ]
+                },
+                "cluster_name": {
+                    "type": "string"
+                },
+                "domain_name": {
+                    "type": "string"
+                },
+                "git_provider": {
+                    "type": "string"
+                },
+                "github_owner": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.ClusterDefinition": {
+            "type": "object",
+            "properties": {
+                "admin_email": {
+                    "type": "string"
+                },
+                "cloud_provider": {
+                    "type": "string"
+                },
+                "cluster_name": {
+                    "type": "string"
+                },
+                "domain_name": {
+                    "type": "string"
+                },
+                "git_provider": {
+                    "type": "string"
+                },
+                "github_owner": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.JSONFailureResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "err"
+                }
+            }
+        },
+        "types.JSONHealthResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "example": "healthy"
+                }
+            }
+        },
+        "types.JSONSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        }
+    }
+}
