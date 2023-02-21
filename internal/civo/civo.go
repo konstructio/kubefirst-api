@@ -50,7 +50,7 @@ func NewCivo() civogo.Client {
 // Create a single configuration instance to act as an interface to the Civo client
 var Conf CivoConfiguration = CivoConfiguration{
 	Config: NewCivo(),
-	Region: os.Getenv("CIVO_TOKEN"),
+	Region: os.Getenv("CIVO_REGION"),
 }
 
 // Route53ListTXTRecords retrieves all DNS TXT record type for a hosted zone
