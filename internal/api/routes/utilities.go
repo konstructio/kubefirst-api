@@ -25,8 +25,6 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/types"
 )
 
-// Utilities
-
 // getHealth godoc
 // @Summary Return health status if the application is running.
 // @Description Return health status if the application is running.

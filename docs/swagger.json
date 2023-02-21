@@ -5,7 +5,7 @@
         "title": "Kubefirst API",
         "contact": {
             "name": "Kubefirst",
-            "email": "kubefirst@kubefirst.com"
+            "email": "help@kubefirst.io"
         },
         "version": "1.0"
     },
@@ -79,6 +79,44 @@
                 }
             }
         },
+        "/civo/domain/validate/:domain": {
+            "get": {
+                "description": "Returns status of whether or not a Civo hosted zone is validated for use with Kubefirst",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "civo"
+                ],
+                "summary": "Returns status of whether or not a Civo hosted zone is validated for use with Kubefirst",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Domain name, no trailing dot",
+                        "name": "domain",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.CivoDomainValidationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONFailureResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/cluster": {
             "get": {
                 "description": "Return all known configured Kubefirst clusters",
@@ -98,8 +136,46 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/types.ClusterDefinition"
+                                "$ref": "#/definitions/cluster.ClusterEntry"
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONFailureResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/cluster/:cluster_name": {
+            "get": {
+                "description": "Return a configured Kubefirst cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "Return a configured Kubefirst cluster",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cluster name",
+                        "name": "cluster_name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/cluster.ClusterEntry"
                         }
                     },
                     "400": {
@@ -124,12 +200,19 @@
                 "summary": "Create a Kubefirst cluster",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Cluster name",
+                        "name": "cluster_name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Cluster create request in JSON format",
-                        "name": "def",
+                        "name": "definition",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/types.ClusterCreateDefinition"
+                            "$ref": "#/definitions/types.ClusterDefinition"
                         }
                     }
                 ],
@@ -138,44 +221,6 @@
                         "description": "Accepted",
                         "schema": {
                             "$ref": "#/definitions/types.JSONSuccessResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/types.JSONFailureResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/cluster/:cluster_name": {
-            "get": {
-                "description": "Create a Kubefirst cluster",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster"
-                ],
-                "summary": "Create a Kubefirst cluster",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Cluster name",
-                        "name": "cluster_name",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/types.ClusterDefinition"
                         }
                     },
                     "400": {
@@ -245,6 +290,17 @@
         }
     },
     "definitions": {
+        "cluster.ClusterEntry": {
+            "type": "object",
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/types.ClusterDefinition"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "types.AWSDomainValidateResponse": {
             "type": "object",
             "properties": {
@@ -264,15 +320,22 @@
                 }
             }
         },
-        "types.ClusterCreateDefinition": {
+        "types.CivoDomainValidationResponse": {
+            "type": "object",
+            "properties": {
+                "validated": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "types.ClusterDefinition": {
             "type": "object",
             "required": [
                 "admin_email",
                 "cloud_provider",
                 "cluster_name",
                 "domain_name",
-                "git_provider",
-                "github_owner"
+                "git_provider"
             ],
             "properties": {
                 "admin_email": {
@@ -292,32 +355,19 @@
                     "type": "string"
                 },
                 "git_provider": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "github",
+                        "gitlab"
+                    ]
                 },
                 "github_owner": {
                     "type": "string"
-                }
-            }
-        },
-        "types.ClusterDefinition": {
-            "type": "object",
-            "properties": {
-                "admin_email": {
+                },
+                "hosted_zone": {
                     "type": "string"
                 },
-                "cloud_provider": {
-                    "type": "string"
-                },
-                "cluster_name": {
-                    "type": "string"
-                },
-                "domain_name": {
-                    "type": "string"
-                },
-                "git_provider": {
-                    "type": "string"
-                },
-                "github_owner": {
+                "region": {
                     "type": "string"
                 }
             }

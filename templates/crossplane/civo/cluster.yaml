@@ -1,0 +1,19 @@
+kind: CivoKubernetes
+apiVersion: cluster.civo.crossplane.io/v1alpha1
+metadata:
+  name: test-crossplane
+spec:
+  name: test-crossplane
+  pools: []
+  #  - id: '8382e422-dcdd-461f-afb4-2ab67f171c3e'
+  # count: 2
+  # size: g3.k3s.small
+  applications:
+    - 'argo-cd'
+    - 'prometheus-operator'
+  version: '1.22.2-k3s1'
+  connectionDetails:
+    connectionSecretNamePrefix: 'cluster-details'
+    connectionSecretNamespace: 'default'
+  providerConfigRef:
+    name: civo-provider

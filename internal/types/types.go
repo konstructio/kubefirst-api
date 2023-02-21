@@ -23,29 +23,26 @@ type AWSDomainValidateResponse struct {
 	Validated bool `json:"validated"`
 }
 
-// AWSProfileResponse is the response for the /aws/profiles route
+// AWSProfileResponse is the response for the /aws/domain/validate route
 type AWSProfilesResponse struct {
 	Profiles []string `json:"profiles"`
 }
 
-// ClusterCreateDefinition is the struct that holds data for the cluster create route
-type ClusterCreateDefinition struct {
-	CloudProvider string `json:"cloud_provider" binding:"required,oneof=aws civo"`
-	GitProvider   string `json:"git_provider" binding:"required"`
-	AdminEmail    string `json:"admin_email" binding:"required"`
-	DomainName    string `json:"domain_name" binding:"required"`
-	GitHubOwner   string `json:"github_owner" binding:"required"`
-	ClusterName   string `json:"cluster_name" binding:"required"`
+// CivoDomainValidationResponse is the response for the /civo/domain/validate route
+type CivoDomainValidationResponse struct {
+	Validated bool `json:"validated"`
 }
 
-// ClusterDefinition describes existing clusters
+// ClusterDefinition describes a Kubefirst management cluster
 type ClusterDefinition struct {
-	CloudProvider string `json:"cloud_provider"`
-	GitProvider   string `json:"git_provider"`
-	AdminEmail    string `json:"admin_email"`
-	DomainName    string `json:"domain_name"`
+	AdminEmail    string `json:"admin_email" binding:"required"`
+	CloudProvider string `json:"cloud_provider" binding:"required,oneof=aws civo"`
+	ClusterName   string `json:"cluster_name" binding:"required"`
+	DomainName    string `json:"domain_name" binding:"required"`
+	GitProvider   string `json:"git_provider" binding:"required,oneof=github gitlab"`
 	GitHubOwner   string `json:"github_owner"`
-	ClusterName   string `json:"cluster_name"`
+	HostedZone    string `json:"hosted_zone"`
+	Region        string `json:"region"`
 }
 
 // JSONFailureResponse describes a failure message returned by the API
