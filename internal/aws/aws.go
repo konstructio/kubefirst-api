@@ -36,19 +36,14 @@ import (
 	"gopkg.in/ini.v1"
 )
 
+const (
+	validationRecordSubdomain string = "kubefirst-liveness-test"
+	validationRecordValue     string = "domain record propagated"
+)
+
 // Create a single configuration instance to act as an interface to the AWS client
 var Conf AWSConfiguration = AWSConfiguration{
 	Config: NewAws(),
-}
-
-var backupResolver = &net.Resolver{
-	PreferGo: true,
-	Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-		d := net.Dialer{
-			Timeout: time.Millisecond * time.Duration(10000),
-		}
-		return d.DialContext(ctx, network, "8.8.8.8:53")
-	},
 }
 
 // NewAws instantiates a new AWS configuration
@@ -204,7 +199,7 @@ func (conf *AWSConfiguration) TestHostedZoneLiveness(hostedZoneName string) (boo
 	}
 
 	// Format fqdn of target record for validation
-	route53RecordName := fmt.Sprintf("kubefirst-liveness-test.%s", hostedZoneName)
+	route53RecordName := fmt.Sprintf("%s.%s", validationRecordSubdomain, hostedZoneName)
 
 	// Get all txt records for hosted zone
 	records, err := conf.Route53ListTXTRecords(hostedZoneID)
@@ -225,7 +220,6 @@ func (conf *AWSConfiguration) TestHostedZoneLiveness(hostedZoneName string) (boo
 		return true, nil
 	case false:
 		log.Infof("record %s does not exist, creating...", route53RecordName)
-		route53RecordValue := "domain record propagated"
 
 		// Construct resource record alter and create record
 		alt := AWSRoute53AlterResourceRecord{
@@ -242,7 +236,7 @@ func (conf *AWSConfiguration) TestHostedZoneLiveness(hostedZoneName string) (boo
 								Type: "TXT",
 								ResourceRecords: []route53Types.ResourceRecord{
 									{
-										Value: aws.String(strconv.Quote(route53RecordValue)),
+										Value: aws.String(strconv.Quote(validationRecordValue)),
 									},
 								},
 								TTL:           aws.Int64(10),
@@ -272,7 +266,7 @@ func (conf *AWSConfiguration) TestHostedZoneLiveness(hostedZoneName string) (boo
 			for i := 1; i < retries; i++ {
 				ips, err := net.LookupTXT(route53RecordName)
 				if err != nil {
-					ips, err = backupResolver.LookupTXT(context.Background(), route53RecordName)
+					ips, err = utils.BackupResolver.LookupTXT(context.Background(), route53RecordName)
 				}
 				if err != nil {
 					log.Warnf("attempt %v of %v resolving %s, retrying in %vs", i, retries, route53RecordName, retryInterval)

@@ -1,5 +1,12 @@
 basePath: /api/v1
 definitions:
+  cluster.ClusterEntry:
+    properties:
+      definition:
+        $ref: '#/definitions/types.ClusterDefinition'
+      name:
+        type: string
+    type: object
   types.AWSDomainValidateResponse:
     properties:
       validated:
@@ -12,7 +19,12 @@ definitions:
           type: string
         type: array
     type: object
-  types.ClusterCreateDefinition:
+  types.CivoDomainValidationResponse:
+    properties:
+      validated:
+        type: boolean
+    type: object
+  types.ClusterDefinition:
     properties:
       admin_email:
         type: string
@@ -26,8 +38,15 @@ definitions:
       domain_name:
         type: string
       git_provider:
+        enum:
+        - github
+        - gitlab
         type: string
       github_owner:
+        type: string
+      hosted_zone:
+        type: string
+      region:
         type: string
     required:
     - admin_email
@@ -35,22 +54,6 @@ definitions:
     - cluster_name
     - domain_name
     - git_provider
-    - github_owner
-    type: object
-  types.ClusterDefinition:
-    properties:
-      admin_email:
-        type: string
-      cloud_provider:
-        type: string
-      cluster_name:
-        type: string
-      domain_name:
-        type: string
-      git_provider:
-        type: string
-      github_owner:
-        type: string
     type: object
   types.JSONFailureResponse:
     properties:
@@ -73,7 +76,7 @@ definitions:
 host: localhost:port
 info:
   contact:
-    email: kubefirst@kubefirst.com
+    email: help@kubefirst.io
     name: Kubefirst
   description: Kubefirst API
   title: Kubefirst API
@@ -125,6 +128,33 @@ paths:
       summary: Returns a list of configured AWS profiles
       tags:
       - aws
+  /civo/domain/validate/:domain:
+    get:
+      consumes:
+      - application/json
+      description: Returns status of whether or not a Civo hosted zone is validated
+        for use with Kubefirst
+      parameters:
+      - description: Domain name, no trailing dot
+        in: path
+        name: domain
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.CivoDomainValidationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Returns status of whether or not a Civo hosted zone is validated for
+        use with Kubefirst
+      tags:
+      - civo
   /cluster:
     get:
       consumes:
@@ -137,38 +167,13 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/types.ClusterDefinition'
+              $ref: '#/definitions/cluster.ClusterEntry'
             type: array
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/types.JSONFailureResponse'
       summary: Return all known configured Kubefirst clusters
-      tags:
-      - cluster
-    post:
-      consumes:
-      - application/json
-      description: Create a Kubefirst cluster
-      parameters:
-      - description: Cluster create request in JSON format
-        in: body
-        name: def
-        required: true
-        schema:
-          $ref: '#/definitions/types.ClusterCreateDefinition'
-      produces:
-      - application/json
-      responses:
-        "202":
-          description: Accepted
-          schema:
-            $ref: '#/definitions/types.JSONSuccessResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/types.JSONFailureResponse'
-      summary: Create a Kubefirst cluster
       tags:
       - cluster
   /cluster/:cluster_name:
@@ -199,7 +204,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Create a Kubefirst cluster
+      description: Return a configured Kubefirst cluster
       parameters:
       - description: Cluster name
         in: path
@@ -212,7 +217,37 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.ClusterDefinition'
+            $ref: '#/definitions/cluster.ClusterEntry'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Return a configured Kubefirst cluster
+      tags:
+      - cluster
+    post:
+      consumes:
+      - application/json
+      description: Create a Kubefirst cluster
+      parameters:
+      - description: Cluster name
+        in: path
+        name: cluster_name
+        required: true
+        type: string
+      - description: Cluster create request in JSON format
+        in: body
+        name: definition
+        required: true
+        schema:
+          $ref: '#/definitions/types.ClusterDefinition'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/types.JSONSuccessResponse'
         "400":
           description: Bad Request
           schema:

@@ -19,12 +19,10 @@ THE SOFTWARE.
 package utils
 
 import (
-	"fmt"
-	"io/ioutil"
-	"log"
+	"context"
+	"net"
 	"os"
-
-	"gopkg.in/yaml.v2"
+	"time"
 )
 
 // FindStringInSlice takes []string and returns true if the supplied string is in the slice.
@@ -47,22 +45,19 @@ func ReadFileContents(filePath string) (string, error) {
 	return string(data), nil
 }
 
-// ReadYAMLFile returns the contents of a yaml file as a map
-func ReadYAMLFile(filePath string) map[interface{}]interface{} {
-	yfile, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		log.Fatalf("Error reading yaml file: %s", err.Error())
-	}
+// RemoveFromSlice accepts T as a comparable slice and removed the index at
+// i - the returned value is the slice without the indexed entry
+func RemoveFromSlice[T comparable](slice []T, i int) []T {
+	slice[i] = slice[len(slice)-1]
+	return slice[:len(slice)-1]
+}
 
-	data := make(map[interface{}]interface{})
-	err = yaml.Unmarshal(yfile, &data)
-	if err != nil {
-		log.Fatalf("Error reading yaml file: %s", err.Error())
-	}
-
-	for k, v := range data {
-		fmt.Printf("%s -> %d\n", k, v)
-	}
-
-	return data
+var BackupResolver = &net.Resolver{
+	PreferGo: true,
+	Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+		d := net.Dialer{
+			Timeout: time.Millisecond * time.Duration(10000),
+		}
+		return d.DialContext(ctx, network, "8.8.8.8:53")
+	},
 }

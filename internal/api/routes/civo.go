@@ -23,24 +23,40 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	cl "github.com/kubefirst/kubefirst-api/internal/cluster"
+	"github.com/kubefirst/kubefirst-api/internal/civo"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 )
 
-// Civo
-
+// GetValidateCivoDomain godoc
+// @Summary Returns status of whether or not a Civo hosted zone is validated for use with Kubefirst
+// @Description Returns status of whether or not a Civo hosted zone is validated for use with Kubefirst
+// @Tags civo
+// @Accept json
+// @Produce json
+// @Param	domain	path	string	true	"Domain name, no trailing dot"
+// @Success 200 {object} types.CivoDomainValidationResponse
+// @Failure 400 {object} types.JSONFailureResponse
+// @Router /civo/domain/validate/:domain [get]
+// GetValidateCivoDomain returns status for a Civo domain validation
 func GetValidateCivoDomain(c *gin.Context) {
-	clusterName, _ := c.Params.Get("clusterid")
-	fmt.Println(clusterName)
-	// Run create func
-	err := cl.CreateCluster(types.ClusterCreateDefinition{})
+	domainName, exists := c.Params.Get("domain")
+	if !exists {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: ":domain parameter not provided in request",
+		})
+		return
+	}
+
+	// Run validate func
+	civoClient := &civo.Conf
+	validated, err := civoClient.TestHostedZoneLiveness(domainName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: fmt.Sprintf("%s", err),
 		})
 		return
 	}
-	c.JSON(http.StatusOK, types.JSONSuccessResponse{
-		Message: "cluster create enqueued",
+	c.JSON(http.StatusOK, types.CivoDomainValidationResponse{
+		Validated: validated,
 	})
 }

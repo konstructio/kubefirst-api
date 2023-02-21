@@ -39,10 +39,17 @@ import (
 // @Router /cluster/:cluster_name [delete]
 // DeleteCluster handles a request to delete a cluster
 func DeleteCluster(c *gin.Context) {
-	clusterName, _ := c.Params.Get("cluster_name")
-	fmt.Println(clusterName)
+	clusterName, param := c.Params.Get("cluster_name")
+	if !param {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: fmt.Sprintf("%s", ":cluster_name not provided"),
+		})
+		return
+	}
+
 	// Run create func
-	err := cl.CreateCluster(types.ClusterCreateDefinition{})
+	clusters := cl.ClusterEntries{}
+	err := clusters.DeleteOne(clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: fmt.Sprintf("%s", err),
@@ -50,26 +57,33 @@ func DeleteCluster(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
-		Message: "cluster create enqueued",
+		Message: "cluster deleted",
 	})
 }
 
 // GetCluster godoc
-// @Summary Create a Kubefirst cluster
-// @Description Create a Kubefirst cluster
+// @Summary Return a configured Kubefirst cluster
+// @Description Return a configured Kubefirst cluster
 // @Tags cluster
 // @Accept json
 // @Produce json
 // @Param	cluster_name	path	string	true	"Cluster name"
-// @Success 200 {object} types.ClusterDefinition
+// @Success 200 {object} cluster.ClusterEntry
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /cluster/:cluster_name [get]
 // GetCluster returns a specific configured cluster
 func GetCluster(c *gin.Context) {
-	clusterName, _ := c.Params.Get("cluster_name")
+	clusterName, param := c.Params.Get("cluster_name")
+	if !param {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: fmt.Sprintf("%s", ":cluster_name not provided"),
+		})
+		return
+	}
 
 	// Retrieve cluster info
-	cluster, err := cl.GetCluster(clusterName)
+	clusters := cl.ClusterEntries{}
+	cluster, err := clusters.ReadOne(clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: fmt.Sprintf("%s", err),
@@ -85,20 +99,21 @@ func GetCluster(c *gin.Context) {
 // @Tags cluster
 // @Accept json
 // @Produce json
-// @Success 200 {object} []types.ClusterDefinition
+// @Success 200 {object} []cluster.ClusterEntry
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /cluster [get]
 // GetClusters returns all known configured cluster
 func GetClusters(c *gin.Context) {
 	// Retrieve all clusters info
-	clusters, err := cl.GetClusters()
+	clusters := cl.ClusterEntries{}
+	allClusters, err := clusters.ReadAll()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: fmt.Sprintf("%s", err),
 		})
 		return
 	}
-	c.JSON(http.StatusOK, clusters)
+	c.JSON(http.StatusOK, allClusters)
 }
 
 // PostCreateCluster godoc
@@ -107,21 +122,24 @@ func GetClusters(c *gin.Context) {
 // @Tags cluster
 // @Accept json
 // @Produce json
-// @Param	def	body	types.ClusterCreateDefinition	true	"Cluster create request in JSON format"
+// @Param	cluster_name	path	string	true	"Cluster name"
+// @Param	definition	body	types.ClusterDefinition	true	"Cluster create request in JSON format"
 // @Success 202 {object} types.JSONSuccessResponse
 // @Failure 400 {object} types.JSONFailureResponse
-// @Router /cluster [post]
+// @Router /cluster/:cluster_name [post]
 // PostCreateCluster handles a request to create a cluster
 func PostCreateCluster(c *gin.Context) {
-	if c.GetHeader("Content-Type") != "application/json" {
+	clusterName, param := c.Params.Get("cluster_name")
+	if !param {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: fmt.Sprintf("%s", "you must pass content-type header as application/json"),
+			Message: fmt.Sprintf("%s", ":cluster_name not provided"),
 		})
+		return
 	}
 
 	// Bind to variable as application/json, handle error
-	var def types.ClusterCreateDefinition
-	err := c.Bind(&def)
+	var clusterDefinition types.ClusterDefinition
+	err := c.Bind(&clusterDefinition)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: fmt.Sprintf("%s", err),
@@ -130,7 +148,7 @@ func PostCreateCluster(c *gin.Context) {
 	}
 
 	// Run create func
-	err = cl.CreateCluster(def)
+	err = cl.CreateCluster(clusterName, clusterDefinition)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: fmt.Sprintf("%s", err),
@@ -138,7 +156,7 @@ func PostCreateCluster(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
-		Message: "cluster create accepted",
+		Message: "cluster create enqueued",
 	})
 
 }

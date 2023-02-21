@@ -16,48 +16,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package main
+package civo
 
 import (
-	"fmt"
-
-	"github.com/kubefirst/kubefirst-api/docs"
-	"github.com/kubefirst/kubefirst-api/internal/api"
-
-	log "github.com/sirupsen/logrus"
+	"github.com/civo/civogo"
 )
 
-// @title Kubefirst API
-// @version 1.0
-// @description Kubefirst API
-// @contact.name Kubefirst
-// @contact.email help@kubefirst.io
-// @host localhost:port
-// @BasePath /api/v1
+// CivoConfiguration stores session data to organize all Civo functions into a single struct
+type CivoConfiguration struct {
+	Config civogo.Client
+	Region string
+}
 
-const (
-	port int = 8080
-)
-
-func main() {
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
-
-	// Programmatically set swagger info
-	docs.SwaggerInfo.Title = "Kubefirst API"
-	docs.SwaggerInfo.Description = "Kubefirst API"
-	docs.SwaggerInfo.Version = "1.0"
-	docs.SwaggerInfo.Host = fmt.Sprintf("localhost:%v", port)
-	docs.SwaggerInfo.BasePath = "/api/v1"
-	docs.SwaggerInfo.Schemes = []string{"http"}
-
-	// API
-	r := api.SetupRouter()
-	err := r.Run(fmt.Sprintf(":%v", port))
-	if err != nil {
-		log.Fatalf("Error starting API: %s", err)
-	}
+// CivoTXTRecord stores Civo DNS TXT record data
+type CivoTXTRecord struct {
+	Name  string
+	Value string
+	TTL   int
 }
