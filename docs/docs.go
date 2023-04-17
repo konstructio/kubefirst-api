@@ -449,7 +449,6 @@ const docTemplate = `{
                 "admin_email",
                 "cloud_provider",
                 "cloud_region",
-                "cluster_name",
                 "domain_name",
                 "git_owner",
                 "git_provider",
