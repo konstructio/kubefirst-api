@@ -1,12 +1,5 @@
 basePath: /api/v1
 definitions:
-  cluster.ClusterEntry:
-    properties:
-      definition:
-        $ref: '#/definitions/types.ClusterDefinition'
-      name:
-        type: string
-    type: object
   types.AWSDomainValidateResponse:
     properties:
       validated:
@@ -24,6 +17,86 @@ definitions:
       validated:
         type: boolean
     type: object
+  types.Cluster:
+    properties:
+      argoCDAuthToken:
+        type: string
+      argoCDCreateRegistryCheck:
+        type: boolean
+      argoCDInitializeCheck:
+        type: boolean
+      argoCDInstallCheck:
+        type: boolean
+      argoCDPassword:
+        type: string
+      argoCDUsername:
+        type: string
+      atlantisWebhookSecret:
+        type: string
+      cloudProvider:
+        type: string
+      cloudRegion:
+        type: string
+      cloudTerraformApplyCheck:
+        type: boolean
+      cloudTerraformApplyFailedCheck:
+        type: boolean
+      clusterID:
+        type: string
+      clusterName:
+        type: string
+      clusterSecretsCreatedCheck:
+        type: boolean
+      clusterType:
+        type: string
+      domainName:
+        type: string
+      gitCredentialsCheck:
+        type: boolean
+      gitHost:
+        type: string
+      gitInitCheck:
+        description: Checks
+        type: boolean
+      gitOwner:
+        type: string
+      gitProvider:
+        type: string
+      gitTerraformApplyCheck:
+        type: boolean
+      gitToken:
+        type: string
+      gitUser:
+        type: string
+      gitlabOwnerGroupID:
+        type: integer
+      gitopsPushedCheck:
+        type: boolean
+      gitopsReadyCheck:
+        type: boolean
+      id:
+        type: string
+      installToolsCheck:
+        type: boolean
+      kbotSetupCheck:
+        type: boolean
+      kubefirstTeam:
+        type: string
+      postDetokenizeCheck:
+        type: boolean
+      privateKey:
+        type: string
+      publicKey:
+        type: string
+      publicKeys:
+        type: string
+      usersTerraformApplyCheck:
+        type: boolean
+      vaultInitializedCheck:
+        type: boolean
+      vaultTerraformApplyCheck:
+        type: boolean
+    type: object
   types.ClusterDefinition:
     properties:
       admin_email:
@@ -32,28 +105,39 @@ definitions:
         enum:
         - aws
         - civo
+        - digitalocean
+        - k3d
+        - vultr
+        type: string
+      cloud_region:
         type: string
       cluster_name:
         type: string
       domain_name:
+        type: string
+      git_owner:
         type: string
       git_provider:
         enum:
         - github
         - gitlab
         type: string
-      github_owner:
+      git_token:
         type: string
-      hosted_zone:
-        type: string
-      region:
+      type:
+        enum:
+        - mgmt
+        - workload
         type: string
     required:
     - admin_email
     - cloud_provider
-    - cluster_name
+    - cloud_region
     - domain_name
+    - git_owner
     - git_provider
+    - git_token
+    - type
     type: object
   types.JSONFailureResponse:
     properties:
@@ -167,7 +251,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/cluster.ClusterEntry'
+              $ref: '#/definitions/types.Cluster'
             type: array
         "400":
           description: Bad Request
@@ -217,7 +301,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/cluster.ClusterEntry'
+            $ref: '#/definitions/types.Cluster'
         "400":
           description: Bad Request
           schema:
