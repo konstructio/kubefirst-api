@@ -10,10 +10,43 @@ import (
 	"fmt"
 	"strconv"
 
+	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/terraform"
 	log "github.com/sirupsen/logrus"
 )
+
+// GitInit
+func (clctrl *ClusterController) GitInit() error {
+	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	if err != nil {
+		return err
+	}
+
+	if !cl.GitInitCheck {
+		// Check for git resources in provider
+		initGitParameters := gitShim.GitInitParameters{
+			GitProvider:  clctrl.GitProvider,
+			GitToken:     clctrl.GitToken,
+			GitOwner:     clctrl.GitOwner,
+			Repositories: clctrl.Repositories,
+			Teams:        clctrl.Teams,
+			GithubOrg:    clctrl.GitOwner,
+			GitlabGroup:  clctrl.GitOwner,
+		}
+		err := gitShim.InitializeGitProvider(&initGitParameters)
+		if err != nil {
+			return err
+		}
+
+		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "git_init_check", true)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
 
 // RunGitTerraform
 func (clctrl *ClusterController) RunGitTerraform() error {
@@ -34,7 +67,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 			// tfEnvs = k3d.GetGithubTerraformEnvs(tfEnvs)
 			tfEnvs["GITHUB_TOKEN"] = clctrl.GitToken
 			tfEnvs["GITHUB_OWNER"] = clctrl.GitOwner
-			tfEnvs["TF_VAR_kbot_ssh_public_key"] = clctrl.PublicKey
+			tfEnvs["TF_VAR_kbot_ssh_public_key"] = cl.PublicKey
 			tfEnvs["AWS_ACCESS_KEY_ID"] = pkg.MinioDefaultUsername
 			tfEnvs["AWS_SECRET_ACCESS_KEY"] = pkg.MinioDefaultPassword
 			tfEnvs["TF_VAR_aws_access_key_id"] = pkg.MinioDefaultUsername
@@ -58,7 +91,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 			tfEnvs["GITLAB_TOKEN"] = clctrl.GitToken
 			tfEnvs["GITLAB_OWNER"] = clctrl.GitOwner
 			tfEnvs["TF_VAR_owner_group_id"] = strconv.Itoa(clctrl.GitlabOwnerGroupID)
-			tfEnvs["TF_VAR_kbot_ssh_public_key"] = clctrl.PublicKey
+			tfEnvs["TF_VAR_kbot_ssh_public_key"] = cl.PublicKey
 			tfEnvs["AWS_ACCESS_KEY_ID"] = pkg.MinioDefaultUsername
 			tfEnvs["AWS_SECRET_ACCESS_KEY"] = pkg.MinioDefaultPassword
 			tfEnvs["TF_VAR_aws_access_key_id"] = pkg.MinioDefaultUsername

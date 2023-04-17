@@ -20,35 +20,19 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func K3DCreate() error {
+func K3DCreate(definition *types.ClusterDefinition) error {
 	ctrl := controller.ClusterController{}
-
-	// This comes from the API call
-	//err := k3d.K3DCreate()
-	//if err != nil {
-	//	fmt.Println(err)
-	//}
-	//err := k3d.DeleteK3DCluster("kubefirst-test-scott", "/Users/scott/.k1", "k3d")
-	//if err != nil {
-	//	fmt.Println(err)
-	//}
-
-	err := ctrl.InitController(&types.ClusterDefinition{
-		AdminEmail:    "",
-		CloudProvider: "",
-		CloudRegion:   "",
-		ClusterName:   "",
-		DomainName:    "",
-		GitProvider:   "",
-		GitOwner:      "",
-		GitToken:      "",
-		Type:          "mgmt",
-	})
+	err := ctrl.InitController(definition)
 	if err != nil {
 		return err
 	}
 
 	err = ctrl.DownloadTools(ctrl.GitProvider, ctrl.GitOwner, ctrl.ProviderConfig.ToolsDir)
+	if err != nil {
+		return err
+	}
+
+	err = ctrl.GitInit()
 	if err != nil {
 		return err
 	}
@@ -236,8 +220,7 @@ func K3DCreate() error {
 		return err
 	}
 
-	log.Info("kubefirst installation complete")
-	log.Info("welcome to your new kubefirst platform running in K3d")
+	log.Info("cluster creation complete")
 
 	// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricMgmtClusterInstallCompleted, "")
 

@@ -70,17 +70,6 @@ type ClusterController struct {
 }
 
 // InitController
-// createCmd.Flags().StringVar(&clusterNameFlag, "cluster-name", "kubefirst", "the name of the cluster to create")
-// createCmd.Flags().StringVar(&clusterTypeFlag, "cluster-type", "mgmt", "the type of cluster to create (i.e. mgmt|workload)")
-// createCmd.Flags().BoolVar(&dryRun, "dry-run", false, "don't execute the installation")
-// createCmd.Flags().StringVar(&gitProviderFlag, "git-provider", "github", fmt.Sprintf("the git provider - one of: %s", supportedGitProviders))
-// createCmd.Flags().StringVar(&githubUserFlag, "github-user", "", "the GitHub user for the new gitops and metaphor repositories - this cannot be used with --github-org")
-// createCmd.Flags().StringVar(&githubOrgFlag, "github-org", "", "the GitHub organization for the new gitops and metaphor repositories - this cannot be used with --github-user")
-// createCmd.Flags().StringVar(&gitlabGroupFlag, "gitlab-group", "", "the GitLab group for the new gitops and metaphor projects - required if using gitlab")
-// createCmd.Flags().StringVar(&gitopsTemplateBranchFlag, "gitops-template-branch", "main", "the branch to clone for the gitops-template repository")
-// createCmd.Flags().StringVar(&gitopsTemplateURLFlag, "gitops-template-url", "https://github.com/kubefirst/gitops-template.git", "the fully qualified url to the gitops-template repository to clone")
-// createCmd.Flags().StringVar(&kbotPasswordFlag, "kbot-password", "", "the default password to use for the kbot user")
-// createCmd.Flags().BoolVar(&useTelemetryFlag, "use-telemetry", true, "whether to emit telemetry")
 func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) error {
 	// Database controller
 	clctrl.MdbCl = &db.MongoDBClient{}
@@ -155,26 +144,11 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		return fmt.Errorf("invalid git provider option")
 	}
 
-	// Check for git resources in provider
-	//initGitParameters := gitShim.GitInitParameters{
-	//	GitProvider:  clctrl.GitProvider,
-	//	GitToken:     clctrl.GitToken,
-	//	GitOwner:     clctrl.GitOwner,
-	//	Repositories: clctrl.Repositories,
-	//	Teams:        clctrl.Teams,
-	//	GithubOrg:    clctrl.GitOwner,
-	//	GitlabGroup:  clctrl.GitOwner,
-	//}
-	//err = gitShim.InitializeGitProvider(&initGitParameters)
-	//if err != nil {
-	//	return err
-	//}
-
 	// Instantiate provider configuration
 	clctrl.ProviderConfig = k3d.GetConfig(clctrl.GitProvider, clctrl.GitOwner)
 
 	// Write cluster record if it doesn't exist
-	cl := db.Cluster{
+	cl := types.Cluster{
 		ID:                    primitive.NewObjectID(),
 		ClusterName:           clctrl.ClusterName,
 		CloudProvider:         clctrl.CloudProvider,
@@ -200,12 +174,11 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 }
 
 // GetCurrentClusterRecord will return an active cluster's record if it exists
-func (clctrl *ClusterController) GetCurrentClusterRecord() (db.Cluster, error) {
+func (clctrl *ClusterController) GetCurrentClusterRecord() (types.Cluster, error) {
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
-		return db.Cluster{}, err
+		return types.Cluster{}, err
 	}
 
 	return cl, nil
-
 }

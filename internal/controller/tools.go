@@ -15,13 +15,25 @@ import (
 // This obviously doesn't work in an api-based environment.
 // It's included for testing and development.
 func (clctrl *ClusterController) DownloadTools(gitProvider string, gitOwner string, toolsDir string) error {
-	log.Info("installing kubefirst dependencies")
-
-	err := k3d.DownloadTools(gitProvider, gitOwner, toolsDir)
+	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
-	log.Info("download dependencies `$HOME/.k1/tools` complete")
+
+	if !cl.InstallToolsCheck {
+		log.Info("installing kubefirst dependencies")
+
+		err := k3d.DownloadTools(gitProvider, gitOwner, toolsDir)
+		if err != nil {
+			return err
+		}
+		log.Info("download dependencies `$HOME/.k1/tools` complete")
+
+		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "install_tools_check", true)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

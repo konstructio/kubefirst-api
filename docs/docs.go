@@ -142,7 +142,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/cluster.ClusterEntry"
+                                "$ref": "#/definitions/types.Cluster"
                             }
                         }
                     },
@@ -181,7 +181,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/cluster.ClusterEntry"
+                            "$ref": "#/definitions/types.Cluster"
                         }
                     },
                     "400": {
@@ -296,17 +296,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "cluster.ClusterEntry": {
-            "type": "object",
-            "properties": {
-                "definition": {
-                    "$ref": "#/definitions/types.ClusterDefinition"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
         "types.AWSDomainValidateResponse": {
             "type": "object",
             "properties": {
@@ -334,6 +323,126 @@ const docTemplate = `{
                 }
             }
         },
+        "types.Cluster": {
+            "type": "object",
+            "properties": {
+                "argoCDAuthToken": {
+                    "type": "string"
+                },
+                "argoCDCreateRegistryCheck": {
+                    "type": "boolean"
+                },
+                "argoCDInitializeCheck": {
+                    "type": "boolean"
+                },
+                "argoCDInstallCheck": {
+                    "type": "boolean"
+                },
+                "argoCDPassword": {
+                    "type": "string"
+                },
+                "argoCDUsername": {
+                    "type": "string"
+                },
+                "atlantisWebhookSecret": {
+                    "type": "string"
+                },
+                "cloudProvider": {
+                    "type": "string"
+                },
+                "cloudRegion": {
+                    "type": "string"
+                },
+                "cloudTerraformApplyCheck": {
+                    "type": "boolean"
+                },
+                "cloudTerraformApplyFailedCheck": {
+                    "type": "boolean"
+                },
+                "clusterID": {
+                    "type": "string"
+                },
+                "clusterName": {
+                    "type": "string"
+                },
+                "clusterSecretsCreatedCheck": {
+                    "type": "boolean"
+                },
+                "clusterType": {
+                    "type": "string"
+                },
+                "domainName": {
+                    "type": "string"
+                },
+                "gitCredentialsCheck": {
+                    "type": "boolean"
+                },
+                "gitHost": {
+                    "type": "string"
+                },
+                "gitInitCheck": {
+                    "description": "Checks",
+                    "type": "boolean"
+                },
+                "gitOwner": {
+                    "type": "string"
+                },
+                "gitProvider": {
+                    "type": "string"
+                },
+                "gitTerraformApplyCheck": {
+                    "type": "boolean"
+                },
+                "gitToken": {
+                    "type": "string"
+                },
+                "gitUser": {
+                    "type": "string"
+                },
+                "gitlabOwnerGroupID": {
+                    "type": "integer"
+                },
+                "gitopsPushedCheck": {
+                    "type": "boolean"
+                },
+                "gitopsReadyCheck": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "installToolsCheck": {
+                    "type": "boolean"
+                },
+                "kbotSetupCheck": {
+                    "type": "boolean"
+                },
+                "kubefirstTeam": {
+                    "type": "string"
+                },
+                "postDetokenizeCheck": {
+                    "type": "boolean"
+                },
+                "privateKey": {
+                    "type": "string"
+                },
+                "publicKey": {
+                    "type": "string"
+                },
+                "publicKeys": {
+                    "type": "string"
+                },
+                "usersTerraformApplyCheck": {
+                    "type": "boolean"
+                },
+                "vaultInitializedCheck": {
+                    "type": "boolean"
+                },
+                "vaultTerraformApplyCheck": {
+                    "type": "boolean"
+                }
+            }
+        },
         "types.ClusterDefinition": {
             "type": "object",
             "required": [
@@ -345,7 +454,6 @@ const docTemplate = `{
                 "git_owner",
                 "git_provider",
                 "git_token",
-                "hosted_zone",
                 "type"
             ],
             "properties": {
@@ -382,9 +490,6 @@ const docTemplate = `{
                     ]
                 },
                 "git_token": {
-                    "type": "string"
-                },
-                "hosted_zone": {
                     "type": "string"
                 },
                 "type": {

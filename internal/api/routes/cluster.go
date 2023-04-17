@@ -8,11 +8,14 @@ package api
 
 import (
 	"fmt"
+
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	cl "github.com/kubefirst/kubefirst-api/internal/cluster"
+	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/providers/k3d"
+	log "github.com/sirupsen/logrus"
 )
 
 // DeleteCluster godoc
@@ -35,12 +38,17 @@ func DeleteCluster(c *gin.Context) {
 		return
 	}
 
-	// Run create func
-	clusters := cl.ClusterEntries{}
-	err := clusters.DeleteOne(clusterName)
+	// Delete cluster
+	mdbcl := &db.MongoDBClient{}
+	err := mdbcl.InitDatabase()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = mdbcl.DeleteCluster(clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: fmt.Sprintf("%s", err),
+			Message: err.Error(),
 		})
 		return
 	}
@@ -56,7 +64,7 @@ func DeleteCluster(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param	cluster_name	path	string	true	"Cluster name"
-// @Success 200 {object} cluster.ClusterEntry
+// @Success 200 {object} types.Cluster
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /cluster/:cluster_name [get]
 // GetCluster returns a specific configured cluster
@@ -70,11 +78,16 @@ func GetCluster(c *gin.Context) {
 	}
 
 	// Retrieve cluster info
-	clusters := cl.ClusterEntries{}
-	cluster, err := clusters.ReadOne(clusterName)
+	mdbcl := &db.MongoDBClient{}
+	err := mdbcl.InitDatabase()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	cluster, err := mdbcl.GetCluster(clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: fmt.Sprintf("%s", err),
+			Message: "cluster not found",
 		})
 		return
 	}
@@ -87,20 +100,26 @@ func GetCluster(c *gin.Context) {
 // @Tags cluster
 // @Accept json
 // @Produce json
-// @Success 200 {object} []cluster.ClusterEntry
+// @Success 200 {object} []types.Cluster
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /cluster [get]
-// GetClusters returns all known configured cluster
+// GetClusters returns all known configured clusters
 func GetClusters(c *gin.Context) {
 	// Retrieve all clusters info
-	clusters := cl.ClusterEntries{}
-	allClusters, err := clusters.ReadAll()
+	mdbcl := &db.MongoDBClient{}
+	err := mdbcl.InitDatabase()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	allClusters, err := mdbcl.GetClusters()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: fmt.Sprintf("%s", err),
 		})
 		return
 	}
+
 	c.JSON(http.StatusOK, allClusters)
 }
 
@@ -118,6 +137,7 @@ func GetClusters(c *gin.Context) {
 // PostCreateCluster handles a request to create a cluster
 func PostCreateCluster(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
+
 	if !param {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: ":cluster_name not provided",
@@ -128,23 +148,27 @@ func PostCreateCluster(c *gin.Context) {
 	// Bind to variable as application/json, handle error
 	var clusterDefinition types.ClusterDefinition
 	err := c.Bind(&clusterDefinition)
+
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
 		})
 		return
 	}
+	clusterDefinition.ClusterName = clusterName
 
-	// Run create func
-	err = cl.CreateCluster(clusterName, clusterDefinition)
+	// Create
+	// k3d is the only supported platform during testing
+	// more to be added later
+	err = k3d.K3DCreate(&clusterDefinition)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: fmt.Sprintf("%s", err),
 		})
 		return
 	}
-	c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
-		Message: "cluster create enqueued",
-	})
 
+	c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
+		Message: "cluster created",
+	})
 }

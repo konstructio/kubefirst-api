@@ -1,3 +1,9 @@
+/*
+Copyright (C) 2021-2023, Kubefirst
+
+This program is licensed under MIT.
+See the LICENSE file for more details.
+*/
 package k3d
 
 import (
@@ -14,7 +20,7 @@ func DeleteK3DCluster(clusterName string, k1Dir string, k3dClient string) error 
 		return err
 	}
 
-	log.Info("k3d resources terraform destroyed")
+	log.Info("k3d resources destroyed")
 
 	return nil
 }
