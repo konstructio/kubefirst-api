@@ -1,30 +1,17 @@
 /*
-Copyright © 2023 Kubefirst <kubefirst.io>
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+Copyright (C) 2021-2023, Kubefirst
+
+This program is licensed under MIT.
+See the LICENSE file for more details.
 */
 package api
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kubefirst/kubefirst-api/internal/civo"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	civointernal "github.com/kubefirst/runtime/pkg/civo"
 )
 
 // GetValidateCivoDomain godoc
@@ -48,11 +35,10 @@ func GetValidateCivoDomain(c *gin.Context) {
 	}
 
 	// Run validate func
-	civoClient := &civo.Conf
-	validated, err := civoClient.TestHostedZoneLiveness(domainName)
-	if err != nil {
+	validated := civointernal.TestDomainLiveness(false, domainName, "", "")
+	if !validated {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: fmt.Sprintf("%s", err),
+			Message: "domain validation failed",
 		})
 		return
 	}

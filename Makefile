@@ -8,11 +8,14 @@ ifeq (, $(shell which gox))
 $(warning "could not find gox in $(PATH), run: go install github.com/mitchellh/gox@latest")
 endif
 
-.PHONY: all build
+.PHONY: all build updateswagger
 
 default: all
 
 all: build
+
+updateswagger:
+	swag init
 
 build:
 	gox \

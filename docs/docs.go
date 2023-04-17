@@ -339,9 +339,14 @@ const docTemplate = `{
             "required": [
                 "admin_email",
                 "cloud_provider",
+                "cloud_region",
                 "cluster_name",
                 "domain_name",
-                "git_provider"
+                "git_owner",
+                "git_provider",
+                "git_token",
+                "hosted_zone",
+                "type"
             ],
             "properties": {
                 "admin_email": {
@@ -351,13 +356,22 @@ const docTemplate = `{
                     "type": "string",
                     "enum": [
                         "aws",
-                        "civo"
+                        "civo",
+                        "digitalocean",
+                        "k3d",
+                        "vultr"
                     ]
+                },
+                "cloud_region": {
+                    "type": "string"
                 },
                 "cluster_name": {
                     "type": "string"
                 },
                 "domain_name": {
+                    "type": "string"
+                },
+                "git_owner": {
                     "type": "string"
                 },
                 "git_provider": {
@@ -367,14 +381,18 @@ const docTemplate = `{
                         "gitlab"
                     ]
                 },
-                "github_owner": {
+                "git_token": {
                     "type": "string"
                 },
                 "hosted_zone": {
                     "type": "string"
                 },
-                "region": {
-                    "type": "string"
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "mgmt",
+                        "workload"
+                    ]
                 }
             }
         },

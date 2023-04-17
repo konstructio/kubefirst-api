@@ -32,28 +32,43 @@ definitions:
         enum:
         - aws
         - civo
+        - digitalocean
+        - k3d
+        - vultr
+        type: string
+      cloud_region:
         type: string
       cluster_name:
         type: string
       domain_name:
+        type: string
+      git_owner:
         type: string
       git_provider:
         enum:
         - github
         - gitlab
         type: string
-      github_owner:
+      git_token:
         type: string
       hosted_zone:
         type: string
-      region:
+      type:
+        enum:
+        - mgmt
+        - workload
         type: string
     required:
     - admin_email
     - cloud_provider
+    - cloud_region
     - cluster_name
     - domain_name
+    - git_owner
     - git_provider
+    - git_token
+    - hosted_zone
+    - type
     type: object
   types.JSONFailureResponse:
     properties:
