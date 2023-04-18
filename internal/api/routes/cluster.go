@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/providers/civo"
 	"github.com/kubefirst/kubefirst-api/providers/k3d"
 	log "github.com/sirupsen/logrus"
 )
@@ -42,7 +43,27 @@ func DeleteCluster(c *gin.Context) {
 	mdbcl := &db.MongoDBClient{}
 	err := mdbcl.InitDatabase()
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+	}
+
+	rec, err := mdbcl.GetCluster(clusterName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+
+	switch rec.CloudProvider {
+	case "k3d":
+	case "civo":
+		err := civo.DeleteCivoCluster(&rec)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
 	}
 
 	err = mdbcl.DeleteCluster(clusterName)
@@ -52,6 +73,7 @@ func DeleteCluster(c *gin.Context) {
 		})
 		return
 	}
+
 	c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
 		Message: "cluster deleted",
 	})
@@ -81,7 +103,7 @@ func GetCluster(c *gin.Context) {
 	mdbcl := &db.MongoDBClient{}
 	err := mdbcl.InitDatabase()
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 
 	cluster, err := mdbcl.GetCluster(clusterName)
@@ -109,7 +131,7 @@ func GetClusters(c *gin.Context) {
 	mdbcl := &db.MongoDBClient{}
 	err := mdbcl.InitDatabase()
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 
 	allClusters, err := mdbcl.GetClusters()
@@ -158,17 +180,30 @@ func PostCreateCluster(c *gin.Context) {
 	clusterDefinition.ClusterName = clusterName
 
 	// Create
-	// k3d is the only supported platform during testing
-	// more to be added later
-	err = k3d.K3DCreate(&clusterDefinition)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: fmt.Sprintf("%s", err),
-		})
-		return
-	}
+	switch clusterDefinition.CloudProvider {
+	case "k3d":
+		err = k3d.CreateK3DCluster(&clusterDefinition)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: fmt.Sprintf("%s", err),
+			})
+			return
+		}
 
-	c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
-		Message: "cluster created",
-	})
+		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
+			Message: "cluster created",
+		})
+	case "civo":
+		err = civo.CreateCivoCluster(&clusterDefinition)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: fmt.Sprintf("%s", err),
+			})
+			return
+		}
+
+		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
+			Message: "cluster created",
+		})
+	}
 }

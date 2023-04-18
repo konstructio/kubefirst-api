@@ -18,6 +18,11 @@ type AWSProfilesResponse struct {
 	Profiles []string `json:"profiles"`
 }
 
+// CivoDomainValidationRequest /civo/domain/validate required parameters
+type CivoDomainValidationRequest struct {
+	CloudRegion string `json:"cloud_region"`
+}
+
 // CivoDomainValidationResponse is the response for the /civo/domain/validate route
 type CivoDomainValidationResponse struct {
 	Validated bool `json:"validated"`
@@ -46,6 +51,9 @@ type Cluster struct {
 	DomainName    string `bson:"domain_name"`
 	ClusterID     string `bson:"cluster_id"`
 	ClusterType   string `bson:"cluster_type"`
+	AlertsEmail   string `bson:"alerts_email"`
+
+	CivoToken string `bson:"civo_token"`
 
 	GitProvider        string `bson:"git_provider"`
 	GitHost            string `bson:"git_host"`
@@ -55,7 +63,11 @@ type Cluster struct {
 	GitlabOwnerGroupID int    `bson:"gitlab_owner_group_id"`
 
 	AtlantisWebhookSecret string `bson:"atlantis_webhook_secret"`
+	AtlantisWebhookURL    string `bson:"atlantis_webhook_url"`
 	KubefirstTeam         string `bson:"kubefirst_team"`
+
+	StateStoreCredentials StateStoreCredentials `bson:"state_store_credentials,omitempty"`
+	StateStoreDetails     StateStoreDetails     `bson:"state_store_details,omitempty"`
 
 	PublicKey  string `bson:"public_key"`
 	PrivateKey string `bson:"private_key"`
@@ -69,6 +81,9 @@ type Cluster struct {
 	GitInitCheck                   bool `bson:"git_init_check"`
 	InstallToolsCheck              bool `bson:"install_tools_check"`
 	KbotSetupCheck                 bool `bson:"kbot_setup_check"`
+	StateStoreCredsCheck           bool `bson:"state_store_creds_check"`
+	StateStoreCreateCheck          bool `bson:"state_store_create_check"`
+	DomainLivenessCheck            bool `bson:"domain_liveness_check"`
 	GitCredentialsCheck            bool `bson:"git_credentials_check"`
 	GitopsReadyCheck               bool `bson:"gitops_ready_check"`
 	GitTerraformApplyCheck         bool `bson:"git_terraform_apply_check"`
@@ -83,6 +98,20 @@ type Cluster struct {
 	VaultTerraformApplyCheck       bool `bson:"vault_terraform_apply_check"`
 	UsersTerraformApplyCheck       bool `bson:"users_terraform_apply_check"`
 	PostDetokenizeCheck            bool `bson:"post_detokenize_check"`
+}
+
+// StateStoreCredentials
+type StateStoreCredentials struct {
+	AccessKeyID     string `bson:"access_key_id"`
+	SecretAccessKey string `bson:"secret_access_key"`
+	Name            string `bson:"name"`
+	ID              string `bson:"id"`
+}
+
+// StateStoreDetails
+type StateStoreDetails struct {
+	Name string `bson:"name"`
+	ID   string `bson:"id"`
 }
 
 // JSONFailureResponse describes a failure message returned by the API

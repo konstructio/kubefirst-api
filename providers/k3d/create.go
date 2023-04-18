@@ -20,14 +20,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func K3DCreate(definition *types.ClusterDefinition) error {
+func CreateK3DCluster(definition *types.ClusterDefinition) error {
 	ctrl := controller.ClusterController{}
 	err := ctrl.InitController(definition)
 	if err != nil {
 		return err
 	}
 
-	err = ctrl.DownloadTools(ctrl.GitProvider, ctrl.GitOwner, ctrl.ProviderConfig.ToolsDir)
+	err = ctrl.DownloadTools(ctrl.GitProvider, ctrl.GitOwner, ctrl.ProviderConfig.(k3d.K3dConfig).ToolsDir)
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func K3DCreate(definition *types.ClusterDefinition) error {
 		return err
 	}
 
-	err = ctrl.CreateK3DCluster()
+	err = ctrl.CreateCluster()
 	if err != nil {
 		return err
 	}
@@ -111,9 +111,9 @@ func K3DCreate(definition *types.ClusterDefinition) error {
 	}
 
 	//
-	kcfg := k8s.CreateKubeConfig(false, ctrl.ProviderConfig.Kubeconfig)
+	kcfg := k8s.CreateKubeConfig(false, ctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
 
-	SetupMinioStorage(kcfg, ctrl.ProviderConfig.K1Dir, ctrl.GitProvider)
+	SetupMinioStorage(kcfg, ctrl.ProviderConfig.(k3d.K3dConfig).K1Dir, ctrl.GitProvider)
 
 	//* configure vault with terraform
 	//* vault port-forward
@@ -143,34 +143,34 @@ func K3DCreate(definition *types.ClusterDefinition) error {
 
 	// PostRun string replacement
 	err = k3d.PostRunPrepareGitopsRepository(ctrl.ClusterName,
-		ctrl.ProviderConfig.GitopsDir,
+		ctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir,
 		ctrl.CreateTokens("gitops").(*k3d.GitopsTokenValues),
 	)
 	if err != nil {
 		log.Infof("Error detokenize post run: %s", err)
 	}
-	gitopsRepo, err := git.PlainOpen(ctrl.ProviderConfig.GitopsDir)
+	gitopsRepo, err := git.PlainOpen(ctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir)
 	if err != nil {
-		log.Infof("error opening repo at: %s", ctrl.ProviderConfig.GitopsDir)
+		log.Infof("error opening repo at: %s", ctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir)
 	}
 
 	// check if file exists before rename
 	_, err = os.Stat(
 		fmt.Sprintf(
 			"%s/terraform/%s/remote-backend.md",
-			ctrl.ProviderConfig.GitopsDir,
-			ctrl.ProviderConfig.GitProvider,
+			ctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir,
+			ctrl.ProviderConfig.(k3d.K3dConfig).GitProvider,
 		),
 	)
 	if err == nil {
 		err = os.Rename(
 			fmt.Sprintf(
 				"%s/terraform/%s/remote-backend.md",
-				ctrl.ProviderConfig.GitopsDir,
+				ctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir,
 				ctrl.GitProvider,
 			), fmt.Sprintf(
 				"%s/terraform/%s/remote-backend.tf",
-				ctrl.ProviderConfig.GitopsDir,
+				ctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir,
 				ctrl.GitProvider,
 			))
 		if err != nil {
@@ -194,7 +194,7 @@ func K3DCreate(definition *types.ClusterDefinition) error {
 		log.Infof("generate public keys failed: %s\n", err.Error())
 	}
 	err = gitopsRepo.Push(&git.PushOptions{
-		RemoteName: ctrl.ProviderConfig.GitProvider,
+		RemoteName: ctrl.ProviderConfig.(k3d.K3dConfig).GitProvider,
 		// This is currently broken because publickeys isn't stored
 		Auth: publicKeys,
 	})

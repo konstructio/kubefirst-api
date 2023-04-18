@@ -82,7 +82,7 @@ func InitializeGitProvider(p *GitInitParameters) error {
 		// Check for existing base projects
 		projects, err := gitlabClient.GetProjects()
 		if err != nil {
-			log.Fatalf("couldn't get gitlab projects: %s", err)
+			log.Errorf("couldn't get gitlab projects: %s", err)
 		}
 		for _, repositoryName := range p.Repositories {
 			for _, project := range projects {
@@ -96,7 +96,7 @@ func InitializeGitProvider(p *GitInitParameters) error {
 		// Save for detokenize
 		subgroups, err := gitlabClient.GetSubGroups()
 		if err != nil {
-			log.Fatalf("couldn't get gitlab subgroups for group %s: %s", p.GitOwner, err)
+			log.Errorf("couldn't get gitlab subgroups for group %s: %s", p.GitOwner, err)
 		}
 		for _, teamName := range p.Repositories {
 			for _, sg := range subgroups {

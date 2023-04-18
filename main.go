@@ -24,7 +24,7 @@ import (
 // @BasePath /api/v1
 
 const (
-	port int = 8080
+	port int = 8081
 )
 
 func main() {

@@ -24,7 +24,7 @@ FROM alpine:3.17.2
 COPY --from=builder /build/kubefirst-api /
 COPY --from=builder /build/docs /docs
 
-EXPOSE 8080
+EXPOSE 8081
 
 # Command to run
 ENTRYPOINT ["/kubefirst-api"]
