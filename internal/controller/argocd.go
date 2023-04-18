@@ -11,9 +11,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	argocdapi "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned"
 	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
+	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/helpers"
 	"github.com/kubefirst/runtime/pkg/k3d"
 	"github.com/kubefirst/runtime/pkg/k8s"
@@ -29,29 +31,43 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 	}
 
 	if !cl.ArgoCDInstallCheck {
-		kcfg := k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		var kcfg *k8s.KubernetesClient
 
-		argoCDInstallPath := fmt.Sprintf("github.com:kubefirst/manifests/argocd/k3d?ref=%s", pkg.KubefirstManifestRepoRef)
+		switch clctrl.CloudProvider {
+		case "k3d":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
+			argoCDInstallPath := fmt.Sprintf("github.com:kubefirst/manifests/argocd/k3d?ref=%s", pkg.KubefirstManifestRepoRef)
+			log.Infof("installing argocd")
+
+			// Build and apply manifests
+			yamlData, err := kcfg.KustomizeBuild(argoCDInstallPath)
+			if err != nil {
+				return err
+			}
+			output, err := kcfg.SplitYAMLFile(yamlData)
+			if err != nil {
+				return err
+			}
+			err = kcfg.ApplyObjects("", output)
+			if err != nil {
+				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricArgoCDInstallFailed, err.Error())
+				return err
+			}
+
+		case "civo":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
+			argoCDInstallPath := fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
+			log.Infof("installing argocd")
+
+			err = argocd.ApplyArgoCDKustomize(kcfg.Clientset, argoCDInstallPath)
+			if err != nil {
+				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricArgoCDInstallFailed, err.Error())
+				return err
+			}
+			//telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricArgoCDInstallCompleted, "")
+		}
 
 		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricArgoCDInstallStarted, "")
-
-		log.Infof("installing argocd")
-
-		// Build and apply manifests
-		yamlData, err := kcfg.KustomizeBuild(argoCDInstallPath)
-		if err != nil {
-			return err
-		}
-		output, err := kcfg.SplitYAMLFile(yamlData)
-		if err != nil {
-			return err
-		}
-		err = kcfg.ApplyObjects("", output)
-		if err != nil {
-			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricArgoCDInstallFailed, err.Error())
-			return err
-		}
-
 		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricArgoCDInstallCompleted, "")
 
 		// Wait for ArgoCD to be ready
@@ -78,7 +94,14 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 	}
 
 	if !cl.ArgoCDInitializeCheck {
-		kcfg := k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		var kcfg *k8s.KubernetesClient
+
+		switch clctrl.CloudProvider {
+		case "k3d":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
+		case "civo":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
+		}
 
 		log.Info("Setting argocd username and password credentials")
 
@@ -90,15 +113,47 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 		}
 
 		log.Info("argocd username and password credentials set successfully")
-		log.Info("Getting an argocd auth token")
+		log.Info("getting an argocd auth token")
 
-		// Test https to argocd
 		var argoCDToken string
-		// only the host, not the protocol
-		err := helpers.TestEndpointTLS(strings.Replace(k3d.ArgocdURL, "https://", "", 1))
-		if err != nil {
+
+		switch clctrl.CloudProvider {
+		case "k3d":
+			// only the host, not the protocol
+			err := helpers.TestEndpointTLS(strings.Replace(k3d.ArgocdURL, "https://", "", 1))
+			if err != nil {
+				argoCDStopChannel := make(chan struct{}, 1)
+				log.Infof("argocd not available via https, using http")
+				defer func() {
+					close(argoCDStopChannel)
+				}()
+				k8s.OpenPortForwardPodWrapper(
+					kcfg.Clientset,
+					kcfg.RestConfig,
+					"argocd-server",
+					"argocd",
+					8080,
+					8080,
+					argoCDStopChannel,
+				)
+				argoCDHTTPURL := strings.Replace(
+					k3d.ArgocdURL,
+					"https://",
+					"http://",
+					1,
+				) + ":8080"
+				argoCDToken, err = argocd.GetArgocdTokenV2(clctrl.HttpClient, argoCDHTTPURL, "admin", argocdPassword)
+				if err != nil {
+					return err
+				}
+			} else {
+				argoCDToken, err = argocd.GetArgocdTokenV2(clctrl.HttpClient, k3d.ArgocdURL, "admin", argocdPassword)
+				if err != nil {
+					return err
+				}
+			}
+		case "civo":
 			argoCDStopChannel := make(chan struct{}, 1)
-			log.Infof("argocd not available via https, using http")
 			defer func() {
 				close(argoCDStopChannel)
 			}()
@@ -111,18 +166,7 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 				8080,
 				argoCDStopChannel,
 			)
-			argoCDHTTPURL := strings.Replace(
-				k3d.ArgocdURL,
-				"https://",
-				"http://",
-				1,
-			) + ":8080"
-			argoCDToken, err = argocd.GetArgocdTokenV2(clctrl.HttpClient, argoCDHTTPURL, "admin", argocdPassword)
-			if err != nil {
-				return err
-			}
-		} else {
-			argoCDToken, err = argocd.GetArgocdTokenV2(clctrl.HttpClient, k3d.ArgocdURL, "admin", argocdPassword)
+			argoCDToken, err = argocd.GetArgoCDToken("admin", argocdPassword)
 			if err != nil {
 				return err
 			}
@@ -155,7 +199,14 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 	}
 
 	if !cl.ArgoCDCreateRegistryCheck {
-		kcfg := k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		var kcfg *k8s.KubernetesClient
+
+		switch clctrl.CloudProvider {
+		case "k3d":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
+		case "civo":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
+		}
 
 		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricCreateRegistryStarted, "")
 		argocdClient, err := argocdapi.NewForConfig(kcfg.RestConfig)
@@ -164,7 +215,21 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		}
 
 		log.Info("applying the registry application to argocd")
-		registryApplicationObject := argocd.GetArgoCDApplicationObject(clctrl.ProviderConfig.DestinationGitopsRepoGitURL, fmt.Sprintf("registry/%s", clctrl.ClusterName))
+		var registryApplicationObject *v1alpha1.Application
+
+		switch clctrl.CloudProvider {
+		case "k3d":
+			registryApplicationObject = argocd.GetArgoCDApplicationObject(
+				clctrl.ProviderConfig.(k3d.K3dConfig).DestinationGitopsRepoGitURL,
+				fmt.Sprintf("registry/%s", clctrl.ClusterName),
+			)
+		case "civo":
+			registryApplicationObject = argocd.GetArgoCDApplicationObject(
+				clctrl.ProviderConfig.(*civo.CivoConfig).DestinationGitopsRepoGitURL,
+				fmt.Sprintf("registry/%s", clctrl.ClusterName),
+			)
+		}
+
 		_, _ = argocdClient.ArgoprojV1alpha1().Applications("argocd").Create(context.Background(), registryApplicationObject, metav1.CreateOptions{})
 
 		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricCreateRegistryCompleted, "")

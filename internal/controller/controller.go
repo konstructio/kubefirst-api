@@ -14,6 +14,7 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/pkg"
+	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/github"
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/handlers"
@@ -29,9 +30,13 @@ type ClusterController struct {
 	ClusterID     string
 	ClusterType   string
 	DomainName    string
+	AlertsEmail   string
 
-	// config
-	ProviderConfig *k3d.K3dConfig
+	// tokens
+	CivoToken string
+
+	// configs
+	ProviderConfig interface{}
 
 	// git
 	GitProvider        string
@@ -54,10 +59,12 @@ type ClusterController struct {
 	Teams []string
 
 	// other
-	AtlantisWebhookSecret    string
-	KubefirstTeam            string
-	GitopsTemplateBranchFlag string
-	GitopsTemplateURLFlag    string
+	AtlantisWebhookSecret         string
+	AtlantisWebhookURL            string
+	KubefirstTeam                 string
+	GitopsTemplateBranchFlag      string
+	GitopsTemplateURLFlag         string
+	KubefirstStateStoreBucketName string
 
 	// keys
 	// kbot public key
@@ -78,24 +85,33 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		return err
 	}
 
-	clctrl.CloudProvider = "k3d"
+	clctrl.AlertsEmail = def.AdminEmail
+	clctrl.CloudProvider = def.CloudProvider
 	clctrl.CloudRegion = def.CloudRegion
 	clctrl.ClusterName = def.ClusterName
 	clctrl.ClusterID = pkg.GenerateClusterID()
 	clctrl.DomainName = def.DomainName
 	clctrl.ClusterType = def.Type
 	clctrl.HttpClient = http.DefaultClient
+
+	switch clctrl.CloudProvider {
+	case "civo":
+		clctrl.CivoToken = os.Getenv("CIVO_TOKEN")
+	}
+
 	clctrl.Repositories = []string{"gitops", "metaphor"}
 	clctrl.Teams = []string{"admins", "developers"}
 
 	clctrl.GitopsTemplateBranchFlag = "main"
 	clctrl.GitopsTemplateURLFlag = "https://github.com/kubefirst/gitops-template.git"
+	clctrl.KubefirstStateStoreBucketName = fmt.Sprintf("k1-state-store-%s-%s", clctrl.ClusterName, clctrl.ClusterID)
 
 	clctrl.KubefirstTeam = os.Getenv("KUBEFIRST_TEAM")
 	if clctrl.KubefirstTeam == "" {
 		clctrl.KubefirstTeam = "false"
 	}
 	clctrl.AtlantisWebhookSecret = pkg.Random(20)
+	clctrl.AtlantisWebhookURL = fmt.Sprintf("https://atlantis.%s/events", clctrl.DomainName)
 
 	// Initialize git parameters
 	clctrl.GitProvider = def.GitProvider
@@ -145,11 +161,17 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	}
 
 	// Instantiate provider configuration
-	clctrl.ProviderConfig = k3d.GetConfig(clctrl.GitProvider, clctrl.GitOwner)
+	switch clctrl.CloudProvider {
+	case "k3d":
+		clctrl.ProviderConfig = k3d.GetConfig(clctrl.GitProvider, clctrl.GitOwner)
+	case "civo":
+		clctrl.ProviderConfig = civo.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
+	}
 
 	// Write cluster record if it doesn't exist
 	cl := types.Cluster{
 		ID:                    primitive.NewObjectID(),
+		AlertsEmail:           clctrl.AlertsEmail,
 		ClusterName:           clctrl.ClusterName,
 		CloudProvider:         clctrl.CloudProvider,
 		CloudRegion:           clctrl.CloudRegion,
@@ -164,6 +186,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		GitlabOwnerGroupID:    clctrl.GitlabOwnerGroupID,
 		AtlantisWebhookSecret: clctrl.AtlantisWebhookSecret,
 		KubefirstTeam:         clctrl.KubefirstTeam,
+		CivoToken:             clctrl.CivoToken,
 	}
 	err = clctrl.MdbCl.InsertCluster(cl)
 	if err != nil {
@@ -181,4 +204,16 @@ func (clctrl *ClusterController) GetCurrentClusterRecord() (types.Cluster, error
 	}
 
 	return cl, nil
+}
+
+// ParseProviderConfig
+func (clctrl *ClusterController) ParseProviderConfig(provider string) interface{} {
+	switch provider {
+	case "k3d":
+		return clctrl.ProviderConfig.(k3d.K3dConfig)
+	case "civo":
+		return clctrl.ProviderConfig.(*civo.CivoConfig)
+	}
+
+	return nil
 }

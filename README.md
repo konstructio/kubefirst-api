@@ -20,16 +20,16 @@ make updateswagger
 
 ## Swagger UI
 
-When the app is running, the UI is available via http://:8080/swagger/index.html.
+When the app is running, the UI is available via http://:8081/swagger/index.html.
 
 ## Running Locally
 
-The API can be run locally for testing. The api is available at `:8080/api/v1`.
+The API can be run locally for testing. The api is available at `:8081/api/v1`.
 
 ## Creating a Cluster
 
 This is in active development. At this time, only `k3d` is supported:
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/cluster/my-cluster -H "Content-Type: application/json" -d '{"admin_email": "scott@kubeshop.io", "cloud_provider": "k3d", "cloud_region": "us-east-1", "domain_name": "your-dns.io", "git_owner": "your-dns-io", "git_provider": "github", "git_token": "ghp_...", "type": "mgmt"}'
+curl -X POST http://localhost:8081/api/v1/cluster/my-cluster -H "Content-Type: application/json" -d '{"admin_email": "scott@kubeshop.io", "cloud_provider": "k3d", "cloud_region": "us-east-1", "domain_name": "your-dns.io", "git_owner": "your-dns-io", "git_provider": "github", "git_token": "ghp_...", "type": "mgmt"}'
 ```

@@ -12,7 +12,9 @@ import (
 	"strconv"
 	"strings"
 
+	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	"github.com/kubefirst/runtime/pkg"
+	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/k3d"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/terraform"
@@ -27,12 +29,21 @@ func (clctrl *ClusterController) InitializeVault() error {
 	}
 
 	if !cl.VaultInitializedCheck {
-		kcfg := k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		var kcfg *k8s.KubernetesClient
+		var vaultHandlerPath string
+
+		switch clctrl.CloudProvider {
+		case "k3d":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
+			vaultHandlerPath = "github.com:kubefirst/manifests.git/vault-handler/replicas-1"
+		case "civo":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
+			vaultHandlerPath = "github.com:kubefirst/manifests.git/vault-handler/replicas-3"
+		}
+
 		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricVaultInitializationStarted, "")
 
 		// Initialize and unseal Vault
-		vaultHandlerPath := "github.com:kubefirst/manifests.git/vault-handler/replicas-1"
-
 		// Build and apply manifests
 		yamlData, err := kcfg.KustomizeBuild(vaultHandlerPath)
 		if err != nil {
@@ -56,7 +67,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 		if err != nil {
 			msg := fmt.Sprintf("could not run vault unseal job: %s", err)
 			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricVaultInitializationFailed, msg)
-			log.Fatal(msg)
+			log.Error(msg)
 		}
 
 		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricVaultInitializationCompleted, "")
@@ -78,7 +89,15 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 	}
 
 	if !cl.VaultTerraformApplyCheck {
-		kcfg := k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		var kcfg *k8s.KubernetesClient
+
+		switch clctrl.CloudProvider {
+		case "k3d":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
+		case "civo":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
+		}
+
 		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricVaultTerraformApplyStarted, "")
 
 		var vaultRootToken string
@@ -89,53 +108,66 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 
 		vaultRootToken = secData["root-token"]
 
-		kubernetesInClusterAPIService, err := k8s.ReadService(clctrl.ProviderConfig.Kubeconfig, "default", "kubernetes")
-		if err != nil {
-			log.Errorf("error looking up kubernetes api server service: %s")
-			return err
-		}
-
 		tfEnvs := map[string]string{}
 		var usernamePasswordString, base64DockerAuth string
 
-		if clctrl.GitProvider == "gitlab" {
-			registryAuth, err := clctrl.ContainerRegistryAuth()
-			if err != nil {
-				return err
+		switch clctrl.CloudProvider {
+		case "k3d":
+			if clctrl.GitProvider == "gitlab" {
+				registryAuth, err := clctrl.ContainerRegistryAuth()
+				if err != nil {
+					return err
+				}
+
+				usernamePasswordString = fmt.Sprintf("%s:%s", "container-registry-auth", registryAuth)
+				base64DockerAuth = base64.StdEncoding.EncodeToString([]byte(usernamePasswordString))
+
+				tfEnvs["TF_VAR_container_registry_auth"] = registryAuth
+				tfEnvs["TF_VAR_owner_group_id"] = strconv.Itoa(clctrl.GitlabOwnerGroupID)
+			} else {
+				usernamePasswordString = fmt.Sprintf("%s:%s", clctrl.GitUser, clctrl.GitToken)
+				base64DockerAuth = base64.StdEncoding.EncodeToString([]byte(usernamePasswordString))
 			}
-
-			usernamePasswordString = fmt.Sprintf("%s:%s", "container-registry-auth", registryAuth)
-			base64DockerAuth = base64.StdEncoding.EncodeToString([]byte(usernamePasswordString))
-
-			tfEnvs["TF_VAR_container_registry_auth"] = registryAuth
-			tfEnvs["TF_VAR_owner_group_id"] = strconv.Itoa(clctrl.GitlabOwnerGroupID)
-		} else {
-			usernamePasswordString = fmt.Sprintf("%s:%s", clctrl.GitUser, clctrl.GitToken)
-			base64DockerAuth = base64.StdEncoding.EncodeToString([]byte(usernamePasswordString))
-
 		}
 
 		log.Info("configuring vault with terraform")
 
-		tfEnvs["TF_VAR_email_address"] = "your@email.com"
-		tfEnvs[fmt.Sprintf("TF_VAR_%s_token", clctrl.GitProvider)] = clctrl.GitToken
-		tfEnvs["TF_VAR_vault_addr"] = k3d.VaultPortForwardURL
-		tfEnvs["TF_VAR_b64_docker_auth"] = base64DockerAuth
-		tfEnvs["TF_VAR_vault_token"] = vaultRootToken
-		tfEnvs["VAULT_ADDR"] = k3d.VaultPortForwardURL
-		tfEnvs["VAULT_TOKEN"] = vaultRootToken
-		tfEnvs["TF_VAR_atlantis_repo_webhook_secret"] = clctrl.AtlantisWebhookSecret
-		tfEnvs["TF_VAR_kbot_ssh_private_key"] = cl.PrivateKey
-		tfEnvs["TF_VAR_kbot_ssh_public_key"] = cl.PublicKey
-		tfEnvs["TF_VAR_kubernetes_api_endpoint"] = fmt.Sprintf("https://%s", kubernetesInClusterAPIService.Spec.ClusterIP)
-		tfEnvs[fmt.Sprintf("%s_OWNER", strings.ToUpper(clctrl.GitProvider))] = clctrl.GitOwner
-		tfEnvs["AWS_ACCESS_KEY_ID"] = pkg.MinioDefaultUsername
-		tfEnvs["AWS_SECRET_ACCESS_KEY"] = pkg.MinioDefaultPassword
-		tfEnvs["TF_VAR_aws_access_key_id"] = pkg.MinioDefaultUsername
-		tfEnvs["TF_VAR_aws_secret_access_key"] = pkg.MinioDefaultPassword
-		// tfEnvs["TF_LOG"] = "DEBUG"
+		var tfEntrypoint string
 
-		tfEntrypoint := clctrl.ProviderConfig.GitopsDir + "/terraform/vault"
+		switch clctrl.CloudProvider {
+		case "k3d":
+			kubernetesInClusterAPIService, err := k8s.ReadService(clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig, "default", "kubernetes")
+			if err != nil {
+				log.Errorf("error looking up kubernetes api server service: %s")
+				return err
+			}
+
+			tfEnvs["TF_VAR_email_address"] = "your@email.com"
+			tfEnvs[fmt.Sprintf("TF_VAR_%s_token", clctrl.GitProvider)] = clctrl.GitToken
+			tfEnvs["TF_VAR_vault_addr"] = k3d.VaultPortForwardURL
+			tfEnvs["TF_VAR_b64_docker_auth"] = base64DockerAuth
+			tfEnvs["TF_VAR_vault_token"] = vaultRootToken
+			tfEnvs["VAULT_ADDR"] = k3d.VaultPortForwardURL
+			tfEnvs["VAULT_TOKEN"] = vaultRootToken
+			tfEnvs["TF_VAR_atlantis_repo_webhook_secret"] = clctrl.AtlantisWebhookSecret
+			tfEnvs["TF_VAR_kbot_ssh_private_key"] = cl.PrivateKey
+			tfEnvs["TF_VAR_kbot_ssh_public_key"] = cl.PublicKey
+			tfEnvs["TF_VAR_kubernetes_api_endpoint"] = fmt.Sprintf("https://%s", kubernetesInClusterAPIService.Spec.ClusterIP)
+			tfEnvs[fmt.Sprintf("%s_OWNER", strings.ToUpper(clctrl.GitProvider))] = clctrl.GitOwner
+			tfEnvs["AWS_ACCESS_KEY_ID"] = pkg.MinioDefaultUsername
+			tfEnvs["AWS_SECRET_ACCESS_KEY"] = pkg.MinioDefaultPassword
+			tfEnvs["TF_VAR_aws_access_key_id"] = pkg.MinioDefaultUsername
+			tfEnvs["TF_VAR_aws_secret_access_key"] = pkg.MinioDefaultPassword
+			// tfEnvs["TF_LOG"] = "DEBUG"
+
+			tfEntrypoint = clctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir + "/terraform/vault"
+		case "civo":
+			tfEnvs["TF_VAR_b64_docker_auth"] = base64DockerAuth
+			tfEnvs = civoext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, &cl)
+			tfEntrypoint = clctrl.ProviderConfig.(*civo.CivoConfig).GitopsDir + "/terraform/vault"
+		}
+
 		err = terraform.InitApplyAutoApprove(false, tfEntrypoint, tfEnvs)
 		if err != nil {
 			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricVaultTerraformApplyFailed, err.Error())
@@ -150,12 +182,20 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 			return err
 		}
 	}
+
 	return nil
 }
 
 // WaitForVault
 func (clctrl *ClusterController) WaitForVault() error {
-	kcfg := k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+	var kcfg *k8s.KubernetesClient
+
+	switch clctrl.CloudProvider {
+	case "k3d":
+		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
+	case "civo":
+		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
+	}
 
 	vaultStatefulSet, err := k8s.ReturnStatefulSetObject(
 		kcfg.Clientset,

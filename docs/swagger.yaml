@@ -12,6 +12,11 @@ definitions:
           type: string
         type: array
     type: object
+  types.CivoDomainValidationRequest:
+    properties:
+      cloud_region:
+        type: string
+    type: object
   types.CivoDomainValidationResponse:
     properties:
       validated:
@@ -19,6 +24,8 @@ definitions:
     type: object
   types.Cluster:
     properties:
+      alertsEmail:
+        type: string
       argoCDAuthToken:
         type: string
       argoCDCreateRegistryCheck:
@@ -32,6 +39,10 @@ definitions:
       argoCDUsername:
         type: string
       atlantisWebhookSecret:
+        type: string
+      atlantisWebhookURL:
+        type: string
+      civoToken:
         type: string
       cloudProvider:
         type: string
@@ -49,6 +60,8 @@ definitions:
         type: boolean
       clusterType:
         type: string
+      domainLivenessCheck:
+        type: boolean
       domainName:
         type: string
       gitCredentialsCheck:
@@ -90,6 +103,14 @@ definitions:
         type: string
       publicKeys:
         type: string
+      stateStoreCreateCheck:
+        type: boolean
+      stateStoreCredentials:
+        $ref: '#/definitions/types.StateStoreCredentials'
+      stateStoreCredsCheck:
+        type: boolean
+      stateStoreDetails:
+        $ref: '#/definitions/types.StateStoreDetails'
       usersTerraformApplyCheck:
         type: boolean
       vaultInitializedCheck:
@@ -155,6 +176,24 @@ definitions:
     properties:
       message:
         example: success
+        type: string
+    type: object
+  types.StateStoreCredentials:
+    properties:
+      accessKeyID:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      secretAccessKey:
+        type: string
+    type: object
+  types.StateStoreDetails:
+    properties:
+      id:
+        type: string
+      name:
         type: string
     type: object
 host: localhost:port
@@ -224,6 +263,12 @@ paths:
         name: domain
         required: true
         type: string
+      - description: Domain validation request in JSON format
+        in: body
+        name: settings
+        required: true
+        schema:
+          $ref: '#/definitions/types.CivoDomainValidationRequest'
       produces:
       - application/json
       responses:

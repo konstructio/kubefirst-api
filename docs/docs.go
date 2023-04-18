@@ -105,6 +105,15 @@ const docTemplate = `{
                         "name": "domain",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Domain validation request in JSON format",
+                        "name": "settings",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.CivoDomainValidationRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -315,6 +324,14 @@ const docTemplate = `{
                 }
             }
         },
+        "types.CivoDomainValidationRequest": {
+            "type": "object",
+            "properties": {
+                "cloud_region": {
+                    "type": "string"
+                }
+            }
+        },
         "types.CivoDomainValidationResponse": {
             "type": "object",
             "properties": {
@@ -326,6 +343,9 @@ const docTemplate = `{
         "types.Cluster": {
             "type": "object",
             "properties": {
+                "alertsEmail": {
+                    "type": "string"
+                },
                 "argoCDAuthToken": {
                     "type": "string"
                 },
@@ -345,6 +365,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "atlantisWebhookSecret": {
+                    "type": "string"
+                },
+                "atlantisWebhookURL": {
+                    "type": "string"
+                },
+                "civoToken": {
                     "type": "string"
                 },
                 "cloudProvider": {
@@ -370,6 +396,9 @@ const docTemplate = `{
                 },
                 "clusterType": {
                     "type": "string"
+                },
+                "domainLivenessCheck": {
+                    "type": "boolean"
                 },
                 "domainName": {
                     "type": "string"
@@ -431,6 +460,18 @@ const docTemplate = `{
                 },
                 "publicKeys": {
                     "type": "string"
+                },
+                "stateStoreCreateCheck": {
+                    "type": "boolean"
+                },
+                "stateStoreCredentials": {
+                    "$ref": "#/definitions/types.StateStoreCredentials"
+                },
+                "stateStoreCredsCheck": {
+                    "type": "boolean"
+                },
+                "stateStoreDetails": {
+                    "$ref": "#/definitions/types.StateStoreDetails"
                 },
                 "usersTerraformApplyCheck": {
                     "type": "boolean"
@@ -524,6 +565,34 @@ const docTemplate = `{
                 "message": {
                     "type": "string",
                     "example": "success"
+                }
+            }
+        },
+        "types.StateStoreCredentials": {
+            "type": "object",
+            "properties": {
+                "accessKeyID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "secretAccessKey": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.StateStoreDetails": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         }

@@ -11,7 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/types"
-	civointernal "github.com/kubefirst/runtime/pkg/civo"
+	"github.com/kubefirst/runtime/pkg/civo"
 )
 
 // GetValidateCivoDomain godoc
@@ -21,6 +21,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param	domain	path	string	true	"Domain name, no trailing dot"
+// @Param	settings	body	types.CivoDomainValidationRequest	true	"Domain validation request in JSON format"
 // @Success 200 {object} types.CivoDomainValidationResponse
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /civo/domain/validate/:domain [get]
@@ -34,8 +35,25 @@ func GetValidateCivoDomain(c *gin.Context) {
 		return
 	}
 
+	var settings types.CivoDomainValidationRequest
+	err := c.Bind(&settings)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+
 	// Run validate func
-	validated := civointernal.TestDomainLiveness(false, domainName, "", "")
+	domainId, err := civo.GetDNSInfo(domainName, settings.CloudRegion)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+
+	validated := civo.TestDomainLiveness(false, domainName, domainId, settings.CloudRegion)
 	if !validated {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: "domain validation failed",

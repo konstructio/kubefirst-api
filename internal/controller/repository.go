@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	gitssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k3d"
 	log "github.com/sirupsen/logrus"
@@ -25,22 +26,44 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 	}
 
 	if !cl.GitopsReadyCheck {
-		err := k3d.PrepareGitRepositories(
-			clctrl.GitProvider,
-			clctrl.ClusterName,
-			clctrl.ClusterType,
-			clctrl.ProviderConfig.DestinationGitopsRepoGitURL,
-			clctrl.ProviderConfig.GitopsDir,
-			clctrl.GitopsTemplateBranchFlag,
-			clctrl.GitopsTemplateURLFlag,
-			clctrl.ProviderConfig.DestinationMetaphorRepoGitURL,
-			clctrl.ProviderConfig.K1Dir,
-			clctrl.CreateTokens("gitops").(*k3d.GitopsTokenValues),
-			clctrl.ProviderConfig.MetaphorDir,
-			clctrl.CreateTokens("metaphor").(*k3d.MetaphorTokenValues),
-		)
-		if err != nil {
-			return err
+		switch clctrl.CloudProvider {
+		case "k3d":
+			err := k3d.PrepareGitRepositories(
+				clctrl.GitProvider,
+				clctrl.ClusterName,
+				clctrl.ClusterType,
+				clctrl.ProviderConfig.(k3d.K3dConfig).DestinationGitopsRepoGitURL,
+				clctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir,
+				clctrl.GitopsTemplateBranchFlag,
+				clctrl.GitopsTemplateURLFlag,
+				clctrl.ProviderConfig.(k3d.K3dConfig).DestinationMetaphorRepoGitURL,
+				clctrl.ProviderConfig.(k3d.K3dConfig).K1Dir,
+				clctrl.CreateTokens("gitops").(*k3d.GitopsTokenValues),
+				clctrl.ProviderConfig.(k3d.K3dConfig).MetaphorDir,
+				clctrl.CreateTokens("metaphor").(*k3d.MetaphorTokenValues),
+			)
+			if err != nil {
+				return err
+			}
+		case "civo":
+			err = civo.PrepareGitRepositories(
+				clctrl.GitProvider,
+				clctrl.ClusterName,
+				clctrl.ClusterType,
+				CivoDestinationGitopsRepoGitURL,
+				clctrl.ProviderConfig.(*civo.CivoConfig).GitopsDir,
+				clctrl.GitopsTemplateBranchFlag,
+				clctrl.GitopsTemplateURLFlag,
+				CivoDestinationMetaphorRepoGitURL,
+				clctrl.ProviderConfig.(*civo.CivoConfig).K1Dir,
+				clctrl.CreateTokens("gitops").(*civo.GitOpsDirectoryValues),
+				clctrl.ProviderConfig.(*civo.CivoConfig).MetaphorDir,
+				clctrl.CreateTokens("metaphor").(*civo.MetaphorTokenValues),
+				civo.GetDomainApexContent(clctrl.DomainName),
+			)
+			if err != nil {
+				return err
+			}
 		}
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "gitops_ready_check", true)
@@ -65,15 +88,30 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			log.Infof("generate public keys failed: %s\n", err.Error())
 		}
 
-		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitopsRepoPushStarted, "")
-		gitopsRepo, err := git.PlainOpen(clctrl.ProviderConfig.GitopsDir)
-		if err != nil {
-			log.Infof("error opening repo at: %s", clctrl.ProviderConfig.GitopsDir)
+		var gitopsDir, metaphorDir, destinationGitopsRepoGitURL, destinationMetaphorRepoGitURL string
+
+		switch clctrl.CloudProvider {
+		case "k3d":
+			gitopsDir = clctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir
+			metaphorDir = clctrl.ProviderConfig.(k3d.K3dConfig).MetaphorDir
+			destinationGitopsRepoGitURL = clctrl.ProviderConfig.(k3d.K3dConfig).DestinationGitopsRepoGitURL
+			destinationMetaphorRepoGitURL = clctrl.ProviderConfig.(k3d.K3dConfig).DestinationMetaphorRepoGitURL
+		case "civo":
+			gitopsDir = clctrl.ProviderConfig.(*civo.CivoConfig).GitopsDir
+			metaphorDir = clctrl.ProviderConfig.(*civo.CivoConfig).MetaphorDir
+			destinationGitopsRepoGitURL = clctrl.ProviderConfig.(*civo.CivoConfig).DestinationGitopsRepoGitURL
+			destinationMetaphorRepoGitURL = clctrl.ProviderConfig.(*civo.CivoConfig).DestinationMetaphorRepoGitURL
 		}
 
-		metaphorRepo, err := git.PlainOpen(clctrl.ProviderConfig.MetaphorDir)
+		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitopsRepoPushStarted, "")
+		gitopsRepo, err := git.PlainOpen(gitopsDir)
 		if err != nil {
-			log.Infof("error opening repo at: %s", clctrl.ProviderConfig.MetaphorDir)
+			log.Infof("error opening repo at: %s", gitopsDir)
+		}
+
+		metaphorRepo, err := git.PlainOpen(metaphorDir)
+		if err != nil {
+			log.Infof("error opening repo at: %s", metaphorDir)
 		}
 
 		// For GitLab, we currently need to add an ssh key to the authenticating user
@@ -84,10 +122,10 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			}
 			keys, err := gitlabClient.GetUserSSHKeys()
 			if err != nil {
-				log.Fatalf("unable to check for ssh keys in gitlab: %s", err.Error())
+				log.Error("unable to check for ssh keys in gitlab: %s", err.Error())
 			}
 
-			var keyName = "kubefirst-k3d-ssh-key"
+			var keyName = "kbot-ssh-key"
 			var keyFound bool = false
 			for _, key := range keys {
 				if key.Title == keyName {
@@ -95,7 +133,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 						log.Infof("ssh key %s already exists and key is up to date, continuing", keyName)
 						keyFound = true
 					} else {
-						log.Fatalf("ssh key %s already exists and key data has drifted - please remove before continuing", keyName)
+						log.Errorf("ssh key %s already exists and key data has drifted - please remove before continuing", keyName)
 					}
 				}
 			}
@@ -103,7 +141,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 				log.Infof("creating ssh key %s...", keyName)
 				err := gitlabClient.AddUserSSHKey(keyName, clctrl.PublicKey)
 				if err != nil {
-					log.Fatalf("error adding ssh key %s: %s", keyName, err.Error())
+					log.Errorf("error adding ssh key %s: %s", keyName, err.Error())
 				}
 			}
 		}
@@ -116,9 +154,9 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			},
 		)
 		if err != nil {
-			msg := fmt.Sprintf("error pushing detokenized gitops repository to remote %s: %s", clctrl.ProviderConfig.DestinationGitopsRepoGitURL, err)
+			msg := fmt.Sprintf("error pushing detokenized gitops repository to remote %s: %s", destinationGitopsRepoGitURL, err)
 			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitopsRepoPushFailed, msg)
-			log.Fatal(msg)
+			log.Error(msg)
 		}
 
 		// push metaphor repo to remote
@@ -129,9 +167,9 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			},
 		)
 		if err != nil {
-			msg := fmt.Sprintf("error pushing detokenized metaphor repository to remote %s: %s", clctrl.ProviderConfig.DestinationMetaphorRepoGitURL, err)
+			msg := fmt.Sprintf("error pushing detokenized metaphor repository to remote %s: %s", destinationMetaphorRepoGitURL, err)
 			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitopsRepoPushFailed, msg)
-			log.Fatal(msg)
+			log.Error(msg)
 		}
 
 		log.Infof("successfully pushed gitops and metaphor repositories to git@%s/%s", clctrl.GitHost, clctrl.GitOwner)

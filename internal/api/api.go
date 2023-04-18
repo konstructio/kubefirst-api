@@ -38,7 +38,7 @@ func SetupRouter() *gin.Engine {
 		// Cluster
 		v1.GET("/cluster", routes.GetClusters)
 		v1.GET("/cluster/:cluster_name", routes.GetCluster)
-		//v1.DELETE("/cluster/:cluster_name", routes.DeleteCluster)
+		v1.DELETE("/cluster/:cluster_name", routes.DeleteCluster)
 		v1.POST("/cluster/:cluster_name", routes.PostCreateCluster)
 
 		// AWS
