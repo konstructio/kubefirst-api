@@ -11,10 +11,14 @@ import (
 	"strings"
 
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
+	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
+	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	"github.com/kubefirst/runtime/pkg/civo"
+	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/k3d"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/terraform"
+	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -33,6 +37,10 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
 		case "civo":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
+		case "digitalocean":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig)
+		case "vultr":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
 		}
 
 		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricUsersTerraformApplyStarted, "")
@@ -64,6 +72,14 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, &cl)
 			tfEnvs = civoext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEntrypoint = clctrl.ProviderConfig.(*civo.CivoConfig).GitopsDir + "/terraform/users"
+		case "digitalocean":
+			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, &cl)
+			tfEnvs = digitaloceanext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEntrypoint = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).GitopsDir + "/terraform/users"
+		case "vultr":
+			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
+			tfEnvs = vultrext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEntrypoint = clctrl.ProviderConfig.(*vultr.VultrConfig).GitopsDir + "/terraform/users"
 		}
 
 		err = terraform.InitApplyAutoApprove(false, tfEntrypoint, tfEnvs)

@@ -13,8 +13,10 @@ import (
 	"github.com/go-git/go-git/v5"
 	gitssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/kubefirst/runtime/pkg/civo"
+	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k3d"
+	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -64,6 +66,44 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 			if err != nil {
 				return err
 			}
+		case "digitalocean":
+			err = digitalocean.PrepareGitRepositories(
+				clctrl.GitProvider,
+				clctrl.ClusterName,
+				clctrl.ClusterType,
+				DigitaloceanDestinationGitopsRepoGitURL,
+				clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).GitopsDir,
+				clctrl.GitopsTemplateBranchFlag,
+				clctrl.GitopsTemplateURLFlag,
+				DigitaloceanDestinationMetaphorRepoGitURL,
+				clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).K1Dir,
+				clctrl.CreateTokens("gitops").(*digitalocean.GitOpsDirectoryValues),
+				clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).MetaphorDir,
+				clctrl.CreateTokens("metaphor").(*digitalocean.MetaphorTokenValues),
+				civo.GetDomainApexContent(clctrl.DomainName),
+			)
+			if err != nil {
+				return err
+			}
+		case "vultr":
+			err = vultr.PrepareGitRepositories(
+				clctrl.GitProvider,
+				clctrl.ClusterName,
+				clctrl.ClusterType,
+				VultrDestinationGitopsRepoGitURL,
+				clctrl.ProviderConfig.(*vultr.VultrConfig).GitopsDir,
+				clctrl.GitopsTemplateBranchFlag,
+				clctrl.GitopsTemplateURLFlag,
+				VultrDestinationMetaphorRepoGitURL,
+				clctrl.ProviderConfig.(*vultr.VultrConfig).K1Dir,
+				clctrl.CreateTokens("gitops").(*vultr.GitOpsDirectoryValues),
+				clctrl.ProviderConfig.(*vultr.VultrConfig).MetaphorDir,
+				clctrl.CreateTokens("metaphor").(*vultr.MetaphorTokenValues),
+				civo.GetDomainApexContent(clctrl.DomainName),
+			)
+			if err != nil {
+				return err
+			}
 		}
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "gitops_ready_check", true)
@@ -101,6 +141,16 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			metaphorDir = clctrl.ProviderConfig.(*civo.CivoConfig).MetaphorDir
 			destinationGitopsRepoGitURL = clctrl.ProviderConfig.(*civo.CivoConfig).DestinationGitopsRepoGitURL
 			destinationMetaphorRepoGitURL = clctrl.ProviderConfig.(*civo.CivoConfig).DestinationMetaphorRepoGitURL
+		case "digitalocean":
+			gitopsDir = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).GitopsDir
+			metaphorDir = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).MetaphorDir
+			destinationGitopsRepoGitURL = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).DestinationGitopsRepoGitURL
+			destinationMetaphorRepoGitURL = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).DestinationMetaphorRepoGitURL
+		case "vultr":
+			gitopsDir = clctrl.ProviderConfig.(*vultr.VultrConfig).GitopsDir
+			metaphorDir = clctrl.ProviderConfig.(*vultr.VultrConfig).MetaphorDir
+			destinationGitopsRepoGitURL = clctrl.ProviderConfig.(*vultr.VultrConfig).DestinationGitopsRepoGitURL
+			destinationMetaphorRepoGitURL = clctrl.ProviderConfig.(*vultr.VultrConfig).DestinationMetaphorRepoGitURL
 		}
 
 		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitopsRepoPushStarted, "")
