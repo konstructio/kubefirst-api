@@ -16,9 +16,11 @@ import (
 	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
 	"github.com/kubefirst/runtime/pkg/civo"
+	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/helpers"
 	"github.com/kubefirst/runtime/pkg/k3d"
 	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -53,9 +55,30 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricArgoCDInstallFailed, err.Error())
 				return err
 			}
-
 		case "civo":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
+			argoCDInstallPath := fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
+			log.Infof("installing argocd")
+
+			err = argocd.ApplyArgoCDKustomize(kcfg.Clientset, argoCDInstallPath)
+			if err != nil {
+				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricArgoCDInstallFailed, err.Error())
+				return err
+			}
+			//telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricArgoCDInstallCompleted, "")
+		case "digitalocean":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig)
+			argoCDInstallPath := fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
+			log.Infof("installing argocd")
+
+			err = argocd.ApplyArgoCDKustomize(kcfg.Clientset, argoCDInstallPath)
+			if err != nil {
+				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricArgoCDInstallFailed, err.Error())
+				return err
+			}
+			//telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricArgoCDInstallCompleted, "")
+		case "vultr":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
 			argoCDInstallPath := fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
 			log.Infof("installing argocd")
 
@@ -101,6 +124,10 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
 		case "civo":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
+		case "digitalocean":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig)
+		case "vultr":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
 		}
 
 		log.Info("Setting argocd username and password credentials")
@@ -152,7 +179,7 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 					return err
 				}
 			}
-		case "civo":
+		case "civo", "digitalocean", "vultr":
 			argoCDStopChannel := make(chan struct{}, 1)
 			defer func() {
 				close(argoCDStopChannel)
@@ -206,6 +233,10 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
 		case "civo":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
+		case "digitalocean":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig)
+		case "vultr":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
 		}
 
 		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricCreateRegistryStarted, "")
@@ -226,6 +257,16 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		case "civo":
 			registryApplicationObject = argocd.GetArgoCDApplicationObject(
 				clctrl.ProviderConfig.(*civo.CivoConfig).DestinationGitopsRepoGitURL,
+				fmt.Sprintf("registry/%s", clctrl.ClusterName),
+			)
+		case "digitalocean":
+			registryApplicationObject = argocd.GetArgoCDApplicationObject(
+				clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).DestinationGitopsRepoGitURL,
+				fmt.Sprintf("registry/%s", clctrl.ClusterName),
+			)
+		case "vultr":
+			registryApplicationObject = argocd.GetArgoCDApplicationObject(
+				clctrl.ProviderConfig.(*vultr.VultrConfig).DestinationGitopsRepoGitURL,
 				fmt.Sprintf("registry/%s", clctrl.ClusterName),
 			)
 		}

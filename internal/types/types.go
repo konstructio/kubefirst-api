@@ -110,8 +110,9 @@ type StateStoreCredentials struct {
 
 // StateStoreDetails
 type StateStoreDetails struct {
-	Name string `bson:"name"`
-	ID   string `bson:"id"`
+	Name     string `bson:"name"`
+	ID       string `bson:"id"`
+	Hostname string `bson:"hostname"`
 }
 
 // JSONFailureResponse describes a failure message returned by the API

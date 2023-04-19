@@ -15,11 +15,13 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/civo"
+	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/github"
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/handlers"
 	"github.com/kubefirst/runtime/pkg/k3d"
 	"github.com/kubefirst/runtime/pkg/services"
+	"github.com/kubefirst/runtime/pkg/vultr"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -33,7 +35,9 @@ type ClusterController struct {
 	AlertsEmail   string
 
 	// tokens
-	CivoToken string
+	CivoToken         string
+	DigitalOceanToken string
+	VultrToken        string
 
 	// configs
 	ProviderConfig interface{}
@@ -97,6 +101,10 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	switch clctrl.CloudProvider {
 	case "civo":
 		clctrl.CivoToken = os.Getenv("CIVO_TOKEN")
+	case "digitalocean":
+		clctrl.DigitalOceanToken = os.Getenv("DO_TOKEN")
+	case "vultr":
+		clctrl.VultrToken = os.Getenv("VULTR_API_KEY")
 	}
 
 	clctrl.Repositories = []string{"gitops", "metaphor"}
@@ -166,6 +174,10 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		clctrl.ProviderConfig = k3d.GetConfig(clctrl.GitProvider, clctrl.GitOwner)
 	case "civo":
 		clctrl.ProviderConfig = civo.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
+	case "digitalocean":
+		clctrl.ProviderConfig = digitalocean.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
+	case "vultr":
+		clctrl.ProviderConfig = vultr.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
 	}
 
 	// Write cluster record if it doesn't exist
@@ -204,16 +216,4 @@ func (clctrl *ClusterController) GetCurrentClusterRecord() (types.Cluster, error
 	}
 
 	return cl, nil
-}
-
-// ParseProviderConfig
-func (clctrl *ClusterController) ParseProviderConfig(provider string) interface{} {
-	switch provider {
-	case "k3d":
-		return clctrl.ProviderConfig.(k3d.K3dConfig)
-	case "civo":
-		return clctrl.ProviderConfig.(*civo.CivoConfig)
-	}
-
-	return nil
 }

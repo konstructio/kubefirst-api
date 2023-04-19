@@ -4,32 +4,31 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package civo
+package vultr
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
-	"github.com/civo/civogo"
-	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
+	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/pkg/argocd"
-	"github.com/kubefirst/runtime/pkg/civo"
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/terraform"
+	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 )
 
-// DeleteCivoCluster
-func DeleteCivoCluster(cl *types.Cluster) error {
-	// Instantiate civo config
-	config := civo.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner)
+// DeleteVultrCluster
+func DeleteVultrCluster(cl *types.Cluster) error {
+	// Instantiate vultr config
+	config := vultr.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner)
 	mdbcl := &db.MongoDBClient{}
 	err := mdbcl.InitDatabase()
 	if err != nil {
@@ -43,8 +42,8 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 
 			tfEntrypoint := config.GitopsDir + "/terraform/github"
 			tfEnvs := map[string]string{}
-			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, cl)
-			tfEnvs = civoext.GetGithubTerraformEnvs(tfEnvs, cl)
+			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, cl)
+			tfEnvs = vultrext.GetGithubTerraformEnvs(tfEnvs, cl)
 			err := terraform.InitDestroyAutoApprove(false, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Printf("error executing terraform destroy %s", tfEntrypoint)
@@ -96,8 +95,8 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 
 			tfEntrypoint := config.GitopsDir + "/terraform/gitlab"
 			tfEnvs := map[string]string{}
-			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, cl)
-			tfEnvs = civoext.GetGitlabTerraformEnvs(tfEnvs, gitlabClient.ParentGroupID, cl)
+			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, cl)
+			tfEnvs = vultrext.GetGitlabTerraformEnvs(tfEnvs, gitlabClient.ParentGroupID, cl)
 			err = terraform.InitDestroyAutoApprove(false, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Infof("error executing terraform destroy %s", tfEntrypoint)
@@ -113,26 +112,44 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 		}
 	}
 
+	// Should be a "cluster was created" check
+	if cl.CloudTerraformApplyCheck {
+		kcfg := k8s.CreateKubeConfig(false, config.Kubeconfig)
+
+		// Remove applications with external dependencies
+		removeArgoCDApps := []string{
+			"ingress-nginx-components",
+			"ingress-nginx",
+			"argo-components",
+			"argo",
+			"atlantis-components",
+			"atlantis",
+			"vault-components",
+			"vault",
+		}
+		err = argocd.ArgoCDApplicationCleanup(kcfg.Clientset, removeArgoCDApps)
+		if err != nil {
+			log.Errorf("encountered error during argocd application cleanup: %s")
+		}
+		// Pause before cluster destroy to prevent a race condition
+		log.Info("waiting for argocd application deletion to complete...")
+		time.Sleep(time.Second * 20)
+	}
+
+	//GetKubernetesAssociatedBlockStorage
+	vultrConf := vultr.VultrConfiguration{
+		Client:  vultr.NewVultr(),
+		Context: context.Background(),
+	}
+	blockStorage, err := vultrConf.GetKubernetesAssociatedBlockStorage("", true)
+	if err != nil {
+		return err
+	}
+
 	if cl.CloudTerraformApplyCheck || cl.CloudTerraformApplyFailedCheck {
 		kcfg := k8s.CreateKubeConfig(false, config.Kubeconfig)
 
-		log.Info("destroying civo resources with terraform")
-
-		client, err := civogo.NewClient(os.Getenv("CIVO_TOKEN"), cl.CloudRegion)
-		if err != nil {
-			return fmt.Errorf(err.Error())
-		}
-
-		cluster, err := client.FindKubernetesCluster(cl.ClusterName)
-		if err != nil {
-			return err
-		}
-		log.Info("cluster name: " + cluster.ID)
-
-		clusterVolumes, err := client.ListVolumesForCluster(cluster.ID)
-		if err != nil {
-			return err
-		}
+		log.Info("destroying vultr resources with terraform")
 
 		// Only port-forward to ArgoCD and delete registry if ArgoCD was installed
 		if cl.ArgoCDInstallCheck {
@@ -165,7 +182,7 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 				return err
 			}
 
-			log.Infof("port-forward to argocd is available at %s", civo.ArgocdPortForwardURL)
+			log.Infof("port-forward to argocd is available at %s", vultr.ArgocdPortForwardURL)
 
 			customTransport := http.DefaultTransport.(*http.Transport).Clone()
 			customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
@@ -178,40 +195,31 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 			log.Infof("http status code %d", httpCode)
 		}
 
-		for _, vol := range clusterVolumes {
-			log.Info("removing volume with name: " + vol.Name)
-			_, err := client.DeleteVolume(vol.ID)
-			if err != nil {
-				return err
-			}
-			log.Info("volume " + vol.ID + " deleted")
-		}
-
 		// Pause before cluster destroy to prevent a race condition
-		log.Info("waiting for Civo Kubernetes cluster resource removal to finish...")
+		log.Info("waiting for vultr kubernetes cluster resource removal to finish...")
 		time.Sleep(time.Second * 10)
 
-		log.Info("destroying civo cloud resources")
-		tfEntrypoint := config.GitopsDir + "/terraform/civo"
+		log.Info("destroying vultr cloud resources")
+		tfEntrypoint := config.GitopsDir + "/terraform/vultr"
 		tfEnvs := map[string]string{}
-		tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, cl)
+		tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, cl)
 
 		switch cl.GitProvider {
 		case "github":
-			tfEnvs = civoext.GetGithubTerraformEnvs(tfEnvs, cl)
+			tfEnvs = vultrext.GetGithubTerraformEnvs(tfEnvs, cl)
 		case "gitlab":
 			gid, err := strconv.Atoi(fmt.Sprint(cl.GitlabOwnerGroupID))
 			if err != nil {
 				return fmt.Errorf("couldn't convert gitlab group id to int: %s", err)
 			}
-			tfEnvs = civoext.GetGitlabTerraformEnvs(tfEnvs, gid, cl)
+			tfEnvs = vultrext.GetGitlabTerraformEnvs(tfEnvs, gid, cl)
 		}
 		err = terraform.InitDestroyAutoApprove(false, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Printf("error executing terraform destroy %s", tfEntrypoint)
 			return err
 		}
-		log.Info("civo resources terraform destroyed")
+		log.Info("vultr resources terraform destroyed")
 
 		err = mdbcl.UpdateCluster(cl.ClusterName, "cloud_terraform_apply_check", false)
 		if err != nil {
@@ -222,6 +230,14 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	// Remove hanging volumes
+	// This fails with regularity if done too quickly
+	time.Sleep(time.Second * 45)
+	err = vultrConf.DeleteBlockStorage(blockStorage)
+	if err != nil {
+		return err
 	}
 
 	// remove ssh key provided one was created

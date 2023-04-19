@@ -15,7 +15,9 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/kubefirst-api/providers/civo"
+	"github.com/kubefirst/kubefirst-api/providers/digitalocean"
 	"github.com/kubefirst/kubefirst-api/providers/k3d"
+	"github.com/kubefirst/kubefirst-api/providers/vultr"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -58,6 +60,22 @@ func DeleteCluster(c *gin.Context) {
 	case "k3d":
 	case "civo":
 		err := civo.DeleteCivoCluster(&rec)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+	case "digitalocean":
+		err := digitalocean.DeleteDigitaloceanCluster(&rec)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+	case "vultr":
+		err := vultr.DeleteVultrCluster(&rec)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: err.Error(),
@@ -159,7 +177,6 @@ func GetClusters(c *gin.Context) {
 // PostCreateCluster handles a request to create a cluster
 func PostCreateCluster(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
-
 	if !param {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: ":cluster_name not provided",
@@ -195,6 +212,30 @@ func PostCreateCluster(c *gin.Context) {
 		})
 	case "civo":
 		err = civo.CreateCivoCluster(&clusterDefinition)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: fmt.Sprintf("%s", err),
+			})
+			return
+		}
+
+		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
+			Message: "cluster created",
+		})
+	case "digitalocean":
+		err = digitalocean.CreateDigitaloceanCluster(&clusterDefinition)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: fmt.Sprintf("%s", err),
+			})
+			return
+		}
+
+		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
+			Message: "cluster created",
+		})
+	case "vultr":
+		err = vultr.CreateVultrCluster(&clusterDefinition)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: fmt.Sprintf("%s", err),
