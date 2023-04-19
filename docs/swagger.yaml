@@ -191,6 +191,8 @@ definitions:
     type: object
   types.StateStoreDetails:
     properties:
+      hostname:
+        type: string
       id:
         type: string
       name:

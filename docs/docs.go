@@ -588,6 +588,9 @@ const docTemplate = `{
         "types.StateStoreDetails": {
             "type": "object",
             "properties": {
+                "hostname": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
