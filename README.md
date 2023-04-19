@@ -2,33 +2,46 @@
 
 Kubefirst API runtime implementation.
 
-## Updating Docs
-
-Swagger UI is generated using [gin-swagger](https://github.com/swaggo/gin-swagger). Tagged routes will generate documentation.
-
-Any time godoc defs for routes are changed, `swag init` should be run.
-
-In order to generate docs:
-
-```bash
-go install github.com/swaggo/swag/cmd/swag@latest
-```
-
-```bash
-make updateswagger
-```
-
-## Swagger UI
-
-When the app is running, the UI is available via http://:8081/swagger/index.html.
+- [kubefirst-api](#kubefirst-api)
+  - [Running Locally](#running-locally)
+  - [Prerequisites](#prerequisites)
+  - [Provider Support](#provider-support)
+  - [Creating a Cluster](#creating-a-cluster)
+    - [Civo](#civo)
+    - [Digital Ocean](#digital-ocean)
+    - [Vultr](#vultr)
+    - [Deleting a Cluster](#deleting-a-cluster)
+  - [Swagger UI](#swagger-ui)
+  - [Updating Swagger Docs](#updating-swagger-docs)
 
 ## Running Locally
 
-The API can be run locally for testing. The api is available at `:8081/api/v1`.
+The API can be run locally for testing. It can be run by using `make build` and then calling the binary in the `bin/` directory or by using `go run .`.
+
+The API is available at `:8081/api/v1` while running.
+
+## Prerequisites
+
+The API uses MongoDB for storing records.
+
+For local development, it's recommended to install [MongoDB Community Edition](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-os-x/).
+
+It is also recommended to install [MongoDB Compass](https://www.mongodb.com/try/download/atlascli).
+
+## Provider Support
+
+The following providers are available for use with the API.
+
+| Provider      | Status      | Supported Operations | Supported Git Providers |
+| ------------- | ----------- | -------------------- | ----------------------- |
+| AWS           | Unsupported |                      |                         |
+| Civo          | Beta        | Create, Delete       | GitHub                  |
+| Digital Ocean | Beta        | Create, Delete       | GitHub                  |
+| Vultr         | Beta        | Create, Delete       | GitHub                  |
 
 ## Creating a Cluster
 
-This is in active development. As such, there are limitations.
+*Note:* This is under active development. As such, there are limitations.
 
 GitHub has been tested and works. GitLab has not been tested yet so success may be spotty.
 
@@ -55,5 +68,31 @@ curl -X POST http://localhost:8081/api/v1/cluster/my-cool-cluster -H "Content-Ty
 You must have the `VULTR_API_KEY` environment variable set containing your API key.
 
 ```bash
-❯ curl -X POST http://localhost:8081/api/v1/cluster/my-cool-cluster -H "Content-Type: application/json" -d '{"admin_email": "scott@kubeshop.io", "cloud_provider": "vultr", "cloud_region": "ewr", "domain_name": "kubesecond.com", "git_owner": "your-dns-io", "git_provider": "github", "git_token": "ghp_...", "type": "mgmt"}'
+curl -X POST http://localhost:8081/api/v1/cluster/my-cool-cluster -H "Content-Type: application/json" -d '{"admin_email": "scott@kubeshop.io", "cloud_provider": "vultr", "cloud_region": "ewr", "domain_name": "kubesecond.com", "git_owner": "your-dns-io", "git_provider": "github", "git_token": "ghp_...", "type": "mgmt"}'
+```
+
+### Deleting a Cluster
+
+```bash
+curl -X DELETE http://localhost:8081/api/v1/cluster/my-cool-cluster
+```
+
+## Swagger UI
+
+When the app is running, the UI is available via http://:8081/swagger/index.html.
+
+## Updating Swagger Docs
+
+Swagger UI is generated using [gin-swagger](https://github.com/swaggo/gin-swagger). Tagged routes will generate documentation.
+
+Any time godoc defs for routes are changed, `swag init` should be run.
+
+In order to generate docs:
+
+```bash
+go install github.com/swaggo/swag/cmd/swag@latest
+```
+
+```bash
+make updateswagger
 ```
