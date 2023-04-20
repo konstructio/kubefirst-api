@@ -104,7 +104,7 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 				return err
 			}
 
-			log.Info("github resources terraform destroyed")
+			log.Info("gitlab resources terraform destroyed")
 
 			err = mdbcl.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
 			if err != nil {
@@ -114,82 +114,84 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 	}
 
 	if cl.CloudTerraformApplyCheck || cl.CloudTerraformApplyFailedCheck {
-		kcfg := k8s.CreateKubeConfig(false, config.Kubeconfig)
+		if !cl.CloudTerraformApplyFailedCheck {
+			kcfg := k8s.CreateKubeConfig(false, config.Kubeconfig)
 
-		log.Info("destroying civo resources with terraform")
+			log.Info("destroying civo resources with terraform")
 
-		client, err := civogo.NewClient(os.Getenv("CIVO_TOKEN"), cl.CloudRegion)
-		if err != nil {
-			return fmt.Errorf(err.Error())
-		}
+			client, err := civogo.NewClient(os.Getenv("CIVO_TOKEN"), cl.CloudRegion)
+			if err != nil {
+				return fmt.Errorf(err.Error())
+			}
 
-		cluster, err := client.FindKubernetesCluster(cl.ClusterName)
-		if err != nil {
-			return err
-		}
-		log.Info("cluster name: " + cluster.ID)
-
-		clusterVolumes, err := client.ListVolumesForCluster(cluster.ID)
-		if err != nil {
-			return err
-		}
-
-		// Only port-forward to ArgoCD and delete registry if ArgoCD was installed
-		if cl.ArgoCDInstallCheck {
-			log.Info("opening argocd port forward")
-			//* ArgoCD port-forward
-			argoCDStopChannel := make(chan struct{}, 1)
-			defer func() {
-				close(argoCDStopChannel)
-			}()
-			k8s.OpenPortForwardPodWrapper(
-				kcfg.Clientset,
-				kcfg.RestConfig,
-				"argocd-server",
-				"argocd",
-				8080,
-				8080,
-				argoCDStopChannel,
-			)
-
-			log.Info("getting new auth token for argocd")
-
-			secData, err := k8s.ReadSecretV2(kcfg.Clientset, "argocd", "argocd-initial-admin-secret")
+			cluster, err := client.FindKubernetesCluster(cl.ClusterName)
 			if err != nil {
 				return err
 			}
-			argocdPassword := secData["password"]
+			log.Info("cluster name: " + cluster.ID)
 
-			argocdAuthToken, err := argocd.GetArgoCDToken("admin", argocdPassword)
+			clusterVolumes, err := client.ListVolumesForCluster(cluster.ID)
 			if err != nil {
 				return err
 			}
 
-			log.Infof("port-forward to argocd is available at %s", civo.ArgocdPortForwardURL)
+			// Only port-forward to ArgoCD and delete registry if ArgoCD was installed
+			if cl.ArgoCDInstallCheck {
+				log.Info("opening argocd port forward")
+				//* ArgoCD port-forward
+				argoCDStopChannel := make(chan struct{}, 1)
+				defer func() {
+					close(argoCDStopChannel)
+				}()
+				k8s.OpenPortForwardPodWrapper(
+					kcfg.Clientset,
+					kcfg.RestConfig,
+					"argocd-server",
+					"argocd",
+					8080,
+					8080,
+					argoCDStopChannel,
+				)
 
-			customTransport := http.DefaultTransport.(*http.Transport).Clone()
-			customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-			argocdHttpClient := http.Client{Transport: customTransport}
-			log.Info("deleting the registry application")
-			httpCode, _, err := argocd.DeleteApplication(&argocdHttpClient, config.RegistryAppName, argocdAuthToken, "true")
-			if err != nil {
-				return err
+				log.Info("getting new auth token for argocd")
+
+				secData, err := k8s.ReadSecretV2(kcfg.Clientset, "argocd", "argocd-initial-admin-secret")
+				if err != nil {
+					return err
+				}
+				argocdPassword := secData["password"]
+
+				argocdAuthToken, err := argocd.GetArgoCDToken("admin", argocdPassword)
+				if err != nil {
+					return err
+				}
+
+				log.Infof("port-forward to argocd is available at %s", civo.ArgocdPortForwardURL)
+
+				customTransport := http.DefaultTransport.(*http.Transport).Clone()
+				customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+				argocdHttpClient := http.Client{Transport: customTransport}
+				log.Info("deleting the registry application")
+				httpCode, _, err := argocd.DeleteApplication(&argocdHttpClient, config.RegistryAppName, argocdAuthToken, "true")
+				if err != nil {
+					return err
+				}
+				log.Infof("http status code %d", httpCode)
 			}
-			log.Infof("http status code %d", httpCode)
-		}
 
-		for _, vol := range clusterVolumes {
-			log.Info("removing volume with name: " + vol.Name)
-			_, err := client.DeleteVolume(vol.ID)
-			if err != nil {
-				return err
+			for _, vol := range clusterVolumes {
+				log.Info("removing volume with name: " + vol.Name)
+				_, err := client.DeleteVolume(vol.ID)
+				if err != nil {
+					return err
+				}
+				log.Info("volume " + vol.ID + " deleted")
 			}
-			log.Info("volume " + vol.ID + " deleted")
-		}
 
-		// Pause before cluster destroy to prevent a race condition
-		log.Info("waiting for Civo Kubernetes cluster resource removal to finish...")
-		time.Sleep(time.Second * 10)
+			// Pause before cluster destroy to prevent a race condition
+			log.Info("waiting for Civo Kubernetes cluster resource removal to finish...")
+			time.Sleep(time.Second * 10)
+		}
 
 		log.Info("destroying civo cloud resources")
 		tfEntrypoint := config.GitopsDir + "/terraform/civo"

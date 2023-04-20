@@ -123,19 +123,16 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		vaultRootToken = secData["root-token"]
 
 		tfEnvs := map[string]string{}
-		var usernamePasswordString, base64DockerAuth string
+		var usernamePasswordString, base64DockerAuth, registryAuth string
 
 		if clctrl.GitProvider == "gitlab" {
-			registryAuth, err := clctrl.ContainerRegistryAuth()
+			registryAuth, err = clctrl.ContainerRegistryAuth()
 			if err != nil {
 				return err
 			}
 
 			usernamePasswordString = fmt.Sprintf("%s:%s", "container-registry-auth", registryAuth)
 			base64DockerAuth = base64.StdEncoding.EncodeToString([]byte(usernamePasswordString))
-
-			tfEnvs["TF_VAR_container_registry_auth"] = registryAuth
-			tfEnvs["TF_VAR_owner_group_id"] = strconv.Itoa(clctrl.GitlabOwnerGroupID)
 		} else {
 			usernamePasswordString = fmt.Sprintf("%s:%s", clctrl.GitUser, clctrl.GitToken)
 			base64DockerAuth = base64.StdEncoding.EncodeToString([]byte(usernamePasswordString))
@@ -173,19 +170,37 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 
 			tfEntrypoint = clctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir + "/terraform/vault"
 		case "civo":
-			tfEnvs["TF_VAR_b64_docker_auth"] = base64DockerAuth
 			tfEnvs = civoext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, &cl)
+			tfEnvs["TF_VAR_b64_docker_auth"] = base64DockerAuth
+
+			if clctrl.GitProvider == "gitlab" {
+				tfEnvs["TF_VAR_container_registry_auth"] = registryAuth
+				tfEnvs["TF_VAR_owner_group_id"] = strconv.Itoa(clctrl.GitlabOwnerGroupID)
+			}
+
 			tfEntrypoint = clctrl.ProviderConfig.(*civo.CivoConfig).GitopsDir + "/terraform/vault"
 		case "digitalocean":
-			tfEnvs["TF_VAR_b64_docker_auth"] = base64DockerAuth
 			tfEnvs = digitaloceanext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, &cl)
+			tfEnvs["TF_VAR_b64_docker_auth"] = base64DockerAuth
+
+			if clctrl.GitProvider == "gitlab" {
+				tfEnvs["TF_VAR_container_registry_auth"] = registryAuth
+				tfEnvs["TF_VAR_owner_group_id"] = strconv.Itoa(clctrl.GitlabOwnerGroupID)
+			}
+
 			tfEntrypoint = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).GitopsDir + "/terraform/vault"
 		case "vultr":
-			tfEnvs["TF_VAR_b64_docker_auth"] = base64DockerAuth
 			tfEnvs = vultrext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
+			tfEnvs["TF_VAR_b64_docker_auth"] = base64DockerAuth
+
+			if clctrl.GitProvider == "gitlab" {
+				tfEnvs["TF_VAR_container_registry_auth"] = registryAuth
+				tfEnvs["TF_VAR_owner_group_id"] = strconv.Itoa(clctrl.GitlabOwnerGroupID)
+			}
+
 			tfEntrypoint = clctrl.ProviderConfig.(*vultr.VultrConfig).GitopsDir + "/terraform/vault"
 		}
 
