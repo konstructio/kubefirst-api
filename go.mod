@@ -7,10 +7,12 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.17.7
 	github.com/aws/aws-sdk-go-v2/config v1.18.19
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.27.5
+	github.com/civo/civogo v0.3.28
 	github.com/gin-gonic/gin v1.8.2
 	github.com/go-git/go-git/v5 v5.6.1
-	github.com/kubefirst/runtime v0.1.11
+	github.com/kubefirst/runtime v0.1.12
 	github.com/minio/minio-go/v7 v7.0.49
+	github.com/rs/zerolog v1.29.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/swaggo/files v1.0.0
 	github.com/swaggo/gin-swagger v1.5.3
@@ -76,7 +78,6 @@ require (
 	github.com/charmbracelet/bubbles v0.15.0 // indirect
 	github.com/charmbracelet/bubbletea v0.23.2 // indirect
 	github.com/charmbracelet/lipgloss v0.7.1 // indirect
-	github.com/civo/civogo v0.3.28 // indirect
 	github.com/cloudflare/circl v1.1.0 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -186,7 +187,6 @@ require (
 	github.com/rivo/uniseg v0.4.2 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/rs/xid v1.4.0 // indirect
-	github.com/rs/zerolog v1.29.0 // indirect
 	github.com/russross/blackfriday v1.5.2 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/segmentio/analytics-go v3.1.0+incompatible // indirect

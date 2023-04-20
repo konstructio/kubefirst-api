@@ -103,7 +103,7 @@ func DeleteDigitaloceanCluster(cl *types.Cluster) error {
 				return err
 			}
 
-			log.Info("github resources terraform destroyed")
+			log.Info("gitlab resources terraform destroyed")
 
 			err = mdbcl.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
 			if err != nil {
@@ -147,57 +147,59 @@ func DeleteDigitaloceanCluster(cl *types.Cluster) error {
 	}
 
 	if cl.CloudTerraformApplyCheck || cl.CloudTerraformApplyFailedCheck {
-		kcfg := k8s.CreateKubeConfig(false, config.Kubeconfig)
+		if !cl.CloudTerraformApplyFailedCheck {
+			kcfg := k8s.CreateKubeConfig(false, config.Kubeconfig)
 
-		log.Info("destroying digitalocean resources with terraform")
+			log.Info("destroying digitalocean resources with terraform")
 
-		// Only port-forward to ArgoCD and delete registry if ArgoCD was installed
-		if cl.ArgoCDInstallCheck {
-			log.Info("opening argocd port forward")
-			//* ArgoCD port-forward
-			argoCDStopChannel := make(chan struct{}, 1)
-			defer func() {
-				close(argoCDStopChannel)
-			}()
-			k8s.OpenPortForwardPodWrapper(
-				kcfg.Clientset,
-				kcfg.RestConfig,
-				"argocd-server",
-				"argocd",
-				8080,
-				8080,
-				argoCDStopChannel,
-			)
+			// Only port-forward to ArgoCD and delete registry if ArgoCD was installed
+			if cl.ArgoCDInstallCheck {
+				log.Info("opening argocd port forward")
+				//* ArgoCD port-forward
+				argoCDStopChannel := make(chan struct{}, 1)
+				defer func() {
+					close(argoCDStopChannel)
+				}()
+				k8s.OpenPortForwardPodWrapper(
+					kcfg.Clientset,
+					kcfg.RestConfig,
+					"argocd-server",
+					"argocd",
+					8080,
+					8080,
+					argoCDStopChannel,
+				)
 
-			log.Info("getting new auth token for argocd")
+				log.Info("getting new auth token for argocd")
 
-			secData, err := k8s.ReadSecretV2(kcfg.Clientset, "argocd", "argocd-initial-admin-secret")
-			if err != nil {
-				return err
+				secData, err := k8s.ReadSecretV2(kcfg.Clientset, "argocd", "argocd-initial-admin-secret")
+				if err != nil {
+					return err
+				}
+				argocdPassword := secData["password"]
+
+				argocdAuthToken, err := argocd.GetArgoCDToken("admin", argocdPassword)
+				if err != nil {
+					return err
+				}
+
+				log.Infof("port-forward to argocd is available at %s", digitalocean.ArgocdPortForwardURL)
+
+				customTransport := http.DefaultTransport.(*http.Transport).Clone()
+				customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+				argocdHttpClient := http.Client{Transport: customTransport}
+				log.Info("deleting the registry application")
+				httpCode, _, err := argocd.DeleteApplication(&argocdHttpClient, config.RegistryAppName, argocdAuthToken, "true")
+				if err != nil {
+					return err
+				}
+				log.Infof("http status code %d", httpCode)
 			}
-			argocdPassword := secData["password"]
 
-			argocdAuthToken, err := argocd.GetArgoCDToken("admin", argocdPassword)
-			if err != nil {
-				return err
-			}
-
-			log.Infof("port-forward to argocd is available at %s", digitalocean.ArgocdPortForwardURL)
-
-			customTransport := http.DefaultTransport.(*http.Transport).Clone()
-			customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-			argocdHttpClient := http.Client{Transport: customTransport}
-			log.Info("deleting the registry application")
-			httpCode, _, err := argocd.DeleteApplication(&argocdHttpClient, config.RegistryAppName, argocdAuthToken, "true")
-			if err != nil {
-				return err
-			}
-			log.Infof("http status code %d", httpCode)
+			// Pause before cluster destroy to prevent a race condition
+			log.Info("waiting for digitalocean kubernetes cluster resource removal to finish...")
+			time.Sleep(time.Second * 10)
 		}
-
-		// Pause before cluster destroy to prevent a race condition
-		log.Info("waiting for digitalocean kubernetes cluster resource removal to finish...")
-		time.Sleep(time.Second * 10)
 
 		log.Info("destroying digitalocean cloud resources")
 		tfEntrypoint := config.GitopsDir + "/terraform/digitalocean"

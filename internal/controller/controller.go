@@ -197,6 +197,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		GitToken:              clctrl.GitToken,
 		GitlabOwnerGroupID:    clctrl.GitlabOwnerGroupID,
 		AtlantisWebhookSecret: clctrl.AtlantisWebhookSecret,
+		AtlantisWebhookURL:    clctrl.AtlantisWebhookURL,
 		KubefirstTeam:         clctrl.KubefirstTeam,
 		CivoToken:             clctrl.CivoToken,
 	}

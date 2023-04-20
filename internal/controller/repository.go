@@ -206,7 +206,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 		if err != nil {
 			msg := fmt.Sprintf("error pushing detokenized gitops repository to remote %s: %s", destinationGitopsRepoGitURL, err)
 			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitopsRepoPushFailed, msg)
-			log.Error(msg)
+			return fmt.Errorf(msg)
 		}
 
 		// push metaphor repo to remote
@@ -219,7 +219,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 		if err != nil {
 			msg := fmt.Sprintf("error pushing detokenized metaphor repository to remote %s: %s", destinationMetaphorRepoGitURL, err)
 			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitopsRepoPushFailed, msg)
-			log.Error(msg)
+			return fmt.Errorf(msg)
 		}
 
 		log.Infof("successfully pushed gitops and metaphor repositories to git@%s/%s", clctrl.GitHost, clctrl.GitOwner)
