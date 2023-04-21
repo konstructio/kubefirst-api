@@ -7,8 +7,8 @@ Kubefirst API runtime implementation.
   - [Prerequisites](#prerequisites)
   - [Provider Support](#provider-support)
   - [Creating a Cluster](#creating-a-cluster)
+    - [AWS](#aws)
     - [Civo](#civo)
-    - [Civo](#civo-1)
     - [Digital Ocean](#digital-ocean)
     - [Vultr](#vultr)
     - [Deleting a Cluster](#deleting-a-cluster)
@@ -50,7 +50,7 @@ GitHub has been tested and works. GitLab has not been tested yet so success may 
 
 When starting the API, you have to have certain OS environment variables set in order for it to work. In the future, this won't be a requirement.
 
-### Civo
+### AWS
 
 You must have the `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN` environment variables set.
 
