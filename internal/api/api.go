@@ -50,6 +50,7 @@ func SetupRouter() *gin.Engine {
 
 		// Utilities
 		v1.GET("/health", routes.GetHealth)
+		v1.GET("/stream", routes.Stream)
 	}
 
 	// swagger-ui
