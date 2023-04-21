@@ -7,6 +7,7 @@ Kubefirst API runtime implementation.
   - [Prerequisites](#prerequisites)
   - [Provider Support](#provider-support)
   - [Creating a Cluster](#creating-a-cluster)
+    - [AWS](#aws)
     - [Civo](#civo)
     - [Digital Ocean](#digital-ocean)
     - [Vultr](#vultr)
@@ -42,11 +43,21 @@ The following providers are available for use with the API.
 
 ## Creating a Cluster
 
-*Note:* This is under active development. As such, there are limitations.
+*Note:* This is under active development. As such, there are limitations. At this time, we still depend on environment variables for cloud provider authentication. Git authentication is passed in the API call.
+
+In a future update, cloud provider authentication will generate an in-cluster Secret which the API will leverage.
 
 GitHub has been tested and works. GitLab has not been tested yet so success may be spotty.
 
 When starting the API, you have to have certain OS environment variables set in order for it to work. In the future, this won't be a requirement.
+
+### AWS
+
+You must have the `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN` environment variables set.
+
+```bash
+curl -X POST http://localhost:8081/api/v1/cluster/kf-api-scott-test -H "Content-Type: application/json" -d '{"admin_email": "scott@kubeshop.io", "cloud_provider": "aws", "cloud_region": "us-east-1", "domain_name": "kubefirst.cloud", "git_owner": "kubefirst-cloud", "git_provider": "github", "git_token": "ghp_...", "type": "mgmt"}'
+```
 
 ### Civo
 
