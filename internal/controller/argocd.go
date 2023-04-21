@@ -13,8 +13,10 @@ import (
 
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	argocdapi "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned"
+	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
+	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/helpers"
@@ -36,25 +38,17 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 		var kcfg *k8s.KubernetesClient
 
 		switch clctrl.CloudProvider {
-		case "k3d":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
-			argoCDInstallPath := fmt.Sprintf("github.com:kubefirst/manifests/argocd/k3d?ref=%s", pkg.KubefirstManifestRepoRef)
+		case "aws":
+			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+			argoCDInstallPath := fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
 			log.Infof("installing argocd")
 
-			// Build and apply manifests
-			yamlData, err := kcfg.KustomizeBuild(argoCDInstallPath)
-			if err != nil {
-				return err
-			}
-			output, err := kcfg.SplitYAMLFile(yamlData)
-			if err != nil {
-				return err
-			}
-			err = kcfg.ApplyObjects("", output)
+			err = argocd.ApplyArgoCDKustomize(kcfg.Clientset, argoCDInstallPath)
 			if err != nil {
 				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricArgoCDInstallFailed, err.Error())
 				return err
 			}
+			//telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricArgoCDInstallCompleted, "")
 		case "civo":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
 			argoCDInstallPath := fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
@@ -77,6 +71,25 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 				return err
 			}
 			//telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricArgoCDInstallCompleted, "")
+		case "k3d":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
+			argoCDInstallPath := fmt.Sprintf("github.com:kubefirst/manifests/argocd/k3d?ref=%s", pkg.KubefirstManifestRepoRef)
+			log.Infof("installing argocd")
+
+			// Build and apply manifests
+			yamlData, err := kcfg.KustomizeBuild(argoCDInstallPath)
+			if err != nil {
+				return err
+			}
+			output, err := kcfg.SplitYAMLFile(yamlData)
+			if err != nil {
+				return err
+			}
+			err = kcfg.ApplyObjects("", output)
+			if err != nil {
+				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricArgoCDInstallFailed, err.Error())
+				return err
+			}
 		case "vultr":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
 			argoCDInstallPath := fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
@@ -120,12 +133,14 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 		var kcfg *k8s.KubernetesClient
 
 		switch clctrl.CloudProvider {
-		case "k3d":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
+		case "aws":
+			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 		case "civo":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
 		case "digitalocean":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig)
+		case "k3d":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
 		case "vultr":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
 		}
@@ -179,7 +194,7 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 					return err
 				}
 			}
-		case "civo", "digitalocean", "vultr":
+		case "aws", "civo", "digitalocean", "vultr":
 			argoCDStopChannel := make(chan struct{}, 1)
 			defer func() {
 				close(argoCDStopChannel)
@@ -229,12 +244,14 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		var kcfg *k8s.KubernetesClient
 
 		switch clctrl.CloudProvider {
-		case "k3d":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
+		case "aws":
+			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 		case "civo":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
 		case "digitalocean":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig)
+		case "k3d":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
 		case "vultr":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
 		}
@@ -249,9 +266,9 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		var registryApplicationObject *v1alpha1.Application
 
 		switch clctrl.CloudProvider {
-		case "k3d":
+		case "aws":
 			registryApplicationObject = argocd.GetArgoCDApplicationObject(
-				clctrl.ProviderConfig.(k3d.K3dConfig).DestinationGitopsRepoGitURL,
+				clctrl.ProviderConfig.(*awsinternal.AwsConfig).DestinationGitopsRepoGitURL,
 				fmt.Sprintf("registry/%s", clctrl.ClusterName),
 			)
 		case "civo":
@@ -262,6 +279,11 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		case "digitalocean":
 			registryApplicationObject = argocd.GetArgoCDApplicationObject(
 				clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).DestinationGitopsRepoGitURL,
+				fmt.Sprintf("registry/%s", clctrl.ClusterName),
+			)
+		case "k3d":
+			registryApplicationObject = argocd.GetArgoCDApplicationObject(
+				clctrl.ProviderConfig.(k3d.K3dConfig).DestinationGitopsRepoGitURL,
 				fmt.Sprintf("registry/%s", clctrl.ClusterName),
 			)
 		case "vultr":

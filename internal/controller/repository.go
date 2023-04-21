@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	gitssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/gitlab"
@@ -29,20 +30,20 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 
 	if !cl.GitopsReadyCheck {
 		switch clctrl.CloudProvider {
-		case "k3d":
-			err := k3d.PrepareGitRepositories(
+		case "aws":
+			err := awsinternal.PrepareGitRepositories(
 				clctrl.GitProvider,
 				clctrl.ClusterName,
 				clctrl.ClusterType,
-				clctrl.ProviderConfig.(k3d.K3dConfig).DestinationGitopsRepoGitURL,
-				clctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir,
+				AWSDestinationGitopsRepoGitURL,
+				clctrl.ProviderConfig.(*awsinternal.AwsConfig).GitopsDir,
 				clctrl.GitopsTemplateBranchFlag,
 				clctrl.GitopsTemplateURLFlag,
-				clctrl.ProviderConfig.(k3d.K3dConfig).DestinationMetaphorRepoGitURL,
-				clctrl.ProviderConfig.(k3d.K3dConfig).K1Dir,
-				clctrl.CreateTokens("gitops").(*k3d.GitopsTokenValues),
-				clctrl.ProviderConfig.(k3d.K3dConfig).MetaphorDir,
-				clctrl.CreateTokens("metaphor").(*k3d.MetaphorTokenValues),
+				AWSDestinationMetaphorRepoGitURL,
+				clctrl.ProviderConfig.(*awsinternal.AwsConfig).K1Dir,
+				clctrl.CreateTokens("gitops").(*awsinternal.GitOpsDirectoryValues),
+				clctrl.ProviderConfig.(*awsinternal.AwsConfig).MetaphorDir,
+				clctrl.CreateTokens("metaphor").(*awsinternal.MetaphorTokenValues),
 			)
 			if err != nil {
 				return err
@@ -81,6 +82,24 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).MetaphorDir,
 				clctrl.CreateTokens("metaphor").(*digitalocean.MetaphorTokenValues),
 				civo.GetDomainApexContent(clctrl.DomainName),
+			)
+			if err != nil {
+				return err
+			}
+		case "k3d":
+			err := k3d.PrepareGitRepositories(
+				clctrl.GitProvider,
+				clctrl.ClusterName,
+				clctrl.ClusterType,
+				clctrl.ProviderConfig.(k3d.K3dConfig).DestinationGitopsRepoGitURL,
+				clctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir,
+				clctrl.GitopsTemplateBranchFlag,
+				clctrl.GitopsTemplateURLFlag,
+				clctrl.ProviderConfig.(k3d.K3dConfig).DestinationMetaphorRepoGitURL,
+				clctrl.ProviderConfig.(k3d.K3dConfig).K1Dir,
+				clctrl.CreateTokens("gitops").(*k3d.GitopsTokenValues),
+				clctrl.ProviderConfig.(k3d.K3dConfig).MetaphorDir,
+				clctrl.CreateTokens("metaphor").(*k3d.MetaphorTokenValues),
 			)
 			if err != nil {
 				return err
@@ -131,11 +150,11 @@ func (clctrl *ClusterController) RepositoryPush() error {
 		var gitopsDir, metaphorDir, destinationGitopsRepoGitURL, destinationMetaphorRepoGitURL string
 
 		switch clctrl.CloudProvider {
-		case "k3d":
-			gitopsDir = clctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir
-			metaphorDir = clctrl.ProviderConfig.(k3d.K3dConfig).MetaphorDir
-			destinationGitopsRepoGitURL = clctrl.ProviderConfig.(k3d.K3dConfig).DestinationGitopsRepoGitURL
-			destinationMetaphorRepoGitURL = clctrl.ProviderConfig.(k3d.K3dConfig).DestinationMetaphorRepoGitURL
+		case "aws":
+			gitopsDir = clctrl.ProviderConfig.(*awsinternal.AwsConfig).GitopsDir
+			metaphorDir = clctrl.ProviderConfig.(*awsinternal.AwsConfig).MetaphorDir
+			destinationGitopsRepoGitURL = clctrl.ProviderConfig.(*awsinternal.AwsConfig).DestinationGitopsRepoGitURL
+			destinationMetaphorRepoGitURL = clctrl.ProviderConfig.(*awsinternal.AwsConfig).DestinationMetaphorRepoGitURL
 		case "civo":
 			gitopsDir = clctrl.ProviderConfig.(*civo.CivoConfig).GitopsDir
 			metaphorDir = clctrl.ProviderConfig.(*civo.CivoConfig).MetaphorDir
@@ -146,6 +165,11 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			metaphorDir = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).MetaphorDir
 			destinationGitopsRepoGitURL = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).DestinationGitopsRepoGitURL
 			destinationMetaphorRepoGitURL = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).DestinationMetaphorRepoGitURL
+		case "k3d":
+			gitopsDir = clctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir
+			metaphorDir = clctrl.ProviderConfig.(k3d.K3dConfig).MetaphorDir
+			destinationGitopsRepoGitURL = clctrl.ProviderConfig.(k3d.K3dConfig).DestinationGitopsRepoGitURL
+			destinationMetaphorRepoGitURL = clctrl.ProviderConfig.(k3d.K3dConfig).DestinationMetaphorRepoGitURL
 		case "vultr":
 			gitopsDir = clctrl.ProviderConfig.(*vultr.VultrConfig).GitopsDir
 			metaphorDir = clctrl.ProviderConfig.(*vultr.VultrConfig).MetaphorDir

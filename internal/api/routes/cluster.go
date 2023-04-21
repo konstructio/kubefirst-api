@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/providers/aws"
 	"github.com/kubefirst/kubefirst-api/providers/civo"
 	"github.com/kubefirst/kubefirst-api/providers/digitalocean"
 	"github.com/kubefirst/kubefirst-api/providers/k3d"
@@ -57,7 +58,14 @@ func DeleteCluster(c *gin.Context) {
 	}
 
 	switch rec.CloudProvider {
-	case "k3d":
+	case "aws":
+		err := aws.DeleteAWSCluster(&rec)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
 	case "civo":
 		err := civo.DeleteCivoCluster(&rec)
 		if err != nil {
@@ -74,6 +82,7 @@ func DeleteCluster(c *gin.Context) {
 			})
 			return
 		}
+	case "k3d":
 	case "vultr":
 		err := vultr.DeleteVultrCluster(&rec)
 		if err != nil {
@@ -198,8 +207,8 @@ func PostCreateCluster(c *gin.Context) {
 
 	// Create
 	switch clusterDefinition.CloudProvider {
-	case "k3d":
-		err = k3d.CreateK3DCluster(&clusterDefinition)
+	case "aws":
+		err = aws.CreateAWSCluster(&clusterDefinition)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: fmt.Sprintf("%s", err),
@@ -224,6 +233,18 @@ func PostCreateCluster(c *gin.Context) {
 		})
 	case "digitalocean":
 		err = digitalocean.CreateDigitaloceanCluster(&clusterDefinition)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: fmt.Sprintf("%s", err),
+			})
+			return
+		}
+
+		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
+			Message: "cluster created",
+		})
+	case "k3d":
+		err = k3d.CreateK3DCluster(&clusterDefinition)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: fmt.Sprintf("%s", err),
