@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/pkg/civo"
@@ -31,6 +32,29 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 
 	if !cl.StateStoreCredsCheck {
 		switch clctrl.CloudProvider {
+		case "aws":
+			kubefirstStateStoreBucket, err := clctrl.AwsClient.CreateBucket(clctrl.KubefirstStateStoreBucketName)
+			if err != nil {
+				return err
+			}
+
+			kubefirstArtifactsBucket, err := clctrl.AwsClient.CreateBucket(clctrl.KubefirstArtifactsBucketName)
+			if err != nil {
+				return err
+			}
+
+			stateStoreData = types.StateStoreCredentials{
+				AccessKeyID:     clctrl.AwsAccessKeyID,
+				SecretAccessKey: clctrl.AwsSecretAccessKey,
+			}
+
+			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_details", types.StateStoreDetails{
+				AWSStateStoreBucket: strings.ReplaceAll(*kubefirstStateStoreBucket.Location, "/", ""),
+				AWSArtifactsBucket:  strings.ReplaceAll(*kubefirstArtifactsBucket.Location, "/", ""),
+			})
+			if err != nil {
+				return err
+			}
 		case "civo":
 			creds, err := civo.GetAccessCredentials(clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
 			if err != nil {
@@ -163,34 +187,37 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 	}
 
 	if !cl.StateStoreCreateCheck {
-		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricStateStoreCreateStarted, "")
+		switch clctrl.CloudProvider {
+		case "civo":
+			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricStateStoreCreateStarted, "")
 
-		accessKeyId := cl.StateStoreCredentials.AccessKeyID
-		log.Infof("access key id %s", accessKeyId)
+			accessKeyId := cl.StateStoreCredentials.AccessKeyID
+			log.Infof("access key id %s", accessKeyId)
 
-		bucket, err := civo.CreateStorageBucket(accessKeyId, clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
-		if err != nil {
-			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricStateStoreCreateFailed, err.Error())
-			log.Info(err.Error())
-			return err
+			bucket, err := civo.CreateStorageBucket(accessKeyId, clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
+			if err != nil {
+				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricStateStoreCreateFailed, err.Error())
+				log.Info(err.Error())
+				return err
+			}
+
+			stateStoreData := types.StateStoreDetails{
+				Name: bucket.Name,
+				ID:   bucket.ID,
+			}
+			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_details", stateStoreData)
+			if err != nil {
+				return err
+			}
+
+			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_create_check", true)
+			if err != nil {
+				return err
+			}
+
+			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricStateStoreCreateCompleted, "")
+			log.Infof("%s state store bucket created", clctrl.CloudProvider)
 		}
-
-		stateStoreData := types.StateStoreDetails{
-			Name: bucket.Name,
-			ID:   bucket.ID,
-		}
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_details", stateStoreData)
-		if err != nil {
-			return err
-		}
-
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_create_check", true)
-		if err != nil {
-			return err
-		}
-
-		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricStateStoreCreateCompleted, "")
-		log.Infof("%s state store bucket created", clctrl.CloudProvider)
 	}
 
 	return nil

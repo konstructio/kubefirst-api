@@ -27,6 +27,11 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricDomainLivenessStarted, "")
 
 		switch clctrl.CloudProvider {
+		case "aws":
+			domainLiveness := clctrl.AwsClient.TestHostedZoneLiveness(false, clctrl.DomainName)
+			if !domainLiveness {
+				return fmt.Errorf("failed to verify domain liveness for domain %s", clctrl.DomainName)
+			}
 		case "civo":
 			// domain id
 			domainId, err := civo.GetDNSInfo(clctrl.DomainName, clctrl.CloudRegion)

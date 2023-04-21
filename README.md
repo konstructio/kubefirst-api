@@ -32,12 +32,13 @@ It is also recommended to install [MongoDB Compass](https://www.mongodb.com/try/
 
 The following providers are available for use with the API.
 
-| Provider      | Status      | Supported Operations | Supported Git Providers |
-| ------------- | ----------- | -------------------- | ----------------------- |
-| AWS           | Unsupported |                      |                         |
-| Civo          | Beta        | Create, Delete       | GitHub                  |
-| Digital Ocean | Beta        | Create, Delete       | GitHub                  |
-| Vultr         | Beta        | Create, Delete       | GitHub                  |
+| Provider      | Status | Supported Operations | Supported Git Providers |
+| ------------- | ------ | -------------------- | ----------------------- |
+| AWS           | Beta   | Create, Delete       | GitHub, GitLab          |
+| Civo          | Beta   | Create, Delete       | GitHub, GitLab          |
+| Digital Ocean | Beta   | Create, Delete       | GitHub, GitLab          |
+| K3d           | Beta   | Create, Delete       | GitHub, GitLab          |
+| Vultr         | Beta   | Create, Delete       | GitHub, GitLab          |
 
 ## Creating a Cluster
 

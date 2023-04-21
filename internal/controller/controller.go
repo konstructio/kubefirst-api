@@ -14,6 +14,7 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/pkg"
+	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/github"
@@ -22,6 +23,7 @@ import (
 	"github.com/kubefirst/runtime/pkg/k3d"
 	"github.com/kubefirst/runtime/pkg/services"
 	"github.com/kubefirst/runtime/pkg/vultr"
+	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -35,9 +37,11 @@ type ClusterController struct {
 	AlertsEmail   string
 
 	// tokens
-	CivoToken         string
-	DigitalOceanToken string
-	VultrToken        string
+	CivoToken          string
+	DigitalOceanToken  string
+	VultrToken         string
+	AwsAccessKeyID     string
+	AwsSecretAccessKey string
 
 	// configs
 	ProviderConfig interface{}
@@ -62,13 +66,18 @@ type ClusterController struct {
 	// teams
 	Teams []string
 
-	// other
-	AtlantisWebhookSecret         string
-	AtlantisWebhookURL            string
-	KubefirstTeam                 string
-	GitopsTemplateBranchFlag      string
-	GitopsTemplateURLFlag         string
+	// atlantis
+	AtlantisWebhookSecret string
+	AtlantisWebhookURL    string
+
+	// internal
+	KubefirstTeam            string
+	GitopsTemplateBranchFlag string
+	GitopsTemplateURLFlag    string
+
+	// state store
 	KubefirstStateStoreBucketName string
+	KubefirstArtifactsBucketName  string
 
 	// keys
 	// kbot public key
@@ -78,6 +87,9 @@ type ClusterController struct {
 
 	// Database Controller
 	MdbCl *db.MongoDBClient
+
+	// Provider clients
+	AwsClient *awsinternal.AWSConfiguration
 }
 
 // InitController
@@ -89,11 +101,26 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		return err
 	}
 
+	// Determine if record already exists
+	recordExists := true
+	rec, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	if err != nil {
+		recordExists = false
+		log.Info("cluster record doesn't exist, continuing")
+	}
+
+	var clusterID string
+	if recordExists {
+		clusterID = rec.ClusterID
+	} else {
+		clusterID = pkg.GenerateClusterID()
+	}
+
 	clctrl.AlertsEmail = def.AdminEmail
 	clctrl.CloudProvider = def.CloudProvider
 	clctrl.CloudRegion = def.CloudRegion
 	clctrl.ClusterName = def.ClusterName
-	clctrl.ClusterID = pkg.GenerateClusterID()
+	clctrl.ClusterID = clusterID
 	clctrl.DomainName = def.DomainName
 	clctrl.ClusterType = def.Type
 	clctrl.HttpClient = http.DefaultClient
@@ -112,7 +139,9 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 
 	clctrl.GitopsTemplateBranchFlag = "main"
 	clctrl.GitopsTemplateURLFlag = "https://github.com/kubefirst/gitops-template.git"
-	clctrl.KubefirstStateStoreBucketName = fmt.Sprintf("k1-state-store-%s-%s", clctrl.ClusterName, clctrl.ClusterID)
+
+	clctrl.KubefirstStateStoreBucketName = fmt.Sprintf("k1-state-store-%s-%s", clctrl.ClusterName, clusterID)
+	clctrl.KubefirstArtifactsBucketName = fmt.Sprintf("k1-artifacts-%s-%s", clctrl.ClusterName, clusterID)
 
 	clctrl.KubefirstTeam = os.Getenv("KUBEFIRST_TEAM")
 	if clctrl.KubefirstTeam == "" {
@@ -170,14 +199,31 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 
 	// Instantiate provider configuration
 	switch clctrl.CloudProvider {
-	case "k3d":
-		clctrl.ProviderConfig = k3d.GetConfig(clctrl.GitProvider, clctrl.GitOwner)
+	case "aws":
+		clctrl.ProviderConfig = awsinternal.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
 	case "civo":
 		clctrl.ProviderConfig = civo.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
 	case "digitalocean":
 		clctrl.ProviderConfig = digitalocean.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
+	case "k3d":
+		clctrl.ProviderConfig = k3d.GetConfig(clctrl.GitProvider, clctrl.GitOwner)
 	case "vultr":
 		clctrl.ProviderConfig = vultr.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
+	}
+
+	// Instantiate provider clients
+	switch clctrl.CloudProvider {
+	case "aws":
+		clctrl.AwsClient = &awsinternal.AWSConfiguration{
+			Config: awsinternal.NewAwsV3(
+				clctrl.CloudRegion,
+				os.Getenv("AWS_ACCESS_KEY_ID"),
+				os.Getenv("AWS_SECRET_ACCESS_KEY"),
+				os.Getenv("AWS_SESSION_TOKEN"),
+			),
+		}
+		clctrl.AwsAccessKeyID = os.Getenv("AWS_ACCESS_KEY_ID")
+		clctrl.AwsSecretAccessKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
 	}
 
 	// Write cluster record if it doesn't exist

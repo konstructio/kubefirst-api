@@ -8,26 +8,6 @@ package types
 
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
-// AWSProfileResponse is the response for the /aws/profiles route
-type AWSDomainValidateResponse struct {
-	Validated bool `json:"validated"`
-}
-
-// AWSProfileResponse is the response for the /aws/domain/validate route
-type AWSProfilesResponse struct {
-	Profiles []string `json:"profiles"`
-}
-
-// CivoDomainValidationRequest /civo/domain/validate required parameters
-type CivoDomainValidationRequest struct {
-	CloudRegion string `json:"cloud_region"`
-}
-
-// CivoDomainValidationResponse is the response for the /civo/domain/validate route
-type CivoDomainValidationResponse struct {
-	Validated bool `json:"validated"`
-}
-
 // ClusterDefinition is used to create a cluster
 type ClusterDefinition struct {
 	AdminEmail    string `json:"admin_email" binding:"required"`
@@ -77,6 +57,10 @@ type Cluster struct {
 	ArgoCDPassword  string `bson:"argocd_password"`
 	ArgoCDAuthToken string `bson:"argocd_auth_token"`
 
+	// kms
+	AWSKMSKeyId               string `bson:"aws_kms_key_id,omitempty"`
+	AWSKMSKeyDetokenizedCheck bool   `bson:"aws_kms_key_detokenized_check"`
+
 	// Checks
 	GitInitCheck                   bool `bson:"git_init_check"`
 	InstallToolsCheck              bool `bson:"install_tools_check"`
@@ -102,30 +86,17 @@ type Cluster struct {
 
 // StateStoreCredentials
 type StateStoreCredentials struct {
-	AccessKeyID     string `bson:"access_key_id"`
-	SecretAccessKey string `bson:"secret_access_key"`
-	Name            string `bson:"name"`
-	ID              string `bson:"id"`
+	AccessKeyID     string `bson:"access_key_id,omitempty"`
+	SecretAccessKey string `bson:"secret_access_key,omitempty"`
+	Name            string `bson:"name,omitempty"`
+	ID              string `bson:"id,omitempty"`
 }
 
 // StateStoreDetails
 type StateStoreDetails struct {
-	Name     string `bson:"name"`
-	ID       string `bson:"id"`
-	Hostname string `bson:"hostname"`
-}
-
-// JSONFailureResponse describes a failure message returned by the API
-type JSONFailureResponse struct {
-	Message string `json:"error" example:"err"`
-}
-
-// JSONHealthResponse describes a message returned by the API health endpoint
-type JSONHealthResponse struct {
-	Status string `json:"status" example:"healthy"`
-}
-
-// JSONSuccessResponse describes a success message returned by the API
-type JSONSuccessResponse struct {
-	Message string `json:"message" example:"success"`
+	Name                string `bson:"name,omitempty"`
+	ID                  string `bson:"id,omitempty"`
+	Hostname            string `bson:"hostname,omitempty"`
+	AWSStateStoreBucket string `bson:"aws_state_store_bucket,omitempty"`
+	AWSArtifactsBucket  string `bson:"aws_artifacts_bucket,omitempty"`
 }
