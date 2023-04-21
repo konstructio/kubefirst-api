@@ -370,6 +370,13 @@ const docTemplate = `{
                 "atlantisWebhookURL": {
                     "type": "string"
                 },
+                "awskmskeyDetokenizedCheck": {
+                    "type": "boolean"
+                },
+                "awskmskeyId": {
+                    "description": "kms",
+                    "type": "string"
+                },
                 "civoToken": {
                     "type": "string"
                 },
@@ -588,6 +595,12 @@ const docTemplate = `{
         "types.StateStoreDetails": {
             "type": "object",
             "properties": {
+                "awsartifactsBucket": {
+                    "type": "string"
+                },
+                "awsstateStoreBucket": {
+                    "type": "string"
+                },
                 "hostname": {
                     "type": "string"
                 },

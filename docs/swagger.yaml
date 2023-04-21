@@ -42,6 +42,11 @@ definitions:
         type: string
       atlantisWebhookURL:
         type: string
+      awskmskeyDetokenizedCheck:
+        type: boolean
+      awskmskeyId:
+        description: kms
+        type: string
       civoToken:
         type: string
       cloudProvider:
@@ -191,6 +196,10 @@ definitions:
     type: object
   types.StateStoreDetails:
     properties:
+      awsartifactsBucket:
+        type: string
+      awsstateStoreBucket:
+        type: string
       hostname:
         type: string
       id:
