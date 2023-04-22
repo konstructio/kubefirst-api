@@ -24,7 +24,7 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
-	err = ctrl.DownloadTools(ctrl.GitProvider, ctrl.GitOwner, ctrl.ProviderConfig.(*civo.CivoConfig).ToolsDir)
+	err = ctrl.DownloadTools(ctrl.ProviderConfig.(*civo.CivoConfig).ToolsDir)
 	if err != nil {
 		return err
 	}

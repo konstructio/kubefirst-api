@@ -44,7 +44,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 			tfEnvs := map[string]string{}
 			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, cl)
 			tfEnvs = awsext.GetGithubTerraformEnvs(tfEnvs, cl)
-			err := terraform.InitDestroyAutoApprove(false, tfEntrypoint, tfEnvs)
+			err := terraform.InitDestroyAutoApprove(false, config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Printf("error executing terraform destroy %s", tfEntrypoint)
 				return err
@@ -97,7 +97,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 			tfEnvs := map[string]string{}
 			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, cl)
 			tfEnvs = awsext.GetGitlabTerraformEnvs(tfEnvs, gitlabClient.ParentGroupID, cl)
-			err = terraform.InitDestroyAutoApprove(false, tfEntrypoint, tfEnvs)
+			err = terraform.InitDestroyAutoApprove(false, config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Infof("error executing terraform destroy %s", tfEntrypoint)
 				return err
@@ -113,13 +113,13 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 	}
 
 	if cl.CloudTerraformApplyCheck || cl.CloudTerraformApplyFailedCheck {
-		if !cl.CloudTerraformApplyFailedCheck {
+		if !cl.ArgoCDDeleteRegistryCheck {
 			awsClient := &awsinternal.AWSConfiguration{
 				Config: awsinternal.NewAwsV3(
 					cl.CloudRegion,
 					os.Getenv("AWS_ACCESS_KEY_ID"),
 					os.Getenv("AWS_SECRET_ACCESS_KEY"),
-					"",
+					os.Getenv("AWS_SESSION_TOKEN"),
 				),
 			}
 			kcfg := awsext.CreateEKSKubeconfig(&awsClient.Config, cl.ClusterName)
@@ -128,6 +128,12 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 
 			// Only port-forward to ArgoCD and delete registry if ArgoCD was installed
 			if cl.ArgoCDInstallCheck {
+				removeArgoCDApps := []string{"ingress-nginx-components", "ingress-nginx"}
+				err = argocd.ArgoCDApplicationCleanup(kcfg.Clientset, removeArgoCDApps)
+				if err != nil {
+					log.Errorf("encountered error during argocd application cleanup: %s")
+				}
+
 				log.Info("opening argocd port forward")
 				//* ArgoCD port-forward
 				argoCDStopChannel := make(chan struct{}, 1)
@@ -173,12 +179,18 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 			// Pause before cluster destroy to prevent a race condition
 			log.Info("waiting for aws Kubernetes cluster resource removal to finish...")
 			time.Sleep(time.Second * 10)
+
+			err = mdbcl.UpdateCluster(cl.ClusterName, "argocd_delete_registry_check", true)
+			if err != nil {
+				return err
+			}
 		}
 
 		log.Info("destroying aws cloud resources")
 		tfEntrypoint := config.GitopsDir + "/terraform/aws"
 		tfEnvs := map[string]string{}
 		tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, cl)
+		tfEnvs["TF_VAR_aws_account_id"] = cl.AWSAccountId
 
 		switch cl.GitProvider {
 		case "github":
@@ -190,7 +202,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 			}
 			tfEnvs = awsext.GetGitlabTerraformEnvs(tfEnvs, gid, cl)
 		}
-		err = terraform.InitDestroyAutoApprove(false, tfEntrypoint, tfEnvs)
+		err = terraform.InitDestroyAutoApprove(false, config.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Printf("error executing terraform destroy %s", tfEntrypoint)
 			return err

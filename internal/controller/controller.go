@@ -13,6 +13,7 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/internal/utils"
 	"github.com/kubefirst/runtime/pkg"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
@@ -94,6 +95,9 @@ type ClusterController struct {
 
 // InitController
 func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) error {
+	// Create k1 dir if it doesn't exist
+	utils.CreateK1Directory(def.ClusterName)
+
 	// Database controller
 	clctrl.MdbCl = &db.MongoDBClient{}
 	err := clctrl.MdbCl.InitDatabase()
@@ -103,7 +107,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 
 	// Determine if record already exists
 	recordExists := true
-	rec, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	rec, err := clctrl.MdbCl.GetCluster(def.ClusterName)
 	if err != nil {
 		recordExists = false
 		log.Info("cluster record doesn't exist, continuing")
@@ -206,7 +210,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	case "digitalocean":
 		clctrl.ProviderConfig = digitalocean.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
 	case "k3d":
-		clctrl.ProviderConfig = k3d.GetConfig(clctrl.GitProvider, clctrl.GitOwner)
+		clctrl.ProviderConfig = k3d.GetConfig(clctrl.ClusterName, clctrl.GitProvider, clctrl.GitOwner)
 	case "vultr":
 		clctrl.ProviderConfig = vultr.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
 	}

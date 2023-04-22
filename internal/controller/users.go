@@ -58,21 +58,24 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		vaultRootToken = secData["root-token"]
 
 		tfEnvs := map[string]string{}
-		var tfEntrypoint string
+		var tfEntrypoint, terraformClient string
 
 		switch clctrl.CloudProvider {
 		case "aws":
 			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, &cl)
 			tfEnvs = awsext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEntrypoint = clctrl.ProviderConfig.(*awsinternal.AwsConfig).GitopsDir + "/terraform/users"
+			terraformClient = clctrl.ProviderConfig.(*awsinternal.AwsConfig).TerraformClient
 		case "civo":
 			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, &cl)
 			tfEnvs = civoext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEntrypoint = clctrl.ProviderConfig.(*civo.CivoConfig).GitopsDir + "/terraform/users"
+			terraformClient = clctrl.ProviderConfig.(*civo.CivoConfig).TerraformClient
 		case "digitalocean":
 			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, &cl)
 			tfEnvs = digitaloceanext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEntrypoint = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).GitopsDir + "/terraform/users"
+			terraformClient = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient
 		case "k3d":
 			tfEnvs["TF_VAR_email_address"] = "your@email.com"
 			tfEnvs[fmt.Sprintf("TF_VAR_%s_token", clctrl.GitProvider)] = clctrl.GitToken
@@ -84,13 +87,15 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 			tfEnvs[fmt.Sprintf("%s_OWNER", strings.ToUpper(clctrl.GitProvider))] = clctrl.GitOwner
 
 			tfEntrypoint = clctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir + "/terraform/users"
+			terraformClient = clctrl.ProviderConfig.(k3d.K3dConfig).TerraformClient
 		case "vultr":
 			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
 			tfEnvs = vultrext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEntrypoint = clctrl.ProviderConfig.(*vultr.VultrConfig).GitopsDir + "/terraform/users"
+			terraformClient = clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient
 		}
 
-		err = terraform.InitApplyAutoApprove(false, tfEntrypoint, tfEnvs)
+		err = terraform.InitApplyAutoApprove(false, terraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricUsersTerraformApplyStarted, err.Error())
 			return err

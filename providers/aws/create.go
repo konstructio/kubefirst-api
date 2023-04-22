@@ -39,7 +39,7 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
-	err = ctrl.DownloadTools(ctrl.GitProvider, ctrl.GitOwner, ctrl.ProviderConfig.(*awsinternal.AwsConfig).ToolsDir)
+	err = ctrl.DownloadTools(ctrl.ProviderConfig.(*awsinternal.AwsConfig).ToolsDir)
 	if err != nil {
 		return err
 	}

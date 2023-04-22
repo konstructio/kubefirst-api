@@ -58,6 +58,7 @@ type Cluster struct {
 	ArgoCDAuthToken string `bson:"argocd_auth_token"`
 
 	// kms
+	AWSAccountId              string `bson:"aws_account_id,omitempty"`
 	AWSKMSKeyId               string `bson:"aws_kms_key_id,omitempty"`
 	AWSKMSKeyDetokenizedCheck bool   `bson:"aws_kms_key_detokenized_check"`
 
@@ -78,6 +79,7 @@ type Cluster struct {
 	ArgoCDInstallCheck             bool `bson:"argocd_install_check"`
 	ArgoCDInitializeCheck          bool `bson:"argocd_initialize_check"`
 	ArgoCDCreateRegistryCheck      bool `bson:"argocd_create_registry_check"`
+	ArgoCDDeleteRegistryCheck      bool `bson:"argocd_delete_registry_check"`
 	VaultInitializedCheck          bool `bson:"vault_initialized_check"`
 	VaultTerraformApplyCheck       bool `bson:"vault_terraform_apply_check"`
 	UsersTerraformApplyCheck       bool `bson:"users_terraform_apply_check"`

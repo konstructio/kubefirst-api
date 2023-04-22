@@ -70,7 +70,12 @@ func (clctrl *ClusterController) CreateCluster() error {
 			}
 			tfEnvs["TF_VAR_aws_account_id"] = *iamCaller.Account
 
-			err = terraform.InitApplyAutoApprove(false, tfEntrypoint, tfEnvs)
+			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "aws_account_id", *iamCaller.Account)
+			if err != nil {
+				return err
+			}
+
+			err = terraform.InitApplyAutoApprove(false, clctrl.ProviderConfig.(*awsinternal.AwsConfig).TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				msg := fmt.Sprintf("error creating aws resources with terraform %s : %s", tfEntrypoint, err)
 				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
@@ -92,7 +97,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 			tfEntrypoint := clctrl.ProviderConfig.(*civo.CivoConfig).GitopsDir + "/terraform/civo"
 			tfEnvs := map[string]string{}
 			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, &cl)
-			err := terraform.InitApplyAutoApprove(false, tfEntrypoint, tfEnvs)
+			err := terraform.InitApplyAutoApprove(false, clctrl.ProviderConfig.(*civo.CivoConfig).TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				msg := fmt.Sprintf("error creating civo resources with terraform %s : %s", tfEntrypoint, err)
 				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
@@ -114,7 +119,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 			tfEntrypoint := clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).GitopsDir + "/terraform/digitalocean"
 			tfEnvs := map[string]string{}
 			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, &cl)
-			err := terraform.InitApplyAutoApprove(false, tfEntrypoint, tfEnvs)
+			err := terraform.InitApplyAutoApprove(false, clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				msg := fmt.Sprintf("error creating digital ocean resources with terraform %s : %s", tfEntrypoint, err)
 				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
@@ -152,7 +157,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 			tfEntrypoint := clctrl.ProviderConfig.(*vultr.VultrConfig).GitopsDir + "/terraform/vultr"
 			tfEnvs := map[string]string{}
 			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
-			err := terraform.InitApplyAutoApprove(false, tfEntrypoint, tfEnvs)
+			err := terraform.InitApplyAutoApprove(false, clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				msg := fmt.Sprintf("error creating vultr resources with terraform %s : %s", tfEntrypoint, err)
 				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)

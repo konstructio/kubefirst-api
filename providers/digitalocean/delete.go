@@ -44,7 +44,7 @@ func DeleteDigitaloceanCluster(cl *types.Cluster) error {
 			tfEnvs := map[string]string{}
 			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, cl)
 			tfEnvs = digitaloceanext.GetGithubTerraformEnvs(tfEnvs, cl)
-			err := terraform.InitDestroyAutoApprove(false, tfEntrypoint, tfEnvs)
+			err := terraform.InitDestroyAutoApprove(false, config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Printf("error executing terraform destroy %s", tfEntrypoint)
 				return err
@@ -97,7 +97,7 @@ func DeleteDigitaloceanCluster(cl *types.Cluster) error {
 			tfEnvs := map[string]string{}
 			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, cl)
 			tfEnvs = digitaloceanext.GetGitlabTerraformEnvs(tfEnvs, gitlabClient.ParentGroupID, cl)
-			err = terraform.InitDestroyAutoApprove(false, tfEntrypoint, tfEnvs)
+			err = terraform.InitDestroyAutoApprove(false, config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Infof("error executing terraform destroy %s", tfEntrypoint)
 				return err
@@ -147,7 +147,7 @@ func DeleteDigitaloceanCluster(cl *types.Cluster) error {
 	}
 
 	if cl.CloudTerraformApplyCheck || cl.CloudTerraformApplyFailedCheck {
-		if !cl.CloudTerraformApplyFailedCheck {
+		if !cl.ArgoCDDeleteRegistryCheck {
 			kcfg := k8s.CreateKubeConfig(false, config.Kubeconfig)
 
 			log.Info("destroying digitalocean resources with terraform")
@@ -199,6 +199,11 @@ func DeleteDigitaloceanCluster(cl *types.Cluster) error {
 			// Pause before cluster destroy to prevent a race condition
 			log.Info("waiting for digitalocean kubernetes cluster resource removal to finish...")
 			time.Sleep(time.Second * 10)
+
+			err = mdbcl.UpdateCluster(cl.ClusterName, "argocd_delete_registry_check", true)
+			if err != nil {
+				return err
+			}
 		}
 
 		log.Info("destroying digitalocean cloud resources")
@@ -216,7 +221,7 @@ func DeleteDigitaloceanCluster(cl *types.Cluster) error {
 			}
 			tfEnvs = digitaloceanext.GetGitlabTerraformEnvs(tfEnvs, gid, cl)
 		}
-		err = terraform.InitDestroyAutoApprove(false, tfEntrypoint, tfEnvs)
+		err = terraform.InitDestroyAutoApprove(false, config.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Printf("error executing terraform destroy %s", tfEntrypoint)
 			return err

@@ -44,7 +44,7 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 			tfEnvs := map[string]string{}
 			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, cl)
 			tfEnvs = vultrext.GetGithubTerraformEnvs(tfEnvs, cl)
-			err := terraform.InitDestroyAutoApprove(false, tfEntrypoint, tfEnvs)
+			err := terraform.InitDestroyAutoApprove(false, config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Printf("error executing terraform destroy %s", tfEntrypoint)
 				return err
@@ -97,7 +97,7 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 			tfEnvs := map[string]string{}
 			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, cl)
 			tfEnvs = vultrext.GetGitlabTerraformEnvs(tfEnvs, gitlabClient.ParentGroupID, cl)
-			err = terraform.InitDestroyAutoApprove(false, tfEntrypoint, tfEnvs)
+			err = terraform.InitDestroyAutoApprove(false, config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Infof("error executing terraform destroy %s", tfEntrypoint)
 				return err
@@ -112,8 +112,7 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 		}
 	}
 
-	// Should be a "cluster was created" check
-	if cl.CloudTerraformApplyCheck {
+	if !cl.ArgoCDDeleteRegistryCheck {
 		kcfg := k8s.CreateKubeConfig(false, config.Kubeconfig)
 
 		// Remove applications with external dependencies
@@ -153,7 +152,7 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 			log.Info("destroying vultr resources with terraform")
 
 			// Only port-forward to ArgoCD and delete registry if ArgoCD was installed
-			if cl.ArgoCDInstallCheck {
+			if !cl.ArgoCDDeleteRegistryCheck {
 				log.Info("opening argocd port forward")
 				//* ArgoCD port-forward
 				argoCDStopChannel := make(chan struct{}, 1)
@@ -199,6 +198,11 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 			// Pause before cluster destroy to prevent a race condition
 			log.Info("waiting for vultr kubernetes cluster resource removal to finish...")
 			time.Sleep(time.Second * 10)
+
+			err = mdbcl.UpdateCluster(cl.ClusterName, "argocd_delete_registry_check", true)
+			if err != nil {
+				return err
+			}
 		}
 
 		log.Info("destroying vultr cloud resources")
@@ -216,7 +220,7 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 			}
 			tfEnvs = vultrext.GetGitlabTerraformEnvs(tfEnvs, gid, cl)
 		}
-		err = terraform.InitDestroyAutoApprove(false, tfEntrypoint, tfEnvs)
+		err = terraform.InitDestroyAutoApprove(false, config.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Printf("error executing terraform destroy %s", tfEntrypoint)
 			return err

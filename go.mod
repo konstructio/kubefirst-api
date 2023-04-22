@@ -4,7 +4,6 @@ go 1.20
 
 require (
 	github.com/argoproj/argo-cd/v2 v2.6.7
-	github.com/aws/aws-sdk-go v1.44.230
 	github.com/aws/aws-sdk-go-v2 v1.17.8
 	github.com/aws/aws-sdk-go-v2/config v1.18.19
 	github.com/aws/aws-sdk-go-v2/service/eks v1.27.10
@@ -12,7 +11,7 @@ require (
 	github.com/civo/civogo v0.3.28
 	github.com/gin-gonic/gin v1.8.2
 	github.com/go-git/go-git/v5 v5.6.1
-	github.com/kubefirst/runtime v0.1.13
+	github.com/kubefirst/runtime v0.1.15-beta5
 	github.com/minio/minio-go/v7 v7.0.49
 	github.com/rs/zerolog v1.29.0
 	github.com/sirupsen/logrus v1.9.0
@@ -24,6 +23,7 @@ require (
 	k8s.io/api v0.26.0
 	k8s.io/apimachinery v0.26.0
 	k8s.io/client-go v11.0.1-0.20190816222228-6d55c1b1f1ca+incompatible
+	sigs.k8s.io/aws-iam-authenticator v0.6.7
 )
 
 replace (
@@ -45,6 +45,7 @@ require (
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/argoproj/gitops-engine v0.7.3 // indirect
 	github.com/argoproj/pkg v0.13.7-0.20221221191914-44694015343d // indirect
+	github.com/aws/aws-sdk-go v1.44.230 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.10 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.18 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.1 // indirect
@@ -246,7 +247,6 @@ require (
 	k8s.io/kubectl v0.24.2 // indirect
 	k8s.io/kubernetes v1.24.2 // indirect
 	k8s.io/utils v0.0.0-20221128185143-99ec85e7a448 // indirect
-	sigs.k8s.io/aws-iam-authenticator v0.6.7 // indirect
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/kustomize/api v0.13.2 // indirect
 	sigs.k8s.io/kustomize/kustomize/v4 v4.5.7 // indirect
