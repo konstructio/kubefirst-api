@@ -11,7 +11,7 @@ require (
 	github.com/civo/civogo v0.3.28
 	github.com/gin-gonic/gin v1.8.2
 	github.com/go-git/go-git/v5 v5.6.1
-	github.com/kubefirst/runtime v0.1.16-beta1
+	github.com/kubefirst/runtime v0.1.16
 	github.com/minio/minio-go/v7 v7.0.49
 	github.com/rs/zerolog v1.29.0
 	github.com/sirupsen/logrus v1.9.0
