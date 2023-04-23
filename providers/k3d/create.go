@@ -27,7 +27,7 @@ func CreateK3DCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
-	err = ctrl.DownloadTools(ctrl.GitProvider, ctrl.GitOwner, ctrl.ProviderConfig.(k3d.K3dConfig).ToolsDir)
+	err = ctrl.DownloadTools(ctrl.ProviderConfig.(*k3d.K3dConfig).ToolsDir)
 	if err != nil {
 		return err
 	}

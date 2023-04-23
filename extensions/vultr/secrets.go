@@ -20,8 +20,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func BootstrapVultrMgmtCluster(dryRun bool, kubeconfigPath string, cl *types.Cluster) error {
-	clientset, err := k8s.GetClientSet(dryRun, kubeconfigPath)
+func BootstrapVultrMgmtCluster(kubeconfigPath string, cl *types.Cluster) error {
+	clientset, err := k8s.GetClientSet(kubeconfigPath)
 	if err != nil {
 		log.Info().Msg("error getting kubernetes clientset")
 	}

@@ -26,7 +26,7 @@ func CreateDigitaloceanCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
-	err = ctrl.DownloadTools(ctrl.GitProvider, ctrl.GitOwner, ctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).ToolsDir)
+	err = ctrl.DownloadTools(ctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).ToolsDir)
 	if err != nil {
 		return err
 	}

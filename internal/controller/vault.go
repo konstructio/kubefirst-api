@@ -171,7 +171,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 
 		log.Info("configuring vault with terraform")
 
-		var tfEntrypoint string
+		var tfEntrypoint, terraformClient string
 
 		switch clctrl.CloudProvider {
 		case "aws":
@@ -185,6 +185,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 			}
 
 			tfEntrypoint = clctrl.ProviderConfig.(*awsinternal.AwsConfig).GitopsDir + "/terraform/vault"
+			terraformClient = clctrl.ProviderConfig.(*awsinternal.AwsConfig).TerraformClient
 		case "civo":
 			tfEnvs = civoext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, &cl)
@@ -196,6 +197,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 			}
 
 			tfEntrypoint = clctrl.ProviderConfig.(*civo.CivoConfig).GitopsDir + "/terraform/vault"
+			terraformClient = clctrl.ProviderConfig.(*civo.CivoConfig).TerraformClient
 		case "digitalocean":
 			tfEnvs = digitaloceanext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, &cl)
@@ -207,6 +209,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 			}
 
 			tfEntrypoint = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).GitopsDir + "/terraform/vault"
+			terraformClient = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient
 		case "k3d":
 			kubernetesInClusterAPIService, err := k8s.ReadService(clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig, "default", "kubernetes")
 			if err != nil {
@@ -241,6 +244,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 			// tfEnvs["TF_LOG"] = "DEBUG"
 
 			tfEntrypoint = clctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir + "/terraform/vault"
+			terraformClient = clctrl.ProviderConfig.(k3d.K3dConfig).TerraformClient
 		case "vultr":
 			tfEnvs = vultrext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
@@ -252,9 +256,10 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 			}
 
 			tfEntrypoint = clctrl.ProviderConfig.(*vultr.VultrConfig).GitopsDir + "/terraform/vault"
+			terraformClient = clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient
 		}
 
-		err = terraform.InitApplyAutoApprove(false, tfEntrypoint, tfEnvs)
+		err = terraform.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricVaultTerraformApplyFailed, err.Error())
 			return err

@@ -21,7 +21,7 @@ import (
 // DeleteK3DCluster
 func DeleteK3DCluster(cl *types.Cluster) error {
 	// Instantiate K3d config
-	config := k3d.GetConfig(cl.GitProvider, cl.GitOwner)
+	config := k3d.GetConfig(cl.ClusterName, cl.GitProvider, cl.GitOwner)
 	mdbcl := &db.MongoDBClient{}
 	err := mdbcl.InitDatabase()
 	if err != nil {
@@ -46,7 +46,7 @@ func DeleteK3DCluster(cl *types.Cluster) error {
 			tfEnvs["TF_VAR_aws_access_key_id"] = pkg.MinioDefaultUsername
 			tfEnvs["TF_VAR_aws_secret_access_key"] = pkg.MinioDefaultPassword
 
-			err := terraform.InitDestroyAutoApprove(false, tfEntrypoint, tfEnvs)
+			err := terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Printf("error executing terraform destroy %s", tfEntrypoint)
 				return err
@@ -105,7 +105,7 @@ func DeleteK3DCluster(cl *types.Cluster) error {
 			tfEnvs["TF_VAR_atlantis_repo_webhook_url"] = cl.AtlantisWebhookURL
 			tfEnvs["TF_VAR_owner_group_id"] = strconv.Itoa(gitlabClient.ParentGroupID)
 
-			err = terraform.InitDestroyAutoApprove(false, tfEntrypoint, tfEnvs)
+			err = terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Printf("error executing terraform destroy %s", tfEntrypoint)
 				return err

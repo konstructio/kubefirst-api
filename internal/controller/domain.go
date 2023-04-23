@@ -28,7 +28,7 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 
 		switch clctrl.CloudProvider {
 		case "aws":
-			domainLiveness := clctrl.AwsClient.TestHostedZoneLiveness(false, clctrl.DomainName)
+			domainLiveness := clctrl.AwsClient.TestHostedZoneLiveness(clctrl.DomainName)
 			if !domainLiveness {
 				return fmt.Errorf("failed to verify domain liveness for domain %s", clctrl.DomainName)
 			}
@@ -41,7 +41,7 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 			}
 
 			log.Infof("domainId: %s", domainId)
-			domainLiveness := civo.TestDomainLiveness(false, clctrl.DomainName, domainId, clctrl.CloudRegion)
+			domainLiveness := civo.TestDomainLiveness(clctrl.DomainName, domainId, clctrl.CloudRegion)
 			if !domainLiveness {
 				return fmt.Errorf("failed to verify domain liveness for domain %s", clctrl.DomainName)
 			}
@@ -58,7 +58,7 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 			}
 
 			log.Infof("domainId: %s", domainId)
-			domainLiveness := digitaloceanConf.TestDomainLiveness(false, clctrl.DomainName)
+			domainLiveness := digitaloceanConf.TestDomainLiveness(clctrl.DomainName)
 			if !domainLiveness {
 				return fmt.Errorf("failed to verify domain liveness for domain %s", clctrl.DomainName)
 			}
@@ -76,7 +76,7 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 
 			// viper values set in above function
 			log.Infof("domainId: %s", domainId)
-			domainLiveness := vultrConf.TestDomainLiveness(false, clctrl.DomainName)
+			domainLiveness := vultrConf.TestDomainLiveness(clctrl.DomainName)
 			if !domainLiveness {
 				return fmt.Errorf("failed to verify domain liveness for domain %s", clctrl.DomainName)
 			}

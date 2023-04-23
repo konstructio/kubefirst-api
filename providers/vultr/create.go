@@ -26,7 +26,7 @@ func CreateVultrCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
-	err = ctrl.DownloadTools(ctrl.GitProvider, ctrl.GitOwner, ctrl.ProviderConfig.(*vultr.VultrConfig).ToolsDir)
+	err = ctrl.DownloadTools(ctrl.ProviderConfig.(*vultr.VultrConfig).ToolsDir)
 	if err != nil {
 		return err
 	}
