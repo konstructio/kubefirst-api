@@ -44,7 +44,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 			tfEnvs := map[string]string{}
 			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, cl)
 			tfEnvs = awsext.GetGithubTerraformEnvs(tfEnvs, cl)
-			err := terraform.InitDestroyAutoApprove(false, config.TerraformClient, tfEntrypoint, tfEnvs)
+			err := terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Printf("error executing terraform destroy %s", tfEntrypoint)
 				return err
@@ -97,7 +97,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 			tfEnvs := map[string]string{}
 			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, cl)
 			tfEnvs = awsext.GetGitlabTerraformEnvs(tfEnvs, gitlabClient.ParentGroupID, cl)
-			err = terraform.InitDestroyAutoApprove(false, config.TerraformClient, tfEntrypoint, tfEnvs)
+			err = terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Infof("error executing terraform destroy %s", tfEntrypoint)
 				return err
@@ -202,7 +202,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 			}
 			tfEnvs = awsext.GetGitlabTerraformEnvs(tfEnvs, gid, cl)
 		}
-		err = terraform.InitDestroyAutoApprove(false, config.TerraformClient, tfEntrypoint, tfEnvs)
+		err = terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Printf("error executing terraform destroy %s", tfEntrypoint)
 			return err

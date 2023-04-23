@@ -259,7 +259,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 			terraformClient = clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient
 		}
 
-		err = terraform.InitApplyAutoApprove(false, terraformClient, tfEntrypoint, tfEnvs)
+		err = terraform.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricVaultTerraformApplyFailed, err.Error())
 			return err

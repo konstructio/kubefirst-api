@@ -95,7 +95,7 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 			terraformClient = clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient
 		}
 
-		err = terraform.InitApplyAutoApprove(false, terraformClient, tfEntrypoint, tfEnvs)
+		err = terraform.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricUsersTerraformApplyStarted, err.Error())
 			return err

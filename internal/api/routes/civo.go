@@ -53,7 +53,7 @@ func GetValidateCivoDomain(c *gin.Context) {
 		return
 	}
 
-	validated := civo.TestDomainLiveness(false, domainName, domainId, settings.CloudRegion)
+	validated := civo.TestDomainLiveness(domainName, domainId, settings.CloudRegion)
 	if !validated {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: "domain validation failed",
