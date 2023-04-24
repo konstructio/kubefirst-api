@@ -9,6 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/eks v1.27.10
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.27.5
 	github.com/civo/civogo v0.3.28
+	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.8.2
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/kubefirst/runtime v0.1.16

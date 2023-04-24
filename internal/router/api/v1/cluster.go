@@ -140,6 +140,7 @@ func GetCluster(c *gin.Context) {
 		})
 		return
 	}
+
 	c.JSON(http.StatusOK, cluster)
 }
 
