@@ -44,7 +44,7 @@ func DeleteCluster(c *gin.Context) {
 
 	// Delete cluster
 	mdbcl := &db.MongoDBClient{}
-	err := mdbcl.InitDatabase()
+	err := mdbcl.InitDatabase("api", "clusters")
 	if err != nil {
 		log.Error(err)
 	}
@@ -128,7 +128,7 @@ func GetCluster(c *gin.Context) {
 
 	// Retrieve cluster info
 	mdbcl := &db.MongoDBClient{}
-	err := mdbcl.InitDatabase()
+	err := mdbcl.InitDatabase("api", "clusters")
 	if err != nil {
 		log.Error(err)
 	}
@@ -156,7 +156,7 @@ func GetCluster(c *gin.Context) {
 func GetClusters(c *gin.Context) {
 	// Retrieve all clusters info
 	mdbcl := &db.MongoDBClient{}
-	err := mdbcl.InitDatabase()
+	err := mdbcl.InitDatabase("api", "clusters")
 	if err != nil {
 		log.Error(err)
 	}

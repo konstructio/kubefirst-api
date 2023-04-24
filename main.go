@@ -8,9 +8,10 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/kubefirst/kubefirst-api/docs"
-	"github.com/kubefirst/kubefirst-api/internal/api"
+	api "github.com/kubefirst/kubefirst-api/internal/router"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -33,6 +34,7 @@ func main() {
 		TimestampFormat: "",
 	})
 	log.SetReportCaller(false)
+	log.SetOutput(os.Stdout)
 
 	// Programmatically set swagger info
 	docs.SwaggerInfo.Title = "Kubefirst API"

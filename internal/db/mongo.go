@@ -8,6 +8,8 @@ package db
 
 import (
 	"context"
+	"fmt"
+	"os"
 
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	log "github.com/sirupsen/logrus"
@@ -23,10 +25,10 @@ type MongoDBClient struct {
 }
 
 // InitDatabase
-func (mdbcl *MongoDBClient) InitDatabase() error {
+func (mdbcl *MongoDBClient) InitDatabase(databaseName string, collectionName string) error {
 	mdbcl.Context = context.Background()
 
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017/")
+	clientOptions := options.Client().ApplyURI(fmt.Sprintf("mongodb://%s/", os.Getenv("MONGODB_HOST")))
 	client, err := mongo.Connect(mdbcl.Context, clientOptions)
 	if err != nil {
 		return err
@@ -38,7 +40,7 @@ func (mdbcl *MongoDBClient) InitDatabase() error {
 	}
 
 	mdbcl.Client = client
-	mdbcl.Collection = client.Database("api").Collection("clusters")
+	mdbcl.Collection = client.Database(databaseName).Collection(collectionName)
 
 	return nil
 }

@@ -100,7 +100,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 
 	// Database controller
 	clctrl.MdbCl = &db.MongoDBClient{}
-	err := clctrl.MdbCl.InitDatabase()
+	err := clctrl.MdbCl.InitDatabase("api", "clusters")
 	if err != nil {
 		return err
 	}

@@ -27,10 +27,19 @@ import (
 
 // DeleteAWSCluster
 func DeleteAWSCluster(cl *types.Cluster) error {
+	// Logging handler
+	// Logs to stdout to maintain compatibility with event streaming
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "",
+	})
+	log.SetReportCaller(false)
+	log.SetOutput(os.Stdout)
+
 	// Instantiate aws config
 	config := awsinternal.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner)
 	mdbcl := &db.MongoDBClient{}
-	err := mdbcl.InitDatabase()
+	err := mdbcl.InitDatabase("api", "clusters")
 	if err != nil {
 		return err
 	}

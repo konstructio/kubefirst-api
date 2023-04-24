@@ -8,6 +8,7 @@ package controller
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
@@ -26,6 +27,15 @@ import (
 
 // RunUsersTerraform
 func (clctrl *ClusterController) RunUsersTerraform() error {
+	// Logging handler
+	// Logs to stdout to maintain compatibility with event streaming
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "",
+	})
+	log.SetReportCaller(false)
+	log.SetOutput(os.Stdout)
+
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err

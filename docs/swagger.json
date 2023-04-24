@@ -296,6 +296,16 @@
                     }
                 }
             }
+        },
+        "/stream": {
+            "get": {
+                "description": "Stream API server logs",
+                "tags": [
+                    "logs"
+                ],
+                "summary": "Stream API server logs",
+                "responses": {}
+            }
         }
     },
     "definitions": {
@@ -346,6 +356,9 @@
                 "argoCDCreateRegistryCheck": {
                     "type": "boolean"
                 },
+                "argoCDDeleteRegistryCheck": {
+                    "type": "boolean"
+                },
                 "argoCDInitializeCheck": {
                     "type": "boolean"
                 },
@@ -364,11 +377,14 @@
                 "atlantisWebhookURL": {
                     "type": "string"
                 },
+                "awsaccountId": {
+                    "description": "kms",
+                    "type": "string"
+                },
                 "awskmskeyDetokenizedCheck": {
                     "type": "boolean"
                 },
                 "awskmskeyId": {
-                    "description": "kms",
                     "type": "string"
                 },
                 "civoToken": {
