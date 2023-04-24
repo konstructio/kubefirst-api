@@ -34,7 +34,11 @@ func main() {
 		TimestampFormat: "",
 	})
 	log.SetReportCaller(false)
-	log.SetOutput(os.Stdout)
+
+	// Check for required environment variables
+	if os.Getenv("MONGODB_HOST") == "" {
+		log.Fatalf("the MONGODB_HOST environment variable must be set")
+	}
 
 	// Programmatically set swagger info
 	docs.SwaggerInfo.Title = "Kubefirst API"

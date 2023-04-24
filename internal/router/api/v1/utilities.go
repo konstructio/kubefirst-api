@@ -32,7 +32,6 @@ func GetHealth(c *gin.Context) {
 	log.SetReportCaller(false)
 	log.SetOutput(os.Stdout)
 
-	log.Info("something blah blah blah")
 	c.JSON(http.StatusOK, types.JSONHealthResponse{
 		Status: "healthz",
 	})
