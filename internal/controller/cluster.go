@@ -8,6 +8,7 @@ package controller
 
 import (
 	"fmt"
+	"os"
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
@@ -45,6 +46,15 @@ var VultrDestinationGitopsRepoGitURL, VultrDestinationMetaphorRepoGitURL string
 
 // CreateCluster
 func (clctrl *ClusterController) CreateCluster() error {
+	// Logging handler
+	// Logs to stdout to maintain compatibility with event streaming
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "",
+	})
+	log.SetReportCaller(false)
+	log.SetOutput(os.Stdout)
+
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
@@ -651,6 +661,15 @@ func (clctrl *ClusterController) ContainerRegistryAuth() (string, error) {
 
 // WaitForClusterReady
 func (clctrl *ClusterController) WaitForClusterReady() error {
+	// Logging handler
+	// Logs to stdout to maintain compatibility with event streaming
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "",
+	})
+	log.SetReportCaller(false)
+	log.SetOutput(os.Stdout)
+
 	var kcfg *k8s.KubernetesClient
 
 	switch clctrl.CloudProvider {

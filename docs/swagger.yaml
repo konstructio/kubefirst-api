@@ -30,6 +30,8 @@ definitions:
         type: string
       argoCDCreateRegistryCheck:
         type: boolean
+      argoCDDeleteRegistryCheck:
+        type: boolean
       argoCDInitializeCheck:
         type: boolean
       argoCDInstallCheck:
@@ -42,10 +44,12 @@ definitions:
         type: string
       atlantisWebhookURL:
         type: string
+      awsaccountId:
+        description: kms
+        type: string
       awskmskeyDetokenizedCheck:
         type: boolean
       awskmskeyId:
-        description: kms
         type: string
       civoToken:
         type: string
@@ -408,4 +412,11 @@ paths:
       summary: Return health status if the application is running.
       tags:
       - health
+  /stream:
+    get:
+      description: Stream API server logs
+      responses: {}
+      summary: Stream API server logs
+      tags:
+      - logs
 swagger: "2.0"

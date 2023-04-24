@@ -8,6 +8,7 @@ package controller
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
@@ -59,6 +60,15 @@ func (clctrl *ClusterController) GitInit() error {
 
 // RunGitTerraform
 func (clctrl *ClusterController) RunGitTerraform() error {
+	// Logging handler
+	// Logs to stdout to maintain compatibility with event streaming
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "",
+	})
+	log.SetReportCaller(false)
+	log.SetOutput(os.Stdout)
+
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err

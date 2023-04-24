@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package k3d
 
 import (
+	"os"
 	"strconv"
 
 	"github.com/kubefirst/kubefirst-api/internal/db"
@@ -20,10 +21,19 @@ import (
 
 // DeleteK3DCluster
 func DeleteK3DCluster(cl *types.Cluster) error {
+	// Logging handler
+	// Logs to stdout to maintain compatibility with event streaming
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "",
+	})
+	log.SetReportCaller(false)
+	log.SetOutput(os.Stdout)
+
 	// Instantiate K3d config
 	config := k3d.GetConfig(cl.ClusterName, cl.GitProvider, cl.GitOwner)
 	mdbcl := &db.MongoDBClient{}
-	err := mdbcl.InitDatabase()
+	err := mdbcl.InitDatabase("api", "clusters")
 	if err != nil {
 		return err
 	}

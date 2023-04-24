@@ -47,6 +47,8 @@ For local development, it's recommended to install [MongoDB Community Edition](h
 
 It is also recommended to install [MongoDB Compass](https://www.mongodb.com/try/download/atlascli).
 
+The host:port for MongoDB should be supplied as the environment variable `MONGODB_HOST`. When testing locally, use `localhost:27017`.
+
 ## Provider Support
 
 The following providers are available for use with the API.

@@ -302,6 +302,16 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/stream": {
+            "get": {
+                "description": "Stream API server logs",
+                "tags": [
+                    "logs"
+                ],
+                "summary": "Stream API server logs",
+                "responses": {}
+            }
         }
     },
     "definitions": {
@@ -352,6 +362,9 @@ const docTemplate = `{
                 "argoCDCreateRegistryCheck": {
                     "type": "boolean"
                 },
+                "argoCDDeleteRegistryCheck": {
+                    "type": "boolean"
+                },
                 "argoCDInitializeCheck": {
                     "type": "boolean"
                 },
@@ -370,11 +383,14 @@ const docTemplate = `{
                 "atlantisWebhookURL": {
                     "type": "string"
                 },
+                "awsaccountId": {
+                    "description": "kms",
+                    "type": "string"
+                },
                 "awskmskeyDetokenizedCheck": {
                     "type": "boolean"
                 },
                 "awskmskeyId": {
-                    "description": "kms",
                     "type": "string"
                 },
                 "civoToken": {

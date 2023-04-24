@@ -8,7 +8,7 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	routes "github.com/kubefirst/kubefirst-api/internal/api/routes"
+	router "github.com/kubefirst/kubefirst-api/internal/router/api/v1"
 	log "github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -36,20 +36,23 @@ func SetupRouter() *gin.Engine {
 	v1 := r.Group("api/v1")
 	{
 		// Cluster
-		v1.GET("/cluster", routes.GetClusters)
-		v1.GET("/cluster/:cluster_name", routes.GetCluster)
-		v1.DELETE("/cluster/:cluster_name", routes.DeleteCluster)
-		v1.POST("/cluster/:cluster_name", routes.PostCreateCluster)
+		v1.GET("/cluster", router.GetClusters)
+		v1.GET("/cluster/:cluster_name", router.GetCluster)
+		v1.DELETE("/cluster/:cluster_name", router.DeleteCluster)
+		v1.POST("/cluster/:cluster_name", router.PostCreateCluster)
 
 		// AWS
-		v1.GET("/aws/profiles", routes.GetAWSProfiles)
-		v1.GET("/aws/validate/domain/:domain", routes.GetValidateAWSDomain)
+		v1.GET("/aws/profiles", router.GetAWSProfiles)
+		v1.GET("/aws/validate/domain/:domain", router.GetValidateAWSDomain)
 
 		// Civo
-		v1.GET("/civo/validate/domain/:domain", routes.GetValidateCivoDomain)
+		v1.GET("/civo/validate/domain/:domain", router.GetValidateCivoDomain)
 
 		// Utilities
-		v1.GET("/health", routes.GetHealth)
+		v1.GET("/health", router.GetHealth)
+
+		// Event streaming
+		v1.GET("/stream", router.GetLogs)
 	}
 
 	// swagger-ui
