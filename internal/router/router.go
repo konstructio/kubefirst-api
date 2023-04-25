@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package api
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	router "github.com/kubefirst/kubefirst-api/internal/router/api/v1"
 	log "github.com/sirupsen/logrus"
@@ -31,6 +32,12 @@ func SetupRouter() *gin.Engine {
 
 	// Recovery middleware
 	r.Use(gin.Recovery())
+
+	// CORS
+	r.Use(cors.New(cors.Config{
+		AllowAllOrigins: true,
+		AllowMethods:    []string{"DELETE", "GET", "HEAD", "PATCH", "POST", "PUT"},
+	}))
 
 	// Define api/v1 group
 	v1 := r.Group("api/v1")

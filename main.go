@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gin-contrib/cors"
 	"github.com/kubefirst/kubefirst-api/docs"
 	api "github.com/kubefirst/kubefirst-api/internal/router"
 	log "github.com/sirupsen/logrus"
@@ -51,11 +50,6 @@ func main() {
 	// API
 	r := api.SetupRouter()
 
-	// CORS
-	r.Use(cors.New(cors.Config{
-		AllowAllOrigins: true,
-		AllowMethods:    []string{"DELETE", "GET", "HEAD", "PATCH", "POST", "PUT"},
-	}))
 	err := r.Run(fmt.Sprintf(":%v", port))
 	if err != nil {
 		log.Fatalf("Error starting API: %s", err)
