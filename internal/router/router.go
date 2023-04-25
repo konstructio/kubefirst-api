@@ -23,6 +23,13 @@ func SetupRouter() *gin.Engine {
 	log.Info("Starting kubefirst API...")
 	r := gin.New()
 
+	// CORS
+	r.Use(cors.New(cors.Config{
+		AllowAllOrigins: true,
+		AllowMethods:    []string{"DELETE", "GET", "HEAD", "PATCH", "POST", "PUT", "OPTIONS"},
+		AllowHeaders: []string{"origin", "content-Type"},
+	}))
+
 	// Establish routes we don't want to log requests to
 	r.Use(gin.LoggerWithConfig(gin.LoggerConfig{
 		SkipPaths: []string{
@@ -32,12 +39,6 @@ func SetupRouter() *gin.Engine {
 
 	// Recovery middleware
 	r.Use(gin.Recovery())
-
-	// CORS
-	r.Use(cors.New(cors.Config{
-		AllowAllOrigins: true,
-		AllowMethods:    []string{"DELETE", "GET", "HEAD", "PATCH", "POST", "PUT"},
-	}))
 
 	// Define api/v1 group
 	v1 := r.Group("api/v1")
