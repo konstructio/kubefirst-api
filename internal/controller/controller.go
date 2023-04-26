@@ -113,6 +113,15 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		log.Info("cluster record doesn't exist, continuing")
 	}
 
+	// If record exists but status is deleted, entry should be deleted
+	// and process should start fresh
+	if recordExists && rec.Status == "deleted" {
+		err = clctrl.MdbCl.DeleteCluster(def.ClusterName)
+		if err != nil {
+			return fmt.Errorf("could not delete existing cluster %s: %s", def.ClusterName, err)
+		}
+	}
+
 	var clusterID string
 	if recordExists {
 		clusterID = rec.ClusterID
@@ -233,6 +242,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	// Write cluster record if it doesn't exist
 	cl := types.Cluster{
 		ID:                    primitive.NewObjectID(),
+		Status:                "provisioning",
 		AlertsEmail:           clctrl.AlertsEmail,
 		ClusterName:           clctrl.ClusterName,
 		CloudProvider:         clctrl.CloudProvider,

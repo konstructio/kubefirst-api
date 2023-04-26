@@ -44,6 +44,11 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 		return err
 	}
 
+	err = mdbcl.UpdateCluster(cl.ClusterName, "status", "deleting")
+	if err != nil {
+		return err
+	}
+
 	switch cl.GitProvider {
 	case "github":
 		if cl.GitTerraformApplyCheck {
@@ -56,6 +61,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 			err := terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Printf("error executing terraform destroy %s", tfEntrypoint)
+				mdbcl.UpdateCluster(cl.ClusterName, "status", "error")
 				return err
 			}
 			log.Info("github resources terraform destroyed")
@@ -109,6 +115,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 			err = terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Infof("error executing terraform destroy %s", tfEntrypoint)
+				mdbcl.UpdateCluster(cl.ClusterName, "status", "error")
 				return err
 			}
 
@@ -180,6 +187,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 				log.Info("deleting the registry application")
 				httpCode, _, err := argocd.DeleteApplication(&argocdHttpClient, config.RegistryAppName, argocdAuthToken, "true")
 				if err != nil {
+					mdbcl.UpdateCluster(cl.ClusterName, "status", "error")
 					return err
 				}
 				log.Infof("http status code %d", httpCode)
@@ -214,6 +222,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 		err = terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Printf("error executing terraform destroy %s", tfEntrypoint)
+			mdbcl.UpdateCluster(cl.ClusterName, "status", "error")
 			return err
 		}
 		log.Info("aws resources terraform destroyed")
@@ -240,6 +249,11 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 		if err != nil {
 			log.Warn(err.Error())
 		}
+	}
+
+	err = mdbcl.UpdateCluster(cl.ClusterName, "status", "deleted")
+	if err != nil {
+		return err
 	}
 
 	return nil

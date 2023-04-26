@@ -59,51 +59,71 @@ func DeleteCluster(c *gin.Context) {
 
 	switch rec.CloudProvider {
 	case "aws":
-		err := aws.DeleteAWSCluster(&rec)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-				Message: err.Error(),
-			})
-			return
-		}
+		cCp := c.Copy()
+
+		go func() {
+			err := aws.DeleteAWSCluster(&rec)
+			if err != nil {
+				cCp.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: err.Error(),
+				})
+				return
+			}
+		}()
+
+		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
+			Message: "cluster delete enqueued",
+		})
 	case "civo":
-		err := civo.DeleteCivoCluster(&rec)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-				Message: err.Error(),
-			})
-			return
-		}
+		cCp := c.Copy()
+
+		go func() {
+			err := civo.DeleteCivoCluster(&rec)
+			if err != nil {
+				cCp.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: err.Error(),
+				})
+				return
+			}
+		}()
+
+		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
+			Message: "cluster delete enqueued",
+		})
 	case "digitalocean":
-		err := digitalocean.DeleteDigitaloceanCluster(&rec)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-				Message: err.Error(),
-			})
-			return
-		}
+		cCp := c.Copy()
+
+		go func() {
+			err := digitalocean.DeleteDigitaloceanCluster(&rec)
+			if err != nil {
+				cCp.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: err.Error(),
+				})
+				return
+			}
+		}()
+
+		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
+			Message: "cluster delete enqueued",
+		})
 	case "k3d":
 	case "vultr":
-		err := vultr.DeleteVultrCluster(&rec)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-				Message: err.Error(),
-			})
-			return
-		}
-	}
+		cCp := c.Copy()
 
-	err = mdbcl.DeleteCluster(clusterName)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: err.Error(),
+		go func() {
+			err := vultr.DeleteVultrCluster(&rec)
+			if err != nil {
+				cCp.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: err.Error(),
+				})
+				return
+			}
+		}()
+
+		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
+			Message: "cluster delete enqueued",
 		})
-		return
 	}
-
-	c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
-		Message: "cluster deleted",
-	})
 }
 
 // GetCluster godoc
@@ -209,64 +229,84 @@ func PostCreateCluster(c *gin.Context) {
 	// Create
 	switch clusterDefinition.CloudProvider {
 	case "aws":
-		err = aws.CreateAWSCluster(&clusterDefinition)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-				Message: fmt.Sprintf("%s", err),
-			})
-			return
-		}
+		cCp := c.Copy()
+
+		go func() {
+			err = aws.CreateAWSCluster(&clusterDefinition)
+			if err != nil {
+				cCp.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: fmt.Sprintf("%s", err),
+				})
+				return
+			}
+		}()
 
 		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
-			Message: "cluster created",
+			Message: "cluster create enqueued",
 		})
 	case "civo":
-		err = civo.CreateCivoCluster(&clusterDefinition)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-				Message: fmt.Sprintf("%s", err),
-			})
-			return
-		}
+		cCp := c.Copy()
+
+		go func() {
+			err = civo.CreateCivoCluster(&clusterDefinition)
+			if err != nil {
+				cCp.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: fmt.Sprintf("%s", err),
+				})
+				return
+			}
+		}()
 
 		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
-			Message: "cluster created",
+			Message: "cluster create enqueued",
 		})
 	case "digitalocean":
-		err = digitalocean.CreateDigitaloceanCluster(&clusterDefinition)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-				Message: fmt.Sprintf("%s", err),
-			})
-			return
-		}
+		cCp := c.Copy()
+
+		go func() {
+			err = digitalocean.CreateDigitaloceanCluster(&clusterDefinition)
+			if err != nil {
+				cCp.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: fmt.Sprintf("%s", err),
+				})
+				return
+			}
+		}()
 
 		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
-			Message: "cluster created",
+			Message: "cluster create enqueued",
 		})
 	case "k3d":
-		err = k3d.CreateK3DCluster(&clusterDefinition)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-				Message: fmt.Sprintf("%s", err),
-			})
-			return
-		}
+		cCp := c.Copy()
+
+		go func() {
+			err = k3d.CreateK3DCluster(&clusterDefinition)
+			if err != nil {
+				cCp.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: fmt.Sprintf("%s", err),
+				})
+				return
+			}
+		}()
 
 		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
-			Message: "cluster created",
+			Message: "cluster create enqueued",
 		})
 	case "vultr":
-		err = vultr.CreateVultrCluster(&clusterDefinition)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-				Message: fmt.Sprintf("%s", err),
-			})
-			return
-		}
+		cCp := c.Copy()
+
+		go func() {
+			err = vultr.CreateVultrCluster(&clusterDefinition)
+			if err != nil {
+				cCp.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: fmt.Sprintf("%s", err),
+				})
+				return
+			}
+		}()
 
 		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
-			Message: "cluster created",
+			Message: "cluster create enqueued",
 		})
 	}
 }
