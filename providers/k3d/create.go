@@ -220,6 +220,11 @@ func CreateK3DCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
+	err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "status", "provisioned")
+	if err != nil {
+		return err
+	}
+
 	log.Info("cluster creation complete")
 
 	// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricMgmtClusterInstallCompleted, "")
