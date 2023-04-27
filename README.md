@@ -22,6 +22,9 @@ Kubefirst API runtime implementation.
 
 - [kubefirst-api](#kubefirst-api)
   - [Running Locally](#running-locally)
+    - [build the binary](#build-the-binary)
+    - [or](#or)
+    - [leverage `air` for live reloading locally](#leverage-air-for-live-reloading-locally)
   - [Prerequisites](#prerequisites)
   - [Provider Support](#provider-support)
   - [Creating a Cluster](#creating-a-cluster)
@@ -35,7 +38,18 @@ Kubefirst API runtime implementation.
 
 ## Running Locally
 
+### build the binary
 The API can be run locally for testing. It can be run by using `make build` and then calling the binary in the `bin/` directory or by using `go run .`.
+   
+### or   
+   
+### leverage `air` for live reloading locally
+**Prerequsite** - install air
+[air](https://github.com/cosmtrek/air) is a lightweight golang utility   
+```golang
+go install github.com/cosmtrek/air@latest
+```
+run `air` from the root of the repository. this will watch go files and live rebuild a local running instance of `kubefirst-api`.   
 
 The API is available at `:8081/api/v1` while running.
 
