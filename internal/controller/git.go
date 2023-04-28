@@ -16,11 +16,13 @@ import (
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
+	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/runtime/pkg"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/k3d"
+	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/terraform"
 	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
@@ -74,13 +76,20 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 		return err
 	}
 
+	// Telemetry handler
+	segmentClient, err := telemetryShim.SetupTelemetry(cl)
+	if err != nil {
+		return err
+	}
+	defer segmentClient.Client.Close()
+
 	if !cl.GitTerraformApplyCheck {
 		switch clctrl.CloudProvider {
 		case "aws":
 			switch clctrl.GitProvider {
 			case "github":
 				// //* create teams and repositories in github
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyStarted, "")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyStarted, "")
 
 				log.Info("Creating github resources with terraform")
 
@@ -90,15 +99,15 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*awsinternal.AwsConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating github resources with terraform %s: %s", tfEntrypoint, err)
-					// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
+					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
 					return fmt.Errorf(msg)
 				}
 
 				log.Infof("Created git repositories and teams for github.com/%s", clctrl.GitOwner)
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
 			case "gitlab":
 				// //* create teams and repositories in gitlab
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyStarted, "")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyStarted, "")
 
 				log.Info("Creating gitlab resources with terraform")
 
@@ -108,18 +117,18 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*awsinternal.AwsConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating gitlab resources with terraform %s: %s", tfEntrypoint, err)
-					//telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
+					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
 					return fmt.Errorf(msg)
 				}
 
 				log.Infof("created git projects and groups for gitlab.com/%s", clctrl.GitOwner)
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
 			}
 		case "civo":
 			switch clctrl.GitProvider {
 			case "github":
 				// //* create teams and repositories in github
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyStarted, "")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyStarted, "")
 
 				log.Info("Creating github resources with terraform")
 
@@ -129,15 +138,15 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*civo.CivoConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating github resources with terraform %s: %s", tfEntrypoint, err)
-					// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
+					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
 					return fmt.Errorf(msg)
 				}
 
 				log.Infof("Created git repositories and teams for github.com/%s", clctrl.GitOwner)
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
 			case "gitlab":
 				// //* create teams and repositories in gitlab
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyStarted, "")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyStarted, "")
 
 				log.Info("Creating gitlab resources with terraform")
 
@@ -147,18 +156,18 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*civo.CivoConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating gitlab resources with terraform %s: %s", tfEntrypoint, err)
-					//telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
+					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
 					return fmt.Errorf(msg)
 				}
 
 				log.Infof("created git projects and groups for gitlab.com/%s", clctrl.GitOwner)
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
 			}
 		case "digitalocean":
 			switch clctrl.GitProvider {
 			case "github":
 				// //* create teams and repositories in github
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyStarted, "")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyStarted, "")
 
 				log.Info("Creating github resources with terraform")
 
@@ -168,15 +177,15 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating github resources with terraform %s: %s", tfEntrypoint, err)
-					// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
+					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
 					return fmt.Errorf(msg)
 				}
 
 				log.Infof("Created git repositories and teams for github.com/%s", clctrl.GitOwner)
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
 			case "gitlab":
 				// //* create teams and repositories in gitlab
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyStarted, "")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyStarted, "")
 
 				log.Info("Creating gitlab resources with terraform")
 
@@ -186,18 +195,18 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating gitlab resources with terraform %s: %s", tfEntrypoint, err)
-					//telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
+					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
 					return fmt.Errorf(msg)
 				}
 
 				log.Infof("created git projects and groups for gitlab.com/%s", clctrl.GitOwner)
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
 			}
 		case "k3d":
 			switch clctrl.GitProvider {
 			case "github":
 				// //* create teams and repositories in github
-				// stelemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyStarted, "")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyStarted, "")
 				log.Info("Creating github resources with terraform")
 
 				tfEntrypoint := clctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir + "/terraform/github"
@@ -213,15 +222,15 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(k3d.K3dConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating github resources with terraform %s: %s", tfEntrypoint, err)
-					// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
+					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
 					return fmt.Errorf(msg)
 				}
 
 				log.Info("created git repositories for github.com/%s", clctrl.GitOwner)
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
 			case "gitlab":
 				// //* create teams and repositories in gitlab
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyStarted, "")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyStarted, "")
 				log.Info("Creating gitlab resources with terraform")
 
 				tfEntrypoint := clctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir + "/terraform/gitlab"
@@ -237,18 +246,18 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(k3d.K3dConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating gitlab resources with terraform %s: %s", tfEntrypoint, err)
-					// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
+					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
 					return fmt.Errorf(msg)
 				}
 
 				log.Infof("created git projects and groups for gitlab.com/%s", clctrl.GitOwner)
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
 			}
 		case "vultr":
 			switch clctrl.GitProvider {
 			case "github":
 				// //* create teams and repositories in github
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyStarted, "")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyStarted, "")
 
 				log.Info("Creating github resources with terraform")
 
@@ -258,15 +267,15 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating github resources with terraform %s: %s", tfEntrypoint, err)
-					// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
+					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
 					return fmt.Errorf(msg)
 				}
 
 				log.Infof("Created git repositories and teams for github.com/%s", clctrl.GitOwner)
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
 			case "gitlab":
 				// //* create teams and repositories in gitlab
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyStarted, "")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyStarted, "")
 
 				log.Info("Creating gitlab resources with terraform")
 
@@ -276,12 +285,12 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating gitlab resources with terraform %s: %s", tfEntrypoint, err)
-					//telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
+					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
 					return fmt.Errorf(msg)
 				}
 
 				log.Infof("created git projects and groups for gitlab.com/%s", clctrl.GitOwner)
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
 			}
 		}
 

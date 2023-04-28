@@ -7,6 +7,8 @@ See the LICENSE file for more details.
 package controller
 
 import (
+	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
+	"github.com/kubefirst/runtime/pkg/segment"
 	internalssh "github.com/kubefirst/runtime/pkg/ssh"
 )
 
@@ -17,10 +19,17 @@ func (clctrl *ClusterController) InitializeBot() error {
 		return err
 	}
 
+	// Telemetry handler
+	segmentClient, err := telemetryShim.SetupTelemetry(cl)
+	if err != nil {
+		return err
+	}
+	defer segmentClient.Client.Close()
+
 	if !cl.KbotSetupCheck {
 		sshPrivateKey, sshPublicKey, err := internalssh.CreateSshKeyPair()
 		if err != nil {
-			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricKbotSetupFailed, err.Error())
+			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricKbotSetupFailed, err.Error())
 			return err
 		}
 

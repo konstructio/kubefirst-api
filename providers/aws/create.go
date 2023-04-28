@@ -13,10 +13,12 @@ import (
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
+	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/bootstrap"
 	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -261,14 +263,14 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 
 	log.Info("cluster creation complete")
 
-	// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricMgmtClusterInstallCompleted, "")
+	// Telemetry handler
+	segmentClient, err := telemetryShim.SetupTelemetry(rec)
+	if err != nil {
+		return err
+	}
+	defer segmentClient.Client.Close()
 
-	// defer func(c segment.SegmentClient) {
-	// 	err := c.Client.Close()
-	// 	if err != nil {
-	// 		log.Info().Msgf("error closing segment client %s", err.Error())
-	// 	}
-	// }(*segmentClient)
+	telemetryShim.Transmit(rec.UseTelemetry, segmentClient, segment.MetricMgmtClusterInstallCompleted, "")
 
 	return nil
 }

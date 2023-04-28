@@ -63,6 +63,9 @@ type Cluster struct {
 	AWSKMSKeyId               string `bson:"aws_kms_key_id,omitempty"`
 	AWSKMSKeyDetokenizedCheck bool   `bson:"aws_kms_key_detokenized_check"`
 
+	// Telemetry
+	UseTelemetry bool `bson:"use_telemetry"`
+
 	// Checks
 	GitInitCheck                   bool `bson:"git_init_check"`
 	InstallToolsCheck              bool `bson:"install_tools_check"`
