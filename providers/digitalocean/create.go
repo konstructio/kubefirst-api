@@ -11,9 +11,11 @@ import (
 	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/controller"
+	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/ssl"
 	log "github.com/sirupsen/logrus"
 )
@@ -178,14 +180,19 @@ func CreateDigitaloceanCluster(definition *types.ClusterDefinition) error {
 
 	log.Info("cluster creation complete")
 
-	// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricMgmtClusterInstallCompleted, "")
+	// Telemetry handler
+	rec, err := ctrl.GetCurrentClusterRecord()
+	if err != nil {
+		return err
+	}
 
-	// defer func(c segment.SegmentClient) {
-	// 	err := c.Client.Close()
-	// 	if err != nil {
-	// 		log.Info().Msgf("error closing segment client %s", err.Error())
-	// 	}
-	// }(*segmentClient)
+	segmentClient, err := telemetryShim.SetupTelemetry(rec)
+	if err != nil {
+		return err
+	}
+	defer segmentClient.Client.Close()
+
+	telemetryShim.Transmit(rec.UseTelemetry, segmentClient, segment.MetricMgmtClusterInstallCompleted, "")
 
 	return nil
 }

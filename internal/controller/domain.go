@@ -10,8 +10,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
+	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 )
@@ -23,8 +25,15 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 		return err
 	}
 
+	// Telemetry handler
+	segmentClient, err := telemetryShim.SetupTelemetry(cl)
+	if err != nil {
+		return err
+	}
+	defer segmentClient.Client.Close()
+
 	if !cl.DomainLivenessCheck {
-		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricDomainLivenessStarted, "")
+		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricDomainLivenessStarted, "")
 
 		switch clctrl.CloudProvider {
 		case "aws":
@@ -36,7 +45,7 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 			// domain id
 			domainId, err := civo.GetDNSInfo(clctrl.DomainName, clctrl.CloudRegion)
 			if err != nil {
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricDomainLivenessFailed, "domain liveness test failed")
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricDomainLivenessFailed, "domain liveness test failed")
 				log.Info(err.Error())
 			}
 
@@ -87,7 +96,8 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 			return err
 		}
 
-		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricDomainLivenessCompleted, "")a
+		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricDomainLivenessCompleted, "")
+
 		log.Infof("domain %s verified", clctrl.DomainName)
 	}
 

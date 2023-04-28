@@ -17,12 +17,14 @@ import (
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
+	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/runtime/pkg"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/k3d"
 	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/terraform"
 	"github.com/kubefirst/runtime/pkg/vault"
 	"github.com/kubefirst/runtime/pkg/vultr"
@@ -47,6 +49,13 @@ func (clctrl *ClusterController) InitializeVault() error {
 		return err
 	}
 
+	// Telemetry handler
+	segmentClient, err := telemetryShim.SetupTelemetry(cl)
+	if err != nil {
+		return err
+	}
+	defer segmentClient.Client.Close()
+
 	if !cl.VaultInitializedCheck {
 		var kcfg *k8s.KubernetesClient
 		var vaultHandlerPath string
@@ -68,7 +77,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 			vaultHandlerPath = "github.com:kubefirst/manifests.git/vault-handler/replicas-3"
 		}
 
-		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricVaultInitializationStarted, "")
+		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricVaultInitializationStarted, "")
 
 		switch clctrl.CloudProvider {
 		case "aws":
@@ -122,12 +131,12 @@ func (clctrl *ClusterController) InitializeVault() error {
 			_, err = k8s.WaitForJobComplete(kcfg.Clientset, job, 240)
 			if err != nil {
 				msg := fmt.Sprintf("could not run vault unseal job: %s", err)
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricVaultInitializationFailed, msg)
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricVaultInitializationFailed, msg)
 				log.Error(msg)
 			}
 		}
 
-		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricVaultInitializationCompleted, "")
+		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricVaultInitializationCompleted, "")
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "vault_initialized_check", true)
 		if err != nil {
@@ -154,6 +163,13 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		return err
 	}
 
+	// Telemetry handler
+	segmentClient, err := telemetryShim.SetupTelemetry(cl)
+	if err != nil {
+		return err
+	}
+	defer segmentClient.Client.Close()
+
 	if !cl.VaultTerraformApplyCheck {
 		var kcfg *k8s.KubernetesClient
 
@@ -170,7 +186,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
 		}
 
-		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricVaultTerraformApplyStarted, "")
+		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricVaultTerraformApplyStarted, "")
 
 		tfEnvs := map[string]string{}
 		var usernamePasswordString, base64DockerAuth, registryAuth string
@@ -280,12 +296,12 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 
 		err = terraform.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
-			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricVaultTerraformApplyFailed, err.Error())
+			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricVaultTerraformApplyFailed, err.Error())
 			return err
 		}
 
 		log.Info("vault terraform executed successfully")
-		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricVaultTerraformApplyCompleted, "")
+		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricVaultTerraformApplyCompleted, "")
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "vault_terraform_apply_check", true)
 		if err != nil {

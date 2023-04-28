@@ -86,6 +86,9 @@ type ClusterController struct {
 	// kbot private key
 	PrivateKey string
 
+	// Telemetry
+	UseTelemetry bool
+
 	// Database Controller
 	MdbCl *db.MongoDBClient
 
@@ -239,9 +242,16 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		clctrl.AwsSecretAccessKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
 	}
 
+	if os.Getenv("USE_TELEMETRY") == "false" {
+		clctrl.UseTelemetry = false
+	} else {
+		clctrl.UseTelemetry = true
+	}
+
 	// Write cluster record if it doesn't exist
 	cl := types.Cluster{
 		ID:                    primitive.NewObjectID(),
+		UseTelemetry:          clctrl.UseTelemetry,
 		Status:                "provisioning",
 		AlertsEmail:           clctrl.AlertsEmail,
 		ClusterName:           clctrl.ClusterName,

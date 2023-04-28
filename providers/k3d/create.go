@@ -13,10 +13,12 @@ import (
 	"github.com/go-git/go-git/v5"
 	gitssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
+	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/pkg/gitClient"
 	"github.com/kubefirst/runtime/pkg/k3d"
 	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -227,14 +229,14 @@ func CreateK3DCluster(definition *types.ClusterDefinition) error {
 
 	log.Info("cluster creation complete")
 
-	// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricMgmtClusterInstallCompleted, "")
+	// Telemetry handler
+	segmentClient, err := telemetryShim.SetupTelemetry(rec)
+	if err != nil {
+		return err
+	}
+	defer segmentClient.Client.Close()
 
-	// defer func(c segment.SegmentClient) {
-	// 	err := c.Client.Close()
-	// 	if err != nil {
-	// 		log.Info().Msgf("error closing segment client %s", err.Error())
-	// 	}
-	// }(*segmentClient)
+	telemetryShim.Transmit(rec.UseTelemetry, segmentClient, segment.MetricMgmtClusterInstallCompleted, "")
 
 	return nil
 }
