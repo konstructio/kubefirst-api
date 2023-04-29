@@ -18,6 +18,7 @@ import (
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
@@ -278,6 +279,11 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 	}
 
 	err = mdbcl.UpdateCluster(cl.ClusterName, "status", "deleted")
+	if err != nil {
+		return err
+	}
+
+	err = pkg.ResetK1Dir(config.K1Dir)
 	if err != nil {
 		return err
 	}

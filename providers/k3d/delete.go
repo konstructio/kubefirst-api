@@ -164,5 +164,10 @@ func DeleteK3DCluster(cl *types.Cluster) error {
 		return err
 	}
 
+	err = pkg.ResetK1Dir(config.K1Dir)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

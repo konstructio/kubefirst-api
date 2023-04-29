@@ -18,6 +18,7 @@ import (
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
 	"github.com/kubefirst/runtime/pkg/civo"
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
@@ -263,6 +264,11 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 	}
 
 	err = mdbcl.UpdateCluster(cl.ClusterName, "status", "deleted")
+	if err != nil {
+		return err
+	}
+
+	err = pkg.ResetK1Dir(config.K1Dir)
 	if err != nil {
 		return err
 	}
