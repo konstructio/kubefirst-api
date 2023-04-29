@@ -16,12 +16,14 @@ import (
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/terraform"
 	log "github.com/sirupsen/logrus"
 )
@@ -37,10 +39,19 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 	log.SetReportCaller(false)
 	log.SetOutput(os.Stdout)
 
+	// Telemetry handler
+	segmentClient, err := telemetryShim.SetupTelemetry(*cl)
+	if err != nil {
+		return err
+	}
+	defer segmentClient.Client.Close()
+
+	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricMgmtClusterDeleteStarted, "")
+
 	// Instantiate aws config
 	config := awsinternal.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner)
 	mdbcl := &db.MongoDBClient{}
-	err := mdbcl.InitDatabase("api", "clusters")
+	err = mdbcl.InitDatabase("api", "clusters")
 	if err != nil {
 		return err
 	}
@@ -61,7 +72,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 			tfEnvs = awsext.GetGithubTerraformEnvs(tfEnvs, cl)
 			err := terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
-				log.Printf("error executing terraform destroy %s", tfEntrypoint)
+				log.Errorf("error executing terraform destroy %s", tfEntrypoint)
 				mdbcl.UpdateCluster(cl.ClusterName, "status", "error")
 				return err
 			}
@@ -115,7 +126,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 			tfEnvs = awsext.GetGitlabTerraformEnvs(tfEnvs, gitlabClient.ParentGroupID, cl)
 			err = terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
-				log.Infof("error executing terraform destroy %s", tfEntrypoint)
+				log.Errorf("error executing terraform destroy %s", tfEntrypoint)
 				mdbcl.UpdateCluster(cl.ClusterName, "status", "error")
 				return err
 			}
@@ -222,7 +233,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 		}
 		err = terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
-			log.Printf("error executing terraform destroy %s", tfEntrypoint)
+			log.Errorf("error executing terraform destroy %s", tfEntrypoint)
 			mdbcl.UpdateCluster(cl.ClusterName, "status", "error")
 			return err
 		}
@@ -251,6 +262,8 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 			log.Warn(err.Error())
 		}
 	}
+
+	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricMgmtClusterDeleteCompleted, "")
 
 	err = mdbcl.UpdateCluster(cl.ClusterName, "status", "deleted")
 	if err != nil {
