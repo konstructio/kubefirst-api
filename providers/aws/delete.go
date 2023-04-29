@@ -17,6 +17,7 @@ import (
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
@@ -252,6 +253,11 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 	}
 
 	err = mdbcl.UpdateCluster(cl.ClusterName, "status", "deleted")
+	if err != nil {
+		return err
+	}
+
+	err = pkg.ResetK1Dir(config.K1Dir)
 	if err != nil {
 		return err
 	}
