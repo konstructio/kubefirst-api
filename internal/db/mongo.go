@@ -61,7 +61,7 @@ func (mdbcl *MongoDBClient) InitDatabase(databaseName string, collectionName str
 	if err != nil {
 		log.Fatalf("error connecting to mongodb: %s", err)
 	}
-	log.Info("connected to mongodb host %s", os.Getenv("MONGODB_HOST"))
+	log.Infof("connected to mongodb host %s", os.Getenv("MONGODB_HOST"))
 
 	mdbcl.Client = client
 	mdbcl.Collection = client.Database(databaseName).Collection(collectionName)
