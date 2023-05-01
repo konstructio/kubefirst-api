@@ -183,15 +183,8 @@ func (mdbcl *MongoDBClient) Export(clusterName string) error {
 
 	// Put file containing cluster dump in object storage
 	err = objectStorage.PutClusterObject(
-		&types.StateStoreCredentials{
-			AccessKeyID:     "UD2IKJKQ6PQ9YRFN1KUM",
-			SecretAccessKey: "AESQOlwOyjtfRzzQlLY4UVSpcXAIkjeWeYCafKy7",
-			Name:            "k1-state-store-feedkray-com-klpf61",
-		},
-		&types.StateStoreDetails{
-			Name:     "k1-state-store-feedkray-com-klpf61",
-			Hostname: "objectstore.nyc1.civo.com",
-		},
+		result.StateStoreCredentials,
+		result.StateStoreDetails,
 		&types.PushBucketObject{
 			LocalFilePath:  localFilePath,
 			RemoteFilePath: remoteFilePath,
@@ -230,15 +223,8 @@ func (mdbcl *MongoDBClient) Restore(clusterName string) error {
 
 	// Retrieve the object from state storage bucket
 	err := objectStorage.GetClusterObject(
-		&types.StateStoreCredentials{
-			AccessKeyID:     "UD2IKJKQ6PQ9YRFN1KUM",
-			SecretAccessKey: "AESQOlwOyjtfRzzQlLY4UVSpcXAIkjeWeYCafKy7",
-			Name:            "k1-state-store-feedkray-com-klpf61",
-		},
-		&types.StateStoreDetails{
-			Name:     "k1-state-store-feedkray-com-klpf61",
-			Hostname: "objectstore.nyc1.civo.com",
-		},
+		result.StateStoreCredentials,
+		result.StateStoreDetails,
 		clusterName,
 		localFilePath,
 		remoteFilePath,
