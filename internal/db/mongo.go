@@ -35,16 +35,33 @@ type MongoDBClient struct {
 func (mdbcl *MongoDBClient) InitDatabase(databaseName string, collectionName string) error {
 	mdbcl.Context = context.Background()
 
-	clientOptions := options.Client().ApplyURI(fmt.Sprintf("mongodb://%s/", os.Getenv("MONGODB_HOST")))
+	var connString string
+	var clientOptions *options.ClientOptions
+
+	switch os.Getenv("MONGODB_HOST_TYPE") {
+	case "atlas":
+		serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+		connString = fmt.Sprintf("mongodb+srv://%s:%s@%s",
+			os.Getenv("MONGODB_USERNAME"),
+			os.Getenv("MONGODB_PASSWORD"),
+			os.Getenv("MONGODB_HOST"),
+		)
+		clientOptions = options.Client().ApplyURI(connString).SetServerAPIOptions(serverAPI)
+	case "local":
+		connString = fmt.Sprintf("mongodb://%s/", os.Getenv("MONGODB_HOST"))
+		clientOptions = options.Client().ApplyURI(connString)
+	}
+
 	client, err := mongo.Connect(mdbcl.Context, clientOptions)
 	if err != nil {
 		return err
 	}
 
-	err = client.Ping(mdbcl.Context, nil)
+	err = client.Database("admin").RunCommand(mdbcl.Context, bson.D{{"ping", 1}}).Err()
 	if err != nil {
-		return err
+		log.Fatalf("error connecting to mongodb: %s", err)
 	}
+	log.Infof("connected to mongodb host %s", os.Getenv("MONGODB_HOST"))
 
 	mdbcl.Client = client
 	mdbcl.Collection = client.Database(databaseName).Collection(collectionName)
