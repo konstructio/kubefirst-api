@@ -106,3 +106,10 @@ type StateStoreDetails struct {
 	AWSStateStoreBucket string `bson:"aws_state_store_bucket,omitempty"`
 	AWSArtifactsBucket  string `bson:"aws_artifacts_bucket,omitempty"`
 }
+
+// PushBucketObject
+type PushBucketObject struct {
+	LocalFilePath  string
+	RemoteFilePath string
+	ContentType    string
+}

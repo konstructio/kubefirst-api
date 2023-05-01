@@ -218,8 +218,9 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 			}
 
 			stateStoreData := types.StateStoreDetails{
-				Name: bucket.Name,
-				ID:   bucket.ID,
+				Name:     bucket.Name,
+				ID:       bucket.ID,
+				Hostname: bucket.BucketURL,
 			}
 			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_details", stateStoreData)
 			if err != nil {
