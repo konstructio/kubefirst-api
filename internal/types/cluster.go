@@ -113,3 +113,9 @@ type PushBucketObject struct {
 	RemoteFilePath string
 	ContentType    string
 }
+
+// ImportClusterRequest
+type ImportClusterRequest struct {
+	StateStoreCredentials StateStoreCredentials
+	StateStoreDetails     StateStoreDetails
+}

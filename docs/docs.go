@@ -283,6 +283,91 @@ const docTemplate = `{
                 }
             }
         },
+        "/cluster/:cluster_name/export": {
+            "post": {
+                "description": "Export a Kubefirst cluster database entry",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "Export a Kubefirst cluster database entry",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cluster name",
+                        "name": "cluster_name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONFailureResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/cluster/:cluster_name/import": {
+            "post": {
+                "description": "Import a Kubefirst cluster database entry",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "Import a Kubefirst cluster database entry",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cluster name",
+                        "name": "cluster_name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Cluster import request in JSON format",
+                        "name": "request_body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.ImportClusterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONFailureResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "description": "Return health status if the application is running.",
@@ -496,6 +581,13 @@ const docTemplate = `{
                 "stateStoreDetails": {
                     "$ref": "#/definitions/types.StateStoreDetails"
                 },
+                "status": {
+                    "type": "string"
+                },
+                "useTelemetry": {
+                    "description": "Telemetry",
+                    "type": "boolean"
+                },
                 "usersTerraformApplyCheck": {
                     "type": "boolean"
                 },
@@ -561,6 +653,17 @@ const docTemplate = `{
                         "mgmt",
                         "workload"
                     ]
+                }
+            }
+        },
+        "types.ImportClusterRequest": {
+            "type": "object",
+            "properties": {
+                "stateStoreCredentials": {
+                    "$ref": "#/definitions/types.StateStoreCredentials"
+                },
+                "stateStoreDetails": {
+                    "$ref": "#/definitions/types.StateStoreDetails"
                 }
             }
         },

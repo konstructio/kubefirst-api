@@ -210,7 +210,7 @@ func (mdbcl *MongoDBClient) Export(clusterName string) error {
 
 // Restore retrieves a target cluster's database export from a state storage bucket and
 // attempts to insert the parsed cluster object into the database
-func (mdbcl *MongoDBClient) Restore(clusterName string) error {
+func (mdbcl *MongoDBClient) Restore(clusterName string, req *types.ImportClusterRequest) error {
 	var cluster *types.Cluster
 	var localFilePath = fmt.Sprintf("%s/%s.json", clusterImportsPath, clusterName)
 	var remoteFilePath = fmt.Sprintf("%s.json", clusterName)
@@ -228,17 +228,15 @@ func (mdbcl *MongoDBClient) Restore(clusterName string) error {
 	// todo: this needs to come from the provisioned mgmt cluster somehow
 	err := objectStorage.GetClusterObject(
 		&types.StateStoreCredentials{
-			AccessKeyID:     "",
-			SecretAccessKey: "",
-			Name:            clusterName,
-			ID:              "",
+			AccessKeyID:     req.StateStoreCredentials.AccessKeyID,
+			SecretAccessKey: req.StateStoreCredentials.SecretAccessKey,
 		},
+		// todo: to support AWS, additional fields are required
+		// AWSStateStoreBucket
+		// AWSArtifactsBucket
 		&types.StateStoreDetails{
-			Name:                clusterName,
-			ID:                  "",
-			Hostname:            "",
-			AWSStateStoreBucket: "",
-			AWSArtifactsBucket:  "",
+			Name:     req.StateStoreDetails.Name,
+			Hostname: req.StateStoreDetails.Hostname,
 		},
 		clusterName,
 		localFilePath,

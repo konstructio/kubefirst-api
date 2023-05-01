@@ -28,7 +28,7 @@ func PutBucketObject(cr *types.StateStoreCredentials, d *types.StateStoreDetails
 		Secure: true,
 	})
 	if err != nil {
-		return fmt.Errorf("error initializing minio client for civo: %s", err)
+		return fmt.Errorf("error initializing minio client: %s", err)
 	}
 
 	object, err := os.Open(obj.LocalFilePath)
@@ -61,7 +61,7 @@ func PutClusterObject(cr *types.StateStoreCredentials, d *types.StateStoreDetail
 		Secure: true,
 	})
 	if err != nil {
-		return fmt.Errorf("error initializing minio client for civo: %s", err)
+		return fmt.Errorf("error initializing minio client: %s", err)
 	}
 
 	// Reference for cluster object output file
