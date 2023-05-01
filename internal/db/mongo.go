@@ -20,6 +20,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+const (
+	clusterExportsPath = "/tmp/api/cluster/export"
+	clusterImportsPath = "/tmp/api/cluster/import"
+)
+
 type MongoDBClient struct {
 	Client     *mongo.Client
 	Collection *mongo.Collection
@@ -152,8 +157,6 @@ func (mdbcl *MongoDBClient) UpdateCluster(clusterName string, field string, valu
 }
 
 // Backups
-const clusterExportsPath = "/tmp/api/cluster/export"
-const clusterImportsPath = "/tmp/api/cluster/import"
 
 // Export parses the contents of a single cluster to a local file
 func (mdbcl *MongoDBClient) Export(clusterName string) error {
@@ -183,8 +186,8 @@ func (mdbcl *MongoDBClient) Export(clusterName string) error {
 
 	// Put file containing cluster dump in object storage
 	err = objectStorage.PutClusterObject(
-		result.StateStoreCredentials,
-		result.StateStoreDetails,
+		&result.StateStoreCredentials,
+		&result.StateStoreDetails,
 		&types.PushBucketObject{
 			LocalFilePath:  localFilePath,
 			RemoteFilePath: remoteFilePath,
@@ -222,9 +225,21 @@ func (mdbcl *MongoDBClient) Restore(clusterName string) error {
 	}
 
 	// Retrieve the object from state storage bucket
+	// todo: this needs to come from the provisioned mgmt cluster somehow
 	err := objectStorage.GetClusterObject(
-		result.StateStoreCredentials,
-		result.StateStoreDetails,
+		&types.StateStoreCredentials{
+			AccessKeyID:     "",
+			SecretAccessKey: "",
+			Name:            clusterName,
+			ID:              "",
+		},
+		&types.StateStoreDetails{
+			Name:                clusterName,
+			ID:                  "",
+			Hostname:            "",
+			AWSStateStoreBucket: "",
+			AWSArtifactsBucket:  "",
+		},
 		clusterName,
 		localFilePath,
 		remoteFilePath,
