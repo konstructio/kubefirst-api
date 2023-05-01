@@ -46,6 +46,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 				awsinternal.TerraformClientVersion,
 			)
 			if err != nil {
+				log.Errorf("error downloading dependencies: %s", err)
 				return err
 			}
 		case "civo":
@@ -58,6 +59,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 				toolsDir,
 			)
 			if err != nil {
+				log.Errorf("error downloading dependencies: %s", err)
 				return err
 			}
 		case "digitalocean":
@@ -70,11 +72,13 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 				toolsDir,
 			)
 			if err != nil {
+				log.Errorf("error downloading dependencies: %s", err)
 				return err
 			}
 		case "k3d":
 			err := k3d.DownloadTools(cl.ClusterName, cl.GitProvider, cl.GitOwner, toolsDir)
 			if err != nil {
+				log.Errorf("error downloading dependencies: %s", err)
 				return err
 			}
 		case "vultr":
@@ -87,6 +91,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 				toolsDir,
 			)
 			if err != nil {
+				log.Errorf("error downloading dependencies: %s", err)
 				return err
 			}
 		}

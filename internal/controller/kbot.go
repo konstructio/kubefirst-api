@@ -7,13 +7,25 @@ See the LICENSE file for more details.
 package controller
 
 import (
+	"os"
+
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/runtime/pkg/segment"
 	internalssh "github.com/kubefirst/runtime/pkg/ssh"
+	log "github.com/sirupsen/logrus"
 )
 
 // InitializeBot
 func (clctrl *ClusterController) InitializeBot() error {
+	// Logging handler
+	// Logs to stdout to maintain compatibility with event streaming
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "",
+	})
+	log.SetReportCaller(false)
+	log.SetOutput(os.Stdout)
+
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
@@ -29,6 +41,7 @@ func (clctrl *ClusterController) InitializeBot() error {
 	if !cl.KbotSetupCheck {
 		sshPrivateKey, sshPublicKey, err := internalssh.CreateSshKeyPair()
 		if err != nil {
+			log.Errorf("error generating ssh keys: %s", err)
 			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricKbotSetupFailed, err.Error())
 			return err
 		}

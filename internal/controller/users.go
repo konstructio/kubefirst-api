@@ -116,6 +116,7 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 
 		err = terraform.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
+			log.Errorf("error applying users terraform: %s", err)
 			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricUsersTerraformApplyStarted, err.Error())
 			return err
 		}

@@ -296,6 +296,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 
 		err = terraform.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
+			log.Errorf("error applying vault terraform: %s", err)
 			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricVaultTerraformApplyFailed, err.Error())
 			return err
 		}
@@ -346,12 +347,12 @@ func (clctrl *ClusterController) WaitForVault() error {
 		1200,
 	)
 	if err != nil {
-		log.Errorf("Error finding Vault StatefulSet: %s", err)
+		log.Errorf("error finding Vault StatefulSet: %s", err)
 		return err
 	}
 	_, err = k8s.WaitForStatefulSetReady(kcfg.Clientset, vaultStatefulSet, 120, true)
 	if err != nil {
-		log.Errorf("Error waiting for Vault StatefulSet ready state: %s", err)
+		log.Errorf("error waiting for Vault StatefulSet ready state: %s", err)
 		return err
 	}
 
