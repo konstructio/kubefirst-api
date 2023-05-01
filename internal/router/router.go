@@ -27,7 +27,7 @@ func SetupRouter() *gin.Engine {
 	r.Use(cors.New(cors.Config{
 		AllowAllOrigins: true,
 		AllowMethods:    []string{"DELETE", "GET", "HEAD", "PATCH", "POST", "PUT", "OPTIONS"},
-		AllowHeaders: []string{"origin", "content-Type"},
+		AllowHeaders:    []string{"origin", "content-Type"},
 	}))
 
 	// Establish routes we don't want to log requests to
@@ -48,6 +48,8 @@ func SetupRouter() *gin.Engine {
 		v1.GET("/cluster/:cluster_name", router.GetCluster)
 		v1.DELETE("/cluster/:cluster_name", router.DeleteCluster)
 		v1.POST("/cluster/:cluster_name", router.PostCreateCluster)
+		v1.POST("/cluster/:cluster_name/export", router.PostExportCluster)
+		v1.POST("/cluster/:cluster_name/import", router.PostImportCluster)
 
 		// AWS
 		v1.GET("/aws/profiles", router.GetAWSProfiles)

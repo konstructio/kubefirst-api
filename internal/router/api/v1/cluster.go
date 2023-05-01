@@ -197,7 +197,6 @@ func PostCreateCluster(c *gin.Context) {
 	// Bind to variable as application/json, handle error
 	var clusterDefinition types.ClusterDefinition
 	err := c.Bind(&clusterDefinition)
-
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -264,4 +263,95 @@ func PostCreateCluster(c *gin.Context) {
 			Message: "cluster create enqueued",
 		})
 	}
+}
+
+// PostExportCluster godoc
+// @Summary Export a Kubefirst cluster database entry
+// @Description Export a Kubefirst cluster database entry
+// @Tags cluster
+// @Accept json
+// @Produce json
+// @Param	cluster_name	path	string	true	"Cluster name"
+// @Success 202 {object} types.JSONSuccessResponse
+// @Failure 400 {object} types.JSONFailureResponse
+// @Router /cluster/:cluster_name/export [post]
+// PostExportCluster handles a request to export a cluster
+func PostExportCluster(c *gin.Context) {
+	clusterName, param := c.Params.Get("cluster_name")
+	if !param {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: ":cluster_name not provided",
+		})
+		return
+	}
+
+	// Export
+	mdbcl := &db.MongoDBClient{}
+	err := mdbcl.InitDatabase("api", "clusters")
+	if err != nil {
+		log.Error(err)
+	}
+
+	err = mdbcl.Export(clusterName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: fmt.Sprintf("error exporting cluster %s: %s", clusterName, err),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, types.JSONSuccessResponse{
+		Message: "cluster exported",
+	})
+}
+
+// PostImportCluster godoc
+// @Summary Import a Kubefirst cluster database entry
+// @Description Import a Kubefirst cluster database entry
+// @Tags cluster
+// @Accept json
+// @Produce json
+// @Param	cluster_name	path	string	true	"Cluster name"
+// @Param	request_body	body	types.ImportClusterRequest	true	"Cluster import request in JSON format"
+// @Success 202 {object} types.JSONSuccessResponse
+// @Failure 400 {object} types.JSONFailureResponse
+// @Router /cluster/:cluster_name/import [post]
+// PostImportCluster handles a request to import a cluster
+func PostImportCluster(c *gin.Context) {
+	clusterName, param := c.Params.Get("cluster_name")
+	if !param {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: ":cluster_name not provided",
+		})
+		return
+	}
+
+	// Bind to variable as application/json, handle error
+	var req types.ImportClusterRequest
+	err := c.Bind(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+
+	// Export
+	mdbcl := &db.MongoDBClient{}
+	err = mdbcl.InitDatabase("api", "clusters")
+	if err != nil {
+		log.Error(err)
+	}
+
+	err = mdbcl.Restore(clusterName, &req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: fmt.Sprintf("error importing cluster %s: %s", clusterName, err),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, types.JSONSuccessResponse{
+		Message: "cluster imported",
+	})
 }

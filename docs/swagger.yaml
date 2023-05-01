@@ -120,6 +120,11 @@ definitions:
         type: boolean
       stateStoreDetails:
         $ref: '#/definitions/types.StateStoreDetails'
+      status:
+        type: string
+      useTelemetry:
+        description: Telemetry
+        type: boolean
       usersTerraformApplyCheck:
         type: boolean
       vaultInitializedCheck:
@@ -168,6 +173,13 @@ definitions:
     - git_provider
     - git_token
     - type
+    type: object
+  types.ImportClusterRequest:
+    properties:
+      stateStoreCredentials:
+        $ref: '#/definitions/types.StateStoreCredentials'
+      stateStoreDetails:
+        $ref: '#/definitions/types.StateStoreDetails'
     type: object
   types.JSONFailureResponse:
     properties:
@@ -397,6 +409,62 @@ paths:
           schema:
             $ref: '#/definitions/types.JSONFailureResponse'
       summary: Create a Kubefirst cluster
+      tags:
+      - cluster
+  /cluster/:cluster_name/export:
+    post:
+      consumes:
+      - application/json
+      description: Export a Kubefirst cluster database entry
+      parameters:
+      - description: Cluster name
+        in: path
+        name: cluster_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/types.JSONSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Export a Kubefirst cluster database entry
+      tags:
+      - cluster
+  /cluster/:cluster_name/import:
+    post:
+      consumes:
+      - application/json
+      description: Import a Kubefirst cluster database entry
+      parameters:
+      - description: Cluster name
+        in: path
+        name: cluster_name
+        required: true
+        type: string
+      - description: Cluster import request in JSON format
+        in: body
+        name: request_body
+        required: true
+        schema:
+          $ref: '#/definitions/types.ImportClusterRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/types.JSONSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Import a Kubefirst cluster database entry
       tags:
       - cluster
   /health:
