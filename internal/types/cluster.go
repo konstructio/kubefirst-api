@@ -23,8 +23,9 @@ type ClusterDefinition struct {
 
 // Cluster describes the configuration storage for a Kubefirst cluster object
 type Cluster struct {
-	ID     primitive.ObjectID `bson:"_id"`
-	Status string             `bson:"status"`
+	ID         primitive.ObjectID `bson:"_id"`
+	Status     string             `bson:"status"`
+	InProgress bool               `bson:"in_progress"`
 
 	ClusterName   string `bson:"cluster_name"`
 	CloudProvider string `bson:"cloud_provider"`

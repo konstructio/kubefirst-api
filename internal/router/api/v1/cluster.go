@@ -206,6 +206,26 @@ func PostCreateCluster(c *gin.Context) {
 	clusterDefinition.ClusterName = clusterName
 
 	// Create
+	// If create is in progress, return error
+	// Retrieve cluster info
+	mdbcl := &db.MongoDBClient{}
+	err = mdbcl.InitDatabase("api", "clusters")
+	if err != nil {
+		log.Error(err)
+	}
+
+	cluster, err := mdbcl.GetCluster(clusterName)
+	if err != nil {
+		log.Infof("cluster %s does not exist, continuing", clusterName)
+	} else {
+		if cluster.InProgress {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: fmt.Sprintf("%s has an active process running and another create cannot be enqeued", clusterName),
+			})
+			return
+		}
+	}
+
 	switch clusterDefinition.CloudProvider {
 	case "aws":
 		go func() {
