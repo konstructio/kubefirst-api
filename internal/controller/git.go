@@ -99,6 +99,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*awsinternal.AwsConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating github resources with terraform %s: %s", tfEntrypoint, err)
+					log.Error(msg)
 					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
 					return fmt.Errorf(msg)
 				}
@@ -117,6 +118,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*awsinternal.AwsConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating gitlab resources with terraform %s: %s", tfEntrypoint, err)
+					log.Error(msg)
 					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
 					return fmt.Errorf(msg)
 				}
@@ -138,6 +140,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*civo.CivoConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating github resources with terraform %s: %s", tfEntrypoint, err)
+					log.Error(msg)
 					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
 					return fmt.Errorf(msg)
 				}
@@ -156,6 +159,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*civo.CivoConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating gitlab resources with terraform %s: %s", tfEntrypoint, err)
+					log.Error(msg)
 					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
 					return fmt.Errorf(msg)
 				}
@@ -177,6 +181,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating github resources with terraform %s: %s", tfEntrypoint, err)
+					log.Error(msg)
 					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
 					return fmt.Errorf(msg)
 				}
@@ -195,6 +200,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating gitlab resources with terraform %s: %s", tfEntrypoint, err)
+					log.Error(msg)
 					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
 					return fmt.Errorf(msg)
 				}
@@ -222,6 +228,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(k3d.K3dConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating github resources with terraform %s: %s", tfEntrypoint, err)
+					log.Error(msg)
 					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
 					return fmt.Errorf(msg)
 				}
@@ -246,6 +253,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(k3d.K3dConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating gitlab resources with terraform %s: %s", tfEntrypoint, err)
+					log.Error(msg)
 					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
 					return fmt.Errorf(msg)
 				}
@@ -267,6 +275,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating github resources with terraform %s: %s", tfEntrypoint, err)
+					log.Error(msg)
 					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
 					return fmt.Errorf(msg)
 				}
@@ -285,6 +294,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating gitlab resources with terraform %s: %s", tfEntrypoint, err)
+					log.Error(msg)
 					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
 					return fmt.Errorf(msg)
 				}

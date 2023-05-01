@@ -97,6 +97,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 			err = terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*awsinternal.AwsConfig).TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				msg := fmt.Sprintf("error creating aws resources with terraform %s : %s", tfEntrypoint, err)
+				log.Error(msg)
 				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
 				if err != nil {
 					return err
@@ -119,6 +120,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 			err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*civo.CivoConfig).TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				msg := fmt.Sprintf("error creating civo resources with terraform %s : %s", tfEntrypoint, err)
+				log.Error(msg)
 				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
 				if err != nil {
 					return err
@@ -141,6 +143,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 			err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				msg := fmt.Sprintf("error creating digital ocean resources with terraform %s : %s", tfEntrypoint, err)
+				log.Error(msg)
 				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
 				if err != nil {
 					return err
@@ -179,6 +182,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 			err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				msg := fmt.Sprintf("error creating vultr resources with terraform %s : %s", tfEntrypoint, err)
+				log.Error(msg)
 				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
 				if err != nil {
 					return err
@@ -585,19 +589,20 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 		case "civo":
 			err := civoext.BootstrapCivoMgmtCluster(clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig, &cl)
 			if err != nil {
-				log.Info("Error adding kubernetes secrets for bootstrap")
+				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
 		case "digitalocean":
 			err := digitaloceanext.BootstrapDigitaloceanMgmtCluster(clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig, &cl)
 			if err != nil {
-				log.Info("Error adding kubernetes secrets for bootstrap")
+				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
 		case "k3d":
 			kcfg := k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
 			err := k3d.GenerateTLSSecrets(kcfg.Clientset, clctrl.ProviderConfig.(k3d.K3dConfig))
 			if err != nil {
+				log.Errorf("error generating tls certificates: %s", err)
 				return err
 			}
 
@@ -613,13 +618,13 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 				clctrl.GitToken,
 			)
 			if err != nil {
-				log.Info("Error adding kubernetes secrets for bootstrap")
+				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
 		case "vultr":
 			err := vultrext.BootstrapVultrMgmtCluster(clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig, &cl)
 			if err != nil {
-				log.Info("Error adding kubernetes secrets for bootstrap")
+				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
 		}
@@ -662,6 +667,7 @@ func (clctrl *ClusterController) ContainerRegistryAuth() (string, error) {
 	}
 	containerRegistryAuthToken, err := gitShim.CreateContainerRegistrySecret(&containerRegistryAuth)
 	if err != nil {
+		log.Errorf("error generating container registry authentication: %s", err)
 		return "", err
 	}
 

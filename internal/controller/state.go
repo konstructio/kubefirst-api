@@ -25,6 +25,15 @@ var DigitaloceanStateStoreBucketName, VultrStateStoreBucketHostname string
 
 // StateStoreCredentials
 func (clctrl *ClusterController) StateStoreCredentials() error {
+	// Logging handler
+	// Logs to stdout to maintain compatibility with event streaming
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "",
+	})
+	log.SetReportCaller(false)
+	log.SetOutput(os.Stdout)
+
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
@@ -67,7 +76,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 		case "civo":
 			creds, err := civo.GetAccessCredentials(clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
 			if err != nil {
-				log.Info(err.Error())
+				log.Error(err.Error())
 			}
 
 			// Verify all credentials fields are present
@@ -113,6 +122,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			err = digitaloceanConf.CreateSpaceBucket(creds, clctrl.KubefirstStateStoreBucketName)
 			if err != nil {
 				msg := fmt.Sprintf("error creating spaces bucket %s: %s", clctrl.KubefirstStateStoreBucketName, err)
+				log.Error(msg)
 				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricStateStoreCreateFailed, msg)
 				return fmt.Errorf(msg)
 			}
@@ -141,7 +151,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			objst, err := vultrConf.CreateObjectStorage(clctrl.CloudRegion, clctrl.KubefirstStateStoreBucketName)
 			if err != nil {
 				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricStateStoreCreateFailed, err.Error())
-				log.Info(err.Error())
+				log.Error(err.Error())
 				return err
 			}
 			err = vultrConf.CreateObjectStorageBucket(vultr.VultrBucketCredentials{
@@ -213,7 +223,7 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 			bucket, err := civo.CreateStorageBucket(accessKeyId, clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
 			if err != nil {
 				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricStateStoreCreateFailed, err.Error())
-				log.Info(err.Error())
+				log.Error(err.Error())
 				return err
 			}
 
