@@ -17,10 +17,13 @@ import (
 
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/terraform"
 	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
@@ -37,10 +40,19 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 	log.SetReportCaller(false)
 	log.SetOutput(os.Stdout)
 
+	// Telemetry handler
+	segmentClient, err := telemetryShim.SetupTelemetry(*cl)
+	if err != nil {
+		return err
+	}
+	defer segmentClient.Client.Close()
+
+	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricMgmtClusterDeleteStarted, "")
+
 	// Instantiate vultr config
 	config := vultr.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner)
 	mdbcl := &db.MongoDBClient{}
-	err := mdbcl.InitDatabase("api", "clusters")
+	err = mdbcl.InitDatabase("api", "clusters")
 	if err != nil {
 		return err
 	}
@@ -277,7 +289,14 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 		}
 	}
 
+	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricMgmtClusterDeleteCompleted, "")
+
 	err = mdbcl.UpdateCluster(cl.ClusterName, "status", "deleted")
+	if err != nil {
+		return err
+	}
+
+	err = pkg.ResetK1Dir(config.K1Dir)
 	if err != nil {
 		return err
 	}

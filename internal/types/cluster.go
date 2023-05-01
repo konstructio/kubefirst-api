@@ -23,8 +23,10 @@ type ClusterDefinition struct {
 
 // Cluster describes the configuration storage for a Kubefirst cluster object
 type Cluster struct {
-	ID     primitive.ObjectID `bson:"_id"`
-	Status string             `bson:"status"`
+	ID                primitive.ObjectID `bson:"_id"`
+	CreationTimestamp string             `bson:"creation_timestamp"`
+	Status            string             `bson:"status"`
+	InProgress        bool               `bson:"in_progress"`
 
 	ClusterName   string `bson:"cluster_name"`
 	CloudProvider string `bson:"cloud_provider"`
@@ -62,6 +64,9 @@ type Cluster struct {
 	AWSAccountId              string `bson:"aws_account_id,omitempty"`
 	AWSKMSKeyId               string `bson:"aws_kms_key_id,omitempty"`
 	AWSKMSKeyDetokenizedCheck bool   `bson:"aws_kms_key_detokenized_check"`
+
+	// Telemetry
+	UseTelemetry bool `bson:"use_telemetry"`
 
 	// Checks
 	GitInitCheck                   bool `bson:"git_init_check"`
@@ -102,4 +107,17 @@ type StateStoreDetails struct {
 	Hostname            string `bson:"hostname,omitempty"`
 	AWSStateStoreBucket string `bson:"aws_state_store_bucket,omitempty"`
 	AWSArtifactsBucket  string `bson:"aws_artifacts_bucket,omitempty"`
+}
+
+// PushBucketObject
+type PushBucketObject struct {
+	LocalFilePath  string
+	RemoteFilePath string
+	ContentType    string
+}
+
+// ImportClusterRequest
+type ImportClusterRequest struct {
+	StateStoreCredentials StateStoreCredentials
+	StateStoreDetails     StateStoreDetails
 }

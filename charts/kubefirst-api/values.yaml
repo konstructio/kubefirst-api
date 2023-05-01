@@ -80,3 +80,4 @@ tolerations: []
 affinity: {}
 
 env: []
+envFrom: []

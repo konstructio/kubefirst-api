@@ -12,9 +12,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
+	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 )
@@ -23,10 +25,26 @@ var DigitaloceanStateStoreBucketName, VultrStateStoreBucketHostname string
 
 // StateStoreCredentials
 func (clctrl *ClusterController) StateStoreCredentials() error {
+	// Logging handler
+	// Logs to stdout to maintain compatibility with event streaming
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "",
+	})
+	log.SetReportCaller(false)
+	log.SetOutput(os.Stdout)
+
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
+
+	// Telemetry handler
+	segmentClient, err := telemetryShim.SetupTelemetry(cl)
+	if err != nil {
+		return err
+	}
+	defer segmentClient.Client.Close()
 
 	var stateStoreData types.StateStoreCredentials
 
@@ -58,7 +76,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 		case "civo":
 			creds, err := civo.GetAccessCredentials(clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
 			if err != nil {
-				log.Info(err.Error())
+				log.Error(err.Error())
 			}
 
 			// Verify all credentials fields are present
@@ -104,7 +122,8 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			err = digitaloceanConf.CreateSpaceBucket(creds, clctrl.KubefirstStateStoreBucketName)
 			if err != nil {
 				msg := fmt.Sprintf("error creating spaces bucket %s: %s", clctrl.KubefirstStateStoreBucketName, err)
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricStateStoreCreateFailed, msg)
+				log.Error(msg)
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricStateStoreCreateFailed, msg)
 				return fmt.Errorf(msg)
 			}
 
@@ -131,8 +150,8 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 
 			objst, err := vultrConf.CreateObjectStorage(clctrl.CloudRegion, clctrl.KubefirstStateStoreBucketName)
 			if err != nil {
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricStateStoreCreateFailed, err.Error())
-				log.Info(err.Error())
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricStateStoreCreateFailed, err.Error())
+				log.Error(err.Error())
 				return err
 			}
 			err = vultrConf.CreateObjectStorageBucket(vultr.VultrBucketCredentials{
@@ -186,24 +205,32 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 		return err
 	}
 
+	// Telemetry handler
+	segmentClient, err := telemetryShim.SetupTelemetry(cl)
+	if err != nil {
+		return err
+	}
+	defer segmentClient.Client.Close()
+
 	if !cl.StateStoreCreateCheck {
 		switch clctrl.CloudProvider {
 		case "civo":
-			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricStateStoreCreateStarted, "")
+			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricStateStoreCreateStarted, "")
 
 			accessKeyId := cl.StateStoreCredentials.AccessKeyID
 			log.Infof("access key id %s", accessKeyId)
 
 			bucket, err := civo.CreateStorageBucket(accessKeyId, clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
 			if err != nil {
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricStateStoreCreateFailed, err.Error())
-				log.Info(err.Error())
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricStateStoreCreateFailed, err.Error())
+				log.Error(err.Error())
 				return err
 			}
 
 			stateStoreData := types.StateStoreDetails{
-				Name: bucket.Name,
-				ID:   bucket.ID,
+				Name:     bucket.Name,
+				ID:       bucket.ID,
+				Hostname: bucket.BucketURL,
 			}
 			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_details", stateStoreData)
 			if err != nil {
@@ -215,7 +242,7 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 				return err
 			}
 
-			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricStateStoreCreateCompleted, "")
+			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricStateStoreCreateCompleted, "")
 			log.Infof("%s state store bucket created", clctrl.CloudProvider)
 		}
 	}

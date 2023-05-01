@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"time"
 
@@ -50,6 +51,30 @@ func ReadFileContents(filePath string) (string, error) {
 		return "", err
 	}
 	return string(data), nil
+}
+
+// ReadFileContentType reads a file on the OS and returns its file type
+func ReadFileContentType(filePath string) (string, error) {
+	// Open File
+	f, err := os.Open(filePath)
+	if err != nil {
+		log.Error(err)
+	}
+	defer f.Close()
+
+	// Only the first 512 bytes are used to sniff the content type.
+	buffer := make([]byte, 512)
+
+	_, err = f.Read(buffer)
+	if err != nil {
+		return "", err
+	}
+
+	// Use the net/http package's handy DectectContentType function. Always returns a valid
+	// content-type by returning "application/octet-stream" if no others seemed to match.
+	contentType := http.DetectContentType(buffer)
+
+	return contentType, nil
 }
 
 // RemoveFromSlice accepts T as a comparable slice and removed the index at

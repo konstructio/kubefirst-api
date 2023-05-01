@@ -17,11 +17,14 @@ import (
 	"github.com/civo/civogo"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
 	"github.com/kubefirst/runtime/pkg/civo"
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/terraform"
 	log "github.com/sirupsen/logrus"
 )
@@ -37,10 +40,19 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 	log.SetReportCaller(false)
 	log.SetOutput(os.Stdout)
 
+	// Telemetry handler
+	segmentClient, err := telemetryShim.SetupTelemetry(*cl)
+	if err != nil {
+		return err
+	}
+	defer segmentClient.Client.Close()
+
+	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricMgmtClusterDeleteStarted, "")
+
 	// Instantiate civo config
 	config := civo.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner)
 	mdbcl := &db.MongoDBClient{}
-	err := mdbcl.InitDatabase("api", "clusters")
+	err = mdbcl.InitDatabase("api", "clusters")
 	if err != nil {
 		return err
 	}
@@ -262,7 +274,14 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 		}
 	}
 
+	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricMgmtClusterDeleteCompleted, "")
+
 	err = mdbcl.UpdateCluster(cl.ClusterName, "status", "deleted")
+	if err != nil {
+		return err
+	}
+
+	err = pkg.ResetK1Dir(config.K1Dir)
 	if err != nil {
 		return err
 	}

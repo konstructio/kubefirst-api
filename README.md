@@ -22,10 +22,10 @@ Kubefirst API runtime implementation.
 
 - [kubefirst-api](#kubefirst-api)
   - [Running Locally](#running-locally)
-    - [build the binary](#build-the-binary)
-    - [or](#or)
-    - [leverage `air` for live reloading locally](#leverage-air-for-live-reloading-locally)
+    - [Build the Binary](#build-the-binary)
+    - [Leverage `air` for Live Reloading Locally](#leverage-air-for-live-reloading-locally)
   - [Prerequisites](#prerequisites)
+    - [Environment Variables](#environment-variables)
   - [Provider Support](#provider-support)
   - [Creating a Cluster](#creating-a-cluster)
     - [AWS](#aws)
@@ -38,30 +38,44 @@ Kubefirst API runtime implementation.
 
 ## Running Locally
 
-### build the binary
+The API is available at `:8081/api/v1` while running.
+
+### Build the Binary
+
 The API can be run locally for testing. It can be run by using `make build` and then calling the binary in the `bin/` directory or by using `go run .`.
    
-### or   
-   
-### leverage `air` for live reloading locally
-**Prerequsite** - install air
-[air](https://github.com/cosmtrek/air) is a lightweight golang utility   
-```golang
+### Leverage `air` for Live Reloading Locally
+
+**Prerequsite** - Install [air](https://github.com/cosmtrek/air).
+
+```go
 go install github.com/cosmtrek/air@latest
 ```
-run `air` from the root of the repository. this will watch go files and live rebuild a local running instance of `kubefirst-api`.   
 
-The API is available at `:8081/api/v1` while running.
+Run `air` from the root of the repository. This will watch go files and live rebuild a local running instance of `kubefirst-api`.   
 
 ## Prerequisites
 
 The API uses MongoDB for storing records.
 
-For local development, it's recommended to install [MongoDB Community Edition](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-os-x/).
+The best option is to use [MongoDB Atlas](https://www.mongodb.com/atlas). This is the recommended approach.
+
+For local development, you can install [MongoDB Community Edition](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-os-x/) - this is not production-quality.
 
 It is also recommended to install [MongoDB Compass](https://www.mongodb.com/try/download/atlascli).
 
 The host:port for MongoDB should be supplied as the environment variable `MONGODB_HOST`. When testing locally, use `localhost:27017`.
+
+### Environment Variables
+
+Some variables are required, others are optional depending on deployment type.
+
+| Variable            | Description                                                                                                                                      | Required       |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------- |
+| `MONGODB_HOST_TYPE` | Can be either `atlas` or `local`.                                                                                                                | Yes            |
+| `MONGODB_HOST`      | The host to connect to. For Atlas, use only the portion of the string not containing username or password. For all other types, append the port. | Yes            |
+| `MONGODB_USERNAME`  | Required when using Atlas.                                                                                                                       | If using Atlas |
+| `MONGODB_PASSWORD`  | Required when using Atlas.                                                                                                                       | If using Atlas |
 
 ## Provider Support
 

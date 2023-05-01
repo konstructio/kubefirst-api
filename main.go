@@ -11,6 +11,7 @@ import (
 	"os"
 
 	"github.com/kubefirst/kubefirst-api/docs"
+	"github.com/kubefirst/kubefirst-api/internal/db"
 	api "github.com/kubefirst/kubefirst-api/internal/router"
 	log "github.com/sirupsen/logrus"
 )
@@ -35,8 +36,25 @@ func main() {
 	log.SetReportCaller(false)
 
 	// Check for required environment variables
+	if os.Getenv("MONGODB_HOST_TYPE") == "" {
+		log.Fatalf("the MONGODB_HOST_TYPE environment variable must be set to either: atlas, local")
+	}
 	if os.Getenv("MONGODB_HOST") == "" {
 		log.Fatalf("the MONGODB_HOST environment variable must be set")
+	}
+	if os.Getenv("MONGODB_HOST_TYPE") == "atlas" {
+		for _, v := range []string{"MONGODB_USERNAME", "MONGODB_PASSWORD"} {
+			if os.Getenv(v) == "" {
+				log.Fatalf("if using MongoDB atlas, the %s environment variable must be set", v)
+			}
+		}
+	}
+
+	// Verify database connectivity
+	mdbcl := &db.MongoDBClient{}
+	err := mdbcl.InitDatabase("api", "clusters")
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// Programmatically set swagger info
@@ -50,7 +68,7 @@ func main() {
 	// API
 	r := api.SetupRouter()
 
-	err := r.Run(fmt.Sprintf(":%v", port))
+	err = r.Run(fmt.Sprintf(":%v", port))
 	if err != nil {
 		log.Fatalf("Error starting API: %s", err)
 	}

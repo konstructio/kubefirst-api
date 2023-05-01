@@ -15,6 +15,7 @@ import (
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
+	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/runtime/configs"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
@@ -22,6 +23,7 @@ import (
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k3d"
 	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/terraform"
 	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
@@ -60,14 +62,21 @@ func (clctrl *ClusterController) CreateCluster() error {
 		return err
 	}
 
+	// Telemetry handler
+	segmentClient, err := telemetryShim.SetupTelemetry(cl)
+	if err != nil {
+		return err
+	}
+	defer segmentClient.Client.Close()
+
 	if !cl.CloudTerraformApplyCheck || cl.CloudTerraformApplyFailedCheck {
-		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricCloudTerraformApplyStarted, "")
+		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyStarted, "")
 
 		log.Infof("creating %s cluster", clctrl.CloudProvider)
 
 		switch clctrl.CloudProvider {
 		case "aws":
-			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricCloudTerraformApplyStarted, "")
+			telemetryShim.Transmit(true, segmentClient, segment.MetricCloudTerraformApplyStarted, "")
 
 			log.Info("creating aws cloud resources with terraform")
 
@@ -88,19 +97,20 @@ func (clctrl *ClusterController) CreateCluster() error {
 			err = terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*awsinternal.AwsConfig).TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				msg := fmt.Sprintf("error creating aws resources with terraform %s : %s", tfEntrypoint, err)
+				log.Error(msg)
 				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
 				if err != nil {
 					return err
 				}
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricCloudTerraformApplyFailed, msg)
+				telemetryShim.Transmit(true, segmentClient, segment.MetricCloudTerraformApplyFailed, msg)
 				return fmt.Errorf(msg)
 			}
 
 			log.Info("created aws cloud resources")
 
-			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
+			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
 		case "civo":
-			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricCloudTerraformApplyStarted, "")
+			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyStarted, "")
 
 			log.Info("creating civo cloud resources with terraform")
 
@@ -110,19 +120,20 @@ func (clctrl *ClusterController) CreateCluster() error {
 			err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*civo.CivoConfig).TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				msg := fmt.Sprintf("error creating civo resources with terraform %s : %s", tfEntrypoint, err)
+				log.Error(msg)
 				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
 				if err != nil {
 					return err
 				}
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricCloudTerraformApplyFailed, msg)
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyFailed, msg)
 				return fmt.Errorf(msg)
 			}
 
 			log.Info("created civo cloud resources")
 
-			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
+			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
 		case "digitalocean":
-			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricCloudTerraformApplyStarted, "")
+			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyStarted, "")
 
 			log.Info("creating digital ocean cloud resources with terraform")
 
@@ -132,17 +143,18 @@ func (clctrl *ClusterController) CreateCluster() error {
 			err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				msg := fmt.Sprintf("error creating digital ocean resources with terraform %s : %s", tfEntrypoint, err)
+				log.Error(msg)
 				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
 				if err != nil {
 					return err
 				}
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricCloudTerraformApplyFailed, msg)
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyFailed, msg)
 				return fmt.Errorf(msg)
 			}
 
 			log.Info("created digital ocean cloud resources")
 
-			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
+			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
 		case "k3d":
 			err := k3d.ClusterCreate(
 				clctrl.ClusterName,
@@ -152,7 +164,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 			)
 			if err != nil {
 				msg := fmt.Sprintf("error creating k3d resources: %s", err)
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricCloudTerraformApplyFailed, msg)
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyFailed, msg)
 				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
 				if err != nil {
 					return err
@@ -160,7 +172,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 				return fmt.Errorf(msg)
 			}
 		case "vultr":
-			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricCloudTerraformApplyStarted, "")
+			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyStarted, "")
 
 			log.Info("creating vultr cloud resources with terraform")
 
@@ -170,22 +182,23 @@ func (clctrl *ClusterController) CreateCluster() error {
 			err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				msg := fmt.Sprintf("error creating vultr resources with terraform %s : %s", tfEntrypoint, err)
+				log.Error(msg)
 				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
 				if err != nil {
 					return err
 				}
-				// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricCloudTerraformApplyFailed, msg)
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyFailed, msg)
 				return fmt.Errorf(msg)
 			}
 
 			log.Info("created vultr cloud resources")
 
-			// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
+			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
 		}
 
 		log.Infof("successfully created %s cluster", clctrl.CloudProvider)
 
-		// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
+		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", false)
 		if err != nil {
@@ -576,19 +589,20 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 		case "civo":
 			err := civoext.BootstrapCivoMgmtCluster(clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig, &cl)
 			if err != nil {
-				log.Info("Error adding kubernetes secrets for bootstrap")
+				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
 		case "digitalocean":
 			err := digitaloceanext.BootstrapDigitaloceanMgmtCluster(clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig, &cl)
 			if err != nil {
-				log.Info("Error adding kubernetes secrets for bootstrap")
+				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
 		case "k3d":
 			kcfg := k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
 			err := k3d.GenerateTLSSecrets(kcfg.Clientset, clctrl.ProviderConfig.(k3d.K3dConfig))
 			if err != nil {
+				log.Errorf("error generating tls certificates: %s", err)
 				return err
 			}
 
@@ -604,13 +618,13 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 				clctrl.GitToken,
 			)
 			if err != nil {
-				log.Info("Error adding kubernetes secrets for bootstrap")
+				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
 		case "vultr":
 			err := vultrext.BootstrapVultrMgmtCluster(clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig, &cl)
 			if err != nil {
-				log.Info("Error adding kubernetes secrets for bootstrap")
+				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
 		}
@@ -653,6 +667,7 @@ func (clctrl *ClusterController) ContainerRegistryAuth() (string, error) {
 	}
 	containerRegistryAuthToken, err := gitShim.CreateContainerRegistrySecret(&containerRegistryAuth)
 	if err != nil {
+		log.Errorf("error generating container registry authentication: %s", err)
 		return "", err
 	}
 

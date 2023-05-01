@@ -10,9 +10,11 @@ import (
 	"os"
 
 	"github.com/kubefirst/kubefirst-api/internal/controller"
+	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/ssl"
 	log "github.com/sirupsen/logrus"
 )
@@ -24,53 +26,108 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
+	err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", true)
+	if err != nil {
+		return err
+	}
+
 	err = ctrl.DownloadTools(ctrl.ProviderConfig.(*civo.CivoConfig).ToolsDir)
 	if err != nil {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
 	err = ctrl.DomainLivenessTest()
 	if err != nil {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
 	err = ctrl.StateStoreCredentials()
 	if err != nil {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
 	err = ctrl.StateStoreCreate()
 	if err != nil {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
 	err = ctrl.GitInit()
 	if err != nil {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
 	err = ctrl.InitializeBot()
 	if err != nil {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
 	err = ctrl.RepositoryPrep()
 	if err != nil {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
 	err = ctrl.RunGitTerraform()
 	if err != nil {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
 	err = ctrl.RepositoryPush()
 	if err != nil {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
 	err = ctrl.CreateCluster()
 	if err != nil {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
@@ -78,6 +135,11 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 
 	err = ctrl.ClusterSecretsBootstrap()
 	if err != nil {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
@@ -101,26 +163,51 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 
 	err = ctrl.InstallArgoCD()
 	if err != nil {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
 	err = ctrl.InitializeArgoCD()
 	if err != nil {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
 	err = ctrl.DeployRegistryApplication()
 	if err != nil {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
 	err = ctrl.WaitForVault()
 	if err != nil {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
 	err = ctrl.InitializeVault()
 	if err != nil {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
@@ -147,6 +234,11 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 
 	err = ctrl.RunVaultTerraform()
 	if err != nil {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
@@ -165,29 +257,56 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 	)
 	if err != nil {
 		log.Errorf("Error finding console Deployment: %s", err)
+
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, consoleDeployment, 120)
 	if err != nil {
 		log.Errorf("Error waiting for console Deployment ready state: %s", err)
+
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
 	err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "status", "provisioned")
+	if err != nil {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
+		return err
+	}
+
+	err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
 	if err != nil {
 		return err
 	}
 
 	log.Info("cluster creation complete")
 
-	// telemetryShim.Transmit(useTelemetryFlag, segmentClient, segment.MetricMgmtClusterInstallCompleted, "")
+	// Telemetry handler
+	rec, err := ctrl.GetCurrentClusterRecord()
+	if err != nil {
+		return err
+	}
 
-	// defer func(c segment.SegmentClient) {
-	// 	err := c.Client.Close()
-	// 	if err != nil {
-	// 		log.Info().Msgf("error closing segment client %s", err.Error())
-	// 	}
-	// }(*segmentClient)
+	segmentClient, err := telemetryShim.SetupTelemetry(rec)
+	if err != nil {
+		return err
+	}
+	defer segmentClient.Client.Close()
+
+	telemetryShim.Transmit(rec.UseTelemetry, segmentClient, segment.MetricMgmtClusterInstallCompleted, "")
 
 	return nil
 }
