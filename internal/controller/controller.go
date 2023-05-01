@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
@@ -251,6 +252,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	// Write cluster record if it doesn't exist
 	cl := types.Cluster{
 		ID:                    primitive.NewObjectID(),
+		CreationTimestamp:     fmt.Sprintf("%v", time.Now().UTC()),
 		UseTelemetry:          clctrl.UseTelemetry,
 		Status:                "provisioning",
 		AlertsEmail:           clctrl.AlertsEmail,
