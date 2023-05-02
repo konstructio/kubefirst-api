@@ -43,18 +43,7 @@ func DeleteCluster(c *gin.Context) {
 	}
 
 	// Delete cluster
-	mdbcl := &db.MongoDBClient{}
-	err := mdbcl.InitDatabase("api", "clusters")
-	if err != nil {
-		log.Error(err)
-	}
-	defer func() {
-		if err = mdbcl.Client.Disconnect(mdbcl.Context); err != nil {
-			log.Error("error closing mongodb client: %s", err)
-		}
-	}()
-
-	rec, err := mdbcl.GetCluster(clusterName)
+	rec, err := db.Client.GetCluster(clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -132,18 +121,7 @@ func GetCluster(c *gin.Context) {
 	}
 
 	// Retrieve cluster info
-	mdbcl := &db.MongoDBClient{}
-	err := mdbcl.InitDatabase("api", "clusters")
-	if err != nil {
-		log.Error(err)
-	}
-	defer func() {
-		if err = mdbcl.Client.Disconnect(mdbcl.Context); err != nil {
-			log.Error("error closing mongodb client: %s", err)
-		}
-	}()
-
-	cluster, err := mdbcl.GetCluster(clusterName)
+	cluster, err := db.Client.GetCluster(clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: "cluster not found",
@@ -166,18 +144,7 @@ func GetCluster(c *gin.Context) {
 // GetClusters returns all known configured clusters
 func GetClusters(c *gin.Context) {
 	// Retrieve all clusters info
-	mdbcl := &db.MongoDBClient{}
-	err := mdbcl.InitDatabase("api", "clusters")
-	if err != nil {
-		log.Error(err)
-	}
-	defer func() {
-		if err = mdbcl.Client.Disconnect(mdbcl.Context); err != nil {
-			log.Error("error closing mongodb client: %s", err)
-		}
-	}()
-
-	allClusters, err := mdbcl.GetClusters()
+	allClusters, err := db.Client.GetClusters()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: fmt.Sprintf("%s", err),
@@ -223,18 +190,7 @@ func PostCreateCluster(c *gin.Context) {
 	// Create
 	// If create is in progress, return error
 	// Retrieve cluster info
-	mdbcl := &db.MongoDBClient{}
-	err = mdbcl.InitDatabase("api", "clusters")
-	if err != nil {
-		log.Error(err)
-	}
-	defer func() {
-		if err = mdbcl.Client.Disconnect(mdbcl.Context); err != nil {
-			log.Error("error closing mongodb client: %s", err)
-		}
-	}()
-
-	cluster, err := mdbcl.GetCluster(clusterName)
+	cluster, err := db.Client.GetCluster(clusterName)
 	if err != nil {
 		log.Infof("cluster %s does not exist, continuing", clusterName)
 	} else {
@@ -326,18 +282,7 @@ func PostExportCluster(c *gin.Context) {
 	}
 
 	// Export
-	mdbcl := &db.MongoDBClient{}
-	err := mdbcl.InitDatabase("api", "clusters")
-	if err != nil {
-		log.Error(err)
-	}
-	defer func() {
-		if err = mdbcl.Client.Disconnect(mdbcl.Context); err != nil {
-			log.Error("error closing mongodb client: %s", err)
-		}
-	}()
-
-	err = mdbcl.Export(clusterName)
+	err := db.Client.Export(clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: fmt.Sprintf("error exporting cluster %s: %s", clusterName, err),
@@ -382,18 +327,7 @@ func PostImportCluster(c *gin.Context) {
 	}
 
 	// Export
-	mdbcl := &db.MongoDBClient{}
-	err = mdbcl.InitDatabase("api", "clusters")
-	if err != nil {
-		log.Error(err)
-	}
-	defer func() {
-		if err = mdbcl.Client.Disconnect(mdbcl.Context); err != nil {
-			log.Error("error closing mongodb client: %s", err)
-		}
-	}()
-
-	err = mdbcl.Restore(clusterName, &req)
+	err = db.Client.Restore(clusterName, &req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: fmt.Sprintf("error importing cluster %s: %s", clusterName, err),
@@ -427,18 +361,7 @@ func PostResetClusterProgress(c *gin.Context) {
 	}
 
 	// Reset
-	mdbcl := &db.MongoDBClient{}
-	err := mdbcl.InitDatabase("api", "clusters")
-	if err != nil {
-		log.Error(err)
-	}
-	defer func() {
-		if err = mdbcl.Client.Disconnect(mdbcl.Context); err != nil {
-			log.Error("error closing mongodb client: %s", err)
-		}
-	}()
-
-	err = mdbcl.UpdateCluster(clusterName, "in_progress", false)
+	err := db.Client.UpdateCluster(clusterName, "in_progress", false)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: fmt.Sprintf("error updating cluster %s: %s", clusterName, err),

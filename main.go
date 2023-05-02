@@ -51,16 +51,11 @@ func main() {
 	}
 
 	// Verify database connectivity
-	mdbcl := &db.MongoDBClient{}
-	err := mdbcl.TestDatabaseConnection()
+	err := db.Client.TestDatabaseConnection()
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer func() {
-		if err = mdbcl.Client.Disconnect(mdbcl.Context); err != nil {
-			log.Error("error closing mongodb client: %s", err)
-		}
-	}()
+	defer db.Client.Client.Disconnect(db.Client.Context)
 
 	// Programmatically set swagger info
 	docs.SwaggerInfo.Title = "Kubefirst API"

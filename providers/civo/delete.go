@@ -51,18 +51,8 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 
 	// Instantiate civo config
 	config := civo.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner)
-	mdbcl := &db.MongoDBClient{}
-	err = mdbcl.InitDatabase("api", "clusters")
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if err = mdbcl.Client.Disconnect(mdbcl.Context); err != nil {
-			log.Error("error closing mongodb client: %s", err)
-		}
-	}()
 
-	err = mdbcl.UpdateCluster(cl.ClusterName, "status", "deleting")
+	err = db.Client.UpdateCluster(cl.ClusterName, "status", "deleting")
 	if err != nil {
 		return err
 	}
@@ -79,12 +69,12 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 			err := terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Printf("error executing terraform destroy %s", tfEntrypoint)
-				mdbcl.UpdateCluster(cl.ClusterName, "status", "error")
+				db.Client.UpdateCluster(cl.ClusterName, "status", "error")
 				return err
 			}
 			log.Info("github resources terraform destroyed")
 
-			err = mdbcl.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
+			err = db.Client.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
 			if err != nil {
 				return err
 			}
@@ -133,13 +123,13 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 			err = terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Infof("error executing terraform destroy %s", tfEntrypoint)
-				mdbcl.UpdateCluster(cl.ClusterName, "status", "error")
+				db.Client.UpdateCluster(cl.ClusterName, "status", "error")
 				return err
 			}
 
 			log.Info("gitlab resources terraform destroyed")
 
-			err = mdbcl.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
+			err = db.Client.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
 			if err != nil {
 				return err
 			}
@@ -207,7 +197,7 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 				log.Info("deleting the registry application")
 				httpCode, _, err := argocd.DeleteApplication(&argocdHttpClient, config.RegistryAppName, argocdAuthToken, "true")
 				if err != nil {
-					mdbcl.UpdateCluster(cl.ClusterName, "status", "error")
+					db.Client.UpdateCluster(cl.ClusterName, "status", "error")
 					return err
 				}
 				log.Infof("http status code %d", httpCode)
@@ -226,7 +216,7 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 			log.Info("waiting for Civo Kubernetes cluster resource removal to finish...")
 			time.Sleep(time.Second * 10)
 
-			err = mdbcl.UpdateCluster(cl.ClusterName, "argocd_delete_registry_check", true)
+			err = db.Client.UpdateCluster(cl.ClusterName, "argocd_delete_registry_check", true)
 			if err != nil {
 				return err
 			}
@@ -250,17 +240,17 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 		err = terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Printf("error executing terraform destroy %s", tfEntrypoint)
-			mdbcl.UpdateCluster(cl.ClusterName, "status", "error")
+			db.Client.UpdateCluster(cl.ClusterName, "status", "error")
 			return err
 		}
 		log.Info("civo resources terraform destroyed")
 
-		err = mdbcl.UpdateCluster(cl.ClusterName, "cloud_terraform_apply_check", false)
+		err = db.Client.UpdateCluster(cl.ClusterName, "cloud_terraform_apply_check", false)
 		if err != nil {
 			return err
 		}
 
-		err = mdbcl.UpdateCluster(cl.ClusterName, "cloud_terraform_apply_failed_check", false)
+		err = db.Client.UpdateCluster(cl.ClusterName, "cloud_terraform_apply_failed_check", false)
 		if err != nil {
 			return err
 		}
@@ -281,7 +271,7 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 
 	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricMgmtClusterDeleteCompleted, "")
 
-	err = mdbcl.UpdateCluster(cl.ClusterName, "status", "deleted")
+	err = db.Client.UpdateCluster(cl.ClusterName, "status", "deleted")
 	if err != nil {
 		return err
 	}
