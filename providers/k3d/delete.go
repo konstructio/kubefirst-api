@@ -48,6 +48,11 @@ func DeleteK3DCluster(cl *types.Cluster) error {
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err = mdbcl.Client.Disconnect(mdbcl.Context); err != nil {
+			log.Error("error closing mongodb client: %s", err)
+		}
+	}()
 
 	err = mdbcl.UpdateCluster(cl.ClusterName, "status", "deleting")
 	if err != nil {

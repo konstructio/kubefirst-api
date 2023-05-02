@@ -48,6 +48,11 @@ func DeleteCluster(c *gin.Context) {
 	if err != nil {
 		log.Error(err)
 	}
+	defer func() {
+		if err = mdbcl.Client.Disconnect(mdbcl.Context); err != nil {
+			log.Error("error closing mongodb client: %s", err)
+		}
+	}()
 
 	rec, err := mdbcl.GetCluster(clusterName)
 	if err != nil {
@@ -132,6 +137,11 @@ func GetCluster(c *gin.Context) {
 	if err != nil {
 		log.Error(err)
 	}
+	defer func() {
+		if err = mdbcl.Client.Disconnect(mdbcl.Context); err != nil {
+			log.Error("error closing mongodb client: %s", err)
+		}
+	}()
 
 	cluster, err := mdbcl.GetCluster(clusterName)
 	if err != nil {
@@ -161,6 +171,11 @@ func GetClusters(c *gin.Context) {
 	if err != nil {
 		log.Error(err)
 	}
+	defer func() {
+		if err = mdbcl.Client.Disconnect(mdbcl.Context); err != nil {
+			log.Error("error closing mongodb client: %s", err)
+		}
+	}()
 
 	allClusters, err := mdbcl.GetClusters()
 	if err != nil {
@@ -213,6 +228,11 @@ func PostCreateCluster(c *gin.Context) {
 	if err != nil {
 		log.Error(err)
 	}
+	defer func() {
+		if err = mdbcl.Client.Disconnect(mdbcl.Context); err != nil {
+			log.Error("error closing mongodb client: %s", err)
+		}
+	}()
 
 	cluster, err := mdbcl.GetCluster(clusterName)
 	if err != nil {
@@ -311,6 +331,11 @@ func PostExportCluster(c *gin.Context) {
 	if err != nil {
 		log.Error(err)
 	}
+	defer func() {
+		if err = mdbcl.Client.Disconnect(mdbcl.Context); err != nil {
+			log.Error("error closing mongodb client: %s", err)
+		}
+	}()
 
 	err = mdbcl.Export(clusterName)
 	if err != nil {
@@ -362,6 +387,11 @@ func PostImportCluster(c *gin.Context) {
 	if err != nil {
 		log.Error(err)
 	}
+	defer func() {
+		if err = mdbcl.Client.Disconnect(mdbcl.Context); err != nil {
+			log.Error("error closing mongodb client: %s", err)
+		}
+	}()
 
 	err = mdbcl.Restore(clusterName, &req)
 	if err != nil {
@@ -373,5 +403,50 @@ func PostImportCluster(c *gin.Context) {
 
 	c.JSON(http.StatusOK, types.JSONSuccessResponse{
 		Message: "cluster imported",
+	})
+}
+
+// PostResetClusterProgress godoc
+// @Summary Remove a cluster status marker from a cluster entry
+// @Description Remove a cluster status marker from a cluster entry
+// @Tags cluster
+// @Accept json
+// @Produce json
+// @Param	cluster_name	path	string	true	"Cluster name"
+// @Success 202 {object} types.JSONSuccessResponse
+// @Failure 400 {object} types.JSONFailureResponse
+// @Router /cluster/:cluster_name/reset_progress [post]
+// PostResetClusterProgress removes a cluster status marker from a cluster entry
+func PostResetClusterProgress(c *gin.Context) {
+	clusterName, param := c.Params.Get("cluster_name")
+	if !param {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: ":cluster_name not provided",
+		})
+		return
+	}
+
+	// Reset
+	mdbcl := &db.MongoDBClient{}
+	err := mdbcl.InitDatabase("api", "clusters")
+	if err != nil {
+		log.Error(err)
+	}
+	defer func() {
+		if err = mdbcl.Client.Disconnect(mdbcl.Context); err != nil {
+			log.Error("error closing mongodb client: %s", err)
+		}
+	}()
+
+	err = mdbcl.UpdateCluster(clusterName, "in_progress", false)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: fmt.Sprintf("error updating cluster %s: %s", clusterName, err),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, types.JSONSuccessResponse{
+		Message: "cluster updated",
 	})
 }

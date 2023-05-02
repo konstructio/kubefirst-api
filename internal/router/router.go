@@ -50,6 +50,7 @@ func SetupRouter() *gin.Engine {
 		v1.POST("/cluster/:cluster_name", router.PostCreateCluster)
 		v1.POST("/cluster/:cluster_name/export", router.PostExportCluster)
 		v1.POST("/cluster/:cluster_name/import", router.PostImportCluster)
+		v1.POST("/cluster/:cluster_name/reset_progress", router.PostResetClusterProgress)
 
 		// AWS
 		v1.GET("/aws/profiles", router.GetAWSProfiles)
