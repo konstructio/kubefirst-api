@@ -31,10 +31,8 @@ type MongoDBClient struct {
 	Context    context.Context
 }
 
-// InitDatabase
-func (mdbcl *MongoDBClient) InitDatabase(databaseName string, collectionName string) error {
-	mdbcl.Context = context.Background()
-
+// BuildClient
+func (mdbcl *MongoDBClient) BuildClient() (*mongo.Client, error) {
 	var connString string
 	var clientOptions *options.ClientOptions
 
@@ -54,6 +52,18 @@ func (mdbcl *MongoDBClient) InitDatabase(databaseName string, collectionName str
 
 	client, err := mongo.Connect(mdbcl.Context, clientOptions)
 	if err != nil {
+		return &mongo.Client{}, fmt.Errorf("error establishing mongodb client: %s", err)
+	}
+
+	return client, nil
+}
+
+// TestDatabaseConnection
+func (mdbcl *MongoDBClient) TestDatabaseConnection() error {
+	mdbcl.Context = context.Background()
+
+	client, err := mdbcl.BuildClient()
+	if err != nil {
 		return err
 	}
 
@@ -62,6 +72,18 @@ func (mdbcl *MongoDBClient) InitDatabase(databaseName string, collectionName str
 		log.Fatalf("error connecting to mongodb: %s", err)
 	}
 	log.Infof("connected to mongodb host %s", os.Getenv("MONGODB_HOST"))
+
+	return nil
+}
+
+// InitDatabase
+func (mdbcl *MongoDBClient) InitDatabase(databaseName string, collectionName string) error {
+	mdbcl.Context = context.Background()
+
+	client, err := mdbcl.BuildClient()
+	if err != nil {
+		return err
+	}
 
 	mdbcl.Client = client
 	mdbcl.Collection = client.Database(databaseName).Collection(collectionName)

@@ -368,6 +368,44 @@ const docTemplate = `{
                 }
             }
         },
+        "/cluster/:cluster_name/reset_progress": {
+            "post": {
+                "description": "Remove a cluster status marker from a cluster entry",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "Remove a cluster status marker from a cluster entry",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cluster name",
+                        "name": "cluster_name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONFailureResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "description": "Return health status if the application is running.",
@@ -505,6 +543,9 @@ const docTemplate = `{
                 "clusterType": {
                     "type": "string"
                 },
+                "creationTimestamp": {
+                    "type": "string"
+                },
                 "domainLivenessCheck": {
                     "type": "boolean"
                 },
@@ -547,6 +588,9 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string"
+                },
+                "inProgress": {
+                    "type": "boolean"
                 },
                 "installToolsCheck": {
                     "type": "boolean"

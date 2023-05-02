@@ -69,6 +69,8 @@ definitions:
         type: boolean
       clusterType:
         type: string
+      creationTimestamp:
+        type: string
       domainLivenessCheck:
         type: boolean
       domainName:
@@ -98,6 +100,8 @@ definitions:
         type: boolean
       id:
         type: string
+      inProgress:
+        type: boolean
       installToolsCheck:
         type: boolean
       kbotSetupCheck:
@@ -465,6 +469,31 @@ paths:
           schema:
             $ref: '#/definitions/types.JSONFailureResponse'
       summary: Import a Kubefirst cluster database entry
+      tags:
+      - cluster
+  /cluster/:cluster_name/reset_progress:
+    post:
+      consumes:
+      - application/json
+      description: Remove a cluster status marker from a cluster entry
+      parameters:
+      - description: Cluster name
+        in: path
+        name: cluster_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/types.JSONSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Remove a cluster status marker from a cluster entry
       tags:
       - cluster
   /health:
