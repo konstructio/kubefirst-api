@@ -50,7 +50,11 @@ func Connect() *MongoDBClient {
 		)
 		clientOptions = options.Client().ApplyURI(connString).SetServerAPIOptions(serverAPI)
 	case "local":
-		connString = fmt.Sprintf("mongodb://%s/", os.Getenv("MONGODB_HOST"))
+		connString = fmt.Sprintf("mongodb://%s:%s@%s",
+			os.Getenv("MONGODB_USERNAME"),
+			os.Getenv("MONGODB_PASSWORD"),
+			os.Getenv("MONGODB_HOST"),
+		)
 		clientOptions = options.Client().ApplyURI(connString)
 	}
 
