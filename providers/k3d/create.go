@@ -205,6 +205,7 @@ func CreateK3DCluster(definition *types.ClusterDefinition) error {
 	}
 
 	// Wait for console Deployment Pods to transition to Running
+	log.Info("deploying kubefirst console and verifying cluster installation is complete")
 	consoleDeployment, err := k8s.ReturnDeploymentObject(
 		kcfg.Clientset,
 		"app.kubernetes.io/instance",

@@ -26,15 +26,19 @@ const (
 )
 
 type MongoDBClient struct {
-	Client     *mongo.Client
-	Collection *mongo.Collection
-	Context    context.Context
+	Client             *mongo.Client
+	ClustersCollection *mongo.Collection
+	Context            context.Context
 }
 
-// BuildClient
-func (mdbcl *MongoDBClient) BuildClient() (*mongo.Client, error) {
+var Client = Connect()
+
+// Connect
+func Connect() *MongoDBClient {
 	var connString string
 	var clientOptions *options.ClientOptions
+
+	ctx := context.Background()
 
 	switch os.Getenv("MONGODB_HOST_TYPE") {
 	case "atlas":
@@ -50,43 +54,27 @@ func (mdbcl *MongoDBClient) BuildClient() (*mongo.Client, error) {
 		clientOptions = options.Client().ApplyURI(connString)
 	}
 
-	client, err := mongo.Connect(mdbcl.Context, clientOptions)
+	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
-		return &mongo.Client{}, fmt.Errorf("error establishing mongodb client: %s", err)
+		log.Fatal("could not create mongodb client: %s", err)
 	}
 
-	return client, nil
+	cl := MongoDBClient{
+		Client:             client,
+		ClustersCollection: client.Database("api").Collection("clusters"),
+		Context:            ctx,
+	}
+
+	return &cl
 }
 
 // TestDatabaseConnection
 func (mdbcl *MongoDBClient) TestDatabaseConnection() error {
-	mdbcl.Context = context.Background()
-
-	client, err := mdbcl.BuildClient()
-	if err != nil {
-		return err
-	}
-
-	err = client.Database("admin").RunCommand(mdbcl.Context, bson.D{{"ping", 1}}).Err()
+	err := mdbcl.Client.Database("admin").RunCommand(mdbcl.Context, bson.D{{"ping", 1}}).Err()
 	if err != nil {
 		log.Fatalf("error connecting to mongodb: %s", err)
 	}
 	log.Infof("connected to mongodb host %s", os.Getenv("MONGODB_HOST"))
-
-	return nil
-}
-
-// InitDatabase
-func (mdbcl *MongoDBClient) InitDatabase(databaseName string, collectionName string) error {
-	mdbcl.Context = context.Background()
-
-	client, err := mdbcl.BuildClient()
-	if err != nil {
-		return err
-	}
-
-	mdbcl.Client = client
-	mdbcl.Collection = client.Database(databaseName).Collection(collectionName)
 
 	return nil
 }
@@ -99,7 +87,7 @@ func (mdbcl *MongoDBClient) DeleteCluster(clusterName string) error {
 	filter := bson.D{{"cluster_name", clusterName}}
 
 	// Delete
-	resp, err := mdbcl.Collection.DeleteOne(mdbcl.Context, filter)
+	resp, err := mdbcl.ClustersCollection.DeleteOne(mdbcl.Context, filter)
 	if err != nil {
 		return fmt.Errorf("error deleting cluster %s: %s", clusterName, err)
 	}
@@ -114,7 +102,7 @@ func (mdbcl *MongoDBClient) GetCluster(clusterName string) (types.Cluster, error
 	// Find
 	filter := bson.D{{"cluster_name", clusterName}}
 	var result types.Cluster
-	err := mdbcl.Collection.FindOne(mdbcl.Context, filter).Decode(&result)
+	err := mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {
 		return types.Cluster{}, fmt.Errorf("error getting cluster %s: %s", clusterName, err)
 	}
@@ -126,7 +114,7 @@ func (mdbcl *MongoDBClient) GetCluster(clusterName string) (types.Cluster, error
 func (mdbcl *MongoDBClient) GetClusters() ([]types.Cluster, error) {
 	// Find all
 	var results []types.Cluster
-	cursor, err := mdbcl.Collection.Find(mdbcl.Context, bson.D{})
+	cursor, err := mdbcl.ClustersCollection.Find(mdbcl.Context, bson.D{})
 	if err != nil {
 		return []types.Cluster{}, fmt.Errorf("error getting clusters: %s", err)
 	}
@@ -154,12 +142,12 @@ func (mdbcl *MongoDBClient) GetClusters() ([]types.Cluster, error) {
 func (mdbcl *MongoDBClient) InsertCluster(cl types.Cluster) error {
 	filter := bson.D{{"cluster_name", cl.ClusterName}}
 	var result types.Cluster
-	err := mdbcl.Collection.FindOne(mdbcl.Context, filter).Decode(&result)
+	err := mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {
 		// This error means your query did not match any documents.
 		if err == mongo.ErrNoDocuments {
 			// Create if entry does not exist
-			insert, err := mdbcl.Collection.InsertOne(mdbcl.Context, cl)
+			insert, err := mdbcl.ClustersCollection.InsertOne(mdbcl.Context, cl)
 			if err != nil {
 				return fmt.Errorf("error inserting cluster %s: %s", cl.ClusterName, err)
 			}
@@ -177,7 +165,7 @@ func (mdbcl *MongoDBClient) UpdateCluster(clusterName string, field string, valu
 	// Find
 	filter := bson.D{{"cluster_name", clusterName}}
 	var result types.Cluster
-	err := mdbcl.Collection.FindOne(mdbcl.Context, filter).Decode(&result)
+	err := mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {
 		return fmt.Errorf("error finding cluster %s: %s", clusterName, err)
 	}
@@ -185,7 +173,7 @@ func (mdbcl *MongoDBClient) UpdateCluster(clusterName string, field string, valu
 	// Update
 	filter = bson.D{{"_id", result.ID}}
 	update := bson.D{{"$set", bson.D{{field, value}}}}
-	resp, err := mdbcl.Collection.UpdateOne(mdbcl.Context, filter, update)
+	resp, err := mdbcl.ClustersCollection.UpdateOne(mdbcl.Context, filter, update)
 	if err != nil {
 		return fmt.Errorf("error updating cluster %s: %s", clusterName, err)
 	}
@@ -205,7 +193,7 @@ func (mdbcl *MongoDBClient) Export(clusterName string) error {
 	// Find
 	filter := bson.D{{"cluster_name", clusterName}}
 	var result types.Cluster
-	err := mdbcl.Collection.FindOne(mdbcl.Context, filter).Decode(&result)
+	err := mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {
 		return err
 	}

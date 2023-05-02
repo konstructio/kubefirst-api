@@ -103,11 +103,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	utils.CreateK1Directory(def.ClusterName)
 
 	// Database controller
-	clctrl.MdbCl = &db.MongoDBClient{}
-	err := clctrl.MdbCl.InitDatabase("api", "clusters")
-	if err != nil {
-		return err
-	}
+	clctrl.MdbCl = db.Client
 
 	// Determine if record already exists
 	recordExists := true
