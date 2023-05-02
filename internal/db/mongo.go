@@ -11,7 +11,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/objectStorage"
 	"github.com/kubefirst/kubefirst-api/internal/types"
@@ -30,7 +29,6 @@ type MongoDBClient struct {
 	Client             *mongo.Client
 	ClustersCollection *mongo.Collection
 	Context            context.Context
-	Cancel             context.CancelFunc
 }
 
 var Client = Connect()
@@ -40,7 +38,7 @@ func Connect() *MongoDBClient {
 	var connString string
 	var clientOptions *options.ClientOptions
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx := context.Background()
 
 	switch os.Getenv("MONGODB_HOST_TYPE") {
 	case "atlas":
@@ -65,7 +63,6 @@ func Connect() *MongoDBClient {
 		Client:             client,
 		ClustersCollection: client.Database("api").Collection("clusters"),
 		Context:            ctx,
-		Cancel:             cancel,
 	}
 
 	return &cl

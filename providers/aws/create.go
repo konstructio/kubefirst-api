@@ -361,12 +361,13 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 	}
 
 	// Wait for console Deployment Pods to transition to Running
+	log.Info("deploying kubefirst console and verifying cluster installation is complete")
 	consoleDeployment, err := k8s.ReturnDeploymentObject(
 		kcfg.Clientset,
 		"app.kubernetes.io/instance",
 		"kubefirst-console",
 		"kubefirst",
-		600,
+		1200,
 	)
 	if err != nil {
 		log.Errorf("Error finding console Deployment: %s", err)
