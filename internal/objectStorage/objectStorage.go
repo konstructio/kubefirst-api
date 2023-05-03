@@ -93,8 +93,8 @@ func PutClusterObject(cr *types.StateStoreCredentials, d *types.StateStoreDetail
 	return nil
 }
 
-// GetClusterObject exports a cluster definition as json and places it in the target object storage bucket
-func GetClusterObject(cr *types.StateStoreCredentials, d *types.StateStoreDetails, clusterName string, localFilePath string, remoteFilePath string) error {
+// GetClusterObject imports a cluster definition as json
+func GetClusterObject(cr *types.StateStoreCredentials, d *types.StateStoreDetails, localFilePath string, remoteFilePath string) error {
 	ctx := context.Background()
 
 	// Initialize minio client
@@ -104,6 +104,11 @@ func GetClusterObject(cr *types.StateStoreCredentials, d *types.StateStoreDetail
 	})
 	if err != nil {
 		return fmt.Errorf("error initializing minio client: %s", err)
+	}
+
+	_, err = minioClient.BucketExists(ctx, d.Name)
+	if err != nil {
+		return err
 	}
 
 	// Get object from bucket

@@ -469,153 +469,153 @@ const docTemplate = `{
         "types.Cluster": {
             "type": "object",
             "properties": {
-                "alertsEmail": {
+                "_id": {
                     "type": "string"
                 },
-                "argoCDAuthToken": {
+                "alerts_email": {
                     "type": "string"
                 },
-                "argoCDCreateRegistryCheck": {
+                "argocd_auth_token": {
+                    "type": "string"
+                },
+                "argocd_create_registry_check": {
                     "type": "boolean"
                 },
-                "argoCDDeleteRegistryCheck": {
+                "argocd_delete_registry_check": {
                     "type": "boolean"
                 },
-                "argoCDInitializeCheck": {
+                "argocd_initialize_check": {
                     "type": "boolean"
                 },
-                "argoCDInstallCheck": {
+                "argocd_install_check": {
                     "type": "boolean"
                 },
-                "argoCDPassword": {
+                "argocd_password": {
                     "type": "string"
                 },
-                "argoCDUsername": {
+                "argocd_username": {
                     "type": "string"
                 },
-                "atlantisWebhookSecret": {
+                "atlantis_webhook_secret": {
                     "type": "string"
                 },
-                "atlantisWebhookURL": {
+                "atlantis_webhook_url": {
                     "type": "string"
                 },
-                "awsaccountId": {
+                "aws_account_id": {
                     "description": "kms",
                     "type": "string"
                 },
-                "awskmskeyDetokenizedCheck": {
+                "aws_kms_key_detokenized_check": {
                     "type": "boolean"
                 },
-                "awskmskeyId": {
+                "aws_kms_key_id": {
                     "type": "string"
                 },
-                "civoToken": {
+                "civo_token": {
                     "type": "string"
                 },
-                "cloudProvider": {
+                "cloud_provider": {
                     "type": "string"
                 },
-                "cloudRegion": {
+                "cloud_region": {
                     "type": "string"
                 },
-                "cloudTerraformApplyCheck": {
+                "cloud_terraform_apply_check": {
                     "type": "boolean"
                 },
-                "cloudTerraformApplyFailedCheck": {
+                "cloud_terraform_apply_failed_check": {
                     "type": "boolean"
                 },
-                "clusterID": {
+                "cluster_id": {
                     "type": "string"
                 },
-                "clusterName": {
+                "cluster_name": {
                     "type": "string"
                 },
-                "clusterSecretsCreatedCheck": {
+                "cluster_secrets_created_check": {
                     "type": "boolean"
                 },
-                "clusterType": {
+                "cluster_type": {
                     "type": "string"
                 },
-                "creationTimestamp": {
+                "creation_timestamp": {
                     "type": "string"
                 },
-                "domainLivenessCheck": {
+                "domain_liveness_check": {
                     "type": "boolean"
                 },
-                "domainName": {
+                "domain_name": {
                     "type": "string"
                 },
-                "gitCredentialsCheck": {
+                "git_credentials_check": {
                     "type": "boolean"
                 },
-                "gitHost": {
+                "git_host": {
                     "type": "string"
                 },
-                "gitInitCheck": {
+                "git_init_check": {
                     "description": "Checks",
                     "type": "boolean"
                 },
-                "gitOwner": {
+                "git_owner": {
                     "type": "string"
                 },
-                "gitProvider": {
+                "git_provider": {
                     "type": "string"
                 },
-                "gitTerraformApplyCheck": {
+                "git_terraform_apply_check": {
                     "type": "boolean"
                 },
-                "gitToken": {
+                "git_token": {
                     "type": "string"
                 },
-                "gitUser": {
+                "git_user": {
                     "type": "string"
                 },
-                "gitlabOwnerGroupID": {
+                "gitlab_owner_group_id": {
                     "type": "integer"
                 },
-                "gitopsPushedCheck": {
+                "gitops_pushed_check": {
                     "type": "boolean"
                 },
-                "gitopsReadyCheck": {
+                "gitops_ready_check": {
                     "type": "boolean"
                 },
-                "id": {
+                "in_progress": {
+                    "type": "boolean"
+                },
+                "install_tools_check": {
+                    "type": "boolean"
+                },
+                "kbot_setup_check": {
+                    "type": "boolean"
+                },
+                "kubefirst_team": {
                     "type": "string"
                 },
-                "inProgress": {
+                "post_detokenize_check": {
                     "type": "boolean"
                 },
-                "installToolsCheck": {
-                    "type": "boolean"
-                },
-                "kbotSetupCheck": {
-                    "type": "boolean"
-                },
-                "kubefirstTeam": {
+                "private_key": {
                     "type": "string"
                 },
-                "postDetokenizeCheck": {
+                "public_key": {
+                    "type": "string"
+                },
+                "public_keys": {
+                    "type": "string"
+                },
+                "state_store_create_check": {
                     "type": "boolean"
                 },
-                "privateKey": {
-                    "type": "string"
-                },
-                "publicKey": {
-                    "type": "string"
-                },
-                "publicKeys": {
-                    "type": "string"
-                },
-                "stateStoreCreateCheck": {
-                    "type": "boolean"
-                },
-                "stateStoreCredentials": {
+                "state_store_credentials": {
                     "$ref": "#/definitions/types.StateStoreCredentials"
                 },
-                "stateStoreCredsCheck": {
+                "state_store_creds_check": {
                     "type": "boolean"
                 },
-                "stateStoreDetails": {
+                "state_store_details": {
                     "$ref": "#/definitions/types.StateStoreDetails"
                 },
                 "status": {
@@ -625,13 +625,13 @@ const docTemplate = `{
                     "description": "Telemetry",
                     "type": "boolean"
                 },
-                "usersTerraformApplyCheck": {
+                "users_terraform_apply_check": {
                     "type": "boolean"
                 },
-                "vaultInitializedCheck": {
+                "vault_initialized_check": {
                     "type": "boolean"
                 },
-                "vaultTerraformApplyCheck": {
+                "vault_terraform_apply_check": {
                     "type": "boolean"
                 }
             }
@@ -696,13 +696,19 @@ const docTemplate = `{
         "types.ImportClusterRequest": {
             "type": "object",
             "properties": {
-                "clusterName": {
+                "cloud_provider": {
                     "type": "string"
                 },
-                "stateStoreCredentials": {
+                "cloud_region": {
+                    "type": "string"
+                },
+                "cluster_name": {
+                    "type": "string"
+                },
+                "state_store_credentials": {
                     "$ref": "#/definitions/types.StateStoreCredentials"
                 },
-                "stateStoreDetails": {
+                "state_store_details": {
                     "$ref": "#/definitions/types.StateStoreDetails"
                 }
             }
@@ -737,7 +743,7 @@ const docTemplate = `{
         "types.StateStoreCredentials": {
             "type": "object",
             "properties": {
-                "accessKeyID": {
+                "access_key_id": {
                     "type": "string"
                 },
                 "id": {
@@ -746,7 +752,7 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "secretAccessKey": {
+                "secret_access_key": {
                     "type": "string"
                 }
             }
@@ -754,10 +760,10 @@ const docTemplate = `{
         "types.StateStoreDetails": {
             "type": "object",
             "properties": {
-                "awsartifactsBucket": {
+                "aws_artifacts_bucket": {
                     "type": "string"
                 },
-                "awsstateStoreBucket": {
+                "aws_state_store_bucket": {
                     "type": "string"
                 },
                 "hostname": {

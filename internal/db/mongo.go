@@ -255,6 +255,16 @@ func (mdbcl *MongoDBClient) Restore(req *types.ImportClusterRequest) error {
 		}
 	}
 
+	var bucketHostname string
+	switch req.CloudProvider {
+	case "civo":
+		bucketHostname = fmt.Sprintf("objectstore.%s.civo.com", req.CloudRegion)
+	case "digitalocean":
+		bucketHostname = fmt.Sprintf("%s.digitaloceanspaces.com", req.CloudRegion)
+	case "vultr":
+		bucketHostname = fmt.Sprintf("%s.vultrobjects.com", req.CloudRegion)
+	}
+
 	// Retrieve the object from state storage bucket
 	err := objectStorage.GetClusterObject(
 		&types.StateStoreCredentials{
@@ -266,9 +276,8 @@ func (mdbcl *MongoDBClient) Restore(req *types.ImportClusterRequest) error {
 		// AWSArtifactsBucket
 		&types.StateStoreDetails{
 			Name:     req.StateStoreDetails.Name,
-			Hostname: req.StateStoreDetails.Hostname,
+			Hostname: bucketHostname,
 		},
-		req.ClusterName,
 		localFilePath,
 		remoteFilePath,
 	)
