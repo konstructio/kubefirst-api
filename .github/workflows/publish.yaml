@@ -1,4 +1,4 @@
-name: release
+name: main
 env:
   ARGO_NAMESPACE: argo
   ARGO_VERSION: v3.4.1
@@ -111,43 +111,6 @@ jobs:
             -p branch="${GITHUB_REF_NAME}" \
             -p clusterName="mgmt-20-kubefirst-com" \
             -p environment="staging" \
-            -p gitUrlNoProtocol="git@github.com:${GITHUB_REPOSITORY_OWNER_PART_SLUG}" \
-            -p shortSha="${GITHUB_SHA_SHORT}" \
-            --wait --log
-      - run: echo "⭐️ the kubefirst open source platform is powered by github stars. give kubefirst one today https://github.com/kubefirst/kubefirst"
-  release:
-    needs: staging
-    runs-on: self-hosted
-    steps:
-      - name: Setup Runner for Argo
-        run: |
-          cd $HOME
-          echo "Install argo"
-          # Download the binary
-          curl -sLO https://github.com/argoproj/argo-workflows/releases/download/${ARGO_VERSION}/argo-linux-amd64.gz
-          # Unzip
-          gunzip argo-linux-amd64.gz
-          # Make binary executable
-          chmod +x argo-linux-amd64
-          # Move binary to path
-          sudo mv ./argo-linux-amd64 /usr/local/bin/argo
-          # Test installation
-          argo version --short
-      - name: Check out repository code
-        uses: actions/checkout@v3
-      - name: Inject slug/short variables
-        uses: rlespinasse/github-slug-action@v4
-      # todo need to look repositoryGitURL, this needs to be overrideable from here and respected on the template side for both repositories
-      - name: release
-        run: |
-          echo "commit sha $GITHUB_SHA"
-          argo version --short
-          argo submit .argo/release.yaml \
-            --generate-name="${GITHUB_REPOSITORY_NAME_PART}-release-${GITHUB_SHA_SHORT}-" \
-            -p appName="${GITHUB_REPOSITORY_NAME_PART}" \
-            -p branch="${GITHUB_REF_NAME}" \
-            -p clusterName="mgmt-20-kubefirst-com" \
-            -p environment="production" \
             -p gitUrlNoProtocol="git@github.com:${GITHUB_REPOSITORY_OWNER_PART_SLUG}" \
             -p shortSha="${GITHUB_SHA_SHORT}" \
             --wait --log
