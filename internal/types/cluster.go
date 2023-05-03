@@ -118,6 +118,7 @@ type PushBucketObject struct {
 
 // ImportClusterRequest
 type ImportClusterRequest struct {
+	ClusterName           string
 	StateStoreCredentials StateStoreCredentials
 	StateStoreDetails     StateStoreDetails
 }

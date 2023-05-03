@@ -45,11 +45,12 @@ func SetupRouter() *gin.Engine {
 	{
 		// Cluster
 		v1.GET("/cluster", router.GetClusters)
+		v1.POST("/cluster/import", router.PostImportCluster)
+
 		v1.GET("/cluster/:cluster_name", router.GetCluster)
 		v1.DELETE("/cluster/:cluster_name", router.DeleteCluster)
 		v1.POST("/cluster/:cluster_name", router.PostCreateCluster)
 		v1.POST("/cluster/:cluster_name/export", router.PostExportCluster)
-		v1.POST("/cluster/:cluster_name/import", router.PostImportCluster)
 		v1.POST("/cluster/:cluster_name/reset_progress", router.PostResetClusterProgress)
 
 		// AWS

@@ -301,21 +301,12 @@ func PostExportCluster(c *gin.Context) {
 // @Tags cluster
 // @Accept json
 // @Produce json
-// @Param	cluster_name	path	string	true	"Cluster name"
 // @Param	request_body	body	types.ImportClusterRequest	true	"Cluster import request in JSON format"
 // @Success 202 {object} types.JSONSuccessResponse
 // @Failure 400 {object} types.JSONFailureResponse
-// @Router /cluster/:cluster_name/import [post]
+// @Router /cluster/import [post]
 // PostImportCluster handles a request to import a cluster
 func PostImportCluster(c *gin.Context) {
-	clusterName, param := c.Params.Get("cluster_name")
-	if !param {
-		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: ":cluster_name not provided",
-		})
-		return
-	}
-
 	// Bind to variable as application/json, handle error
 	var req types.ImportClusterRequest
 	err := c.Bind(&req)
@@ -327,10 +318,10 @@ func PostImportCluster(c *gin.Context) {
 	}
 
 	// Export
-	err = db.Client.Restore(clusterName, &req)
+	err = db.Client.Restore(&req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: fmt.Sprintf("error importing cluster %s: %s", clusterName, err),
+			Message: fmt.Sprintf("error importing cluster %s: %s", req.ClusterName, err),
 		})
 		return
 	}
@@ -341,8 +332,8 @@ func PostImportCluster(c *gin.Context) {
 }
 
 // PostResetClusterProgress godoc
-// @Summary Remove a cluster status marker from a cluster entry
-// @Description Remove a cluster status marker from a cluster entry
+// @Summary Remove a cluster progress marker from a cluster entry
+// @Description Remove a cluster progress marker from a cluster entry
 // @Tags cluster
 // @Accept json
 // @Produce json
@@ -350,7 +341,7 @@ func PostImportCluster(c *gin.Context) {
 // @Success 202 {object} types.JSONSuccessResponse
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /cluster/:cluster_name/reset_progress [post]
-// PostResetClusterProgress removes a cluster status marker from a cluster entry
+// PostResetClusterProgress removes a cluster progress marker from a cluster entry
 func PostResetClusterProgress(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
 	if !param {
