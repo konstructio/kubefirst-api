@@ -241,10 +241,10 @@ func (mdbcl *MongoDBClient) Export(clusterName string) error {
 
 // Restore retrieves a target cluster's database export from a state storage bucket and
 // attempts to insert the parsed cluster object into the database
-func (mdbcl *MongoDBClient) Restore(clusterName string, req *types.ImportClusterRequest) error {
+func (mdbcl *MongoDBClient) Restore(req *types.ImportClusterRequest) error {
 	var cluster *types.Cluster
-	var localFilePath = fmt.Sprintf("%s/%s.json", clusterImportsPath, clusterName)
-	var remoteFilePath = fmt.Sprintf("%s.json", clusterName)
+	var localFilePath = fmt.Sprintf("%s/%s.json", clusterImportsPath, req.ClusterName)
+	var remoteFilePath = fmt.Sprintf("%s.json", req.ClusterName)
 
 	// Verify import directory exists
 	if _, err := os.Stat(clusterImportsPath); os.IsNotExist(err) {
@@ -256,7 +256,6 @@ func (mdbcl *MongoDBClient) Restore(clusterName string, req *types.ImportCluster
 	}
 
 	// Retrieve the object from state storage bucket
-	// todo: this needs to come from the provisioned mgmt cluster somehow
 	err := objectStorage.GetClusterObject(
 		&types.StateStoreCredentials{
 			AccessKeyID:     req.StateStoreCredentials.AccessKeyID,
@@ -269,7 +268,7 @@ func (mdbcl *MongoDBClient) Restore(clusterName string, req *types.ImportCluster
 			Name:     req.StateStoreDetails.Name,
 			Hostname: req.StateStoreDetails.Hostname,
 		},
-		clusterName,
+		req.ClusterName,
 		localFilePath,
 		remoteFilePath,
 	)
@@ -293,7 +292,7 @@ func (mdbcl *MongoDBClient) Restore(clusterName string, req *types.ImportCluster
 		return err
 	}
 
-	log.Infof("successfully restored cluster %s to database", clusterName)
+	log.Infof("successfully restored cluster %s to database", req.ClusterName)
 
 	err = os.Remove(localFilePath)
 	if err != nil {

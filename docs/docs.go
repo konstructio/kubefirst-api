@@ -321,9 +321,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/cluster/:cluster_name/import": {
+        "/cluster/:cluster_name/reset_progress": {
             "post": {
-                "description": "Import a Kubefirst cluster database entry",
+                "description": "Remove a cluster progress marker from a cluster entry",
                 "consumes": [
                     "application/json"
                 ],
@@ -333,7 +333,7 @@ const docTemplate = `{
                 "tags": [
                     "cluster"
                 ],
-                "summary": "Import a Kubefirst cluster database entry",
+                "summary": "Remove a cluster progress marker from a cluster entry",
                 "parameters": [
                     {
                         "type": "string",
@@ -341,15 +341,6 @@ const docTemplate = `{
                         "name": "cluster_name",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "Cluster import request in JSON format",
-                        "name": "request_body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/types.ImportClusterRequest"
-                        }
                     }
                 ],
                 "responses": {
@@ -368,9 +359,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/cluster/:cluster_name/reset_progress": {
+        "/cluster/import": {
             "post": {
-                "description": "Remove a cluster status marker from a cluster entry",
+                "description": "Import a Kubefirst cluster database entry",
                 "consumes": [
                     "application/json"
                 ],
@@ -380,14 +371,16 @@ const docTemplate = `{
                 "tags": [
                     "cluster"
                 ],
-                "summary": "Remove a cluster status marker from a cluster entry",
+                "summary": "Import a Kubefirst cluster database entry",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Cluster name",
-                        "name": "cluster_name",
-                        "in": "path",
-                        "required": true
+                        "description": "Cluster import request in JSON format",
+                        "name": "request_body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.ImportClusterRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -703,6 +696,9 @@ const docTemplate = `{
         "types.ImportClusterRequest": {
             "type": "object",
             "properties": {
+                "clusterName": {
+                    "type": "string"
+                },
                 "stateStoreCredentials": {
                     "$ref": "#/definitions/types.StateStoreCredentials"
                 },
