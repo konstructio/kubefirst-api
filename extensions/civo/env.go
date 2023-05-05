@@ -8,7 +8,6 @@ package civo
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 
@@ -31,7 +30,7 @@ func readVaultTokenFromSecret(clientset *kubernetes.Clientset) string {
 }
 
 func GetCivoTerraformEnvs(envs map[string]string, cl *types.Cluster) map[string]string {
-	envs["CIVO_TOKEN"] = os.Getenv("CIVO_TOKEN")
+	envs["CIVO_TOKEN"] = cl.CivoAuth.Token
 	// needed for s3 api connectivity to object storage
 	envs["AWS_ACCESS_KEY_ID"] = cl.StateStoreCredentials.AccessKeyID
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
@@ -89,7 +88,7 @@ func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *types.Cluster, e
 	envs[fmt.Sprintf("TF_VAR_%s_token", cl.GitProvider)] = cl.GitToken
 	envs["VAULT_ADDR"] = civo.VaultPortForwardURL
 	envs["VAULT_TOKEN"] = readVaultTokenFromSecret(clientset)
-	envs["TF_VAR_civo_token"] = cl.CivoToken
+	envs["TF_VAR_civo_token"] = cl.CivoAuth.Token
 	envs["TF_VAR_atlantis_repo_webhook_secret"] = cl.AtlantisWebhookSecret
 	envs["TF_VAR_atlantis_repo_webhook_url"] = cl.AtlantisWebhookURL
 	envs["TF_VAR_kbot_ssh_private_key"] = cl.PrivateKey

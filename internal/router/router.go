@@ -53,12 +53,14 @@ func SetupRouter() *gin.Engine {
 		v1.POST("/cluster/:cluster_name/export", router.PostExportCluster)
 		v1.POST("/cluster/:cluster_name/reset_progress", router.PostResetClusterProgress)
 
+		// Deprecated
 		// AWS
-		v1.GET("/aws/profiles", router.GetAWSProfiles)
-		v1.GET("/aws/validate/domain/:domain", router.GetValidateAWSDomain)
+		// v1.GET("/aws/profiles", router.GetAWSProfiles)
 
-		// Civo
-		v1.GET("/civo/validate/domain/:domain", router.GetValidateCivoDomain)
+		// Domains
+		v1.GET("/domain/:cloud_provider")
+		v1.GET("/domain/validate/aws/:domain", router.GetValidateAWSDomain)
+		v1.GET("/domain/validate/civo/:domain", router.GetValidateCivoDomain)
 
 		// Utilities
 		v1.GET("/health", router.GetHealth)

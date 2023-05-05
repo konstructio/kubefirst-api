@@ -161,7 +161,7 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 
 	//GetKubernetesAssociatedBlockStorage
 	vultrConf := vultr.VultrConfiguration{
-		Client:  vultr.NewVultr(),
+		Client:  vultr.NewVultr(cl.VultrAuth.Token),
 		Context: context.Background(),
 	}
 	blockStorage, err := vultrConf.GetKubernetesAssociatedBlockStorage("", true)

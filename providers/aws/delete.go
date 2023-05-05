@@ -140,9 +140,9 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 			awsClient := &awsinternal.AWSConfiguration{
 				Config: awsinternal.NewAwsV3(
 					cl.CloudRegion,
-					os.Getenv("AWS_ACCESS_KEY_ID"),
-					os.Getenv("AWS_SECRET_ACCESS_KEY"),
-					os.Getenv("AWS_SESSION_TOKEN"),
+					cl.AWSAuth.AccessKeyID,
+					cl.AWSAuth.SecretAccessKey,
+					cl.AWSAuth.SessionToken,
 				),
 			}
 			kcfg := awsext.CreateEKSKubeconfig(&awsClient.Config, cl.ClusterName)

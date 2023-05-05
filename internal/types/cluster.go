@@ -11,7 +11,7 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 // ClusterDefinition is used to create a cluster
 type ClusterDefinition struct {
 	AdminEmail    string `json:"admin_email" binding:"required"`
-	CloudProvider string `json:"cloud_provider" binding:"required,oneof=aws civo digitalocean k3d vultr"`
+	CloudProvider string `json:"cloud_provider" binding:"required,oneof=aws civo digitalocean vultr"`
 	CloudRegion   string `json:"cloud_region" binding:"required"`
 	ClusterName   string `json:"cluster_name,omitempty"`
 	DomainName    string `json:"domain_name" binding:"required"`
@@ -19,6 +19,11 @@ type ClusterDefinition struct {
 	GitOwner      string `json:"git_owner" binding:"required"`
 	GitToken      string `json:"git_token" binding:"required"`
 	Type          string `json:"type" binding:"required,oneof=mgmt workload"`
+
+	AWSAuth          AWSAuth          `json:"aws_auth,omitempty"`
+	CivoAuth         CivoAuth         `json:"civo_auth,omitempty"`
+	DigitaloceanAuth DigitaloceanAuth `json:"do_auth,omitempty"`
+	VultrAuth        VultrAuth        `json:"vultr_auth,omitempty"`
 }
 
 // Cluster describes the configuration storage for a Kubefirst cluster object
@@ -36,7 +41,11 @@ type Cluster struct {
 	ClusterType   string `bson:"cluster_type" json:"cluster_type"`
 	AlertsEmail   string `bson:"alerts_email" json:"alerts_email"`
 
-	CivoToken string `bson:"civo_token" json:"civo_token"`
+	// Auth
+	AWSAuth          AWSAuth          `bson:"aws_auth,omitempty" json:"aws_auth,omitempty"`
+	CivoAuth         CivoAuth         `bson:"civo_auth,omitempty" json:"civo_auth,omitempty"`
+	DigitaloceanAuth DigitaloceanAuth `bson:"do_auth,omitempty" json:"do_auth,omitempty"`
+	VultrAuth        VultrAuth        `bson:"vultr_auth,omitempty" json:"vultr_auth,omitempty"`
 
 	GitProvider        string `bson:"git_provider" json:"git_provider"`
 	GitHost            string `bson:"git_host" json:"git_host"`
@@ -90,14 +99,6 @@ type Cluster struct {
 	VaultTerraformApplyCheck       bool `bson:"vault_terraform_apply_check" json:"vault_terraform_apply_check"`
 	UsersTerraformApplyCheck       bool `bson:"users_terraform_apply_check" json:"users_terraform_apply_check"`
 	PostDetokenizeCheck            bool `bson:"post_detokenize_check" json:"post_detokenize_check"`
-}
-
-// StateStoreCredentials
-type StateStoreCredentials struct {
-	AccessKeyID     string `bson:"access_key_id,omitempty" json:"access_key_id,omitempty"`
-	SecretAccessKey string `bson:"secret_access_key,omitempty" json:"secret_access_key,omitempty"`
-	Name            string `bson:"name,omitempty" json:"name,omitempty"`
-	ID              string `bson:"id,omitempty" json:"id,omitempty"`
 }
 
 // StateStoreDetails

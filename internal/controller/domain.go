@@ -43,20 +43,20 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 			}
 		case "civo":
 			// domain id
-			domainId, err := civo.GetDNSInfo(clctrl.DomainName, clctrl.CloudRegion)
+			domainId, err := civo.GetDNSInfo(cl.CivoAuth.Token, clctrl.DomainName, clctrl.CloudRegion)
 			if err != nil {
 				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricDomainLivenessFailed, "domain liveness test failed")
 				log.Info(err.Error())
 			}
 
 			log.Infof("domainId: %s", domainId)
-			domainLiveness := civo.TestDomainLiveness(clctrl.DomainName, domainId, clctrl.CloudRegion)
+			domainLiveness := civo.TestDomainLiveness(cl.CivoAuth.Token, clctrl.DomainName, domainId, clctrl.CloudRegion)
 			if !domainLiveness {
 				return fmt.Errorf("failed to verify domain liveness for domain %s", clctrl.DomainName)
 			}
 		case "digitalocean":
 			digitaloceanConf := digitalocean.DigitaloceanConfiguration{
-				Client:  digitalocean.NewDigitalocean(),
+				Client:  digitalocean.NewDigitalocean(cl.DigitaloceanAuth.Token),
 				Context: context.Background(),
 			}
 
@@ -73,7 +73,7 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 			}
 		case "vultr":
 			vultrConf := vultr.VultrConfiguration{
-				Client:  vultr.NewVultr(),
+				Client:  vultr.NewVultr(cl.VultrAuth.Token),
 				Context: context.Background(),
 			}
 

@@ -74,7 +74,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				return err
 			}
 		case "civo":
-			creds, err := civo.GetAccessCredentials(clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
+			creds, err := civo.GetAccessCredentials(cl.CivoAuth.Token, clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
 			if err != nil {
 				log.Error(err.Error())
 			}
@@ -93,7 +93,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			}
 			if civoCredsFailureMessage != "" {
 				// Creds failed to properly parse, so remove them
-				err := civo.DeleteAccessCredentials(clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
+				err := civo.DeleteAccessCredentials(cl.CivoAuth.Token, clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
 				if err != nil {
 					return err
 				}
@@ -110,13 +110,13 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			}
 		case "digitalocean":
 			digitaloceanConf := digitalocean.DigitaloceanConfiguration{
-				Client:  digitalocean.NewDigitalocean(),
+				Client:  digitalocean.NewDigitalocean(cl.DigitaloceanAuth.Token),
 				Context: context.Background(),
 			}
 
 			creds := digitalocean.DigitaloceanSpacesCredentials{
-				AccessKey:       os.Getenv("DO_SPACES_KEY"),
-				SecretAccessKey: os.Getenv("DO_SPACES_SECRET"),
+				AccessKey:       cl.DigitaloceanAuth.SpacesKey,
+				SecretAccessKey: cl.DigitaloceanAuth.SpacesSecret,
 				Endpoint:        fmt.Sprintf("%s.digitaloceanspaces.com", "nyc3"),
 			}
 			err = digitaloceanConf.CreateSpaceBucket(creds, clctrl.KubefirstStateStoreBucketName)
@@ -144,7 +144,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			DigitaloceanStateStoreBucketName = creds.Endpoint
 		case "vultr":
 			vultrConf := vultr.VultrConfiguration{
-				Client:  vultr.NewVultr(),
+				Client:  vultr.NewVultr(cl.VultrAuth.Token),
 				Context: context.Background(),
 			}
 
@@ -220,7 +220,7 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 			accessKeyId := cl.StateStoreCredentials.AccessKeyID
 			log.Infof("access key id %s", accessKeyId)
 
-			bucket, err := civo.CreateStorageBucket(accessKeyId, clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
+			bucket, err := civo.CreateStorageBucket(cl.CivoAuth.Token, accessKeyId, clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
 			if err != nil {
 				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricStateStoreCreateFailed, err.Error())
 				log.Error(err.Error())

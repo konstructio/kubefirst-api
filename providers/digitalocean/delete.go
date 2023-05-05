@@ -162,7 +162,7 @@ func DeleteDigitaloceanCluster(cl *types.Cluster) error {
 
 	// Fetch cluster resources prior to deletion
 	digitaloceanConf := digitalocean.DigitaloceanConfiguration{
-		Client:  digitalocean.NewDigitalocean(),
+		Client:  digitalocean.NewDigitalocean(cl.DigitaloceanAuth.Token),
 		Context: context.Background(),
 	}
 	resources, err := digitaloceanConf.GetKubernetesAssociatedResources(cl.ClusterName)

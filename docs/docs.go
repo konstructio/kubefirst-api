@@ -399,6 +399,44 @@ const docTemplate = `{
                 }
             }
         },
+        "/domain/:cloud_provider": {
+            "get": {
+                "description": "Return a configured Kubefirst cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "domain"
+                ],
+                "summary": "Return a configured Kubefirst cluster",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The cloud provider to return registered domains/zones from",
+                        "name": "cloud_provider",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.Cluster"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONFailureResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "description": "Return health status if the application is running.",
@@ -431,6 +469,20 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "types.AWSAuth": {
+            "type": "object",
+            "properties": {
+                "access_key_id": {
+                    "type": "string"
+                },
+                "secret_access_key": {
+                    "type": "string"
+                },
+                "session_token": {
+                    "type": "string"
+                }
+            }
+        },
         "types.AWSDomainValidateResponse": {
             "type": "object",
             "properties": {
@@ -447,6 +499,14 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "types.CivoAuth": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
                 }
             }
         },
@@ -506,14 +566,22 @@ const docTemplate = `{
                     "description": "kms",
                     "type": "string"
                 },
+                "aws_auth": {
+                    "description": "Auth",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/types.AWSAuth"
+                        }
+                    ]
+                },
                 "aws_kms_key_detokenized_check": {
                     "type": "boolean"
                 },
                 "aws_kms_key_id": {
                     "type": "string"
                 },
-                "civo_token": {
-                    "type": "string"
+                "civo_auth": {
+                    "$ref": "#/definitions/types.CivoAuth"
                 },
                 "cloud_provider": {
                     "type": "string"
@@ -541,6 +609,9 @@ const docTemplate = `{
                 },
                 "creation_timestamp": {
                     "type": "string"
+                },
+                "do_auth": {
+                    "$ref": "#/definitions/types.DigitaloceanAuth"
                 },
                 "domain_liveness_check": {
                     "type": "boolean"
@@ -633,6 +704,9 @@ const docTemplate = `{
                 },
                 "vault_terraform_apply_check": {
                     "type": "boolean"
+                },
+                "vultr_auth": {
+                    "$ref": "#/definitions/types.VultrAuth"
                 }
             }
         },
@@ -652,13 +726,18 @@ const docTemplate = `{
                 "admin_email": {
                     "type": "string"
                 },
+                "aws_auth": {
+                    "$ref": "#/definitions/types.AWSAuth"
+                },
+                "civo_auth": {
+                    "$ref": "#/definitions/types.CivoAuth"
+                },
                 "cloud_provider": {
                     "type": "string",
                     "enum": [
                         "aws",
                         "civo",
                         "digitalocean",
-                        "k3d",
                         "vultr"
                     ]
                 },
@@ -667,6 +746,9 @@ const docTemplate = `{
                 },
                 "cluster_name": {
                     "type": "string"
+                },
+                "do_auth": {
+                    "$ref": "#/definitions/types.DigitaloceanAuth"
                 },
                 "domain_name": {
                     "type": "string"
@@ -690,6 +772,23 @@ const docTemplate = `{
                         "mgmt",
                         "workload"
                     ]
+                },
+                "vultr_auth": {
+                    "$ref": "#/definitions/types.VultrAuth"
+                }
+            }
+        },
+        "types.DigitaloceanAuth": {
+            "type": "object",
+            "properties": {
+                "spaces_key": {
+                    "type": "string"
+                },
+                "spaces_secret": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
                 }
             }
         },
@@ -773,6 +872,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.VultrAuth": {
+            "type": "object",
+            "properties": {
+                "token": {
                     "type": "string"
                 }
             }

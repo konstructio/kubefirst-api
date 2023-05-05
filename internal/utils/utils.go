@@ -93,3 +93,14 @@ var BackupResolver = &net.Resolver{
 		return d.DialContext(ctx, network, "8.8.8.8:53")
 	},
 }
+
+// ValidateAuthenticationFields checks a map[string]string returned from looking up an
+// authentication Secret for missing fields
+func ValidateAuthenticationFields(s map[string]string) error {
+	for key, value := range s {
+		if value == "" {
+			return fmt.Errorf("field %s cannot be blank", key)
+		}
+	}
+	return nil
+}

@@ -9,7 +9,6 @@ package digitalocean
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/kubefirst/kubefirst-api/internal/types"
@@ -70,7 +69,7 @@ func BootstrapDigitaloceanMgmtCluster(kubeconfigPath string, cl *types.Cluster) 
 		{
 			ObjectMeta: metav1.ObjectMeta{Name: "digitalocean-creds", Namespace: "external-dns"},
 			Data: map[string][]byte{
-				"digitalocean-token": []byte(os.Getenv("DO_TOKEN")),
+				"digitalocean-token": []byte(cl.DigitaloceanAuth.Token),
 			},
 		},
 	}
