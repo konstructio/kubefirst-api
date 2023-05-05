@@ -1,5 +1,14 @@
 basePath: /api/v1
 definitions:
+  types.AWSAuth:
+    properties:
+      access_key_id:
+        type: string
+      secret_access_key:
+        type: string
+      session_token:
+        type: string
+    type: object
   types.AWSDomainValidateResponse:
     properties:
       validated:
@@ -11,6 +20,11 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  types.CivoAuth:
+    properties:
+      token:
+        type: string
     type: object
   types.CivoDomainValidationRequest:
     properties:
@@ -49,12 +63,16 @@ definitions:
       aws_account_id:
         description: kms
         type: string
+      aws_auth:
+        allOf:
+        - $ref: '#/definitions/types.AWSAuth'
+        description: Auth
       aws_kms_key_detokenized_check:
         type: boolean
       aws_kms_key_id:
         type: string
-      civo_token:
-        type: string
+      civo_auth:
+        $ref: '#/definitions/types.CivoAuth'
       cloud_provider:
         type: string
       cloud_region:
@@ -73,6 +91,8 @@ definitions:
         type: string
       creation_timestamp:
         type: string
+      do_auth:
+        $ref: '#/definitions/types.DigitaloceanAuth'
       domain_liveness_check:
         type: boolean
       domain_name:
@@ -135,23 +155,30 @@ definitions:
         type: boolean
       vault_terraform_apply_check:
         type: boolean
+      vultr_auth:
+        $ref: '#/definitions/types.VultrAuth'
     type: object
   types.ClusterDefinition:
     properties:
       admin_email:
         type: string
+      aws_auth:
+        $ref: '#/definitions/types.AWSAuth'
+      civo_auth:
+        $ref: '#/definitions/types.CivoAuth'
       cloud_provider:
         enum:
         - aws
         - civo
         - digitalocean
-        - k3d
         - vultr
         type: string
       cloud_region:
         type: string
       cluster_name:
         type: string
+      do_auth:
+        $ref: '#/definitions/types.DigitaloceanAuth'
       domain_name:
         type: string
       git_owner:
@@ -168,6 +195,8 @@ definitions:
         - mgmt
         - workload
         type: string
+      vultr_auth:
+        $ref: '#/definitions/types.VultrAuth'
     required:
     - admin_email
     - cloud_provider
@@ -177,6 +206,15 @@ definitions:
     - git_provider
     - git_token
     - type
+    type: object
+  types.DigitaloceanAuth:
+    properties:
+      spaces_key:
+        type: string
+      spaces_secret:
+        type: string
+      token:
+        type: string
     type: object
   types.ImportClusterRequest:
     properties:
@@ -231,6 +269,11 @@ definitions:
       id:
         type: string
       name:
+        type: string
+    type: object
+  types.VultrAuth:
+    properties:
+      token:
         type: string
     type: object
 host: localhost:port
@@ -497,6 +540,31 @@ paths:
       summary: Import a Kubefirst cluster database entry
       tags:
       - cluster
+  /domain/:cloud_provider:
+    get:
+      consumes:
+      - application/json
+      description: Return a configured Kubefirst cluster
+      parameters:
+      - description: The cloud provider to return registered domains/zones from
+        in: path
+        name: cloud_provider
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.Cluster'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Return a configured Kubefirst cluster
+      tags:
+      - domain
   /health:
     get:
       description: Return health status if the application is running.
