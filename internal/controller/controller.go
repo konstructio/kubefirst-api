@@ -38,10 +38,11 @@ type ClusterController struct {
 	DomainName    string
 	AlertsEmail   string
 
-	// tokens
-	CivoToken          string
-	DigitalOceanToken  string
-	VultrToken         string
+	// auth
+	AWSAuth            types.AWSAuth
+	CivoAuth           types.CivoAuth
+	DigitaloceanAuth   types.DigitaloceanAuth
+	VultrAuth          types.VultrAuth
 	AwsAccessKeyID     string
 	AwsSecretAccessKey string
 
@@ -139,12 +140,14 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	clctrl.HttpClient = http.DefaultClient
 
 	switch clctrl.CloudProvider {
+	case "aws":
+		clctrl.AWSAuth = def.AWSAuth
 	case "civo":
-		clctrl.CivoToken = os.Getenv("CIVO_TOKEN")
+		clctrl.CivoAuth = def.CivoAuth
 	case "digitalocean":
-		clctrl.DigitalOceanToken = os.Getenv("DO_TOKEN")
+		clctrl.DigitaloceanAuth = def.DigitaloceanAuth
 	case "vultr":
-		clctrl.VultrToken = os.Getenv("VULTR_API_KEY")
+		clctrl.VultrAuth = def.VultrAuth
 	}
 
 	clctrl.Repositories = []string{"gitops", "metaphor"}
@@ -216,12 +219,15 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		clctrl.ProviderConfig = awsinternal.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
 	case "civo":
 		clctrl.ProviderConfig = civo.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
+		clctrl.ProviderConfig.(*civo.CivoConfig).CivoToken = clctrl.CivoAuth.Token
 	case "digitalocean":
 		clctrl.ProviderConfig = digitalocean.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
+		clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).DigitaloceanToken = clctrl.DigitaloceanAuth.Token
 	case "k3d":
 		clctrl.ProviderConfig = k3d.GetConfig(clctrl.ClusterName, clctrl.GitProvider, clctrl.GitOwner)
 	case "vultr":
 		clctrl.ProviderConfig = vultr.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
+		clctrl.ProviderConfig.(*vultr.VultrConfig).VultrToken = clctrl.VultrAuth.Token
 	}
 
 	// Instantiate provider clients
@@ -230,13 +236,11 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		clctrl.AwsClient = &awsinternal.AWSConfiguration{
 			Config: awsinternal.NewAwsV3(
 				clctrl.CloudRegion,
-				os.Getenv("AWS_ACCESS_KEY_ID"),
-				os.Getenv("AWS_SECRET_ACCESS_KEY"),
-				os.Getenv("AWS_SESSION_TOKEN"),
+				clctrl.AWSAuth.AccessKeyID,
+				clctrl.AWSAuth.SecretAccessKey,
+				clctrl.AWSAuth.SessionToken,
 			),
 		}
-		clctrl.AwsAccessKeyID = os.Getenv("AWS_ACCESS_KEY_ID")
-		clctrl.AwsSecretAccessKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
 	}
 
 	if os.Getenv("USE_TELEMETRY") == "false" {
@@ -267,7 +271,9 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		AtlantisWebhookSecret: clctrl.AtlantisWebhookSecret,
 		AtlantisWebhookURL:    clctrl.AtlantisWebhookURL,
 		KubefirstTeam:         clctrl.KubefirstTeam,
-		CivoToken:             clctrl.CivoToken,
+		CivoAuth:              clctrl.CivoAuth,
+		DigitaloceanAuth:      clctrl.DigitaloceanAuth,
+		VultrAuth:             clctrl.VultrAuth,
 	}
 	err = clctrl.MdbCl.InsertCluster(cl)
 	if err != nil {

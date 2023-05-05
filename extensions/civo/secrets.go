@@ -9,7 +9,6 @@ package civo
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/kubefirst/kubefirst-api/internal/types"
@@ -71,13 +70,13 @@ func BootstrapCivoMgmtCluster(kubeconfigPath string, cl *types.Cluster) error {
 		{
 			ObjectMeta: metav1.ObjectMeta{Name: "civo-creds", Namespace: "external-dns"},
 			Data: map[string][]byte{
-				"civo-token": []byte(os.Getenv("CIVO_TOKEN")),
+				"civo-token": []byte(cl.CivoAuth.Token),
 			},
 		},
 		{
 			ObjectMeta: metav1.ObjectMeta{Name: "civo-secret", Namespace: "cert-manager"},
 			Data: map[string][]byte{
-				"api-key": []byte(os.Getenv("CIVO_TOKEN")),
+				"api-key": []byte(cl.CivoAuth.Token),
 			},
 		},
 	}

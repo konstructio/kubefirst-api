@@ -142,7 +142,7 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 
 			log.Info("destroying civo resources with terraform")
 
-			client, err := civogo.NewClient(os.Getenv("CIVO_TOKEN"), cl.CloudRegion)
+			client, err := civogo.NewClient(cl.CivoAuth.Token, cl.CloudRegion)
 			if err != nil {
 				return fmt.Errorf(err.Error())
 			}

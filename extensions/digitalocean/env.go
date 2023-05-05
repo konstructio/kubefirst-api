@@ -8,7 +8,6 @@ package digitalocean
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 
@@ -31,8 +30,8 @@ func readVaultTokenFromSecret(clientset *kubernetes.Clientset) string {
 }
 
 func GetDigitaloceanTerraformEnvs(envs map[string]string, cl *types.Cluster) map[string]string {
-	envs["DO_TOKEN"] = os.Getenv("DO_TOKEN")
-	envs["TF_VAR_do_token"] = os.Getenv("DO_TOKEN")
+	envs["DO_TOKEN"] = cl.DigitaloceanAuth.Token
+	envs["TF_VAR_do_token"] = cl.DigitaloceanAuth.Token
 	envs["AWS_ACCESS_KEY_ID"] = cl.StateStoreCredentials.AccessKeyID
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
 	envs["TF_VAR_aws_access_key_id"] = cl.StateStoreCredentials.AccessKeyID
@@ -47,8 +46,8 @@ func GetGithubTerraformEnvs(envs map[string]string, cl *types.Cluster) map[strin
 	envs["GITHUB_OWNER"] = cl.GitOwner
 	envs["TF_VAR_atlantis_repo_webhook_secret"] = cl.AtlantisWebhookSecret
 	envs["TF_VAR_kbot_ssh_public_key"] = cl.PublicKey
-	envs["DO_TOKEN"] = os.Getenv("DO_TOKEN")
-	envs["TF_VAR_do_token"] = os.Getenv("DO_TOKEN")
+	envs["DO_TOKEN"] = cl.DigitaloceanAuth.Token
+	envs["TF_VAR_do_token"] = cl.DigitaloceanAuth.Token
 	envs["AWS_ACCESS_KEY_ID"] = cl.StateStoreCredentials.AccessKeyID
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
 	envs["TF_VAR_aws_access_key_id"] = cl.StateStoreCredentials.AccessKeyID
@@ -63,8 +62,8 @@ func GetGitlabTerraformEnvs(envs map[string]string, gid int, cl *types.Cluster) 
 	envs["TF_VAR_atlantis_repo_webhook_secret"] = cl.AtlantisWebhookSecret
 	envs["TF_VAR_atlantis_repo_webhook_url"] = cl.AtlantisWebhookURL
 	envs["TF_VAR_kbot_ssh_public_key"] = cl.PublicKey
-	envs["DO_TOKEN"] = os.Getenv("DO_TOKEN")
-	envs["TF_VAR_do_token"] = os.Getenv("DO_TOKEN")
+	envs["DO_TOKEN"] = cl.DigitaloceanAuth.Token
+	envs["TF_VAR_do_token"] = cl.DigitaloceanAuth.Token
 	envs["AWS_ACCESS_KEY_ID"] = cl.StateStoreCredentials.AccessKeyID
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
 	envs["TF_VAR_aws_access_key_id"] = cl.StateStoreCredentials.AccessKeyID
@@ -80,8 +79,8 @@ func GetUsersTerraformEnvs(clientset *kubernetes.Clientset, cl *types.Cluster, e
 	envs["VAULT_ADDR"] = digitalocean.VaultPortForwardURL
 	envs[fmt.Sprintf("%s_TOKEN", strings.ToUpper(cl.GitProvider))] = cl.GitToken
 	envs[fmt.Sprintf("%s_OWNER", strings.ToUpper(cl.GitProvider))] = cl.GitOwner
-	envs["DO_TOKEN"] = os.Getenv("DO_TOKEN")
-	envs["TF_VAR_do_token"] = os.Getenv("DO_TOKEN")
+	envs["DO_TOKEN"] = cl.DigitaloceanAuth.Token
+	envs["TF_VAR_do_token"] = cl.DigitaloceanAuth.Token
 	envs["AWS_ACCESS_KEY_ID"] = cl.StateStoreCredentials.AccessKeyID
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
 	envs["TF_VAR_aws_access_key_id"] = cl.StateStoreCredentials.AccessKeyID
@@ -99,13 +98,12 @@ func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *types.Cluster, e
 	envs[fmt.Sprintf("TF_VAR_%s_token", cl.GitProvider)] = cl.GitToken
 	envs["VAULT_ADDR"] = digitalocean.VaultPortForwardURL
 	envs["VAULT_TOKEN"] = readVaultTokenFromSecret(clientset)
-	envs["TF_VAR_do_token"] = os.Getenv("DO_TOKEN")
 	envs["TF_VAR_atlantis_repo_webhook_secret"] = cl.AtlantisWebhookSecret
 	envs["TF_VAR_atlantis_repo_webhook_url"] = cl.AtlantisWebhookURL
 	envs["TF_VAR_kbot_ssh_private_key"] = cl.PrivateKey
 	envs["TF_VAR_kbot_ssh_public_key"] = cl.PublicKey
-	envs["DO_TOKEN"] = os.Getenv("DO_TOKEN")
-	envs["TF_VAR_do_token"] = os.Getenv("DO_TOKEN")
+	envs["DO_TOKEN"] = cl.DigitaloceanAuth.Token
+	envs["TF_VAR_do_token"] = cl.DigitaloceanAuth.Token
 	envs["AWS_ACCESS_KEY_ID"] = cl.StateStoreCredentials.AccessKeyID
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
 	envs["TF_VAR_aws_access_key_id"] = cl.StateStoreCredentials.AccessKeyID

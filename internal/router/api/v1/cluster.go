@@ -12,13 +12,16 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/internal/utils"
 	"github.com/kubefirst/kubefirst-api/providers/aws"
 	"github.com/kubefirst/kubefirst-api/providers/civo"
 	"github.com/kubefirst/kubefirst-api/providers/digitalocean"
 	"github.com/kubefirst/kubefirst-api/providers/k3d"
 	"github.com/kubefirst/kubefirst-api/providers/vultr"
+	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -202,8 +205,48 @@ func PostCreateCluster(c *gin.Context) {
 		}
 	}
 
+	// Determine authentication type
+	useSecretForAuth := false
+	kcfg := k8s.CreateKubeConfig(false, "/Users/scott/.kube/config")
+	k1AuthSecret, err := k8s.ReadSecretV2(kcfg.Clientset, constants.KubefirstNamespace, constants.KubefirstAuthSecretName)
+	if err != nil {
+		log.Warnf("authentication secret does not exist, continuing: %s", err)
+	} else {
+		log.Info("authentication secret exists, checking contents")
+		if k1AuthSecret == nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: "authentication secret found but contains no data, please check and try again",
+			})
+			return
+		}
+		useSecretForAuth = true
+	}
+
 	switch clusterDefinition.CloudProvider {
 	case "aws":
+		if useSecretForAuth {
+			err := utils.ValidateAuthenticationFields(k1AuthSecret)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: fmt.Sprintf("error checking aws auth: %s", err),
+				})
+				return
+			}
+			clusterDefinition.AWSAuth = types.AWSAuth{
+				AccessKeyID:     k1AuthSecret["aws-access-key-id"],
+				SecretAccessKey: k1AuthSecret["aws-secret-access-key"],
+				SessionToken:    k1AuthSecret["aws-session-token"],
+			}
+		} else {
+			if clusterDefinition.AWSAuth.AccessKeyID == "" ||
+				clusterDefinition.AWSAuth.SecretAccessKey == "" ||
+				clusterDefinition.AWSAuth.SessionToken == "" {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: "missing authentication credentials in request, please check and try again",
+				})
+				return
+			}
+		}
 		go func() {
 			err = aws.CreateAWSCluster(&clusterDefinition)
 			if err != nil {
@@ -215,6 +258,25 @@ func PostCreateCluster(c *gin.Context) {
 			Message: "cluster create enqueued",
 		})
 	case "civo":
+		if useSecretForAuth {
+			err := utils.ValidateAuthenticationFields(k1AuthSecret)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: fmt.Sprintf("error checking civo auth: %s", err),
+				})
+				return
+			}
+			clusterDefinition.CivoAuth = types.CivoAuth{
+				Token: k1AuthSecret["civo-token"],
+			}
+		} else {
+			if clusterDefinition.CivoAuth.Token == "" {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: "missing authentication credentials in request, please check and try again",
+				})
+				return
+			}
+		}
 		go func() {
 			err = civo.CreateCivoCluster(&clusterDefinition)
 			if err != nil {
@@ -226,6 +288,29 @@ func PostCreateCluster(c *gin.Context) {
 			Message: "cluster create enqueued",
 		})
 	case "digitalocean":
+		if useSecretForAuth {
+			err := utils.ValidateAuthenticationFields(k1AuthSecret)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: fmt.Sprintf("error checking digitalocean auth: %s", err),
+				})
+				return
+			}
+			clusterDefinition.DigitaloceanAuth = types.DigitaloceanAuth{
+				Token:        k1AuthSecret["do-token"],
+				SpacesKey:    k1AuthSecret["do-spaces-key"],
+				SpacesSecret: k1AuthSecret["do-spaces-token"],
+			}
+		} else {
+			if clusterDefinition.DigitaloceanAuth.Token == "" ||
+				clusterDefinition.DigitaloceanAuth.SpacesKey == "" ||
+				clusterDefinition.DigitaloceanAuth.SpacesSecret == "" {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: "missing authentication credentials in request, please check and try again",
+				})
+				return
+			}
+		}
 		go func() {
 			err = digitalocean.CreateDigitaloceanCluster(&clusterDefinition)
 			if err != nil {
@@ -248,6 +333,25 @@ func PostCreateCluster(c *gin.Context) {
 			Message: "cluster create enqueued",
 		})
 	case "vultr":
+		if useSecretForAuth {
+			err := utils.ValidateAuthenticationFields(k1AuthSecret)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: fmt.Sprintf("error checking vultr auth: %s", err),
+				})
+				return
+			}
+			clusterDefinition.VultrAuth = types.VultrAuth{
+				Token: k1AuthSecret["vultr-api-key"],
+			}
+		} else {
+			if clusterDefinition.VultrAuth.Token == "" {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: "missing authentication credentials in request, please check and try again",
+				})
+				return
+			}
+		}
 		go func() {
 			err = vultr.CreateVultrCluster(&clusterDefinition)
 			if err != nil {

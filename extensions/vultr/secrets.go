@@ -9,7 +9,6 @@ package vultr
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/kubefirst/kubefirst-api/internal/types"
@@ -70,7 +69,7 @@ func BootstrapVultrMgmtCluster(kubeconfigPath string, cl *types.Cluster) error {
 		{
 			ObjectMeta: metav1.ObjectMeta{Name: "vultr-creds", Namespace: "external-dns"},
 			Data: map[string][]byte{
-				"vultr-token": []byte(os.Getenv("VULTR_API_KEY")),
+				"vultr-token": []byte(cl.VultrAuth.Token),
 			},
 		},
 	}
