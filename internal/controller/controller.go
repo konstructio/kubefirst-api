@@ -293,7 +293,7 @@ func (clctrl *ClusterController) GetCurrentClusterRecord() (types.Cluster, error
 	return cl, nil
 }
 
-// HandleError
+// HandleError implements an error handler for cluster controller objects
 func (clctrl *ClusterController) HandleError(condition string) error {
 	err := clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "in_progress", false)
 	if err != nil {
