@@ -1,0 +1,31 @@
+{{- if .Values.rbac.create -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "kubefirst-api.fullname" . }}
+  labels:
+    {{- include "kubefirst-api.labels" . | nindent 4 }}
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - "secrets"
+    verbs:
+      - "get"
+      - "list"
+      - "watch"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "kubefirst-api.fullname" . }}
+  labels:
+    {{- include "kubefirst-api.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "kubefirst-api.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "kubefirst-api.serviceAccountName" . }}
+{{- end }}
