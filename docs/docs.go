@@ -665,6 +665,9 @@ const docTemplate = `{
                 "kubefirst_team": {
                     "type": "string"
                 },
+                "last_condition": {
+                    "type": "string"
+                },
                 "post_detokenize_check": {
                     "type": "boolean"
                 },

@@ -43,121 +43,73 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 
 	_, err = awsClient.CheckAvailabilityZones(ctrl.CloudRegion)
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
 	err = ctrl.DownloadTools(ctrl.ProviderConfig.(*awsinternal.AwsConfig).ToolsDir)
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
 	err = ctrl.DomainLivenessTest()
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
 	err = ctrl.StateStoreCredentials()
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
 	err = ctrl.GitInit()
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
 	err = ctrl.InitializeBot()
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
 	err = ctrl.RepositoryPrep()
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
 	err = ctrl.RunGitTerraform()
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
 	err = ctrl.RepositoryPush()
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
 	err = ctrl.CreateCluster()
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
 	err = ctrl.DetokenizeKMSKeyID()
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
 	err = ctrl.WaitForClusterReady()
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
@@ -182,31 +134,19 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 	// Cluster bootstrap (aws specific)
 	rec, err := ctrl.GetCurrentClusterRecord()
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
 	err = ctrl.InstallArgoCD()
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
 	err = ctrl.InitializeArgoCD()
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
@@ -296,21 +236,13 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 
 	err = ctrl.DeployRegistryApplication()
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
 	err = ctrl.WaitForVault()
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
@@ -332,31 +264,19 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 
 	err = ctrl.InitializeVault()
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
 	err = ctrl.RunVaultTerraform()
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
 	err = ctrl.RunUsersTerraform()
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
@@ -372,32 +292,19 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 	if err != nil {
 		log.Errorf("Error finding console Deployment: %s", err)
 
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, consoleDeployment, 120)
 	if err != nil {
 		log.Errorf("Error waiting for console Deployment ready state: %s", err)
 
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
 	err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "status", "provisioned")
 	if err != nil {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-		if err != nil {
-			return err
-		}
-
 		return err
 	}
 
