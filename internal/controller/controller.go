@@ -292,3 +292,21 @@ func (clctrl *ClusterController) GetCurrentClusterRecord() (types.Cluster, error
 
 	return cl, nil
 }
+
+// HandleError
+func (clctrl *ClusterController) HandleError(condition string) error {
+	err := clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "in_progress", false)
+	if err != nil {
+		return err
+	}
+	err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "status", "error")
+	if err != nil {
+		return err
+	}
+	err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "last_condition", condition)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

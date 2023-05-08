@@ -31,6 +31,7 @@ type Cluster struct {
 	ID                primitive.ObjectID `bson:"_id" json:"_id"`
 	CreationTimestamp string             `bson:"creation_timestamp" json:"creation_timestamp"`
 	Status            string             `bson:"status" json:"status"`
+	LastCondition     string             `bson:"last_condition" json:"last_condition"`
 	InProgress        bool               `bson:"in_progress" json:"in_progress"`
 
 	ClusterName   string `bson:"cluster_name" json:"cluster_name"`
