@@ -6,9 +6,11 @@ See the LICENSE file for more details.
 */
 package types
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
-// ClusterDefinition is used to create a cluster
+// ClusterDefinition describes an incoming request to create a cluster
 type ClusterDefinition struct {
 	AdminEmail    string `json:"admin_email" binding:"required"`
 	CloudProvider string `json:"cloud_provider" binding:"required,oneof=aws civo digitalocean vultr"`

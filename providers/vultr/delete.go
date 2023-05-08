@@ -17,6 +17,7 @@ import (
 
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/internal/errors"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/pkg"
@@ -69,7 +70,7 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 			err := terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Printf("error executing terraform destroy %s", tfEntrypoint)
-				db.Client.UpdateCluster(cl.ClusterName, "status", "error")
+				errors.HandleClusterError(cl, err.Error())
 				return err
 			}
 			log.Info("github resources terraform destroyed")
@@ -123,7 +124,7 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 			err = terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Infof("error executing terraform destroy %s", tfEntrypoint)
-				db.Client.UpdateCluster(cl.ClusterName, "status", "error")
+				errors.HandleClusterError(cl, err.Error())
 				return err
 			}
 
@@ -247,7 +248,7 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 		err = terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Printf("error executing terraform destroy %s", tfEntrypoint)
-			db.Client.UpdateCluster(cl.ClusterName, "status", "error")
+			errors.HandleClusterError(cl, err.Error())
 			return err
 		}
 		log.Info("vultr resources terraform destroyed")

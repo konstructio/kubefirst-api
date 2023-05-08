@@ -16,6 +16,7 @@ import (
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/internal/errors"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/pkg"
@@ -68,7 +69,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 			err := terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Errorf("error executing terraform destroy %s", tfEntrypoint)
-				db.Client.UpdateCluster(cl.ClusterName, "status", "error")
+				errors.HandleClusterError(cl, err.Error())
 				return err
 			}
 			log.Info("github resources terraform destroyed")
@@ -122,7 +123,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 			err = terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Errorf("error executing terraform destroy %s", tfEntrypoint)
-				db.Client.UpdateCluster(cl.ClusterName, "status", "error")
+				errors.HandleClusterError(cl, err.Error())
 				return err
 			}
 
@@ -194,7 +195,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 				log.Info("deleting the registry application")
 				httpCode, _, err := argocd.DeleteApplication(&argocdHttpClient, config.RegistryAppName, argocdAuthToken, "true")
 				if err != nil {
-					db.Client.UpdateCluster(cl.ClusterName, "status", "error")
+					errors.HandleClusterError(cl, err.Error())
 					return err
 				}
 				log.Infof("http status code %d", httpCode)
@@ -229,7 +230,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 		err = terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Errorf("error executing terraform destroy %s", tfEntrypoint)
-			db.Client.UpdateCluster(cl.ClusterName, "status", "error")
+			errors.HandleClusterError(cl, err.Error())
 			return err
 		}
 		log.Info("aws resources terraform destroyed")
