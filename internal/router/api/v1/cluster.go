@@ -8,6 +8,7 @@ package api
 
 import (
 	"fmt"
+	"os"
 
 	"net/http"
 
@@ -206,20 +207,28 @@ func PostCreateCluster(c *gin.Context) {
 	}
 
 	// Determine authentication type
+	inCluster := false
 	useSecretForAuth := false
-	kcfg := k8s.CreateKubeConfig(false, "/Users/scott/.kube/config")
-	k1AuthSecret, err := k8s.ReadSecretV2(kcfg.Clientset, constants.KubefirstNamespace, constants.KubefirstAuthSecretName)
-	if err != nil {
-		log.Warnf("authentication secret does not exist, continuing: %s", err)
-	} else {
-		log.Info("authentication secret exists, checking contents")
-		if k1AuthSecret == nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-				Message: "authentication secret found but contains no data, please check and try again",
-			})
-			return
+	var k1AuthSecret = map[string]string{}
+	if os.Getenv("IN_CLUSTER") == "true" {
+		inCluster = true
+	}
+
+	if inCluster {
+		kcfg := k8s.CreateKubeConfig(inCluster, "")
+		k1AuthSecret, err := k8s.ReadSecretV2(kcfg.Clientset, constants.KubefirstNamespace, constants.KubefirstAuthSecretName)
+		if err != nil {
+			log.Warnf("authentication secret does not exist, continuing: %s", err)
+		} else {
+			log.Info("authentication secret exists, checking contents")
+			if k1AuthSecret == nil {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: "authentication secret found but contains no data, please check and try again",
+				})
+				return
+			}
+			useSecretForAuth = true
 		}
-		useSecretForAuth = true
 	}
 
 	switch clusterDefinition.CloudProvider {

@@ -78,6 +78,7 @@ Some variables are required, others are optional depending on deployment type.
 | `MONGODB_HOST`      | The host to connect to. For Atlas, use only the portion of the string not containing username or password. For all other types, append the port. | Yes            |
 | `MONGODB_USERNAME`  | Required when using Atlas.                                                                                                                       | If using Atlas |
 | `MONGODB_PASSWORD`  | Required when using Atlas.                                                                                                                       | If using Atlas |
+| `IN_CLUSTER`        | Specify whether or not the API is running inside a Kubernetes cluster. By default, this is assumed `false`.                                      | No             |
 
 ## Provider Support
 
