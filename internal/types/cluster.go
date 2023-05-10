@@ -81,13 +81,12 @@ type Cluster struct {
 	UseTelemetry bool `bson:"use_telemetry"`
 
 	// Checks
-	GitInitCheck                   bool `bson:"git_init_check" json:"git_init_check"`
 	InstallToolsCheck              bool `bson:"install_tools_check" json:"install_tools_check"`
-	KbotSetupCheck                 bool `bson:"kbot_setup_check" json:"kbot_setup_check"`
+	DomainLivenessCheck            bool `bson:"domain_liveness_check" json:"domain_liveness_check"`
 	StateStoreCredsCheck           bool `bson:"state_store_creds_check" json:"state_store_creds_check"`
 	StateStoreCreateCheck          bool `bson:"state_store_create_check" json:"state_store_create_check"`
-	DomainLivenessCheck            bool `bson:"domain_liveness_check" json:"domain_liveness_check"`
-	GitCredentialsCheck            bool `bson:"git_credentials_check" json:"git_credentials_check"`
+	GitInitCheck                   bool `bson:"git_init_check" json:"git_init_check"`
+	KbotSetupCheck                 bool `bson:"kbot_setup_check" json:"kbot_setup_check"`
 	GitopsReadyCheck               bool `bson:"gitops_ready_check" json:"gitops_ready_check"`
 	GitTerraformApplyCheck         bool `bson:"git_terraform_apply_check" json:"git_terraform_apply_check"`
 	GitopsPushedCheck              bool `bson:"gitops_pushed_check" json:"gitops_pushed_check"`
@@ -101,7 +100,6 @@ type Cluster struct {
 	VaultInitializedCheck          bool `bson:"vault_initialized_check" json:"vault_initialized_check"`
 	VaultTerraformApplyCheck       bool `bson:"vault_terraform_apply_check" json:"vault_terraform_apply_check"`
 	UsersTerraformApplyCheck       bool `bson:"users_terraform_apply_check" json:"users_terraform_apply_check"`
-	PostDetokenizeCheck            bool `bson:"post_detokenize_check" json:"post_detokenize_check"`
 }
 
 // StateStoreDetails
