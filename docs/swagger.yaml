@@ -97,12 +97,9 @@ definitions:
         type: boolean
       domain_name:
         type: string
-      git_credentials_check:
-        type: boolean
       git_host:
         type: string
       git_init_check:
-        description: Checks
         type: boolean
       git_owner:
         type: string
@@ -123,6 +120,7 @@ definitions:
       in_progress:
         type: boolean
       install_tools_check:
+        description: Checks
         type: boolean
       kbot_setup_check:
         type: boolean
@@ -130,8 +128,6 @@ definitions:
         type: string
       last_condition:
         type: string
-      post_detokenize_check:
-        type: boolean
       private_key:
         type: string
       public_key:

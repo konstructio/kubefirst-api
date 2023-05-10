@@ -619,14 +619,10 @@ const docTemplate = `{
                 "domain_name": {
                     "type": "string"
                 },
-                "git_credentials_check": {
-                    "type": "boolean"
-                },
                 "git_host": {
                     "type": "string"
                 },
                 "git_init_check": {
-                    "description": "Checks",
                     "type": "boolean"
                 },
                 "git_owner": {
@@ -657,6 +653,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "install_tools_check": {
+                    "description": "Checks",
                     "type": "boolean"
                 },
                 "kbot_setup_check": {
@@ -667,9 +664,6 @@ const docTemplate = `{
                 },
                 "last_condition": {
                     "type": "string"
-                },
-                "post_detokenize_check": {
-                    "type": "boolean"
                 },
                 "private_key": {
                     "type": "string"
