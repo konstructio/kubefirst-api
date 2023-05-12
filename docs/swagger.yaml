@@ -214,6 +214,26 @@ definitions:
       token:
         type: string
     type: object
+  types.DomainListRequest:
+    properties:
+      aws_auth:
+        $ref: '#/definitions/types.AWSAuth'
+      civo_auth:
+        $ref: '#/definitions/types.CivoAuth'
+      cloud_region:
+        type: string
+      do_auth:
+        $ref: '#/definitions/types.DigitaloceanAuth'
+      vultr_auth:
+        $ref: '#/definitions/types.VultrAuth'
+    type: object
+  types.DomainListResponse:
+    properties:
+      domains:
+        items:
+          type: string
+        type: array
+    type: object
   types.ImportClusterRequest:
     properties:
       cloud_provider:
@@ -539,28 +559,31 @@ paths:
       tags:
       - cluster
   /domain/:cloud_provider:
-    get:
+    post:
       consumes:
       - application/json
-      description: Return a configured Kubefirst cluster
+      description: Return a list of registered domains/hosted zones for a cloud provider
+        account
       parameters:
-      - description: The cloud provider to return registered domains/zones from
-        in: path
-        name: cloud_provider
+      - description: Domain list request in JSON format
+        in: body
+        name: request
         required: true
-        type: string
+        schema:
+          $ref: '#/definitions/types.DomainListRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.Cluster'
+            $ref: '#/definitions/types.DomainListResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/types.JSONFailureResponse'
-      summary: Return a configured Kubefirst cluster
+      summary: Return a list of registered domains/hosted zones for a cloud provider
+        account
       tags:
       - domain
   /health:

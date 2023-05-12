@@ -400,8 +400,8 @@ const docTemplate = `{
             }
         },
         "/domain/:cloud_provider": {
-            "get": {
-                "description": "Return a configured Kubefirst cluster",
+            "post": {
+                "description": "Return a list of registered domains/hosted zones for a cloud provider account",
                 "consumes": [
                     "application/json"
                 ],
@@ -411,21 +411,23 @@ const docTemplate = `{
                 "tags": [
                     "domain"
                 ],
-                "summary": "Return a configured Kubefirst cluster",
+                "summary": "Return a list of registered domains/hosted zones for a cloud provider account",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "The cloud provider to return registered domains/zones from",
-                        "name": "cloud_provider",
-                        "in": "path",
-                        "required": true
+                        "description": "Domain list request in JSON format",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.DomainListRequest"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/types.Cluster"
+                            "$ref": "#/definitions/types.DomainListResponse"
                         }
                     },
                     "400": {
@@ -786,6 +788,37 @@ const docTemplate = `{
                 },
                 "token": {
                     "type": "string"
+                }
+            }
+        },
+        "types.DomainListRequest": {
+            "type": "object",
+            "properties": {
+                "aws_auth": {
+                    "$ref": "#/definitions/types.AWSAuth"
+                },
+                "civo_auth": {
+                    "$ref": "#/definitions/types.CivoAuth"
+                },
+                "cloud_region": {
+                    "type": "string"
+                },
+                "do_auth": {
+                    "$ref": "#/definitions/types.DigitaloceanAuth"
+                },
+                "vultr_auth": {
+                    "$ref": "#/definitions/types.VultrAuth"
+                }
+            }
+        },
+        "types.DomainListResponse": {
+            "type": "object",
+            "properties": {
+                "domains": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

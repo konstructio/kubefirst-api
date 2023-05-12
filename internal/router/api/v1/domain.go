@@ -7,26 +7,31 @@ See the LICENSE file for more details.
 package api
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	awsinternal "github.com/kubefirst/runtime/pkg/aws"
+	"github.com/kubefirst/runtime/pkg/civo"
+	"github.com/kubefirst/runtime/pkg/digitalocean"
+	"github.com/kubefirst/runtime/pkg/vultr"
 )
 
-// GetDomains godoc
-// @Summary Return a configured Kubefirst cluster
-// @Description Return a configured Kubefirst cluster
+// PostDomains godoc
+// @Summary Return a list of registered domains/hosted zones for a cloud provider account
+// @Description Return a list of registered domains/hosted zones for a cloud provider account
 // @Tags domain
 // @Accept json
 // @Produce json
-// @Param	cloud_provider	path	string	true	"The cloud provider to return registered domains/zones from"
-// @Success 200 {object} types.Cluster
+// @Param	request	body	types.DomainListRequest	true	"Domain list request in JSON format"
+// @Success 200 {object} types.DomainListResponse
 // @Failure 400 {object} types.JSONFailureResponse
-// @Router /domain/:cloud_provider [get]
-// GetDomains returns registered domains/hosted zones for a cloud provider account
-func GetDomains(c *gin.Context) {
-	clusterName, param := c.Params.Get("cloud_provider")
+// @Router /domain/:cloud_provider [post]
+// PostDomains returns registered domains/hosted zones for a cloud provider account
+func PostDomains(c *gin.Context) {
+	cloudProvider, param := c.Params.Get("cloud_provider")
 	if !param {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: ":cloud_provider not provided",
@@ -34,14 +39,108 @@ func GetDomains(c *gin.Context) {
 		return
 	}
 
-	// Retrieve domain info
-	cluster, err := db.Client.GetCluster(clusterName)
+	// Bind to variable as application/json, handle error
+	var domainListRequest types.DomainListRequest
+	err := c.Bind(&domainListRequest)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: "cluster not found",
+			Message: err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, cluster)
+	var domainListResponse types.DomainListResponse
+
+	fmt.Println(domainListRequest)
+
+	switch cloudProvider {
+	case "aws":
+		if domainListRequest.AWSAuth.AccessKeyID == "" ||
+			domainListRequest.AWSAuth.SecretAccessKey == "" ||
+			domainListRequest.AWSAuth.SessionToken == "" {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: "missing authentication credentials in request, please check and try again",
+			})
+			return
+		}
+		awsConf := &awsinternal.AWSConfiguration{
+			Config: awsinternal.NewAwsV3(
+				domainListRequest.CloudRegion,
+				domainListRequest.AWSAuth.AccessKeyID,
+				domainListRequest.AWSAuth.SecretAccessKey,
+				domainListRequest.AWSAuth.SessionToken,
+			),
+		}
+
+		domains, err := awsConf.GetHostedZones()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+		domainListResponse.Domains = domains
+	case "civo":
+		if domainListRequest.CivoAuth.Token == "" {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: "missing authentication credentials in request, please check and try again",
+			})
+			return
+		}
+		domains, err := civo.GetDNSDomains(domainListRequest.CivoAuth.Token, domainListRequest.CloudRegion)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+		domainListResponse.Domains = domains
+	case "digitalocean":
+		if domainListRequest.DigitaloceanAuth.Token == "" {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: "missing authentication credentials in request, please check and try again",
+			})
+			return
+		}
+		digitaloceanConf := digitalocean.DigitaloceanConfiguration{
+			Client:  digitalocean.NewDigitalocean(domainListRequest.DigitaloceanAuth.Token),
+			Context: context.Background(),
+		}
+
+		domains, err := digitaloceanConf.GetDNSDomains()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+		domainListResponse.Domains = domains
+	case "vultr":
+		if domainListRequest.VultrAuth.Token == "" {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: "missing authentication credentials in request, please check and try again",
+			})
+			return
+		}
+		vultrConf := vultr.VultrConfiguration{
+			Client:  vultr.NewVultr(domainListRequest.VultrAuth.Token),
+			Context: context.Background(),
+		}
+
+		domains, err := vultrConf.GetDNSDomains()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+		domainListResponse.Domains = domains
+	default:
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: fmt.Sprintf("unsupported provider: %s", cloudProvider),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, domainListResponse)
 }
