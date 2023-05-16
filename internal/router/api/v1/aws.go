@@ -32,7 +32,7 @@ func GetAWSProfiles(c *gin.Context) {
 	profiles, err := awsConfig.ListLocalProfiles("")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: fmt.Sprintf("%s", err),
+			Message: err.Error(),
 		})
 		return
 	}
@@ -67,7 +67,7 @@ func GetValidateAWSDomain(c *gin.Context) {
 	validated, err := awsClient.TestHostedZoneLiveness(fmt.Sprintf("%s.", domainName))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: fmt.Sprintf("%s", err),
+			Message: err.Error(),
 		})
 		return
 	}

@@ -7,7 +7,6 @@ See the LICENSE file for more details.
 package api
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -29,7 +28,7 @@ func GetMarketplaceApps(c *gin.Context) {
 	apps, err := marketplace.ParseActiveApplications()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: fmt.Sprintf("%s", err),
+			Message: err.Error(),
 		})
 		return
 	}
