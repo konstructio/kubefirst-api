@@ -265,6 +265,30 @@ definitions:
         example: success
         type: string
     type: object
+  types.MarketplaceApp:
+    properties:
+      categories:
+        items:
+          type: string
+        type: array
+      description:
+        type: string
+      image_url:
+        type: string
+      name:
+        type: string
+      secret_keys:
+        items:
+          type: string
+        type: array
+    type: object
+  types.MarketplaceApps:
+    properties:
+      apps:
+        items:
+          $ref: '#/definitions/types.MarketplaceApp'
+        type: array
+    type: object
   types.StateStoreCredentials:
     properties:
       access_key_id:
@@ -599,6 +623,25 @@ paths:
       summary: Return health status if the application is running.
       tags:
       - health
+  /marketplace/apps:
+    get:
+      consumes:
+      - application/json
+      description: Returns a list of available Kubefirst marketplace applications
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.MarketplaceApps'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Returns a list of available Kubefirst marketplace applications
+      tags:
+      - marketplace
   /stream:
     get:
       description: Stream API server logs

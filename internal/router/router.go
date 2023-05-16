@@ -57,6 +57,9 @@ func SetupRouter() *gin.Engine {
 		// AWS
 		// v1.GET("/aws/profiles", router.GetAWSProfiles)
 
+		// Marketplace
+		v1.GET("/marketplace/apps", router.GetMarketplaceApps)
+
 		// Domains
 		v1.POST("/domain/:cloud_provider", router.PostDomains)
 		v1.GET("/domain/validate/aws/:domain", router.GetValidateAWSDomain)
