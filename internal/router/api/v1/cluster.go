@@ -151,7 +151,7 @@ func GetClusters(c *gin.Context) {
 	allClusters, err := db.Client.GetClusters()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: fmt.Sprintf("%s", err),
+			Message: err.Error(),
 		})
 		return
 	}
