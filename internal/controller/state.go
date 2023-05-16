@@ -74,7 +74,12 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				return err
 			}
 		case "civo":
-			creds, err := civo.GetAccessCredentials(cl.CivoAuth.Token, clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
+			civoConf := civo.CivoConfiguration{
+				Client:  civo.NewCivo(cl.CivoAuth.Token, cl.CloudRegion),
+				Context: context.Background(),
+			}
+
+			creds, err := civoConf.GetAccessCredentials(clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
 			if err != nil {
 				log.Error(err.Error())
 			}
@@ -93,7 +98,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			}
 			if civoCredsFailureMessage != "" {
 				// Creds failed to properly parse, so remove them
-				err := civo.DeleteAccessCredentials(cl.CivoAuth.Token, clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
+				err := civoConf.DeleteAccessCredentials(clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
 				if err != nil {
 					return err
 				}
@@ -215,12 +220,17 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 	if !cl.StateStoreCreateCheck {
 		switch clctrl.CloudProvider {
 		case "civo":
+			civoConf := civo.CivoConfiguration{
+				Client:  civo.NewCivo(cl.CivoAuth.Token, cl.CloudRegion),
+				Context: context.Background(),
+			}
+
 			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricStateStoreCreateStarted, "")
 
 			accessKeyId := cl.StateStoreCredentials.AccessKeyID
 			log.Infof("access key id %s", accessKeyId)
 
-			bucket, err := civo.CreateStorageBucket(cl.CivoAuth.Token, accessKeyId, clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
+			bucket, err := civoConf.CreateStorageBucket(accessKeyId, clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
 			if err != nil {
 				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricStateStoreCreateFailed, err.Error())
 				log.Error(err.Error())

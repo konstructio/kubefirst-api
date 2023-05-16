@@ -42,15 +42,20 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 				return fmt.Errorf("failed to verify domain liveness for domain %s", clctrl.DomainName)
 			}
 		case "civo":
+			civoConf := civo.CivoConfiguration{
+				Client:  civo.NewCivo(cl.CivoAuth.Token, cl.CloudRegion),
+				Context: context.Background(),
+			}
+
 			// domain id
-			domainId, err := civo.GetDNSInfo(cl.CivoAuth.Token, clctrl.DomainName, clctrl.CloudRegion)
+			domainId, err := civoConf.GetDNSInfo(clctrl.DomainName, clctrl.CloudRegion)
 			if err != nil {
 				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricDomainLivenessFailed, "domain liveness test failed")
 				log.Info(err.Error())
 			}
 
 			log.Infof("domainId: %s", domainId)
-			domainLiveness := civo.TestDomainLiveness(cl.CivoAuth.Token, clctrl.DomainName, domainId, clctrl.CloudRegion)
+			domainLiveness := civoConf.TestDomainLiveness(clctrl.DomainName, domainId, clctrl.CloudRegion)
 			if !domainLiveness {
 				return fmt.Errorf("failed to verify domain liveness for domain %s", clctrl.DomainName)
 			}

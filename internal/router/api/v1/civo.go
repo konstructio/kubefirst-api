@@ -7,8 +7,10 @@ See the LICENSE file for more details.
 package api
 
 import (
+	"context"
 	"net/http"
 
+	"github.com/civo/civogo"
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/pkg/civo"
@@ -45,7 +47,12 @@ func GetValidateCivoDomain(c *gin.Context) {
 	}
 
 	// Run validate func
-	domainId, err := civo.GetDNSInfo("", domainName, settings.CloudRegion)
+	civoConf := civo.CivoConfiguration{
+		Client:  &civogo.Client{},
+		Context: context.Background(),
+	}
+
+	domainId, err := civoConf.GetDNSInfo(domainName, settings.CloudRegion)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -53,7 +60,7 @@ func GetValidateCivoDomain(c *gin.Context) {
 		return
 	}
 
-	validated := civo.TestDomainLiveness("", domainName, domainId, settings.CloudRegion)
+	validated := civoConf.TestDomainLiveness(domainName, domainId, settings.CloudRegion)
 	if !validated {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: "domain validation failed",
