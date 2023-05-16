@@ -87,7 +87,12 @@ func PostDomains(c *gin.Context) {
 			})
 			return
 		}
-		domains, err := civo.GetDNSDomains(domainListRequest.CivoAuth.Token, domainListRequest.CloudRegion)
+		civoConf := civo.CivoConfiguration{
+			Client:  civo.NewCivo(domainListRequest.CivoAuth.Token, domainListRequest.CloudRegion),
+			Context: context.Background(),
+		}
+
+		domains, err := civoConf.GetDNSDomains(domainListRequest.CloudRegion)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: err.Error(),
