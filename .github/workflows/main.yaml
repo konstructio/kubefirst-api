@@ -38,7 +38,7 @@ jobs:
             --generate-name="${GITHUB_REPOSITORY_NAME_PART}-publish-${GITHUB_SHA_SHORT}-" \
             -p appName="${GITHUB_REPOSITORY_NAME_PART}" \
             -p branch="${GITHUB_REF_NAME}" \
-            -p containerRegistryURL="555935582951.dkr.ecr.us-east-2.amazonaws.com/${GITHUB_REPOSITORY_NAME_PART}:${GITHUB_SHA_SHORT}" \
+            -p containerRegistryURL="public.ecr.aws/kubefirst/${GITHUB_REPOSITORY_NAME_PART}:${GITHUB_SHA_SHORT}" \
             -p gitUrlNoProtocol="git@github.com:${GITHUB_REPOSITORY_OWNER_PART_SLUG}" \
             -p shortSha="${GITHUB_SHA_SHORT}" \
             --wait --log
