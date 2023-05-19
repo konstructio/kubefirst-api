@@ -13,9 +13,23 @@ type MarketplaceApps struct {
 
 // MarketplaceApp describes a Kubefirst marketplace application
 type MarketplaceApp struct {
-	Name        string   `bson:"name" json:"name" yaml:"name"`
-	SecretKeys  []string `bson:"secret_keys" json:"secret_keys" yaml:"secretKeys"`
-	ImageURL    string   `bson:"image_url" json:"image_url" yaml:"imageUrl"`
-	Description string   `bson:"description" json:"description" yaml:"description"`
-	Categories  []string `bson:"categories" json:"categories" yaml:"categories"`
+	Name        string                    `bson:"name" json:"name" yaml:"name"`
+	SecretKeys  []MarketplaceAppSecretKey `bson:"secret_keys" json:"secret_keys" yaml:"secretKeys"`
+	ImageURL    string                    `bson:"image_url" json:"image_url" yaml:"imageUrl"`
+	Description string                    `bson:"description" json:"description" yaml:"description"`
+	Categories  []string                  `bson:"categories" json:"categories" yaml:"categories"`
+}
+
+// MarketplaceAppSecretKey describes a required secret value when creating a
+// service based on a marketplace app
+type MarketplaceAppSecretKey struct {
+	Name  string `bson:"name" json:"name"`
+	Label string `bson:"label,omitempty" json:"label,omitempty"`
+	Value string `bson:"value,omitempty" json:"value,omitempty"`
+}
+
+// MarketplaceAppCreateRequest describes a request to create a service for a cluster
+// based on a marketplace app
+type MarketplaceAppCreateRequest struct {
+	SecretKeys []MarketplaceAppSecretKey `bson:"secret_keys,omitempty" json:"secret_keys,omitempty"`
 }

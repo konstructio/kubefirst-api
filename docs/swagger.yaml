@@ -205,6 +205,15 @@ definitions:
     - git_token
     - type
     type: object
+  types.ClusterServiceList:
+    properties:
+      cluster_name:
+        type: string
+      services:
+        items:
+          $ref: '#/definitions/types.Service'
+        type: array
+    type: object
   types.DigitaloceanAuth:
     properties:
       spaces_key:
@@ -279,8 +288,24 @@ definitions:
         type: string
       secret_keys:
         items:
-          type: string
+          $ref: '#/definitions/types.MarketplaceAppSecretKey'
         type: array
+    type: object
+  types.MarketplaceAppCreateRequest:
+    properties:
+      secret_keys:
+        items:
+          $ref: '#/definitions/types.MarketplaceAppSecretKey'
+        type: array
+    type: object
+  types.MarketplaceAppSecretKey:
+    properties:
+      label:
+        type: string
+      name:
+        type: string
+      value:
+        type: string
     type: object
   types.MarketplaceApps:
     properties:
@@ -288,6 +313,23 @@ definitions:
         items:
           $ref: '#/definitions/types.MarketplaceApp'
         type: array
+    type: object
+  types.Service:
+    properties:
+      default:
+        type: boolean
+      description:
+        type: string
+      image:
+        type: string
+      links:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      status:
+        type: string
     type: object
   types.StateStoreCredentials:
     properties:
@@ -642,6 +684,67 @@ paths:
       summary: Returns a list of available Kubefirst marketplace applications
       tags:
       - marketplace
+  /services/:cluster_name:
+    get:
+      consumes:
+      - application/json
+      description: Returns a list of services for a cluster
+      parameters:
+      - description: Cluster name
+        in: path
+        name: cluster_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.ClusterServiceList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Returns a list of services for a cluster
+      tags:
+      - services
+  /services/:cluster_name/:service_name:
+    post:
+      consumes:
+      - application/json
+      description: Add a marketplace application to a cluster as a service
+      parameters:
+      - description: Cluster name
+        in: path
+        name: cluster_name
+        required: true
+        type: string
+      - description: Service name to be added
+        in: path
+        name: service_name
+        required: true
+        type: string
+      - description: Service create request in JSON format
+        in: body
+        name: definition
+        required: true
+        schema:
+          $ref: '#/definitions/types.MarketplaceAppCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/types.JSONSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Add a marketplace application to a cluster as a service
+      tags:
+      - services
   /stream:
     get:
       description: Stream API server logs

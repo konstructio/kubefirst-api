@@ -488,6 +488,98 @@ const docTemplate = `{
                 }
             }
         },
+        "/services/:cluster_name": {
+            "get": {
+                "description": "Returns a list of services for a cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "services"
+                ],
+                "summary": "Returns a list of services for a cluster",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cluster name",
+                        "name": "cluster_name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.ClusterServiceList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONFailureResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/services/:cluster_name/:service_name": {
+            "post": {
+                "description": "Add a marketplace application to a cluster as a service",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "services"
+                ],
+                "summary": "Add a marketplace application to a cluster as a service",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cluster name",
+                        "name": "cluster_name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Service name to be added",
+                        "name": "service_name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Service create request in JSON format",
+                        "name": "definition",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.MarketplaceAppCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONFailureResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/stream": {
             "get": {
                 "description": "Stream API server logs",
@@ -806,6 +898,20 @@ const docTemplate = `{
                 }
             }
         },
+        "types.ClusterServiceList": {
+            "type": "object",
+            "properties": {
+                "cluster_name": {
+                    "type": "string"
+                },
+                "services": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.Service"
+                    }
+                }
+            }
+        },
         "types.DigitaloceanAuth": {
             "type": "object",
             "properties": {
@@ -919,8 +1025,33 @@ const docTemplate = `{
                 "secret_keys": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/types.MarketplaceAppSecretKey"
                     }
+                }
+            }
+        },
+        "types.MarketplaceAppCreateRequest": {
+            "type": "object",
+            "properties": {
+                "secret_keys": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.MarketplaceAppSecretKey"
+                    }
+                }
+            }
+        },
+        "types.MarketplaceAppSecretKey": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
                 }
             }
         },
@@ -932,6 +1063,32 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/types.MarketplaceApp"
                     }
+                }
+            }
+        },
+        "types.Service": {
+            "type": "object",
+            "properties": {
+                "default": {
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "links": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
                 }
             }
         },
