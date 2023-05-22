@@ -20,7 +20,6 @@ import (
 	"github.com/kubefirst/kubefirst-api/providers/aws"
 	"github.com/kubefirst/kubefirst-api/providers/civo"
 	"github.com/kubefirst/kubefirst-api/providers/digitalocean"
-	"github.com/kubefirst/kubefirst-api/providers/k3d"
 	"github.com/kubefirst/kubefirst-api/providers/vultr"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/sirupsen/logrus"
@@ -89,7 +88,6 @@ func DeleteCluster(c *gin.Context) {
 		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
 			Message: "cluster delete enqueued",
 		})
-	case "k3d":
 	case "vultr":
 		go func() {
 			err := vultr.DeleteVultrCluster(&rec)
@@ -322,17 +320,6 @@ func PostCreateCluster(c *gin.Context) {
 		}
 		go func() {
 			err = digitalocean.CreateDigitaloceanCluster(&clusterDefinition)
-			if err != nil {
-				log.Errorf(err.Error())
-			}
-		}()
-
-		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
-			Message: "cluster create enqueued",
-		})
-	case "k3d":
-		go func() {
-			err = k3d.CreateK3DCluster(&clusterDefinition)
 			if err != nil {
 				log.Errorf(err.Error())
 			}

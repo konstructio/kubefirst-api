@@ -84,13 +84,12 @@ Some variables are required, others are optional depending on deployment type.
 
 The following providers are available for use with the API.
 
-| Provider      | Status     | Supported Operations | Supported Git Providers |
-| ------------- | ---------- | -------------------- | ----------------------- |
-| AWS           | Beta       | Create, Delete       | GitHub, GitLab          |
-| Civo          | Beta       | Create, Delete       | GitHub, GitLab          |
-| Digital Ocean | Beta       | Create, Delete       | GitHub, GitLab          |
-| K3d           | Deprecated | Create, Delete       | GitHub, GitLab          |
-| Vultr         | Beta       | Create, Delete       | GitHub, GitLab          |
+| Provider      | Status | Supported Operations | Supported Git Providers |
+| ------------- | ------ | -------------------- | ----------------------- |
+| AWS           | Beta   | Create, Delete       | GitHub, GitLab          |
+| Civo          | Beta   | Create, Delete       | GitHub, GitLab          |
+| Digital Ocean | Beta   | Create, Delete       | GitHub, GitLab          |
+| Vultr         | Beta   | Create, Delete       | GitHub, GitLab          |
 
 ## Creating a Cluster
 

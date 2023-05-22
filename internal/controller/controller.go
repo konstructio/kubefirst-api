@@ -22,7 +22,6 @@ import (
 	"github.com/kubefirst/runtime/pkg/github"
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/handlers"
-	"github.com/kubefirst/runtime/pkg/k3d"
 	"github.com/kubefirst/runtime/pkg/services"
 	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
@@ -176,7 +175,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		gitHubService := services.NewGitHubService(clctrl.HttpClient)
 		gitHubHandler := handlers.NewGitHubHandler(gitHubService)
 
-		clctrl.GitHost = k3d.GithubHost
+		clctrl.GitHost = "github.com"
 		clctrl.ContainerRegistryHost = "ghcr.io"
 		// Verify token scopes
 		err := github.VerifyTokenPermissions(def.GitToken)
@@ -190,7 +189,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		}
 		clctrl.GitUser = githubUser
 	case "gitlab":
-		clctrl.GitHost = k3d.GitlabHost
+		clctrl.GitHost = "gitlab.com"
 		clctrl.ContainerRegistryHost = "registry.gitlab.com"
 		// Verify token scopes
 		err := gitlab.VerifyTokenPermissions(def.GitToken)
@@ -223,8 +222,6 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	case "digitalocean":
 		clctrl.ProviderConfig = digitalocean.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
 		clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).DigitaloceanToken = clctrl.DigitaloceanAuth.Token
-	case "k3d":
-		clctrl.ProviderConfig = k3d.GetConfig(clctrl.ClusterName, clctrl.GitProvider, clctrl.GitOwner)
 	case "vultr":
 		clctrl.ProviderConfig = vultr.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
 		clctrl.ProviderConfig.(*vultr.VultrConfig).VultrToken = clctrl.VultrAuth.Token

@@ -21,7 +21,6 @@ import (
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/gitlab"
-	"github.com/kubefirst/runtime/pkg/k3d"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/terraform"
@@ -155,22 +154,6 @@ func (clctrl *ClusterController) CreateCluster() error {
 			log.Info("created digital ocean cloud resources")
 
 			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
-		case "k3d":
-			err := k3d.ClusterCreate(
-				clctrl.ClusterName,
-				clctrl.ProviderConfig.(k3d.K3dConfig).K1Dir,
-				clctrl.ProviderConfig.(k3d.K3dConfig).K3dClient,
-				clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig,
-			)
-			if err != nil {
-				msg := fmt.Sprintf("error creating k3d resources: %s", err)
-				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyFailed, msg)
-				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
-				if err != nil {
-					return err
-				}
-				return fmt.Errorf(msg)
-			}
 		case "vultr":
 			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyStarted, "")
 
@@ -419,35 +402,6 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			}
 			gitopsTemplateTokens.(*digitalocean.GitOpsDirectoryValues).GitOpsRepoGitURL = DigitaloceanDestinationGitopsRepoGitURL
 			gitopsTemplateTokens.(*digitalocean.GitOpsDirectoryValues).StateStoreBucketHostname = DigitaloceanStateStoreBucketName
-		case "k3d":
-			gitopsTemplateTokens = &k3d.GitopsTokenValues{
-				GithubOwner:                   clctrl.GitOwner,
-				GithubUser:                    clctrl.GitUser,
-				GitlabOwner:                   clctrl.GitOwner,
-				GitlabOwnerGroupID:            clctrl.GitlabOwnerGroupID,
-				GitlabUser:                    clctrl.GitUser,
-				DomainName:                    clctrl.DomainName,
-				AtlantisAllowList:             fmt.Sprintf("%s/%s/*", clctrl.GitHost, clctrl.GitOwner),
-				AlertsEmail:                   "REMOVE_THIS_VALUE",
-				ClusterName:                   clctrl.ClusterName,
-				ClusterType:                   clctrl.ClusterType,
-				GithubHost:                    clctrl.GitHost,
-				GitlabHost:                    clctrl.GitHost,
-				ArgoWorkflowsIngressURL:       fmt.Sprintf("https://argo.%s", clctrl.DomainName),
-				VaultIngressURL:               fmt.Sprintf("https://vault.%s", clctrl.DomainName),
-				ArgocdIngressURL:              fmt.Sprintf("https://argocd.%s", clctrl.DomainName),
-				AtlantisIngressURL:            fmt.Sprintf("https://atlantis.%s", clctrl.DomainName),
-				MetaphorDevelopmentIngressURL: fmt.Sprintf("https://metaphor-development.%s", clctrl.DomainName),
-				MetaphorStagingIngressURL:     fmt.Sprintf("https://metaphor-staging.%s", clctrl.DomainName),
-				MetaphorProductionIngressURL:  fmt.Sprintf("https://metaphor-production.%s", clctrl.DomainName),
-				KubefirstVersion:              configs.K1Version,
-				KubefirstTeam:                 clctrl.KubefirstTeam,
-				KubeconfigPath:                clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig,
-				GitopsRepoGitURL:              clctrl.ProviderConfig.(k3d.K3dConfig).DestinationGitopsRepoGitURL,
-				GitProvider:                   clctrl.ProviderConfig.(k3d.K3dConfig).GitProvider,
-				ClusterId:                     clctrl.ClusterID,
-				CloudProvider:                 clctrl.CloudProvider,
-			}
 		case "vultr":
 			gitopsTemplateTokens = &vultr.GitOpsDirectoryValues{
 				AlertsEmail:               clctrl.AlertsEmail,
@@ -548,16 +502,6 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				MetaphorStagingIngressURL:     fmt.Sprintf("metaphor-staging.%s", clctrl.DomainName),
 				MetaphorProductionIngressURL:  fmt.Sprintf("metaphor-production.%s", clctrl.DomainName),
 			}
-		case "k3d":
-			metaphorTemplateTokens = &k3d.MetaphorTokenValues{
-				ClusterName:                   clctrl.ClusterName,
-				CloudRegion:                   clctrl.CloudRegion,
-				ContainerRegistryURL:          fmt.Sprintf("%s/%s/metaphor", clctrl.ContainerRegistryHost, clctrl.GitOwner),
-				DomainName:                    clctrl.DomainName,
-				MetaphorDevelopmentIngressURL: fmt.Sprintf("metaphor-development.%s", clctrl.DomainName),
-				MetaphorStagingIngressURL:     fmt.Sprintf("metaphor-staging.%s", clctrl.DomainName),
-				MetaphorProductionIngressURL:  fmt.Sprintf("metaphor-production.%s", clctrl.DomainName),
-			}
 		case "vultr":
 			metaphorTemplateTokens = &vultr.MetaphorTokenValues{
 				ClusterName:                   clctrl.ClusterName,
@@ -598,29 +542,6 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
-		case "k3d":
-			kcfg := k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
-			err := k3d.GenerateTLSSecrets(kcfg.Clientset, clctrl.ProviderConfig.(k3d.K3dConfig))
-			if err != nil {
-				log.Errorf("error generating tls certificates: %s", err)
-				return err
-			}
-
-			err = k3d.AddK3DSecrets(
-				clctrl.AtlantisWebhookSecret,
-				clctrl.PublicKey,
-				clctrl.ProviderConfig.(k3d.K3dConfig).DestinationGitopsRepoGitURL,
-				clctrl.PrivateKey,
-				clctrl.GitProvider,
-				clctrl.GitUser,
-				clctrl.GitOwner,
-				clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig,
-				clctrl.GitToken,
-			)
-			if err != nil {
-				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
-				return err
-			}
 		case "vultr":
 			err := vultrext.BootstrapVultrMgmtCluster(clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig, &cl)
 			if err != nil {
@@ -649,8 +570,6 @@ func (clctrl *ClusterController) ContainerRegistryAuth() (string, error) {
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
 	case "digitalocean":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig)
-	case "k3d":
-		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
 	case "vultr":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
 	}
@@ -694,8 +613,6 @@ func (clctrl *ClusterController) WaitForClusterReady() error {
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
 	case "digitalocean":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig)
-	case "k3d":
-		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
 	case "vultr":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
 	}
