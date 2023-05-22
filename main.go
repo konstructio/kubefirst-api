@@ -60,6 +60,12 @@ func main() {
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	docs.SwaggerInfo.Schemes = []string{"http"}
 
+	// Startup tasks
+	err = db.Client.InsertMarketplaceApps()
+	if err != nil {
+		log.Warn(err)
+	}
+
 	// API
 	r := api.SetupRouter()
 

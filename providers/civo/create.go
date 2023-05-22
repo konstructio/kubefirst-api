@@ -10,6 +10,8 @@ import (
 	"os"
 
 	"github.com/kubefirst/kubefirst-api/internal/controller"
+	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/pkg/civo"
@@ -226,6 +228,13 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 	defer segmentClient.Client.Close()
 
 	telemetryShim.Transmit(rec.UseTelemetry, segmentClient, segment.MetricMgmtClusterInstallCompleted, "")
+
+	// Create default service entries
+	cl, _ := db.Client.GetCluster(ctrl.ClusterName)
+	err = services.AddDefaultServices(&cl)
+	if err != nil {
+		log.Errorf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
+	}
 
 	return nil
 }

@@ -14,8 +14,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// ParseActiveApplications reads the active upstream application manifest
-func ParseActiveApplications() (types.MarketplaceApps, error) {
+// ReadActiveApplications reads the active upstream application manifest
+func ReadActiveApplications() (types.MarketplaceApps, error) {
 	gh := gitShim.GitHubClient{
 		Client: gitShim.NewGitHub(),
 	}
@@ -25,7 +25,7 @@ func ParseActiveApplications() (types.MarketplaceApps, error) {
 		return types.MarketplaceApps{}, fmt.Errorf("error retrieving marketplace repository content: %s", err)
 	}
 
-	index, err := gh.ParseMarketplaceIndex(activeContent)
+	index, err := gh.ReadMarketplaceIndex(activeContent)
 	if err != nil {
 		return types.MarketplaceApps{}, fmt.Errorf("error retrieving marketplace index content: %s", err)
 	}
@@ -38,4 +38,23 @@ func ParseActiveApplications() (types.MarketplaceApps, error) {
 	}
 
 	return out, nil
+}
+
+// ReadApplicationDirectory reads a marketplace application's directory
+func ReadApplicationDirectory(applicationName string) ([][]byte, error) {
+	gh := gitShim.GitHubClient{
+		Client: gitShim.NewGitHub(),
+	}
+
+	activeContent, err := gh.ReadMarketplaceRepoContents()
+	if err != nil {
+		return [][]byte{}, fmt.Errorf("error retrieving marketplace app directory content: %s", err)
+	}
+
+	contents, err := gh.ReadMarketplaceAppDirectory(activeContent, applicationName)
+	if err != nil {
+		return [][]byte{}, fmt.Errorf("error retrieving marketplace app directory content: %s", err)
+	}
+
+	return contents, nil
 }

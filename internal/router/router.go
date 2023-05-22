@@ -60,6 +60,10 @@ func SetupRouter() *gin.Engine {
 		// Marketplace
 		v1.GET("/marketplace/apps", router.GetMarketplaceApps)
 
+		// Services
+		v1.GET("/services/:cluster_name", router.GetServices)
+		v1.POST("/services/:cluster_name/:service_name", router.PostAddServiceToCluster)
+
 		// Domains
 		v1.POST("/domain/:cloud_provider", router.PostDomains)
 		v1.GET("/domain/validate/aws/:domain", router.GetValidateAWSDomain)

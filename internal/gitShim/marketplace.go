@@ -51,8 +51,24 @@ func (gh *GitHubClient) ReadMarketplaceRepoContents() ([]*github.RepositoryConte
 	return directoryContent, nil
 }
 
-// ParseMarketplaceIndex reads the marketplace repository index
-func (gh *GitHubClient) ParseMarketplaceIndex(contents []*github.RepositoryContent) ([]byte, error) {
+// ReadMarketplaceRepoDirectory reads the files in a marketplace repo directory
+func (gh *GitHubClient) ReadMarketplaceRepoDirectory(path string) ([]*github.RepositoryContent, error) {
+	_, directoryContent, _, err := gh.Client.Repositories.GetContents(
+		context.Background(),
+		KubefirstGitHubOrganization,
+		KubefirstMarketplaceRepository,
+		path,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return directoryContent, nil
+}
+
+// ReadMarketplaceIndex reads the marketplace repository index
+func (gh *GitHubClient) ReadMarketplaceIndex(contents []*github.RepositoryContent) ([]byte, error) {
 	for _, content := range contents {
 		switch *content.Type {
 		case "file":
@@ -68,6 +84,34 @@ func (gh *GitHubClient) ParseMarketplaceIndex(contents []*github.RepositoryConte
 	}
 
 	return []byte{}, fmt.Errorf("index.yaml not found in marketplace repository")
+}
+
+// ReadMarketplaceAppDirectory reads the file content in a marketplace app directory
+func (gh *GitHubClient) ReadMarketplaceAppDirectory(contents []*github.RepositoryContent, applicationName string) ([][]byte, error) {
+	for _, content := range contents {
+		if *content.Type == "dir" && *content.Name == applicationName {
+			files, err := gh.ReadMarketplaceRepoDirectory(*content.Path)
+			if err != nil {
+				return [][]byte{}, err
+			}
+
+			var res [][]byte
+
+			for _, file := range files {
+				b, err := gh.readFileContents(file)
+				if err != nil {
+					return [][]byte{}, err
+				}
+				res = append(res, b)
+			}
+
+			return res, nil
+		} else {
+			continue
+		}
+	}
+
+	return [][]byte{}, nil
 }
 
 // readFileContents parses the contents of a file in a GitHub repository

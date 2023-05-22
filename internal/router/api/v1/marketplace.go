@@ -10,7 +10,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kubefirst/kubefirst-api/internal/marketplace"
+	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 )
 
@@ -25,7 +25,7 @@ import (
 // @Router /marketplace/apps [get]
 // GetMarketplaceApps returns a list of available Kubefirst marketplace applications
 func GetMarketplaceApps(c *gin.Context) {
-	apps, err := marketplace.ParseActiveApplications()
+	apps, err := db.Client.GetMarketplaceApps()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
