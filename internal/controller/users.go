@@ -64,13 +64,6 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricUsersTerraformApplyStarted, "")
 		log.Info("applying users terraform")
 
-		var vaultRootToken string
-		secData, err := k8s.ReadSecretV2(kcfg.Clientset, "vault", "vault-unseal-secret")
-		if err != nil {
-			return err
-		}
-		vaultRootToken = secData["root-token"]
-
 		tfEnvs := map[string]string{}
 		var tfEntrypoint, terraformClient string
 

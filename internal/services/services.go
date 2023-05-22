@@ -7,16 +7,23 @@ See the LICENSE file for more details.
 package services
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"os"
+	"time"
 
+	v1alpha1 "github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	argocdapi "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned"
+	health "github.com/argoproj/gitops-engine/pkg/health"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/marketplace"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/pkg/gitClient"
+	"github.com/kubefirst/runtime/pkg/k8s"
+	log "github.com/sirupsen/logrus"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // CreateService
@@ -27,6 +34,7 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.Marketpl
 	if err != nil {
 		log.Fatalf("error getting home path: %s", err)
 	}
+	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, cl.ClusterName)
 	gitopsDir := fmt.Sprintf("%s/.k1/%s/gitops", homeDir, cl.ClusterName)
 	gitopsRepo, _ = git.PlainOpen(gitopsDir)
 
@@ -60,9 +68,6 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.Marketpl
 		return err
 	}
 
-	// Update services to feature new service
-	// Wait for ArgoCD success in here somewhere?
-
 	// Add to list
 	err = db.Client.InsertClusterServiceListEntry(cl.ClusterName, &types.Service{
 		Name:        serviceName,
@@ -74,6 +79,48 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.Marketpl
 	})
 	if err != nil {
 		return err
+	}
+
+	// Wait for ArgoCD application sync
+	var kcfg *k8s.KubernetesClient
+
+	switch cl.CloudProvider {
+	case "aws":
+		// kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+		return fmt.Errorf("not enabled for aws")
+	case "civo", "digitalocean", "vultr":
+		kcfg = k8s.CreateKubeConfig(false, fmt.Sprintf("%s/kubeconfig", clusterDir))
+	}
+
+	argocdClient, err := argocdapi.NewForConfig(kcfg.RestConfig)
+	if err != nil {
+		return err
+	}
+
+	// Sync registry
+	// todo: initiate registry sync
+	// Wait for app to be created
+	for i := 0; i < 50; i++ {
+		_, err := argocdClient.ArgoprojV1alpha1().Applications("argocd").Get(context.Background(), serviceName, v1.GetOptions{})
+		if err != nil {
+			log.Infof("cluster %s - waiting for app %s to be created", cl.ClusterName, serviceName)
+			time.Sleep(time.Second * 10)
+		} else {
+			break
+		}
+	}
+	// Wait for app to be synchronized and healthy
+	for i := 0; i < 50; i++ {
+		app, err := argocdClient.ArgoprojV1alpha1().Applications("argocd").Get(context.Background(), serviceName, v1.GetOptions{})
+		if err != nil {
+			return fmt.Errorf("cluster %s - error getting argocd application %s: %s", cl.ClusterName, serviceName, err)
+		}
+		if app.Status.Sync.Status == v1alpha1.SyncStatusCodeSynced && app.Status.Health.Status == health.HealthStatusHealthy {
+			log.Infof("cluster %s - app %s synchronized", cl.ClusterName, serviceName)
+			break
+		}
+		log.Infof("cluster %s - waiting for app %s to sync", cl.ClusterName, serviceName)
+		time.Sleep(time.Second * 10)
 	}
 
 	return nil
