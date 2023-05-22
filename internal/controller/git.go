@@ -9,7 +9,6 @@ package controller
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
@@ -17,11 +16,9 @@ import (
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	"github.com/kubefirst/runtime/pkg"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
-	"github.com/kubefirst/runtime/pkg/k3d"
 	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/terraform"
 	"github.com/kubefirst/runtime/pkg/vultr"
@@ -198,59 +195,6 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				tfEnvs := map[string]string{}
 				tfEnvs = digitaloceanext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
 				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient, tfEntrypoint, tfEnvs)
-				if err != nil {
-					msg := fmt.Sprintf("error creating gitlab resources with terraform %s: %s", tfEntrypoint, err)
-					log.Error(msg)
-					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
-					return fmt.Errorf(msg)
-				}
-
-				log.Infof("created git projects and groups for gitlab.com/%s", clctrl.GitOwner)
-				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
-			}
-		case "k3d":
-			switch clctrl.GitProvider {
-			case "github":
-				// //* create teams and repositories in github
-				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyStarted, "")
-				log.Info("Creating github resources with terraform")
-
-				tfEntrypoint := clctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir + "/terraform/github"
-				tfEnvs := map[string]string{}
-				// tfEnvs = k3d.GetGithubTerraformEnvs(tfEnvs)
-				tfEnvs["GITHUB_TOKEN"] = clctrl.GitToken
-				tfEnvs["GITHUB_OWNER"] = clctrl.GitOwner
-				tfEnvs["TF_VAR_kbot_ssh_public_key"] = cl.PublicKey
-				tfEnvs["AWS_ACCESS_KEY_ID"] = pkg.MinioDefaultUsername
-				tfEnvs["AWS_SECRET_ACCESS_KEY"] = pkg.MinioDefaultPassword
-				tfEnvs["TF_VAR_aws_access_key_id"] = pkg.MinioDefaultUsername
-				tfEnvs["TF_VAR_aws_secret_access_key"] = pkg.MinioDefaultPassword
-				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(k3d.K3dConfig).TerraformClient, tfEntrypoint, tfEnvs)
-				if err != nil {
-					msg := fmt.Sprintf("error creating github resources with terraform %s: %s", tfEntrypoint, err)
-					log.Error(msg)
-					telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyFailed, msg)
-					return fmt.Errorf(msg)
-				}
-
-				log.Info("created git repositories for github.com/%s", clctrl.GitOwner)
-				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
-			case "gitlab":
-				// //* create teams and repositories in gitlab
-				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyStarted, "")
-				log.Info("Creating gitlab resources with terraform")
-
-				tfEntrypoint := clctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir + "/terraform/gitlab"
-				tfEnvs := map[string]string{}
-				tfEnvs["GITLAB_TOKEN"] = clctrl.GitToken
-				tfEnvs["GITLAB_OWNER"] = clctrl.GitOwner
-				tfEnvs["TF_VAR_owner_group_id"] = strconv.Itoa(clctrl.GitlabOwnerGroupID)
-				tfEnvs["TF_VAR_kbot_ssh_public_key"] = cl.PublicKey
-				tfEnvs["AWS_ACCESS_KEY_ID"] = pkg.MinioDefaultUsername
-				tfEnvs["AWS_SECRET_ACCESS_KEY"] = pkg.MinioDefaultPassword
-				tfEnvs["TF_VAR_aws_access_key_id"] = pkg.MinioDefaultUsername
-				tfEnvs["TF_VAR_aws_secret_access_key"] = pkg.MinioDefaultPassword
-				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(k3d.K3dConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating gitlab resources with terraform %s: %s", tfEntrypoint, err)
 					log.Error(msg)

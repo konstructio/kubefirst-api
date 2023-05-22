@@ -7,9 +7,7 @@ See the LICENSE file for more details.
 package controller
 
 import (
-	"fmt"
 	"os"
-	"strings"
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
@@ -19,7 +17,6 @@ import (
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
-	"github.com/kubefirst/runtime/pkg/k3d"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/terraform"
@@ -60,8 +57,6 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
 		case "digitalocean":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig)
-		case "k3d":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
 		case "vultr":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
 		}
@@ -95,18 +90,6 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 			tfEnvs = digitaloceanext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEntrypoint = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).GitopsDir + "/terraform/users"
 			terraformClient = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient
-		case "k3d":
-			tfEnvs["TF_VAR_email_address"] = "your@email.com"
-			tfEnvs[fmt.Sprintf("TF_VAR_%s_token", clctrl.GitProvider)] = clctrl.GitToken
-			tfEnvs["TF_VAR_vault_addr"] = k3d.VaultPortForwardURL
-			tfEnvs["TF_VAR_vault_token"] = vaultRootToken
-			tfEnvs["VAULT_ADDR"] = k3d.VaultPortForwardURL
-			tfEnvs["VAULT_TOKEN"] = vaultRootToken
-			tfEnvs[fmt.Sprintf("%s_TOKEN", strings.ToUpper(clctrl.GitProvider))] = clctrl.GitToken
-			tfEnvs[fmt.Sprintf("%s_OWNER", strings.ToUpper(clctrl.GitProvider))] = clctrl.GitOwner
-
-			tfEntrypoint = clctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir + "/terraform/users"
-			terraformClient = clctrl.ProviderConfig.(k3d.K3dConfig).TerraformClient
 		case "vultr":
 			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
 			tfEnvs = vultrext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)

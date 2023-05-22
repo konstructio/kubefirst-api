@@ -12,7 +12,6 @@ import (
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
-	"github.com/kubefirst/runtime/pkg/k3d"
 	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 )
@@ -71,12 +70,6 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 				digitalocean.TerraformClientVersion,
 				toolsDir,
 			)
-			if err != nil {
-				log.Errorf("error downloading dependencies: %s", err)
-				return err
-			}
-		case "k3d":
-			err := k3d.DownloadTools(cl.ClusterName, cl.GitProvider, cl.GitOwner, toolsDir)
 			if err != nil {
 				log.Errorf("error downloading dependencies: %s", err)
 				return err

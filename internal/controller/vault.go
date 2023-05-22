@@ -11,18 +11,15 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	"github.com/kubefirst/runtime/pkg"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
-	"github.com/kubefirst/runtime/pkg/k3d"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/terraform"
@@ -69,9 +66,6 @@ func (clctrl *ClusterController) InitializeVault() error {
 		case "digitalocean":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig)
 			vaultHandlerPath = "github.com:kubefirst/manifests.git/vault-handler/replicas-3"
-		case "k3d":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
-			vaultHandlerPath = "github.com:kubefirst/manifests.git/vault-handler/replicas-1"
 		case "vultr":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
 			vaultHandlerPath = "github.com:kubefirst/manifests.git/vault-handler/replicas-3"
@@ -107,7 +101,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 			if err != nil {
 				return err
 			}
-		case "civo", "digitalocean", "k3d", "vultr":
+		case "civo", "digitalocean", "vultr":
 			// Initialize and unseal Vault
 			// Build and apply manifests
 			yamlData, err := kcfg.KustomizeBuild(vaultHandlerPath)
@@ -180,8 +174,6 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
 		case "digitalocean":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig)
-		case "k3d":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
 		case "vultr":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
 		}
@@ -245,41 +237,6 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 
 			tfEntrypoint = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).GitopsDir + "/terraform/vault"
 			terraformClient = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient
-		case "k3d":
-			kubernetesInClusterAPIService, err := k8s.ReadService(clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig, "default", "kubernetes")
-			if err != nil {
-				log.Errorf("error looking up kubernetes api server service: %s")
-				return err
-			}
-
-			var vaultRootToken string
-			secData, err := k8s.ReadSecretV2(kcfg.Clientset, "vault", "vault-unseal-secret")
-			if err != nil {
-				return err
-			}
-
-			vaultRootToken = secData["root-token"]
-
-			tfEnvs["TF_VAR_email_address"] = "your@email.com"
-			tfEnvs[fmt.Sprintf("TF_VAR_%s_token", clctrl.GitProvider)] = clctrl.GitToken
-			tfEnvs["TF_VAR_vault_addr"] = k3d.VaultPortForwardURL
-			tfEnvs["TF_VAR_b64_docker_auth"] = base64DockerAuth
-			tfEnvs["TF_VAR_vault_token"] = vaultRootToken
-			tfEnvs["VAULT_ADDR"] = k3d.VaultPortForwardURL
-			tfEnvs["VAULT_TOKEN"] = vaultRootToken
-			tfEnvs["TF_VAR_atlantis_repo_webhook_secret"] = clctrl.AtlantisWebhookSecret
-			tfEnvs["TF_VAR_kbot_ssh_private_key"] = cl.PrivateKey
-			tfEnvs["TF_VAR_kbot_ssh_public_key"] = cl.PublicKey
-			tfEnvs["TF_VAR_kubernetes_api_endpoint"] = fmt.Sprintf("https://%s", kubernetesInClusterAPIService.Spec.ClusterIP)
-			tfEnvs[fmt.Sprintf("%s_OWNER", strings.ToUpper(clctrl.GitProvider))] = clctrl.GitOwner
-			tfEnvs["AWS_ACCESS_KEY_ID"] = pkg.MinioDefaultUsername
-			tfEnvs["AWS_SECRET_ACCESS_KEY"] = pkg.MinioDefaultPassword
-			tfEnvs["TF_VAR_aws_access_key_id"] = pkg.MinioDefaultUsername
-			tfEnvs["TF_VAR_aws_secret_access_key"] = pkg.MinioDefaultPassword
-			// tfEnvs["TF_LOG"] = "DEBUG"
-
-			tfEntrypoint = clctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir + "/terraform/vault"
-			terraformClient = clctrl.ProviderConfig.(k3d.K3dConfig).TerraformClient
 		case "vultr":
 			tfEnvs = vultrext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
@@ -333,8 +290,6 @@ func (clctrl *ClusterController) WaitForVault() error {
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
 	case "digitalocean":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig)
-	case "k3d":
-		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(k3d.K3dConfig).Kubeconfig)
 	case "vultr":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
 	}

@@ -18,7 +18,6 @@ import (
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/gitlab"
-	"github.com/kubefirst/runtime/pkg/k3d"
 	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
@@ -85,24 +84,6 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).MetaphorDir,
 				clctrl.CreateTokens("metaphor").(*digitalocean.MetaphorTokenValues),
 				civo.GetDomainApexContent(clctrl.DomainName),
-			)
-			if err != nil {
-				return err
-			}
-		case "k3d":
-			err := k3d.PrepareGitRepositories(
-				clctrl.GitProvider,
-				clctrl.ClusterName,
-				clctrl.ClusterType,
-				clctrl.ProviderConfig.(k3d.K3dConfig).DestinationGitopsRepoGitURL,
-				clctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir,
-				clctrl.GitopsTemplateBranchFlag,
-				clctrl.GitopsTemplateURLFlag,
-				clctrl.ProviderConfig.(k3d.K3dConfig).DestinationMetaphorRepoGitURL,
-				clctrl.ProviderConfig.(k3d.K3dConfig).K1Dir,
-				clctrl.CreateTokens("gitops").(*k3d.GitopsTokenValues),
-				clctrl.ProviderConfig.(k3d.K3dConfig).MetaphorDir,
-				clctrl.CreateTokens("metaphor").(*k3d.MetaphorTokenValues),
 			)
 			if err != nil {
 				return err
@@ -184,11 +165,6 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			metaphorDir = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).MetaphorDir
 			destinationGitopsRepoGitURL = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).DestinationGitopsRepoGitURL
 			destinationMetaphorRepoGitURL = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).DestinationMetaphorRepoGitURL
-		case "k3d":
-			gitopsDir = clctrl.ProviderConfig.(k3d.K3dConfig).GitopsDir
-			metaphorDir = clctrl.ProviderConfig.(k3d.K3dConfig).MetaphorDir
-			destinationGitopsRepoGitURL = clctrl.ProviderConfig.(k3d.K3dConfig).DestinationGitopsRepoGitURL
-			destinationMetaphorRepoGitURL = clctrl.ProviderConfig.(k3d.K3dConfig).DestinationMetaphorRepoGitURL
 		case "vultr":
 			gitopsDir = clctrl.ProviderConfig.(*vultr.VultrConfig).GitopsDir
 			metaphorDir = clctrl.ProviderConfig.(*vultr.VultrConfig).MetaphorDir
