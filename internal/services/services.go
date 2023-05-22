@@ -17,9 +17,11 @@ import (
 	health "github.com/argoproj/gitops-engine/pkg/health"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/marketplace"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/gitClient"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/sirupsen/logrus"
@@ -39,23 +41,32 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.Marketpl
 	gitopsRepo, _ = git.PlainOpen(gitopsDir)
 
 	// Create service files in gitops dir
-	f, err := marketplace.ReadApplicationDirectory(serviceName)
+	files, err := marketplace.ReadApplicationDirectory(serviceName)
 	if err != nil {
 		return err
 	}
-
-	for _, c := range f {
-		err = os.WriteFile(fmt.Sprintf("%s/registry/%s/%s.yaml", gitopsDir, cl.ClusterName, serviceName), c, 0644)
+	_, err = os.Create(fmt.Sprintf("%s/registry/%s/%s.yaml", gitopsDir, cl.ClusterName, serviceName))
+	if err != nil {
+		return fmt.Errorf("cluster %s - error creating file: %s", cl.ClusterName, err)
+	}
+	f, err := os.OpenFile(fmt.Sprintf("%s.yaml", serviceName), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("cluster %s - error opening file: %s", cl.ClusterName, err)
+	}
+	// Regardless of how many files there are, loop over them and create a single yaml file
+	for _, c := range files {
+		_, err = f.WriteString(fmt.Sprintf("---\n%s\n", c))
 		if err != nil {
 			return err
 		}
 	}
+	f.Close()
 
+	// Commit to gitops repository
 	err = gitClient.Commit(gitopsRepo, fmt.Sprintf("committing files for service %s", serviceName))
 	if err != nil {
-		return err
+		return fmt.Errorf("cluster %s - error committing service file: %s", cl.ClusterName, err)
 	}
-
 	publicKeys, err := ssh.NewPublicKeys("git", []byte(cl.PrivateKey), "")
 	if err != nil {
 		return err
@@ -65,7 +76,7 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.Marketpl
 		Auth:       publicKeys,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("cluster %s - error pushing commit for service file: %s", cl.ClusterName, err)
 	}
 
 	// Add to list
@@ -86,8 +97,13 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.Marketpl
 
 	switch cl.CloudProvider {
 	case "aws":
-		// kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-		return fmt.Errorf("not enabled for aws")
+		awscfg := awsinternal.NewAwsV3(
+			cl.CloudRegion,
+			cl.AWSAuth.AccessKeyID,
+			cl.AWSAuth.SecretAccessKey,
+			cl.AWSAuth.SessionToken,
+		)
+		kcfg = awsext.CreateEKSKubeconfig(&awscfg, cl.ClusterName)
 	case "civo", "digitalocean", "vultr":
 		kcfg = k8s.CreateKubeConfig(false, fmt.Sprintf("%s/kubeconfig", clusterDir))
 	}
@@ -108,9 +124,15 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.Marketpl
 		} else {
 			break
 		}
+		if i == 50 {
+			return fmt.Errorf("cluster %s - error waiting for app %s to be created: %s", cl.ClusterName, serviceName, err)
+		}
 	}
 	// Wait for app to be synchronized and healthy
 	for i := 0; i < 50; i++ {
+		if i == 50 {
+			return fmt.Errorf("cluster %s - error waiting for app %s to synchronize: %s", cl.ClusterName, serviceName, err)
+		}
 		app, err := argocdClient.ArgoprojV1alpha1().Applications("argocd").Get(context.Background(), serviceName, v1.GetOptions{})
 		if err != nil {
 			return fmt.Errorf("cluster %s - error getting argocd application %s: %s", cl.ClusterName, serviceName, err)
