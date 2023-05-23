@@ -73,7 +73,7 @@ spec:
       volumes:
       - configMap:
           defaultMode: 420
-          name: kubefirst-api-known-hosts-cm
+          name: {{ include "kubefirst-api.fullname" . }}
         name: ssh-known-hosts
       {{- with .Values.nodeSelector }}
       nodeSelector:
