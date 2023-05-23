@@ -26,7 +26,7 @@ spec:
       {{- end }}
       serviceAccountName: {{ include "kubefirst-api.serviceAccountName" . }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}  
       containers:
         - name: {{ .Chart.Name }}
           {{- if .Values.env }}
@@ -65,8 +65,16 @@ spec:
             successThreshold: 1
             failureThreshold: 3
             timeoutSeconds: 30
+          volumeMounts:
+          - mountPath: /.ssh/
+            name: ssh-known-hosts
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: kubefirst-api-known-hosts-cm
+        name: ssh-known-hosts
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
