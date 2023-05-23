@@ -28,6 +28,8 @@ RUN go build -o kubefirst-api .
 # Build final image using nothing but the binary
 FROM alpine:3.17.2
 
+RUN apk update && apk add git 
+
 COPY --from=builder /build/kubefirst-api /
 COPY --from=builder /build/docs /docs
 COPY --from=builder /root/.ssh/known_hosts /root/.ssh/known_hosts
