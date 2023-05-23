@@ -65,16 +65,16 @@ spec:
             successThreshold: 1
             failureThreshold: 3
             timeoutSeconds: 30
-          volumeMounts:
-          - mountPath: /root/.ssh/
-            name: ssh-known-hosts
+          # volumeMounts:
+          # - mountPath: /root/.ssh/
+          #   name: ssh-known-hosts
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-      volumes:
-      - configMap:
-          defaultMode: 420
-          name: {{ include "kubefirst-api.fullname" . }}
-        name: ssh-known-hosts
+      # volumes:
+      # - configMap:
+      #     defaultMode: 420
+      #     name: {{ include "kubefirst-api.fullname" . }}
+      #   name: ssh-known-hosts
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
