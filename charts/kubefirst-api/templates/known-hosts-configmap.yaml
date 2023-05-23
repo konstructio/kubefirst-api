@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: kubefirst-api-known-hosts-cm
+  name: {{ include "kubefirst-api.fullname" . }}
   namespace: kubefirst
 data:
   known_hosts: |-
