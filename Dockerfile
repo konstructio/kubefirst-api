@@ -12,6 +12,8 @@ COPY go.mod .
 COPY go.sum .
 RUN go mod download
 
+RUN apk update && apk add openssh 
+
 RUN mkdir -p /root/.ssh
 RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 RUN ssh-keyscan gitlab.com >> /root/.ssh/known_hosts
