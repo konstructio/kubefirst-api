@@ -39,17 +39,18 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.Marketpl
 	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, cl.ClusterName)
 	gitopsDir := fmt.Sprintf("%s/.k1/%s/gitops", homeDir, cl.ClusterName)
 	gitopsRepo, _ = git.PlainOpen(gitopsDir)
+	serviceFile := fmt.Sprintf("%s/registry/%s/%s.yaml", gitopsDir, cl.ClusterName, serviceName)
 
 	// Create service files in gitops dir
 	files, err := marketplace.ReadApplicationDirectory(serviceName)
 	if err != nil {
 		return err
 	}
-	_, err = os.Create(fmt.Sprintf("%s/registry/%s/%s.yaml", gitopsDir, cl.ClusterName, serviceName))
+	_, err = os.Create(serviceFile)
 	if err != nil {
 		return fmt.Errorf("cluster %s - error creating file: %s", cl.ClusterName, err)
 	}
-	f, err := os.OpenFile(fmt.Sprintf("%s.yaml", serviceName), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(serviceFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return fmt.Errorf("cluster %s - error opening file: %s", cl.ClusterName, err)
 	}
