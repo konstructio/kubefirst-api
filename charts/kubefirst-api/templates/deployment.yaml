@@ -29,12 +29,13 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}  
       containers:
         - name: {{ .Chart.Name }}
+        #! need to address hostname of service below, also address namespace
           env:
             {{- if not .Values.atlasDbHost }}
             - name: MONGODB_HOST
-              value: kubefirst-mongodb.kubefirst.svc.cluster.local
+              value: {{ .Values.mongodbHost | default "{{ .Chart.Name }}-mongodb-development.development.svc.cluster.local" }}
             - name: MONGODB_USERNAME
-              value: root
+              value: {{ .Values.mongodbUsername | default "root" }}
             {{- else }}
             - name: MONGODB_HOST
               value: {{ .Values.atlasDbHost }}
@@ -70,23 +71,23 @@ spec:
             - name: http
               containerPort: 8081
               protocol: TCP
-          # livenessProbe:
-          #   tcpSocket:
-          #     port: 8081
-          #   initialDelaySeconds: 10
-          #   periodSeconds: 5
-          #   successThreshold: 1
-          #   failureThreshold: 1
-          #   timeoutSeconds: 30
-          # readinessProbe:
-          #   httpGet:
-          #     path: /api/v1/health
-          #     port: http
-          #   initialDelaySeconds: 10
-          #   periodSeconds: 20
-          #   successThreshold: 1
-          #   failureThreshold: 3
-          #   timeoutSeconds: 30
+          livenessProbe:
+            tcpSocket:
+              port: 8081
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 1
+            timeoutSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            successThreshold: 1
+            failureThreshold: 3
+            timeoutSeconds: 30
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

@@ -93,3 +93,5 @@ existingSecret: ""
 # defaults to in cluster mongodb, accepts a host name like `your-db.123abcd.mongodb.net`
 atlasDbHost: ""
 atlasDbUsername: ""
+mongodbHost: ""
+mongodbUsername: ""
