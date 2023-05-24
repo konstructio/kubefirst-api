@@ -33,21 +33,24 @@ spec:
             {{- if not .Values.atlasDbHost }}
             - name: MONGODB_HOST
               value: kubefirst-mongodb.kubefirst.svc.cluster.local
+            - name: MONGODB_USERNAME
+              value: root
             {{- else }}
             - name: MONGODB_HOST
               value: {{ .Values.atlasDbHost }}
-            {{- end }}
             - name: MONGODB_USERNAME
-              value: root
+              value: {{ .Values.atlasDbUsername }}
+            {{- end }}
             - name: MONGODB_HOST_TYPE
-              valueFrom:
-                secretKeyRef:
-                  name: kubefirst-initial-secrets
-                  key: mongodb-host-type
+              value: {{- if not .Values.atlasDbHost }}
+                "local"
+              {{- else }}
+                "atlas"
+              {{- end }}
             - name: MONGODB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: kubefirst-initial-secrets
+                  name: {{ .Values.existingSecret | default "kubefirst-initial-secrets" }}
                   key: mongodb-root-password
           {{- if .Values.env }}
             {{- range $envVar := .Values.env }}
