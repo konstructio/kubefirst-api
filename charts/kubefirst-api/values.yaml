@@ -87,4 +87,8 @@ tolerations: []
 affinity: {}
 
 env: []
-envFrom: []
+envFrom: []   
+
+existingSecret:
+# must be one of `local` or `atlas`
+atlasDbHost: kubefirst-api-developme.v3mrpfs.mongodb.net
