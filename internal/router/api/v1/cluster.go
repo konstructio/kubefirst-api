@@ -54,6 +54,19 @@ func DeleteCluster(c *gin.Context) {
 		return
 	}
 
+	if rec.LastCondition != "" {
+		err = db.Client.UpdateCluster(rec.ClusterName, "last_condition", "")
+		if err != nil {
+			log.Warnf("error updating cluster last_condition field: %s", err)
+		}
+	}
+	if rec.Status == "error" {
+		err = db.Client.UpdateCluster(rec.ClusterName, "status", "deleting")
+		if err != nil {
+			log.Warnf("error updating cluster status field: %s", err)
+		}
+	}
+
 	switch rec.CloudProvider {
 	case "aws":
 		go func() {
@@ -201,6 +214,18 @@ func PostCreateCluster(c *gin.Context) {
 				Message: fmt.Sprintf("%s has an active process running and another create cannot be enqeued", clusterName),
 			})
 			return
+		}
+		if cluster.LastCondition != "" {
+			err = db.Client.UpdateCluster(cluster.ClusterName, "last_condition", "")
+			if err != nil {
+				log.Warnf("error updating cluster last_condition field: %s", err)
+			}
+		}
+		if cluster.Status == "error" {
+			err = db.Client.UpdateCluster(cluster.ClusterName, "status", "provisioning")
+			if err != nil {
+				log.Warnf("error updating cluster status field: %s", err)
+			}
 		}
 	}
 
