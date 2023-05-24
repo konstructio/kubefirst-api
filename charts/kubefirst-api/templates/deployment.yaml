@@ -29,11 +29,11 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}  
       containers:
         - name: {{ .Chart.Name }}
-        #! need to address hostname of service below, also address namespace
+        # ! need to address hostname of service below, also address namespace
           env:
             {{- if not .Values.atlasDbHost }}
             - name: MONGODB_HOST
-              value: {{ .Values.mongodbHost | default "{{ .Chart.Name }}-mongodb-development.development.svc.cluster.local" }}
+              value: {{ .Values.mongodbHost | default "kubefirst-api-mongodb-development.development.svc.cluster.local" }}
             - name: MONGODB_USERNAME
               value: {{ .Values.mongodbUsername | default "root" }}
             {{- else }}
