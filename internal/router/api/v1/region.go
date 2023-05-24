@@ -19,18 +19,18 @@ import (
 	"github.com/kubefirst/runtime/pkg/vultr"
 )
 
-// PostDomains godoc
-// @Summary Return a list of registered domains/hosted zones for a cloud provider account
-// @Description Return a list of registered domains/hosted zones for a cloud provider account
-// @Tags domain
+// PostRegions godoc
+// @Summary Return a list of regions for a cloud provider account
+// @Description Return a list of regions for a cloud provider account
+// @Tags region
 // @Accept json
 // @Produce json
-// @Param	request	body	types.DomainListRequest	true	"Domain list request in JSON format"
-// @Success 200 {object} types.DomainListResponse
+// @Param	request	body	types.RegionListRequest	true	"Region list request in JSON format"
+// @Success 200 {object} types.RegionListResponse
 // @Failure 400 {object} types.JSONFailureResponse
-// @Router /domain/:cloud_provider [post]
-// PostDomains returns registered domains/hosted zones for a cloud provider account
-func PostDomains(c *gin.Context) {
+// @Router /region/:cloud_provider [post]
+// PostRegions returns a list of regions for a cloud provider account
+func PostRegions(c *gin.Context) {
 	cloudProvider, param := c.Params.Get("cloud_provider")
 	if !param {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -40,8 +40,8 @@ func PostDomains(c *gin.Context) {
 	}
 
 	// Bind to variable as application/json, handle error
-	var domainListRequest types.DomainListRequest
-	err := c.Bind(&domainListRequest)
+	var regionListRequest types.RegionListRequest
+	err := c.Bind(&regionListRequest)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -49,13 +49,13 @@ func PostDomains(c *gin.Context) {
 		return
 	}
 
-	var domainListResponse types.DomainListResponse
+	var regionListResponse types.RegionListResponse
 
 	switch cloudProvider {
 	case "aws":
-		if domainListRequest.AWSAuth.AccessKeyID == "" ||
-			domainListRequest.AWSAuth.SecretAccessKey == "" ||
-			domainListRequest.AWSAuth.SessionToken == "" {
+		if regionListRequest.AWSAuth.AccessKeyID == "" ||
+			regionListRequest.AWSAuth.SecretAccessKey == "" ||
+			regionListRequest.AWSAuth.SessionToken == "" {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: "missing authentication credentials in request, please check and try again",
 			})
@@ -63,81 +63,81 @@ func PostDomains(c *gin.Context) {
 		}
 		awsConf := &awsinternal.AWSConfiguration{
 			Config: awsinternal.NewAwsV3(
-				domainListRequest.CloudRegion,
-				domainListRequest.AWSAuth.AccessKeyID,
-				domainListRequest.AWSAuth.SecretAccessKey,
-				domainListRequest.AWSAuth.SessionToken,
+				regionListRequest.CloudRegion,
+				regionListRequest.AWSAuth.AccessKeyID,
+				regionListRequest.AWSAuth.SecretAccessKey,
+				regionListRequest.AWSAuth.SessionToken,
 			),
 		}
 
-		domains, err := awsConf.GetHostedZones()
+		regions, err := awsConf.GetRegions(regionListRequest.CloudRegion)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: err.Error(),
 			})
 			return
 		}
-		domainListResponse.Domains = domains
+		regionListResponse.Regions = regions
 	case "civo":
-		if domainListRequest.CivoAuth.Token == "" {
+		if regionListRequest.CivoAuth.Token == "" {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: "missing authentication credentials in request, please check and try again",
 			})
 			return
 		}
 		civoConf := civo.CivoConfiguration{
-			Client:  civo.NewCivo(domainListRequest.CivoAuth.Token, domainListRequest.CloudRegion),
+			Client:  civo.NewCivo(regionListRequest.CivoAuth.Token, regionListRequest.CloudRegion),
 			Context: context.Background(),
 		}
 
-		domains, err := civoConf.GetDNSDomains(domainListRequest.CloudRegion)
+		regions, err := civoConf.GetRegions(regionListRequest.CloudRegion)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: err.Error(),
 			})
 			return
 		}
-		domainListResponse.Domains = domains
+		regionListResponse.Regions = regions
 	case "digitalocean":
-		if domainListRequest.DigitaloceanAuth.Token == "" {
+		if regionListRequest.DigitaloceanAuth.Token == "" {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: "missing authentication credentials in request, please check and try again",
 			})
 			return
 		}
 		digitaloceanConf := digitalocean.DigitaloceanConfiguration{
-			Client:  digitalocean.NewDigitalocean(domainListRequest.DigitaloceanAuth.Token),
+			Client:  digitalocean.NewDigitalocean(regionListRequest.DigitaloceanAuth.Token),
 			Context: context.Background(),
 		}
 
-		domains, err := digitaloceanConf.GetDNSDomains()
+		regions, err := digitaloceanConf.GetRegions()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: err.Error(),
 			})
 			return
 		}
-		domainListResponse.Domains = domains
+		regionListResponse.Regions = regions
 	case "vultr":
-		if domainListRequest.VultrAuth.Token == "" {
+		if regionListRequest.VultrAuth.Token == "" {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: "missing authentication credentials in request, please check and try again",
 			})
 			return
 		}
 		vultrConf := vultr.VultrConfiguration{
-			Client:  vultr.NewVultr(domainListRequest.VultrAuth.Token),
+			Client:  vultr.NewVultr(regionListRequest.VultrAuth.Token),
 			Context: context.Background(),
 		}
 
-		domains, err := vultrConf.GetDNSDomains()
+		regions, err := vultrConf.GetRegions()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: err.Error(),
 			})
 			return
 		}
-		domainListResponse.Domains = domains
+		regionListResponse.Regions = regions
 	default:
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: fmt.Sprintf("unsupported provider: %s", cloudProvider),
@@ -145,5 +145,5 @@ func PostDomains(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, domainListResponse)
+	c.JSON(http.StatusOK, regionListResponse)
 }

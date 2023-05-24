@@ -488,6 +488,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/region/:cloud_provider": {
+            "post": {
+                "description": "Return a list of regions for a cloud provider account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "region"
+                ],
+                "summary": "Return a list of regions for a cloud provider account",
+                "parameters": [
+                    {
+                        "description": "Region list request in JSON format",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.RegionListRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.RegionListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONFailureResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/services/:cluster_name": {
             "get": {
                 "description": "Returns a list of services for a cluster",
@@ -1062,6 +1102,37 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/types.MarketplaceApp"
+                    }
+                }
+            }
+        },
+        "types.RegionListRequest": {
+            "type": "object",
+            "properties": {
+                "aws_auth": {
+                    "$ref": "#/definitions/types.AWSAuth"
+                },
+                "civo_auth": {
+                    "$ref": "#/definitions/types.CivoAuth"
+                },
+                "cloud_region": {
+                    "type": "string"
+                },
+                "do_auth": {
+                    "$ref": "#/definitions/types.DigitaloceanAuth"
+                },
+                "vultr_auth": {
+                    "$ref": "#/definitions/types.VultrAuth"
+                }
+            }
+        },
+        "types.RegionListResponse": {
+            "type": "object",
+            "properties": {
+                "regions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
                     }
                 }
             }

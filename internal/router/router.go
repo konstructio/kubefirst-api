@@ -69,6 +69,9 @@ func SetupRouter() *gin.Engine {
 		v1.GET("/domain/validate/aws/:domain", router.GetValidateAWSDomain)
 		v1.GET("/domain/validate/civo/:domain", router.GetValidateCivoDomain)
 
+		// Regions
+		v1.POST("/region/:cloud_provider", router.PostRegions)
+
 		// Utilities
 		v1.GET("/health", router.GetHealth)
 

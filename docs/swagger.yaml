@@ -314,6 +314,26 @@ definitions:
           $ref: '#/definitions/types.MarketplaceApp'
         type: array
     type: object
+  types.RegionListRequest:
+    properties:
+      aws_auth:
+        $ref: '#/definitions/types.AWSAuth'
+      civo_auth:
+        $ref: '#/definitions/types.CivoAuth'
+      cloud_region:
+        type: string
+      do_auth:
+        $ref: '#/definitions/types.DigitaloceanAuth'
+      vultr_auth:
+        $ref: '#/definitions/types.VultrAuth'
+    type: object
+  types.RegionListResponse:
+    properties:
+      regions:
+        items:
+          type: string
+        type: array
+    type: object
   types.Service:
     properties:
       default:
@@ -684,6 +704,32 @@ paths:
       summary: Returns a list of available Kubefirst marketplace applications
       tags:
       - marketplace
+  /region/:cloud_provider:
+    post:
+      consumes:
+      - application/json
+      description: Return a list of regions for a cloud provider account
+      parameters:
+      - description: Region list request in JSON format
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/types.RegionListRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.RegionListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Return a list of regions for a cloud provider account
+      tags:
+      - region
   /services/:cluster_name:
     get:
       consumes:
