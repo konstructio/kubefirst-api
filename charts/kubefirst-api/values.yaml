@@ -90,5 +90,5 @@ env: []
 envFrom: []   
 
 existingSecret:
-# must be one of `local` or `atlas`
-atlasDbHost: kubefirst-api-developme.v3mrpfs.mongodb.net
+# defaults to in cluster mongodb, accepts a host name like `your-db.123abcd.mongodb.net`
+atlasDbHost: 
