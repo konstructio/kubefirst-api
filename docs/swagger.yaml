@@ -756,6 +756,35 @@ paths:
       tags:
       - services
   /services/:cluster_name/:service_name:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a marketplace application from a cluster
+      parameters:
+      - description: Cluster name
+        in: path
+        name: cluster_name
+        required: true
+        type: string
+      - description: Service name to be removed
+        in: path
+        name: service_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/types.JSONSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Remove a marketplace application from a cluster
+      tags:
+      - services
     post:
       consumes:
       - application/json

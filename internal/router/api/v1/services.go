@@ -176,3 +176,71 @@ func PostAddServiceToCluster(c *gin.Context) {
 		return
 	}
 }
+
+// DeleteServiceFromCluster godoc
+// @Summary Remove a marketplace application from a cluster
+// @Description Remove a marketplace application from a cluster
+// @Tags services
+// @Accept json
+// @Produce json
+// @Param	cluster_name	path	string	true	"Cluster name"
+// @Param	service_name	path	string	true	"Service name to be removed"
+// @Success 202 {object} types.JSONSuccessResponse
+// @Failure 400 {object} types.JSONFailureResponse
+// @Router /services/:cluster_name/:service_name [delete]
+// DeleteServiceFromCluster handles a request to remove a marketplace application from a cluster
+func DeleteServiceFromCluster(c *gin.Context) {
+	clusterName, param := c.Params.Get("cluster_name")
+	if !param {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: ":cluster_name not provided",
+		})
+		return
+	}
+
+	serviceName, param := c.Params.Get("service_name")
+	if !param {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: ":service_name not provided",
+		})
+		return
+	}
+
+	// Verify cluster exists
+	cl, err := db.Client.GetCluster(clusterName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: "cluster not found",
+		})
+		return
+	}
+
+	// Verify service is a valid option and determine if it requires secrets
+	apps, err := db.Client.GetMarketplaceApps()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+	valid := false
+	for _, app := range apps.Apps {
+		if app.Name == serviceName {
+			valid = true
+		}
+	}
+	if !valid {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: fmt.Sprintf("service %s is not valid", serviceName),
+		})
+		return
+	}
+
+	err = services.DeleteService(&cl, serviceName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+}
