@@ -143,7 +143,7 @@ This would require the following parameters added to the API call depending on w
 
 ```json
 {
-	"digitalocean_auth": {
+	"do_auth": {
 		"token": "my-do-token",
 		"spaces_key": "foo",
 		"spaces_secret": "bar"
