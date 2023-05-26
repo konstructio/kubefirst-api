@@ -42,6 +42,10 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.Marketpl
 	serviceFile := fmt.Sprintf("%s/registry/%s/%s.yaml", gitopsDir, cl.ClusterName, serviceName)
 
 	// Create service files in gitops dir
+	err = gitClient.Pull(gitopsRepo, "main")
+	if err != nil {
+		log.Warnf("cluster %s - error pulling gitops repo: %s", cl.ClusterName, err)
+	}
 	files, err := marketplace.ReadApplicationDirectory(serviceName)
 	if err != nil {
 		return err
@@ -144,6 +148,63 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.Marketpl
 		}
 		log.Infof("cluster %s - waiting for app %s to sync", cl.ClusterName, serviceName)
 		time.Sleep(time.Second * 10)
+	}
+
+	return nil
+}
+
+// DeleteService
+func DeleteService(cl *types.Cluster, serviceName string) error {
+	var gitopsRepo *git.Repository
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("error getting home path: %s", err)
+	}
+	gitopsDir := fmt.Sprintf("%s/.k1/%s/gitops", homeDir, cl.ClusterName)
+	gitopsRepo, _ = git.PlainOpen(gitopsDir)
+	serviceFile := fmt.Sprintf("%s/registry/%s/%s.yaml", gitopsDir, cl.ClusterName, serviceName)
+
+	// Delete service files from gitops dir
+	err = gitClient.Pull(gitopsRepo, "main")
+	if err != nil {
+		log.Warnf("cluster %s - error pulling gitops repo: %s", cl.ClusterName, err)
+	}
+	_, err = os.Stat(serviceFile)
+	if err != nil {
+		return fmt.Errorf("file %s does not exist in repository", serviceFile)
+	} else {
+		err := os.Remove(serviceFile)
+		if err != nil {
+			return fmt.Errorf("cluster %s - error deleting file: %s", cl.ClusterName, err)
+		}
+	}
+
+	// Commit to gitops repository
+	err = gitClient.Commit(gitopsRepo, fmt.Sprintf("deleting files for service %s", serviceName))
+	if err != nil {
+		return fmt.Errorf("cluster %s - error deleting service file: %s", cl.ClusterName, err)
+	}
+	publicKeys, err := ssh.NewPublicKeys("git", []byte(cl.PrivateKey), "")
+	if err != nil {
+		return err
+	}
+	err = gitopsRepo.Push(&git.PushOptions{
+		RemoteName: cl.GitProvider,
+		Auth:       publicKeys,
+	})
+	if err != nil {
+		return fmt.Errorf("cluster %s - error pushing commit for service file: %s", cl.ClusterName, err)
+	}
+
+	// Remove from list
+	svc, err := db.Client.GetService(cl.ClusterName, serviceName)
+	if err != nil {
+		return fmt.Errorf("cluster %s - error finding service: %s", cl.ClusterName, err)
+	}
+	err = db.Client.DeleteClusterServiceListEntry(cl.ClusterName, &svc)
+	if err != nil {
+		return err
 	}
 
 	return nil
