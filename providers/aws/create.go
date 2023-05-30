@@ -40,7 +40,12 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 
 	// Validate aws region
 	awsClient := &awsinternal.AWSConfiguration{
-		Config: awsinternal.NewAwsV2(ctrl.CloudRegion),
+		Config: awsinternal.NewAwsV3(
+			ctrl.CloudRegion,
+			ctrl.AWSAuth.AccessKeyID,
+			ctrl.AWSAuth.SecretAccessKey,
+			ctrl.AWSAuth.SessionToken,
+		),
 	}
 
 	_, err = awsClient.CheckAvailabilityZones(ctrl.CloudRegion)
