@@ -33,7 +33,7 @@ spec:
           env:
             {{- if not .Values.atlasDbHost }}
             - name: MONGODB_HOST
-              value: {{ .Values.mongodbHost | default "kubefirst-api-mongodb-development.development.svc.cluster.local" }}
+              value: {{ .Values.mongodbHost | default (printf "%s-mongodb.%s.svc.cluster.local" (.Release.Name ) (.Release.Namespace )) }}
             - name: MONGODB_USERNAME
               value: {{ .Values.mongodbUsername | default "root" }}
             {{- else }}
