@@ -62,8 +62,8 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			}
 
 			stateStoreData = types.StateStoreCredentials{
-				AccessKeyID:     clctrl.AwsAccessKeyID,
-				SecretAccessKey: clctrl.AwsSecretAccessKey,
+				AccessKeyID:     clctrl.AWSAuth.AccessKeyID,
+				SecretAccessKey: clctrl.AWSAuth.SecretAccessKey,
 			}
 
 			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_details", types.StateStoreDetails{
