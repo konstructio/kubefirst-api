@@ -33,8 +33,10 @@ func GetAwsTerraformEnvs(envs map[string]string, cl *types.Cluster) map[string]s
 	// needed for s3 api connectivity to object storage
 	envs["AWS_ACCESS_KEY_ID"] = cl.StateStoreCredentials.AccessKeyID
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
+	envs["AWS_SESSION_TOKEN"] = cl.AWSAuth.SessionToken
 	envs["TF_VAR_aws_access_key_id"] = cl.StateStoreCredentials.AccessKeyID
 	envs["TF_VAR_aws_secret_access_key"] = cl.StateStoreCredentials.SecretAccessKey
+	envs["TF_VAR_aws_session_token"] = cl.AWSAuth.SessionToken
 	envs["TF_VAR_aws_region"] = cl.CloudRegion
 	envs["TF_VAR_hosted_zone_name"] = cl.DomainName
 	//envs["TF_LOG"] = "debug"
@@ -50,8 +52,10 @@ func GetGithubTerraformEnvs(envs map[string]string, cl *types.Cluster) map[strin
 	envs["TF_VAR_kbot_ssh_public_key"] = cl.PublicKey
 	envs["AWS_ACCESS_KEY_ID"] = cl.StateStoreCredentials.AccessKeyID
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
+	envs["AWS_SESSION_TOKEN"] = cl.AWSAuth.SessionToken
 	envs["TF_VAR_aws_access_key_id"] = cl.StateStoreCredentials.AccessKeyID
 	envs["TF_VAR_aws_secret_access_key"] = cl.StateStoreCredentials.SecretAccessKey
+	envs["TF_VAR_aws_session_token"] = cl.AWSAuth.SessionToken
 
 	return envs
 }
@@ -64,8 +68,10 @@ func GetGitlabTerraformEnvs(envs map[string]string, gid int, cl *types.Cluster) 
 	envs["TF_VAR_kbot_ssh_public_key"] = cl.PublicKey
 	envs["AWS_ACCESS_KEY_ID"] = cl.StateStoreCredentials.AccessKeyID
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
+	envs["AWS_SESSION_TOKEN"] = cl.AWSAuth.SessionToken
 	envs["TF_VAR_aws_access_key_id"] = cl.StateStoreCredentials.AccessKeyID
 	envs["TF_VAR_aws_secret_access_key"] = cl.StateStoreCredentials.SecretAccessKey
+	envs["TF_VAR_aws_session_token"] = cl.AWSAuth.SessionToken
 	envs["TF_VAR_owner_group_id"] = strconv.Itoa(gid)
 	envs["TF_VAR_gitlab_owner"] = cl.GitOwner
 

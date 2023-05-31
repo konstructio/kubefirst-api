@@ -268,6 +268,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		AtlantisWebhookSecret: clctrl.AtlantisWebhookSecret,
 		AtlantisWebhookURL:    clctrl.AtlantisWebhookURL,
 		KubefirstTeam:         clctrl.KubefirstTeam,
+		AWSAuth:               clctrl.AWSAuth,
 		CivoAuth:              clctrl.CivoAuth,
 		DigitaloceanAuth:      clctrl.DigitaloceanAuth,
 		VultrAuth:             clctrl.VultrAuth,
