@@ -26,11 +26,34 @@ spec:
       {{- end }}
       serviceAccountName: {{ include "kubefirst-api.serviceAccountName" . }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}  
       containers:
         - name: {{ .Chart.Name }}
-          {{- if .Values.env }}
+        # ! need to address hostname of service below, also address namespace
           env:
+            {{- if not .Values.atlasDbHost }}
+            - name: MONGODB_HOST
+              value: {{ .Values.mongodbHost | default (printf "%s-mongodb.%s.svc.cluster.local" (.Release.Name ) (.Release.Namespace )) }}
+            - name: MONGODB_USERNAME
+              value: {{ .Values.mongodbUsername | default "root" }}
+            {{- else }}
+            - name: MONGODB_HOST
+              value: {{ .Values.atlasDbHost }}
+            - name: MONGODB_USERNAME
+              value: {{ .Values.atlasDbUsername }}
+            {{- end }}
+            - name: MONGODB_HOST_TYPE
+              value: {{- if not .Values.atlasDbHost }}
+                "local"
+              {{- else }}
+                "atlas"
+              {{- end }}
+            - name: MONGODB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.existingSecret | default "kubefirst-initial-secrets" }}
+                  key: mongodb-root-password
+          {{- if .Values.env }}
             {{- range $envVar := .Values.env }}
             - name: {{ $envVar.name }}
               value: {{ $envVar.value }}
