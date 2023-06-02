@@ -5,7 +5,8 @@ env:
 on:
   push:
     branches:
-      - main
+      # - main
+      - helm-chart-update
 jobs:
   publish:
     runs-on: self-hosted
