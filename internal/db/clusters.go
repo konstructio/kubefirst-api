@@ -115,12 +115,10 @@ func (mdbcl *MongoDBClient) UpdateCluster(clusterName string, field string, valu
 	// Update
 	filter = bson.D{{"_id", result.ID}}
 	update := bson.D{{"$set", bson.D{{field, value}}}}
-	resp, err := mdbcl.ClustersCollection.UpdateOne(mdbcl.Context, filter, update)
+	_, err = mdbcl.ClustersCollection.UpdateOne(mdbcl.Context, filter, update)
 	if err != nil {
 		return fmt.Errorf("error updating cluster %s: %s", clusterName, err)
 	}
-
-	log.Infof("cluster updated: %v", resp.ModifiedCount)
 
 	return nil
 }

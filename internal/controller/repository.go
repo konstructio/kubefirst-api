@@ -25,12 +25,23 @@ import (
 
 // RepositoryPrep
 func (clctrl *ClusterController) RepositoryPrep() error {
+	// Logging handler
+	// Logs to stdout to maintain compatibility with event streaming
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "",
+	})
+	log.SetReportCaller(false)
+	log.SetOutput(os.Stdout)
+
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
 
 	if !cl.GitopsReadyCheck {
+		log.Info("initializing the gitops repository - this may take several minutes")
+
 		switch clctrl.CloudProvider {
 		case "aws":
 			err := awsinternal.PrepareGitRepositories(
@@ -113,6 +124,8 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 		if err != nil {
 			return err
 		}
+
+		log.Info("gitops repository initialized")
 	}
 
 	return nil
