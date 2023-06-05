@@ -28,18 +28,18 @@ func initActionAutoApprove(terraformClientPath string, tfAction, tfEntrypoint st
 
 	err := os.Chdir(tfEntrypoint)
 	if err != nil {
-		log.Info("error: could not change to directory " + tfEntrypoint)
+		log.Infof("error: could not change to directory %s", tfEntrypoint)
 		return err
 	}
 	err = pkg.ExecShellWithVars(tfEnvs, terraformClientPath, "init", "-force-copy")
 	if err != nil {
-		log.Printf("error: terraform init for %s failed: %s", tfEntrypoint, err)
+		log.Errorf("error: terraform init for %s failed: %s", tfEntrypoint, err)
 		return err
 	}
 
 	err = pkg.ExecShellWithVars(tfEnvs, terraformClientPath, tfAction, "-auto-approve")
 	if err != nil {
-		log.Printf("error: terraform %s -auto-approve for %s failed %s", tfAction, tfEntrypoint, err)
+		log.Errorf("error: terraform %s -auto-approve for %s failed %s", tfAction, tfEntrypoint, err)
 		return err
 	}
 	os.RemoveAll(fmt.Sprintf("%s/.terraform/", tfEntrypoint))
