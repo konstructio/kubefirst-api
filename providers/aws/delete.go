@@ -15,6 +15,7 @@ import (
 	"time"
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
+	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/errors"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
@@ -25,7 +26,6 @@ import (
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
-	"github.com/kubefirst/runtime/pkg/terraform"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -66,7 +66,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 			tfEnvs := map[string]string{}
 			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, cl)
 			tfEnvs = awsext.GetGithubTerraformEnvs(tfEnvs, cl)
-			err := terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
+			err := terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Errorf("error executing terraform destroy %s", tfEntrypoint)
 				errors.HandleClusterError(cl, err.Error())
@@ -120,7 +120,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 			tfEnvs := map[string]string{}
 			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, cl)
 			tfEnvs = awsext.GetGitlabTerraformEnvs(tfEnvs, gitlabClient.ParentGroupID, cl)
-			err = terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
+			err = terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Errorf("error executing terraform destroy %s", tfEntrypoint)
 				errors.HandleClusterError(cl, err.Error())
@@ -227,7 +227,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 			}
 			tfEnvs = awsext.GetGitlabTerraformEnvs(tfEnvs, gid, cl)
 		}
-		err = terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
+		err = terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Errorf("error executing terraform destroy %s", tfEntrypoint)
 			errors.HandleClusterError(cl, err.Error())
