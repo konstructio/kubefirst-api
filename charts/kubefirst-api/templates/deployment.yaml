@@ -1,3 +1,4 @@
+{{- $clusterId := randAlphaNum 6 | quote -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -53,6 +54,14 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.existingSecret | default "kubefirst-initial-secrets" }}
                   key: mongodb-root-password
+            - name: INSTALL_METHOD
+              value: {{ .Values.installMethod | default "helm" }}
+            - name: CLUSTER_ID
+              value: {{ .Values.clusterId | default $clusterId }}
+            - name: CLUSTER_TYPE
+              value: {{ .Values.clusterType | default "bootstrap" }}
+            - name: USE_TELEMETRY
+              value: {{ .Values.useTelemetry | default "true" }}
           {{- if .Values.env }}
             {{- range $envVar := .Values.env }}
             - name: {{ $envVar.name }}

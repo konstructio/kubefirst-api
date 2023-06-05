@@ -48,7 +48,7 @@ func DeleteDigitaloceanCluster(cl *types.Cluster) error {
 	}
 	defer segmentClient.Client.Close()
 
-	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricMgmtClusterDeleteStarted, "")
+	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricClusterDeleteStarted, "")
 
 	// Instantiate digitalocean config
 	config := digitalocean.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner)
@@ -285,7 +285,7 @@ func DeleteDigitaloceanCluster(cl *types.Cluster) error {
 		}
 	}
 
-	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricMgmtClusterDeleteCompleted, "")
+	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricClusterDeleteCompleted, "")
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", "deleted")
 	if err != nil {

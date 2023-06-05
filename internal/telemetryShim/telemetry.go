@@ -34,6 +34,22 @@ func SetupTelemetry(cl types.Cluster) (*segment.SegmentClient, error) {
 	return segmentClient, nil
 }
 
+func SetupInitialTelemetry(clusterID string, clusterType string, installMethod string) (*segment.SegmentClient, error) {
+	// Segment Client
+	segmentClient := &segment.SegmentClient{
+		CliVersion:        configs.K1Version,
+		ClusterID:         clusterID,
+		ClusterType:       clusterType,
+		DomainName:        "kubefirst.io", //ToDo: make this optional
+		KubefirstClient:   "api",
+		KubefirstTeamInfo: os.Getenv("KUBEFIRST_TEAM_INFO"),
+		InstallMethod:     installMethod,
+	}
+	segmentClient.SetupClient()
+
+	return segmentClient, nil
+}
+
 // Transmit sends a metric via Segment
 func Transmit(useTelemetry bool, segmentClient *segment.SegmentClient, metricName string, errorMessage string) {
 	if useTelemetry {

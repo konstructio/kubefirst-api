@@ -48,7 +48,7 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 	}
 	defer segmentClient.Client.Close()
 
-	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricMgmtClusterDeleteStarted, "")
+	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricClusterDeleteStarted, "")
 
 	// Instantiate civo config
 	config := civo.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner)
@@ -270,7 +270,7 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 		}
 	}
 
-	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricMgmtClusterDeleteCompleted, "")
+	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricClusterDeleteCompleted, "")
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", "deleted")
 	if err != nil {
