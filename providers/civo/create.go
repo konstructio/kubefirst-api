@@ -149,7 +149,7 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
-	//
+	// Create kubeconfig client
 	kcfg := k8s.CreateKubeConfig(false, ctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
 
 	// SetupMinioStorage(kcfg, ctrl.ProviderConfig.K1Dir, ctrl.GitProvider)
