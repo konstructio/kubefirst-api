@@ -13,6 +13,8 @@ import (
 	"github.com/kubefirst/kubefirst-api/docs"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	api "github.com/kubefirst/kubefirst-api/internal/router"
+	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
+	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -45,6 +47,11 @@ func main() {
 		}
 	}
 
+	useTelemetry := true
+	if os.Getenv("USE_TELEMETRY") == "false" {
+		useTelemetry = false
+	}
+
 	// Verify database connectivity
 	err := db.Client.TestDatabaseConnection()
 	if err != nil {
@@ -60,6 +67,13 @@ func main() {
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	docs.SwaggerInfo.Schemes = []string{"http"}
 
+	// Telemetry handler
+	segmentClient, err := telemetryShim.SetupInitialTelemetry(os.Getenv("CLUSTER_ID"), os.Getenv("CLUSTER_TYPE"), os.Getenv("INSTALL_METHOD"))
+	if err != nil {
+		log.Warn(err)
+	}
+	defer segmentClient.Client.Close()
+
 	// Startup tasks
 	err = db.Client.InsertMarketplaceApps()
 	if err != nil {
@@ -68,6 +82,8 @@ func main() {
 
 	// API
 	r := api.SetupRouter()
+
+	telemetryShim.Transmit(useTelemetry, segmentClient, segment.MetricKubefirstInstalled, "")
 
 	err = r.Run(fmt.Sprintf(":%v", port))
 	if err != nil {
