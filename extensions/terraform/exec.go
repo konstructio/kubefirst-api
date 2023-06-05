@@ -31,17 +31,17 @@ func ExecShellWithVars(osvars map[string]string, command string, args ...string)
 	for k, v := range osvars {
 		os.Setenv(k, v)
 		suppressedValue := strings.Repeat("*", len(v))
-		log.Infof(" export %s = %s", k, suppressedValue)
+		log.Printf(" export %s = %s", k, suppressedValue)
 	}
 	cmd := exec.Command(command, args...)
 	cmdReaderOut, err := cmd.StdoutPipe()
 	if err != nil {
-		log.Errorf("failed creating out pipe for: %v", command)
+		log.Printf("failed creating out pipe for: %v", command)
 		return err
 	}
 	cmdReaderErr, err := cmd.StderrPipe()
 	if err != nil {
-		log.Errorf("failed creating out pipe for: %v", command)
+		log.Printf("failed creating out pipe for: %v", command)
 		return err
 	}
 
@@ -56,7 +56,7 @@ func ExecShellWithVars(osvars map[string]string, command string, args ...string)
 	doneErr := make(chan bool)
 	go func() {
 		for msg := range stdOut {
-			log.Infof("OUT: %s", msg)
+			log.Printf("OUT: %s", msg)
 		}
 		doneOut <- true
 	}()
@@ -64,14 +64,14 @@ func ExecShellWithVars(osvars map[string]string, command string, args ...string)
 		// STD Err should not be supressed, as it prevents to troubleshoot issues in case something fails.
 		// On linux StdErr > StdOut by design in terms of priority.
 		for msg := range stdErr {
-			log.Warnf("ERR: %s", msg)
+			log.Printf("ERR: %s", msg)
 		}
 		doneErr <- true
 	}()
 
 	err = cmd.Run()
 	if err != nil {
-		log.Errorf("command %q failed", command)
+		log.Printf("command %q failed", command)
 		return err
 	} else {
 		close(stdOut)
@@ -87,7 +87,7 @@ func ExecShellWithVars(osvars map[string]string, command string, args ...string)
 func reader(scanner *bufio.Scanner, out chan string) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Errorf("Error processing logs from command. Error: %s", r)
+			log.Printf("Error processing logs from command. Error: %s", r)
 		}
 	}()
 	for scanner.Scan() {
