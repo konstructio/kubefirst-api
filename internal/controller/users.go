@@ -12,6 +12,7 @@ import (
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
+	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
@@ -19,7 +20,6 @@ import (
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
-	"github.com/kubefirst/runtime/pkg/terraform"
 	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 )
@@ -90,7 +90,7 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 			terraformClient = clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient
 		}
 
-		err = terraform.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
+		err = terraformext.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Errorf("error applying users terraform: %s", err)
 			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricUsersTerraformApplyStarted, err.Error())

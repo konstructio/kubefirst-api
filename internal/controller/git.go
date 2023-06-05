@@ -13,6 +13,7 @@ import (
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
+	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
@@ -20,7 +21,6 @@ import (
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/segment"
-	"github.com/kubefirst/runtime/pkg/terraform"
 	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 )
@@ -93,7 +93,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				tfEntrypoint := clctrl.ProviderConfig.(*awsinternal.AwsConfig).GitopsDir + "/terraform/github"
 				tfEnvs := map[string]string{}
 				tfEnvs = awsext.GetGithubTerraformEnvs(tfEnvs, &cl)
-				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*awsinternal.AwsConfig).TerraformClient, tfEntrypoint, tfEnvs)
+				err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.(*awsinternal.AwsConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating github resources with terraform %s: %s", tfEntrypoint, err)
 					log.Error(msg)
@@ -112,7 +112,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				tfEntrypoint := clctrl.ProviderConfig.(*awsinternal.AwsConfig).GitopsDir + "/terraform/gitlab"
 				tfEnvs := map[string]string{}
 				tfEnvs = awsext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
-				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*awsinternal.AwsConfig).TerraformClient, tfEntrypoint, tfEnvs)
+				err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.(*awsinternal.AwsConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating gitlab resources with terraform %s: %s", tfEntrypoint, err)
 					log.Error(msg)
@@ -134,7 +134,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				tfEntrypoint := clctrl.ProviderConfig.(*civo.CivoConfig).GitopsDir + "/terraform/github"
 				tfEnvs := map[string]string{}
 				tfEnvs = civoext.GetGithubTerraformEnvs(tfEnvs, &cl)
-				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*civo.CivoConfig).TerraformClient, tfEntrypoint, tfEnvs)
+				err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.(*civo.CivoConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating github resources with terraform %s: %s", tfEntrypoint, err)
 					log.Error(msg)
@@ -153,7 +153,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				tfEntrypoint := clctrl.ProviderConfig.(*civo.CivoConfig).GitopsDir + "/terraform/gitlab"
 				tfEnvs := map[string]string{}
 				tfEnvs = civoext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
-				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*civo.CivoConfig).TerraformClient, tfEntrypoint, tfEnvs)
+				err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.(*civo.CivoConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating gitlab resources with terraform %s: %s", tfEntrypoint, err)
 					log.Error(msg)
@@ -175,7 +175,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				tfEntrypoint := clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).GitopsDir + "/terraform/github"
 				tfEnvs := map[string]string{}
 				tfEnvs = digitaloceanext.GetGithubTerraformEnvs(tfEnvs, &cl)
-				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient, tfEntrypoint, tfEnvs)
+				err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating github resources with terraform %s: %s", tfEntrypoint, err)
 					log.Error(msg)
@@ -194,7 +194,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				tfEntrypoint := clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).GitopsDir + "/terraform/gitlab"
 				tfEnvs := map[string]string{}
 				tfEnvs = digitaloceanext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
-				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient, tfEntrypoint, tfEnvs)
+				err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating gitlab resources with terraform %s: %s", tfEntrypoint, err)
 					log.Error(msg)
@@ -216,7 +216,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				tfEntrypoint := clctrl.ProviderConfig.(*vultr.VultrConfig).GitopsDir + "/terraform/github"
 				tfEnvs := map[string]string{}
 				tfEnvs = vultrext.GetGithubTerraformEnvs(tfEnvs, &cl)
-				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient, tfEntrypoint, tfEnvs)
+				err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating github resources with terraform %s: %s", tfEntrypoint, err)
 					log.Error(msg)
@@ -235,7 +235,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				tfEntrypoint := clctrl.ProviderConfig.(*vultr.VultrConfig).GitopsDir + "/terraform/gitlab"
 				tfEnvs := map[string]string{}
 				tfEnvs = vultrext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
-				err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient, tfEntrypoint, tfEnvs)
+				err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient, tfEntrypoint, tfEnvs)
 				if err != nil {
 					msg := fmt.Sprintf("error creating gitlab resources with terraform %s: %s", tfEntrypoint, err)
 					log.Error(msg)
