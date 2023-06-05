@@ -32,17 +32,20 @@ type ClusterDefinition struct {
 type Cluster struct {
 	ID                primitive.ObjectID `bson:"_id" json:"_id"`
 	CreationTimestamp string             `bson:"creation_timestamp" json:"creation_timestamp"`
-	Status            string             `bson:"status" json:"status"`
-	LastCondition     string             `bson:"last_condition" json:"last_condition"`
-	InProgress        bool               `bson:"in_progress" json:"in_progress"`
 
-	ClusterName   string `bson:"cluster_name" json:"cluster_name"`
+	// Status
+	Status        string `bson:"status" json:"status"`
+	LastCondition string `bson:"last_condition" json:"last_condition"`
+	InProgress    bool   `bson:"in_progress" json:"in_progress"`
+
+	// Identifiers
+	AlertsEmail   string `bson:"alerts_email" json:"alerts_email"`
 	CloudProvider string `bson:"cloud_provider" json:"cloud_provider"`
 	CloudRegion   string `bson:"cloud_region" json:"cloud_region"`
-	DomainName    string `bson:"domain_name" json:"domain_name"`
+	ClusterName   string `bson:"cluster_name" json:"cluster_name"`
 	ClusterID     string `bson:"cluster_id" json:"cluster_id"`
 	ClusterType   string `bson:"cluster_type" json:"cluster_type"`
-	AlertsEmail   string `bson:"alerts_email" json:"alerts_email"`
+	DomainName    string `bson:"domain_name" json:"domain_name"`
 
 	// Auth
 	AWSAuth          AWSAuth          `bson:"aws_auth,omitempty" json:"aws_auth,omitempty"`

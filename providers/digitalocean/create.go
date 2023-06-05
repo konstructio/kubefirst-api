@@ -146,7 +146,7 @@ func CreateDigitaloceanCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
-	//
+	// Create kubeconfig client
 	kcfg := k8s.CreateKubeConfig(false, ctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig)
 
 	// SetupMinioStorage(kcfg, ctrl.ProviderConfig.K1Dir, ctrl.GitProvider)
