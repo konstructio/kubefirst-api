@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kubefirst/runtime/pkg"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -31,13 +30,13 @@ func initActionAutoApprove(terraformClientPath string, tfAction, tfEntrypoint st
 		log.Printf("error: could not change to directory %s", tfEntrypoint)
 		return err
 	}
-	err = pkg.ExecShellWithVars(tfEnvs, terraformClientPath, "init", "-force-copy")
+	err = ExecShellWithVars(tfEnvs, terraformClientPath, "init", "-force-copy")
 	if err != nil {
 		log.Printf("error: terraform init for %s failed: %s", tfEntrypoint, err)
 		return err
 	}
 
-	err = pkg.ExecShellWithVars(tfEnvs, terraformClientPath, tfAction, "-auto-approve")
+	err = ExecShellWithVars(tfEnvs, terraformClientPath, tfAction, "-auto-approve")
 	if err != nil {
 		log.Printf("error: terraform %s -auto-approve for %s failed %s", tfAction, tfEntrypoint, err)
 		return err
