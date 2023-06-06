@@ -1,0 +1,6 @@
+repos:
+  - repo: https://github.com/muya/swaggo-hooks
+    rev: 'main'
+    hooks:
+      - id: swag-fmt
+      - id: swag-init
