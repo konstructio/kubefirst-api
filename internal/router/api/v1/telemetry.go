@@ -18,13 +18,13 @@ import (
 )
 
 // PostTelemetry godoc
-// @Summary Create a Telemtry Event
-// @Description Create a Telemtry Event
-// @Tags cluster
+// @Summary Create a Telemetry Event
+// @Description Create a Telemetry Event
+// @Tags telemetry
 // @Accept json
 // @Param	cluster_name	path	string	true	"Cluster name"
-// @Param	definition	body	types.ClusterDefinition	true	"Cluster create request in JSON format"
-// @Success 202 {object} types.TelemetryRequest
+// @Param	definition	body	types.TelemetryRequest	true	"event request in JSON format"
+// @Success 202 {object} types.JSONSuccessResponse
 // @Router /telemetry/:cluster_name [post]
 // PostTelemetry sents a new telemetry event
 func PostTelemetry(c *gin.Context) {
@@ -46,26 +46,17 @@ func PostTelemetry(c *gin.Context) {
 		return
 	}
 
-	// Create
-	// If create is in progress, return error
-	// Retrieve cluster info
 	cluster, err := db.Client.GetCluster(clusterName)
-
+	var req types.TelemetryRequest
+	err = c.Bind(&req)
+	// Telemetry handler
+	segmentClient, err := telemetryShim.SetupTelemetry(cluster)
 	if err != nil {
-		log.Infof("cluster %s does not exist, continuing", clusterName)
-	} else {
-		var req types.TelemetryRequest
-		err := c.Bind(&req)
-		// Telemetry handler
-		segmentClient, err := telemetryShim.SetupTelemetry(cluster)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer segmentClient.Client.Close()
-
-		telemetryShim.Transmit(useTelemetry, segmentClient, req.Event, "")
-
+		log.Fatal(err)
 	}
+	defer segmentClient.Client.Close()
+
+	telemetryShim.Transmit(useTelemetry, segmentClient, req.Event, "")
 
 	c.JSON(http.StatusOK, true)
 }
