@@ -40,8 +40,8 @@ func SetupInitialTelemetry(clusterID string, clusterType string, installMethod s
 		CliVersion:        configs.K1Version,
 		ClusterID:         clusterID,
 		ClusterType:       clusterType,
-		DomainName:        "kubefirst.io", //ToDo: make this optional
 		KubefirstClient:   "api",
+		KubefirstTeam:     os.Getenv("KUBEFIRST_TEAM"),
 		KubefirstTeamInfo: os.Getenv("KUBEFIRST_TEAM_INFO"),
 		InstallMethod:     installMethod,
 	}
@@ -54,6 +54,15 @@ func SetupInitialTelemetry(clusterID string, clusterType string, installMethod s
 func Transmit(useTelemetry bool, segmentClient *segment.SegmentClient, metricName string, errorMessage string) {
 	if useTelemetry {
 		segmentMsg := segmentClient.SendCountMetric(metricName, errorMessage)
+		if segmentMsg != "" {
+			log.Info(segmentMsg)
+		}
+	}
+}
+
+func TransmitClusterZero(useTelemetry bool, segmentClient *segment.SegmentClient, metricName string, errorMessage string) {
+	if useTelemetry {
+		segmentMsg := segmentClient.SendCountClusterZeroMetric(metricName, errorMessage)
 		if segmentMsg != "" {
 			log.Info(segmentMsg)
 		}

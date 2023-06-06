@@ -672,7 +672,24 @@ const docTemplate = `{
                 "summary": "Stream API server logs",
                 "responses": {}
             }
-        }
+        },
+        "/telemetry/:cluster_name": {
+            "post": {
+              "description": "Sends telemetry events",
+              "parameters": [
+                {
+                  "description": "Event name",
+                  "in": "path",
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "responses": {},
+              "summary": "Sends telemetry events",
+              "tags": ["telemetry"]
+            }
+        },
     },
     "definitions": {
         "types.AWSAuth": {

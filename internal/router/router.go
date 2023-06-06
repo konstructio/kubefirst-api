@@ -78,6 +78,9 @@ func SetupRouter() *gin.Engine {
 
 		// Event streaming
 		v1.GET("/stream", router.GetLogs)
+
+		// Telemetry
+		v1.POST("/telemetry/:cluster_name", router.PostTelemetry)
 	}
 
 	// swagger-ui
