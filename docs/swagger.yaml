@@ -41,6 +41,7 @@ definitions:
       _id:
         type: string
       alerts_email:
+        description: Identifiers
         type: string
       argocd_auth_token:
         type: string
@@ -143,6 +144,7 @@ definitions:
       state_store_details:
         $ref: '#/definitions/types.StateStoreDetails'
       status:
+        description: Status
         type: string
       useTelemetry:
         description: Telemetry
@@ -373,6 +375,11 @@ definitions:
       id:
         type: string
       name:
+        type: string
+    type: object
+  types.TelemetryRequest:
+    properties:
+      event:
         type: string
     type: object
   types.VultrAuth:
@@ -829,15 +836,27 @@ paths:
       - logs
   /telemetry/:cluster_name:
     post:
-      description: Sends telemetry events
+      consumes:
+      - application/json
+      description: Create a Telemetry Event
       parameters:
-      - description: Event name
+      - description: Cluster name
         in: path
-        name: event
+        name: cluster_name
         required: true
         type: string
-      responses: {}
-      summary: Sends telemetry events
+      - description: event request in JSON format
+        in: body
+        name: definition
+        required: true
+        schema:
+          $ref: '#/definitions/types.TelemetryRequest'
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/types.JSONSuccessResponse'
+      summary: Create a Telemetry Event
       tags:
       - telemetry
 swagger: "2.0"
