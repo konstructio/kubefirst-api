@@ -675,21 +675,42 @@ const docTemplate = `{
         },
         "/telemetry/:cluster_name": {
             "post": {
-              "description": "Sends telemetry events",
-              "parameters": [
-                {
-                  "description": "Event name",
-                  "in": "path",
-                  "name": "event",
-                  "required": true,
-                  "type": "string"
+                "description": "Create a Telemetry Event",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "telemetry"
+                ],
+                "summary": "Create a Telemetry Event",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cluster name",
+                        "name": "cluster_name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "event request in JSON format",
+                        "name": "definition",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.TelemetryRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONSuccessResponse"
+                        }
+                    }
                 }
-              ],
-              "responses": {},
-              "summary": "Sends telemetry events",
-              "tags": ["telemetry"]
             }
-        },
+        }
     },
     "definitions": {
         "types.AWSAuth": {
@@ -756,6 +777,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "alerts_email": {
+                    "description": "Identifiers",
                     "type": "string"
                 },
                 "argocd_auth_token": {
@@ -910,6 +932,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/types.StateStoreDetails"
                 },
                 "status": {
+                    "description": "Status",
                     "type": "string"
                 },
                 "useTelemetry": {
@@ -1256,6 +1279,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.TelemetryRequest": {
+            "type": "object",
+            "properties": {
+                "event": {
                     "type": "string"
                 }
             }
