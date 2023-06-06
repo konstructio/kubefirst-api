@@ -827,4 +827,17 @@ paths:
       summary: Stream API server logs
       tags:
       - logs
+  /telemetry/:cluster_name:
+    post:
+      description: Sends telemetry events
+      parameters:
+      - description: Event name
+        in: path
+        name: event
+        required: true
+        type: string
+      responses: {}
+      summary: Sends telemetry events
+      tags:
+      - telemetry
 swagger: "2.0"

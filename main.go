@@ -9,6 +9,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/kubefirst/kubefirst-api/docs"
 	"github.com/kubefirst/kubefirst-api/internal/db"
@@ -50,6 +51,12 @@ func main() {
 	useTelemetry := true
 	if os.Getenv("USE_TELEMETRY") == "false" {
 		useTelemetry = false
+	} else {
+		for _, v := range []string{"CLUSTER_ID", "CLUSTER_TYPE", "INSTALL_METHOD"} {
+			if os.Getenv(v) == "" {
+				log.Fatalf("the %s environment variable must be set", v)
+			}
+		}
 	}
 
 	// Verify database connectivity
@@ -80,13 +87,25 @@ func main() {
 		log.Warn(err)
 	}
 
+	if useTelemetry {
+		go heartBeat(segmentClient)
+	}
+
 	// API
 	r := api.SetupRouter()
 
-	telemetryShim.Transmit(useTelemetry, segmentClient, segment.MetricKubefirstInstalled, "")
+	telemetryShim.TransmitClusterZero(useTelemetry, segmentClient, segment.MetricKubefirstInstalled, "")
 
 	err = r.Run(fmt.Sprintf(":%v", port))
 	if err != nil {
 		log.Fatalf("Error starting API: %s", err)
+	}
+}
+
+func heartBeat(segmentClient *segment.SegmentClient) {
+	telemetryShim.TransmitClusterZero(true, segmentClient, segment.MetricKubefirstHeartbeat, "")
+	for range time.Tick(time.Minute * 20) {
+		log.Info("Sending Heatbeat")
+		telemetryShim.Transmit(true, segmentClient, segment.MetricKubefirstHeartbeat, "")
 	}
 }
