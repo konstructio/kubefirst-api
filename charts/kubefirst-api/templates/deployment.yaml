@@ -55,13 +55,13 @@ spec:
                   name: {{ .Values.existingSecret | default "kubefirst-initial-secrets" }}
                   key: mongodb-root-password
             - name: INSTALL_METHOD
-              value: {{ .Values.installMethod | default "helm" }}
+              value: {{ .Values.installMethod | default "helm" | quote }}
             - name: CLUSTER_ID
-              value: {{ .Values.clusterId | default $clusterId }} 
+              value: {{ .Values.clusterId | default $clusterId | quote }} 
             - name: CLUSTER_TYPE
-              value: {{ .Values.clusterType | default "bootstrap" }}
+              value: {{ .Values.clusterType | default "bootstrap" | quote }}
             - name: USE_TELEMETRY
-              value: {{ .Values.useTelemetry | default "true" }}
+              value: {{ .Values.useTelemetry | default "true" | quote }}
           {{- if .Values.env }}
             {{- range $envVar := .Values.env }}
             - name: {{ $envVar.name }}
