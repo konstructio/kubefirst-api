@@ -57,7 +57,7 @@ spec:
             - name: INSTALL_METHOD
               value: {{ .Values.installMethod | default "helm" | quote }}
             - name: CLUSTER_ID
-              value: {{ .Values.clusterId | default $clusterId | quote }} 
+              value: {{ .Values.clusterId | default $clusterId }} 
             - name: CLUSTER_TYPE
               value: {{ .Values.clusterType | default "bootstrap" | quote }}
             - name: USE_TELEMETRY
