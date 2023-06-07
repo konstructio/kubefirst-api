@@ -80,6 +80,9 @@ type Cluster struct {
 	AWSKMSKeyId               string `bson:"aws_kms_key_id,omitempty" json:"aws_kms_key_id,omitempty"`
 	AWSKMSKeyDetokenizedCheck bool   `bson:"aws_kms_key_detokenized_check" json:"aws_kms_key_detokenized_check"`
 
+	// Kubeconfig
+	Kubeconfig string `bson:"kubeconfig" json:"kubeconfig"`
+
 	// Telemetry
 	UseTelemetry bool `bson:"use_telemetry"`
 

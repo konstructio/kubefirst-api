@@ -7,8 +7,11 @@ See the LICENSE file for more details.
 package civo
 
 import (
+	"context"
 	"os"
+	"strings"
 
+	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/services"
@@ -19,6 +22,8 @@ import (
 	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/ssl"
 	log "github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func CreateCivoCluster(definition *types.ClusterDefinition) error {
@@ -152,6 +157,34 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 	// Create kubeconfig client
 	kcfg := k8s.CreateKubeConfig(false, ctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
 
+	// Create Secret for initial cluster import
+	cl, _ := db.Client.GetCluster(ctrl.ClusterName)
+
+	_, err = kcfg.Clientset.CoreV1().Secrets(constants.KubefirstNamespace).Get(context.Background(), constants.KubefirstImportSecretName, metav1.GetOptions{})
+	if err == nil {
+		log.Infof("kubernetes secret %s/%s already created - skipping", constants.KubefirstNamespace, constants.KubefirstImportSecretName)
+	} else if strings.Contains(err.Error(), "not found") {
+		_, err = kcfg.Clientset.CoreV1().Secrets(constants.KubefirstNamespace).Create(context.Background(), &v1.Secret{
+			Type: "Opaque",
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      constants.KubefirstImportSecretName,
+				Namespace: constants.KubefirstNamespace,
+			},
+			Data: map[string][]byte{
+				"CLOUD_PROVIDER":    []byte(cl.CloudProvider),
+				"CLOUD_REGION":      []byte(cl.CloudRegion),
+				"CLUSTER_NAME":      []byte(cl.ClusterName),
+				"ACCESS_KEY_ID":     []byte(cl.StateStoreCredentials.AccessKeyID),
+				"SECRET_ACCESS_KEY": []byte(cl.StateStoreCredentials.SecretAccessKey),
+				"STATE_STORE_NAME":  []byte(cl.StateStoreDetails.Name),
+			},
+		}, metav1.CreateOptions{})
+		if err != nil {
+			log.Fatalf("error creating kubernetes secret for initial import: %s", err)
+		}
+		log.Info("Created Secret for initial cluster import")
+	}
+
 	// SetupMinioStorage(kcfg, ctrl.ProviderConfig.K1Dir, ctrl.GitProvider)
 
 	//* configure vault with terraform
@@ -230,7 +263,7 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 	telemetryShim.Transmit(rec.UseTelemetry, segmentClient, segment.MetricClusterInstallCompleted, "")
 
 	// Create default service entries
-	cl, _ := db.Client.GetCluster(ctrl.ClusterName)
+	cl, _ = db.Client.GetCluster(ctrl.ClusterName)
 	err = services.AddDefaultServices(&cl)
 	if err != nil {
 		log.Errorf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)

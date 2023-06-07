@@ -12,4 +12,7 @@ const (
 
 	// The name of the Secret that holds authentication credentials
 	KubefirstAuthSecretName = "kubefirst-secret"
+
+	// The Secret created to hold initial cluster import data
+	KubefirstImportSecretName = "kubefirst-initial-cluster-import"
 )

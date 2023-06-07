@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
+	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/services"
@@ -158,6 +159,34 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 	}
 
 	kcfg := awsext.CreateEKSKubeconfig(&ctrl.AwsClient.Config, ctrl.ClusterName)
+
+	// Create Secret for initial cluster import
+	cl, _ := db.Client.GetCluster(ctrl.ClusterName)
+
+	_, err = kcfg.Clientset.CoreV1().Secrets(constants.KubefirstNamespace).Get(context.Background(), constants.KubefirstImportSecretName, metav1.GetOptions{})
+	if err == nil {
+		log.Infof("kubernetes secret %s/%s already created - skipping", constants.KubefirstNamespace, constants.KubefirstImportSecretName)
+	} else if strings.Contains(err.Error(), "not found") {
+		_, err = kcfg.Clientset.CoreV1().Secrets(constants.KubefirstNamespace).Create(context.Background(), &v1.Secret{
+			Type: "Opaque",
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      constants.KubefirstImportSecretName,
+				Namespace: constants.KubefirstNamespace,
+			},
+			Data: map[string][]byte{
+				"CLOUD_PROVIDER":    []byte(cl.CloudProvider),
+				"CLOUD_REGION":      []byte(cl.CloudRegion),
+				"CLUSTER_NAME":      []byte(cl.ClusterName),
+				"ACCESS_KEY_ID":     []byte(cl.StateStoreCredentials.AccessKeyID),
+				"SECRET_ACCESS_KEY": []byte(cl.StateStoreCredentials.SecretAccessKey),
+				"STATE_STORE_NAME":  []byte(cl.StateStoreDetails.AWSStateStoreBucket),
+			},
+		}, metav1.CreateOptions{})
+		if err != nil {
+			log.Fatalf("error creating kubernetes secret for initial import: %s", err)
+		}
+		log.Info("Created Secret for initial cluster import")
+	}
 
 	if !rec.ClusterSecretsCreatedCheck {
 		log.Info("creating service accounts and namespaces")
@@ -332,7 +361,7 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 	telemetryShim.Transmit(rec.UseTelemetry, segmentClient, segment.MetricClusterInstallCompleted, "")
 
 	// Create default service entries
-	cl, _ := db.Client.GetCluster(ctrl.ClusterName)
+	cl, _ = db.Client.GetCluster(ctrl.ClusterName)
 	err = services.AddDefaultServices(&cl)
 	if err != nil {
 		log.Errorf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
