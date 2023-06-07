@@ -96,12 +96,10 @@ func (mdbcl *MongoDBClient) InsertClusterServiceListEntry(clusterName string, de
 
 	// Update
 	update := bson.M{"$push": bson.M{"services": def}}
-	resp, err := mdbcl.ServicesCollection.UpdateOne(mdbcl.Context, filter, update)
+	_, err := mdbcl.ServicesCollection.UpdateOne(mdbcl.Context, filter, update)
 	if err != nil {
 		return fmt.Errorf("error updating cluster service list for cluster %s: %s", clusterName, err)
 	}
-
-	log.Infof("cluster service list updated: %v", resp.ModifiedCount)
 
 	return nil
 }
