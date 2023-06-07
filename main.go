@@ -94,8 +94,6 @@ func main() {
 	// API
 	r := api.SetupRouter()
 
-	telemetryShim.TransmitClusterZero(useTelemetry, segmentClient, segment.MetricKubefirstInstalled, "")
-
 	err = r.Run(fmt.Sprintf(":%v", port))
 	if err != nil {
 		log.Fatalf("Error starting API: %s", err)
@@ -105,7 +103,6 @@ func main() {
 func heartBeat(segmentClient *segment.SegmentClient) {
 	telemetryShim.TransmitClusterZero(true, segmentClient, segment.MetricKubefirstHeartbeat, "")
 	for range time.Tick(time.Minute * 20) {
-		log.Info("Sending Heatbeat")
-		telemetryShim.Transmit(true, segmentClient, segment.MetricKubefirstHeartbeat, "")
+		telemetryShim.TransmitClusterZero(true, segmentClient, segment.MetricKubefirstHeartbeat, "")
 	}
 }
