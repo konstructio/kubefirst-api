@@ -49,12 +49,14 @@ type ClusterController struct {
 	ProviderConfig interface{}
 
 	// git
-	GitProvider        string
-	GitHost            string
-	GitOwner           string
-	GitUser            string
-	GitToken           string
-	GitlabOwnerGroupID int
+	GitopsTemplateURL    string
+	GitopsTemplateBranch string
+	GitProvider          string
+	GitHost              string
+	GitOwner             string
+	GitUser              string
+	GitToken             string
+	GitlabOwnerGroupID   int
 
 	// container registry
 	ContainerRegistryHost string
@@ -73,9 +75,7 @@ type ClusterController struct {
 	AtlantisWebhookURL    string
 
 	// internal
-	KubefirstTeam            string
-	GitopsTemplateBranchFlag string
-	GitopsTemplateURLFlag    string
+	KubefirstTeam string
 
 	// state store
 	KubefirstStateStoreBucketName string
@@ -152,8 +152,17 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	clctrl.Repositories = []string{"gitops", "metaphor"}
 	clctrl.Teams = []string{"admins", "developers"}
 
-	clctrl.GitopsTemplateBranchFlag = "main"
-	clctrl.GitopsTemplateURLFlag = "https://github.com/kubefirst/gitops-template.git"
+	if def.GitopsTemplateBranch != "" {
+		clctrl.GitopsTemplateBranch = def.GitopsTemplateBranch
+	} else {
+		clctrl.GitopsTemplateBranch = "main"
+	}
+
+	if def.GitopsTemplateURL != "" {
+		clctrl.GitopsTemplateURL = def.GitopsTemplateURL
+	} else {
+		clctrl.GitopsTemplateURL = "https://github.com/kubefirst/gitops-template.git"
+	}
 
 	clctrl.KubefirstStateStoreBucketName = fmt.Sprintf("k1-state-store-%s-%s", clctrl.ClusterName, clusterID)
 	clctrl.KubefirstArtifactsBucketName = fmt.Sprintf("k1-artifacts-%s-%s", clctrl.ClusterName, clusterID)
@@ -259,6 +268,8 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		DomainName:            clctrl.DomainName,
 		ClusterID:             clctrl.ClusterID,
 		ClusterType:           clctrl.ClusterType,
+		GitopsTemplateURL:     clctrl.GitopsTemplateURL,
+		GitopsTemplateBranch:  clctrl.GitopsTemplateBranch,
 		GitProvider:           clctrl.GitProvider,
 		GitHost:               clctrl.GitHost,
 		GitOwner:              clctrl.GitOwner,

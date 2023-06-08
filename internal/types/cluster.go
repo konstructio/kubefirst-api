@@ -12,15 +12,17 @@ import (
 
 // ClusterDefinition describes an incoming request to create a cluster
 type ClusterDefinition struct {
-	AdminEmail    string `json:"admin_email" binding:"required"`
-	CloudProvider string `json:"cloud_provider" binding:"required,oneof=aws civo digitalocean vultr"`
-	CloudRegion   string `json:"cloud_region" binding:"required"`
-	ClusterName   string `json:"cluster_name,omitempty"`
-	DomainName    string `json:"domain_name" binding:"required"`
-	GitProvider   string `json:"git_provider" binding:"required,oneof=github gitlab"`
-	GitOwner      string `json:"git_owner" binding:"required"`
-	GitToken      string `json:"git_token" binding:"required"`
-	Type          string `json:"type" binding:"required,oneof=mgmt workload"`
+	AdminEmail           string `json:"admin_email" binding:"required"`
+	CloudProvider        string `json:"cloud_provider" binding:"required,oneof=aws civo digitalocean vultr"`
+	CloudRegion          string `json:"cloud_region" binding:"required"`
+	ClusterName          string `json:"cluster_name,omitempty"`
+	DomainName           string `json:"domain_name" binding:"required"`
+	GitopsTemplateURL    string `json:"gitops_template_url"`
+	GitopsTemplateBranch string `json:"gitops_template_branch"`
+	GitProvider          string `json:"git_provider" binding:"required,oneof=github gitlab"`
+	GitOwner             string `json:"git_owner" binding:"required"`
+	GitToken             string `json:"git_token" binding:"required"`
+	Type                 string `json:"type" binding:"required,oneof=mgmt workload"`
 
 	AWSAuth          AWSAuth          `json:"aws_auth,omitempty"`
 	CivoAuth         CivoAuth         `json:"civo_auth,omitempty"`
@@ -53,12 +55,14 @@ type Cluster struct {
 	DigitaloceanAuth DigitaloceanAuth `bson:"do_auth,omitempty" json:"do_auth,omitempty"`
 	VultrAuth        VultrAuth        `bson:"vultr_auth,omitempty" json:"vultr_auth,omitempty"`
 
-	GitProvider        string `bson:"git_provider" json:"git_provider"`
-	GitHost            string `bson:"git_host" json:"git_host"`
-	GitOwner           string `bson:"git_owner" json:"git_owner"`
-	GitUser            string `bson:"git_user" json:"git_user"`
-	GitToken           string `bson:"git_token" json:"git_token"`
-	GitlabOwnerGroupID int    `bson:"gitlab_owner_group_id" json:"gitlab_owner_group_id"`
+	GitopsTemplateURL    string `bson:"gitops_template_url" json:"gitops_template_url"`
+	GitopsTemplateBranch string `bson:"gitops_template_branch" json:"gitops_template_branch"`
+	GitProvider          string `bson:"git_provider" json:"git_provider"`
+	GitHost              string `bson:"git_host" json:"git_host"`
+	GitOwner             string `bson:"git_owner" json:"git_owner"`
+	GitUser              string `bson:"git_user" json:"git_user"`
+	GitToken             string `bson:"git_token" json:"git_token"`
+	GitlabOwnerGroupID   int    `bson:"gitlab_owner_group_id" json:"gitlab_owner_group_id"`
 
 	AtlantisWebhookSecret string `bson:"atlantis_webhook_secret" json:"atlantis_webhook_secret"`
 	AtlantisWebhookURL    string `bson:"atlantis_webhook_url" json:"atlantis_webhook_url"`

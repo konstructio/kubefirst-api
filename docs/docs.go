@@ -894,6 +894,12 @@ const docTemplate = `{
                 "gitops_ready_check": {
                     "type": "boolean"
                 },
+                "gitops_template_branch": {
+                    "type": "string"
+                },
+                "gitops_template_url": {
+                    "type": "string"
+                },
                 "in_progress": {
                     "type": "boolean"
                 },
@@ -1007,6 +1013,12 @@ const docTemplate = `{
                     ]
                 },
                 "git_token": {
+                    "type": "string"
+                },
+                "gitops_template_branch": {
+                    "type": "string"
+                },
+                "gitops_template_url": {
                     "type": "string"
                 },
                 "type": {
