@@ -243,7 +243,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				GitRunner:            fmt.Sprintf("%s Runner", clctrl.GitProvider),
 				GitRunnerDescription: fmt.Sprintf("Self Hosted %s Runner", clctrl.GitProvider),
 				GitRunnerNS:          fmt.Sprintf("%s-runner", clctrl.GitProvider),
-				GitURL:               clctrl.GitopsTemplateURLFlag,
+				GitURL:               clctrl.GitopsTemplateURL,
 
 				GitHubHost:  fmt.Sprintf("https://github.com/%s/gitops.git", clctrl.GitOwner),
 				GitHubOwner: clctrl.GitOwner,
@@ -308,7 +308,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				GitRunner:            fmt.Sprintf("%s Runner", clctrl.GitProvider),
 				GitRunnerDescription: fmt.Sprintf("Self Hosted %s Runner", clctrl.GitProvider),
 				GitRunnerNS:          fmt.Sprintf("%s-runner", clctrl.GitProvider),
-				GitURL:               clctrl.GitopsTemplateURLFlag,
+				GitURL:               clctrl.GitopsTemplateURL,
 
 				GitHubHost:  fmt.Sprintf("https://github.com/%s/gitops.git", clctrl.GitOwner),
 				GitHubOwner: clctrl.GitOwner,
@@ -370,7 +370,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				GitRunner:            fmt.Sprintf("%s Runner", clctrl.GitProvider),
 				GitRunnerDescription: fmt.Sprintf("Self Hosted %s Runner", clctrl.GitProvider),
 				GitRunnerNS:          fmt.Sprintf("%s-runner", clctrl.GitProvider),
-				GitURL:               clctrl.GitopsTemplateURLFlag,
+				GitURL:               clctrl.GitopsTemplateURL,
 
 				GitHubHost:  fmt.Sprintf("https://github.com/%s/gitops.git", clctrl.GitOwner),
 				GitHubOwner: clctrl.GitOwner,
@@ -433,7 +433,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				GitRunner:            fmt.Sprintf("%s Runner", clctrl.GitProvider),
 				GitRunnerDescription: fmt.Sprintf("Self Hosted %s Runner", clctrl.GitProvider),
 				GitRunnerNS:          fmt.Sprintf("%s-runner", clctrl.GitProvider),
-				GitURL:               clctrl.GitopsTemplateURLFlag,
+				GitURL:               clctrl.GitopsTemplateURL,
 
 				GitHubHost:  fmt.Sprintf("https://github.com/%s/gitops.git", clctrl.GitOwner),
 				GitHubOwner: clctrl.GitOwner,
