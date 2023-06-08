@@ -268,6 +268,8 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		DomainName:            clctrl.DomainName,
 		ClusterID:             clctrl.ClusterID,
 		ClusterType:           clctrl.ClusterType,
+		GitopsTemplateURL:     clctrl.GitopsTemplateURL,
+		GitopsTemplateBranch:  clctrl.GitopsTemplateBranch,
 		GitProvider:           clctrl.GitProvider,
 		GitHost:               clctrl.GitHost,
 		GitOwner:              clctrl.GitOwner,
