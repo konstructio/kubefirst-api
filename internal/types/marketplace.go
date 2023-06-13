@@ -8,6 +8,7 @@ package types
 
 // MarketplaceApps lists all active marketplace app options
 type MarketplaceApps struct {
+	Name string           `bson:"name" json:"name" yaml:"name"`
 	Apps []MarketplaceApp `bson:"apps" json:"apps" yaml:"apps"`
 }
 

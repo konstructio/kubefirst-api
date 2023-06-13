@@ -82,7 +82,7 @@ func main() {
 	defer segmentClient.Client.Close()
 
 	// Startup tasks
-	err = db.Client.InsertMarketplaceApps()
+	err = db.Client.UpdateMarketplaceApps()
 	if err != nil {
 		log.Warn(err)
 	}

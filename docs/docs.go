@@ -459,6 +459,35 @@ const docTemplate = `{
                 }
             }
         },
+        "/marketplace/apps/update": {
+            "get": {
+                "description": "Updates the list of available Kubefirst marketplace applications",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace"
+                ],
+                "summary": "Updates the list of available Kubefirst marketplace applications",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONFailureResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/region/:cloud_provider": {
             "post": {
                 "description": "Return a list of regions for a cloud provider account",
@@ -1158,6 +1187,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/types.MarketplaceApp"
                     }
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
