@@ -21,7 +21,6 @@ import (
 	route53Types "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/ini.v1"
 )
 
 const (
@@ -63,38 +62,7 @@ func (conf *AWSConfiguration) GetHostedZoneID(domain string) (string, error) {
 			return *zone.Id, nil
 		}
 	}
-	return "", errors.New(fmt.Sprintf("could not find a hosted zone for: %s", domain))
-}
-
-// ListLocalProfiles returns named AWS profiles from the local
-// configuration file
-// todo: Will it always be a prerequisite to have named profiles configured
-// before reaching this step?
-func (conf *AWSConfiguration) ListLocalProfiles(overrideConfigFilename string) ([]string, error) {
-	// Allow overriding the default config file location
-	var defaultAWSConfigFilePath string
-	if overrideConfigFilename == "" {
-		defaultAWSConfigFilePath = config.DefaultSharedConfigFilename()
-	} else {
-		defaultAWSConfigFilePath = overrideConfigFilename
-	}
-
-	// Read config file
-	file, err := ini.Load(defaultAWSConfigFilePath)
-	if err != nil {
-		return []string{}, err
-	}
-
-	// Return named profiles as []string
-	configAsArray := make([]string, 0)
-	for _, val := range file.Sections() {
-		// todo: Figure out why this returns DEFAULT at all
-		if val.Name() != "DEFAULT" {
-			configAsArray = append(configAsArray, val.Name())
-		}
-
-	}
-	return configAsArray, nil
+	return "", fmt.Errorf(fmt.Sprintf("could not find a hosted zone for: %s", domain))
 }
 
 // Route53AlterResourceRecord simplifies manipulation of Route53 records

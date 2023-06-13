@@ -50,35 +50,6 @@
                 }
             }
         },
-        "/aws/profiles": {
-            "get": {
-                "description": "Returns a list of configured AWS profiles",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "aws"
-                ],
-                "summary": "Returns a list of configured AWS profiles",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/types.AWSProfilesResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/types.JSONFailureResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/civo/domain/validate/:domain": {
             "get": {
                 "description": "Returns status of whether or not a Civo hosted zone is validated for use with Kubefirst",
@@ -726,17 +697,6 @@
             "properties": {
                 "validated": {
                     "type": "boolean"
-                }
-            }
-        },
-        "types.AWSProfilesResponse": {
-            "type": "object",
-            "properties": {
-                "profiles": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 }
             }
         },

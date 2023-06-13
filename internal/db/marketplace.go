@@ -39,7 +39,7 @@ func (mdbcl *MongoDBClient) InsertMarketplaceApps() error {
 	if err != nil {
 		return fmt.Errorf("error updating marketplace app list in database: %s", err)
 	}
-	log.Info(insert)
+	log.Info("updated marketplace application directory: %s", insert)
 
 	return nil
 }

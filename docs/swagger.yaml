@@ -14,13 +14,6 @@ definitions:
       validated:
         type: boolean
     type: object
-  types.AWSProfilesResponse:
-    properties:
-      profiles:
-        items:
-          type: string
-        type: array
-    type: object
   types.CivoAuth:
     properties:
       token:
@@ -429,25 +422,6 @@ paths:
             $ref: '#/definitions/types.JSONFailureResponse'
       summary: Returns status of whether or not an AWS hosted zone is validated for
         use with Kubefirst
-      tags:
-      - aws
-  /aws/profiles:
-    get:
-      consumes:
-      - application/json
-      description: Returns a list of configured AWS profiles
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/types.AWSProfilesResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/types.JSONFailureResponse'
-      summary: Returns a list of configured AWS profiles
       tags:
       - aws
   /civo/domain/validate/:domain:

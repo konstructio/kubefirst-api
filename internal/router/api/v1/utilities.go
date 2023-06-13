@@ -11,6 +11,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	log "github.com/sirupsen/logrus"
 )
@@ -31,6 +32,15 @@ func GetHealth(c *gin.Context) {
 	})
 	log.SetReportCaller(false)
 	log.SetOutput(os.Stdout)
+
+	// Verify database connectivity
+	err := db.Client.TestDatabaseConnection()
+	if err != nil {
+		c.JSON(http.StatusOK, types.JSONHealthResponse{
+			Status: "database connection failed",
+		})
+	}
+	defer db.Client.Client.Disconnect(db.Client.Context)
 
 	c.JSON(http.StatusOK, types.JSONHealthResponse{
 		Status: "healthz",

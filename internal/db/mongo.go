@@ -54,7 +54,7 @@ func Connect() *MongoDBClient {
 
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
-		log.Fatal("could not create mongodb client: %s", err)
+		log.Fatalf("could not create mongodb client: %s", err)
 	}
 
 	cl := MongoDBClient{
