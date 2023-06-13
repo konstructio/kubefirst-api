@@ -55,6 +55,7 @@ func SetupRouter() *gin.Engine {
 
 		// Marketplace
 		v1.GET("/marketplace/apps", router.GetMarketplaceApps)
+		v1.GET("/marketplace/apps/update", router.UpdateMarketplaceApps)
 
 		// Services
 		v1.GET("/services/:cluster_name", router.GetServices)

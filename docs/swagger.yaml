@@ -316,6 +316,8 @@ definitions:
         items:
           $ref: '#/definitions/types.MarketplaceApp'
         type: array
+      name:
+        type: string
     type: object
   types.RegionListRequest:
     properties:
@@ -691,6 +693,25 @@ paths:
           schema:
             $ref: '#/definitions/types.JSONFailureResponse'
       summary: Returns a list of available Kubefirst marketplace applications
+      tags:
+      - marketplace
+  /marketplace/apps/update:
+    get:
+      consumes:
+      - application/json
+      description: Updates the list of available Kubefirst marketplace applications
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.JSONSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Updates the list of available Kubefirst marketplace applications
       tags:
       - marketplace
   /region/:cloud_provider:
