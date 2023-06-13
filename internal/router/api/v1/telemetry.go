@@ -46,9 +46,24 @@ func PostTelemetry(c *gin.Context) {
 		return
 	}
 
+	// Retrieve cluster info
 	cluster, err := db.Client.GetCluster(clusterName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: "cluster not found",
+		})
+		return
+	}
+
 	var req types.TelemetryRequest
 	err = c.Bind(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+
 	// Telemetry handler
 	segmentClient, err := telemetryShim.SetupTelemetry(cluster)
 	if err != nil {

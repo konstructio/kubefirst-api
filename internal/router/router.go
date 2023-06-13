@@ -53,10 +53,6 @@ func SetupRouter() *gin.Engine {
 		v1.POST("/cluster/:cluster_name/export", router.PostExportCluster)
 		v1.POST("/cluster/:cluster_name/reset_progress", router.PostResetClusterProgress)
 
-		// Deprecated
-		// AWS
-		// v1.GET("/aws/profiles", router.GetAWSProfiles)
-
 		// Marketplace
 		v1.GET("/marketplace/apps", router.GetMarketplaceApps)
 
