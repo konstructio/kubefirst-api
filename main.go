@@ -60,7 +60,7 @@ func main() {
 	}
 
 	// Verify database connectivity
-	err := db.Client.TestDatabaseConnection()
+	err := db.Client.TestDatabaseConnection(false)
 	if err != nil {
 		log.Fatal(err)
 	}

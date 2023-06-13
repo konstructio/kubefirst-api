@@ -34,13 +34,12 @@ func GetHealth(c *gin.Context) {
 	log.SetOutput(os.Stdout)
 
 	// Verify database connectivity
-	err := db.Client.TestDatabaseConnection()
+	err := db.Client.TestDatabaseConnection(true)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONHealthResponse{
 			Status: "database connection failed",
 		})
 	}
-	defer db.Client.Client.Disconnect(db.Client.Context)
 
 	c.JSON(http.StatusOK, types.JSONHealthResponse{
 		Status: "healthz",

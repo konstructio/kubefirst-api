@@ -69,12 +69,14 @@ func Connect() *MongoDBClient {
 }
 
 // TestDatabaseConnection
-func (mdbcl *MongoDBClient) TestDatabaseConnection() error {
+func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
 	err := mdbcl.Client.Database("admin").RunCommand(mdbcl.Context, bson.D{{"ping", 1}}).Err()
 	if err != nil {
 		log.Fatalf("error connecting to mongodb: %s", err)
 	}
-	log.Infof("connected to mongodb host %s", os.Getenv("MONGODB_HOST"))
+	if !silent {
+		log.Infof("connected to mongodb host %s", os.Getenv("MONGODB_HOST"))
+	}
 
 	return nil
 }
