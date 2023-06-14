@@ -42,7 +42,7 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.Marketpl
 	serviceFile := fmt.Sprintf("%s/registry/%s/%s.yaml", gitopsDir, cl.ClusterName, serviceName)
 
 	// Create service files in gitops dir
-	err = gitClient.Pull(gitopsRepo, "github", "main")
+	err = gitClient.Pull(gitopsRepo, cl.GitProvider, "main")
 	if err != nil {
 		log.Warnf("cluster %s - error pulling gitops repo: %s", cl.ClusterName, err)
 	}
@@ -166,7 +166,7 @@ func DeleteService(cl *types.Cluster, serviceName string) error {
 	serviceFile := fmt.Sprintf("%s/registry/%s/%s.yaml", gitopsDir, cl.ClusterName, serviceName)
 
 	// Delete service files from gitops dir
-	err = gitClient.Pull(gitopsRepo, "github", "main")
+	err = gitClient.Pull(gitopsRepo, cl.GitProvider, "main")
 	if err != nil {
 		log.Warnf("cluster %s - error pulling gitops repo: %s", cl.ClusterName, err)
 	}
