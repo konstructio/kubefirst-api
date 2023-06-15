@@ -246,6 +246,50 @@ definitions:
           type: string
         type: array
     type: object
+  types.GitopsCatalogApp:
+    properties:
+      categories:
+        items:
+          type: string
+        type: array
+      description:
+        type: string
+      display_name:
+        type: string
+      image_url:
+        type: string
+      name:
+        type: string
+      secret_keys:
+        items:
+          $ref: '#/definitions/types.GitopsCatalogAppSecretKey'
+        type: array
+    type: object
+  types.GitopsCatalogAppCreateRequest:
+    properties:
+      secret_keys:
+        items:
+          $ref: '#/definitions/types.GitopsCatalogAppSecretKey'
+        type: array
+    type: object
+  types.GitopsCatalogAppSecretKey:
+    properties:
+      label:
+        type: string
+      name:
+        type: string
+      value:
+        type: string
+    type: object
+  types.GitopsCatalogApps:
+    properties:
+      apps:
+        items:
+          $ref: '#/definitions/types.GitopsCatalogApp'
+        type: array
+      name:
+        type: string
+    type: object
   types.ImportClusterRequest:
     properties:
       cloud_provider:
@@ -275,48 +319,6 @@ definitions:
     properties:
       message:
         example: success
-        type: string
-    type: object
-  types.MarketplaceApp:
-    properties:
-      categories:
-        items:
-          type: string
-        type: array
-      description:
-        type: string
-      image_url:
-        type: string
-      name:
-        type: string
-      secret_keys:
-        items:
-          $ref: '#/definitions/types.MarketplaceAppSecretKey'
-        type: array
-    type: object
-  types.MarketplaceAppCreateRequest:
-    properties:
-      secret_keys:
-        items:
-          $ref: '#/definitions/types.MarketplaceAppSecretKey'
-        type: array
-    type: object
-  types.MarketplaceAppSecretKey:
-    properties:
-      label:
-        type: string
-      name:
-        type: string
-      value:
-        type: string
-    type: object
-  types.MarketplaceApps:
-    properties:
-      apps:
-        items:
-          $ref: '#/definitions/types.MarketplaceApp'
-        type: array
-      name:
         type: string
     type: object
   types.RegionListRequest:
@@ -663,6 +665,44 @@ paths:
         account
       tags:
       - domain
+  /gitops-catalog/apps:
+    get:
+      consumes:
+      - application/json
+      description: Returns a list of available Kubefirst gitops catalog applications
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.GitopsCatalogApps'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Returns a list of available Kubefirst gitops catalog applications
+      tags:
+      - gitops-catalog
+  /gitops-catalog/apps/update:
+    get:
+      consumes:
+      - application/json
+      description: Updates the list of available Kubefirst gitops catalog applications
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.JSONSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Updates the list of available Kubefirst gitops catalog applications
+      tags:
+      - gitops-catalog
   /health:
     get:
       description: Return health status if the application is running.
@@ -676,44 +716,6 @@ paths:
       summary: Return health status if the application is running.
       tags:
       - health
-  /marketplace/apps:
-    get:
-      consumes:
-      - application/json
-      description: Returns a list of available Kubefirst marketplace applications
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/types.MarketplaceApps'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/types.JSONFailureResponse'
-      summary: Returns a list of available Kubefirst marketplace applications
-      tags:
-      - marketplace
-  /marketplace/apps/update:
-    get:
-      consumes:
-      - application/json
-      description: Updates the list of available Kubefirst marketplace applications
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/types.JSONSuccessResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/types.JSONFailureResponse'
-      summary: Updates the list of available Kubefirst marketplace applications
-      tags:
-      - marketplace
   /region/:cloud_provider:
     post:
       consumes:
@@ -769,7 +771,7 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Remove a marketplace application from a cluster
+      description: Remove a gitops catalog application from a cluster
       parameters:
       - description: Cluster name
         in: path
@@ -792,13 +794,13 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/types.JSONFailureResponse'
-      summary: Remove a marketplace application from a cluster
+      summary: Remove a gitops catalog application from a cluster
       tags:
       - services
     post:
       consumes:
       - application/json
-      description: Add a marketplace application to a cluster as a service
+      description: Add a gitops catalog application to a cluster as a service
       parameters:
       - description: Cluster name
         in: path
@@ -815,7 +817,7 @@ paths:
         name: definition
         required: true
         schema:
-          $ref: '#/definitions/types.MarketplaceAppCreateRequest'
+          $ref: '#/definitions/types.GitopsCatalogAppCreateRequest'
       produces:
       - application/json
       responses:
@@ -827,7 +829,7 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/types.JSONFailureResponse'
-      summary: Add a marketplace application to a cluster as a service
+      summary: Add a gitops catalog application to a cluster as a service
       tags:
       - services
   /stream:

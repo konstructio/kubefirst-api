@@ -20,7 +20,7 @@ import (
 	vaultapi "github.com/hashicorp/vault/api"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	"github.com/kubefirst/kubefirst-api/internal/db"
-	"github.com/kubefirst/kubefirst-api/internal/marketplace"
+	"github.com/kubefirst/kubefirst-api/internal/gitopsCatalog"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/gitClient"
@@ -31,7 +31,7 @@ import (
 )
 
 // CreateService
-func CreateService(cl *types.Cluster, serviceName string, appDef *types.MarketplaceApp, req *types.MarketplaceAppCreateRequest) error {
+func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCatalogApp, req *types.GitopsCatalogAppCreateRequest) error {
 	var gitopsRepo *git.Repository
 
 	homeDir, err := os.UserHomeDir()
@@ -96,7 +96,7 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.Marketpl
 	if err != nil {
 		log.Warnf("cluster %s - error pulling gitops repo: %s", cl.ClusterName, err)
 	}
-	files, err := marketplace.ReadApplicationDirectory(serviceName)
+	files, err := gitopsCatalog.ReadApplicationDirectory(serviceName)
 	if err != nil {
 		return err
 	}

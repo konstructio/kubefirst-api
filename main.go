@@ -9,13 +9,12 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/kubefirst/kubefirst-api/docs"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	api "github.com/kubefirst/kubefirst-api/internal/router"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	"github.com/kubefirst/runtime/pkg/segment"
+	"github.com/kubefirst/kubefirst-api/internal/utils"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -81,14 +80,12 @@ func main() {
 	}
 	defer segmentClient.Client.Close()
 
-	// Startup tasks
-	err = db.Client.UpdateMarketplaceApps()
-	if err != nil {
-		log.Warn(err)
-	}
+	// Subroutine to automatically update gitops catalog
+	go utils.ScheduledGitopsCatalogUpdate()
 
+	// Subroutine to emit heartbeat
 	if useTelemetry {
-		go heartBeat(segmentClient)
+		go telemetryShim.Heartbeat(segmentClient)
 	}
 
 	// API
@@ -97,12 +94,5 @@ func main() {
 	err = r.Run(fmt.Sprintf(":%v", port))
 	if err != nil {
 		log.Fatalf("Error starting API: %s", err)
-	}
-}
-
-func heartBeat(segmentClient *segment.SegmentClient) {
-	telemetryShim.TransmitClusterZero(true, segmentClient, segment.MetricKubefirstHeartbeat, "")
-	for range time.Tick(time.Minute * 20) {
-		telemetryShim.TransmitClusterZero(true, segmentClient, segment.MetricKubefirstHeartbeat, "")
 	}
 }

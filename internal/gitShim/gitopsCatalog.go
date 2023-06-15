@@ -15,17 +15,17 @@ import (
 )
 
 const (
-	KubefirstGitHubOrganization    = "kubefirst"
-	KubefirstMarketplaceRepository = "marketplace"
-	basePath                       = "/"
+	KubefirstGitHubOrganization      = "kubefirst"
+	KubefirstGitopsCatalogRepository = "gitops-catalog"
+	basePath                         = "/"
 )
 
-// GetMarketplaceRepo returns an object detailing the Kubefirst marketplace GitHub repository
-func (gh *GitHubClient) GetMarketplaceRepo() (*github.Repository, error) {
+// GetGitopsCatalogRepo returns an object detailing the Kubefirst gitops catalog GitHub repository
+func (gh *GitHubClient) GetGitopsCatalogRepo() (*github.Repository, error) {
 	repo, _, err := gh.Client.Repositories.Get(
 		context.Background(),
 		KubefirstGitHubOrganization,
-		KubefirstMarketplaceRepository,
+		KubefirstGitopsCatalogRepository,
 	)
 	if err != nil {
 		return &github.Repository{}, err
@@ -34,13 +34,13 @@ func (gh *GitHubClient) GetMarketplaceRepo() (*github.Repository, error) {
 	return repo, nil
 }
 
-// ReadMarketplaceRepoContents reads the file and directory contents of the Kubefirst marketplace
+// ReadGitopsCatalogRepoContents reads the file and directory contents of the Kubefirst gitops catalog
 // GitHub repository
-func (gh *GitHubClient) ReadMarketplaceRepoContents() ([]*github.RepositoryContent, error) {
+func (gh *GitHubClient) ReadGitopsCatalogRepoContents() ([]*github.RepositoryContent, error) {
 	_, directoryContent, _, err := gh.Client.Repositories.GetContents(
 		context.Background(),
 		KubefirstGitHubOrganization,
-		KubefirstMarketplaceRepository,
+		KubefirstGitopsCatalogRepository,
 		basePath,
 		nil,
 	)
@@ -51,12 +51,12 @@ func (gh *GitHubClient) ReadMarketplaceRepoContents() ([]*github.RepositoryConte
 	return directoryContent, nil
 }
 
-// ReadMarketplaceRepoDirectory reads the files in a marketplace repo directory
-func (gh *GitHubClient) ReadMarketplaceRepoDirectory(path string) ([]*github.RepositoryContent, error) {
+// ReadGitopsCatalogRepoDirectory reads the files in a gitops catalog repo directory
+func (gh *GitHubClient) ReadGitopsCatalogRepoDirectory(path string) ([]*github.RepositoryContent, error) {
 	_, directoryContent, _, err := gh.Client.Repositories.GetContents(
 		context.Background(),
 		KubefirstGitHubOrganization,
-		KubefirstMarketplaceRepository,
+		KubefirstGitopsCatalogRepository,
 		path,
 		nil,
 	)
@@ -67,8 +67,8 @@ func (gh *GitHubClient) ReadMarketplaceRepoDirectory(path string) ([]*github.Rep
 	return directoryContent, nil
 }
 
-// ReadMarketplaceIndex reads the marketplace repository index
-func (gh *GitHubClient) ReadMarketplaceIndex(contents []*github.RepositoryContent) ([]byte, error) {
+// ReadGitopsCatalogIndex reads the gitops catalog repository index
+func (gh *GitHubClient) ReadGitopsCatalogIndex(contents []*github.RepositoryContent) ([]byte, error) {
 	for _, content := range contents {
 		switch *content.Type {
 		case "file":
@@ -83,14 +83,14 @@ func (gh *GitHubClient) ReadMarketplaceIndex(contents []*github.RepositoryConten
 		}
 	}
 
-	return []byte{}, fmt.Errorf("index.yaml not found in marketplace repository")
+	return []byte{}, fmt.Errorf("index.yaml not found in gitops catalog repository")
 }
 
-// ReadMarketplaceAppDirectory reads the file content in a marketplace app directory
-func (gh *GitHubClient) ReadMarketplaceAppDirectory(contents []*github.RepositoryContent, applicationName string) ([][]byte, error) {
+// ReadGitopsCatalogAppDirectory reads the file content in a gitops catalog app directory
+func (gh *GitHubClient) ReadGitopsCatalogAppDirectory(contents []*github.RepositoryContent, applicationName string) ([][]byte, error) {
 	for _, content := range contents {
 		if *content.Type == "dir" && *content.Name == applicationName {
-			files, err := gh.ReadMarketplaceRepoDirectory(*content.Path)
+			files, err := gh.ReadGitopsCatalogRepoDirectory(*content.Path)
 			if err != nil {
 				return [][]byte{}, err
 			}
@@ -119,7 +119,7 @@ func (gh *GitHubClient) readFileContents(content *github.RepositoryContent) ([]b
 	rc, _, err := gh.Client.Repositories.DownloadContents(
 		context.Background(),
 		KubefirstGitHubOrganization,
-		KubefirstMarketplaceRepository,
+		KubefirstGitopsCatalogRepository,
 		*content.Path,
 		nil,
 	)

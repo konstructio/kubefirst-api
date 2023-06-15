@@ -18,11 +18,11 @@ import (
 )
 
 type MongoDBClient struct {
-	Client                *mongo.Client
-	Context               context.Context
-	ClustersCollection    *mongo.Collection
-	MarketplaceCollection *mongo.Collection
-	ServicesCollection    *mongo.Collection
+	Client                  *mongo.Client
+	Context                 context.Context
+	ClustersCollection      *mongo.Collection
+	GitopsCatalogCollection *mongo.Collection
+	ServicesCollection      *mongo.Collection
 }
 
 var Client = Connect()
@@ -58,11 +58,11 @@ func Connect() *MongoDBClient {
 	}
 
 	cl := MongoDBClient{
-		Client:                client,
-		Context:               ctx,
-		ClustersCollection:    client.Database("api").Collection("clusters"),
-		MarketplaceCollection: client.Database("api").Collection("marketplace"),
-		ServicesCollection:    client.Database("api").Collection("services"),
+		Client:                  client,
+		Context:                 ctx,
+		ClustersCollection:      client.Database("api").Collection("clusters"),
+		GitopsCatalogCollection: client.Database("api").Collection("gitops-catalog"),
+		ServicesCollection:      client.Database("api").Collection("services"),
 	}
 
 	return &cl

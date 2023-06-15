@@ -410,6 +410,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/gitops-catalog/apps": {
+            "get": {
+                "description": "Returns a list of available Kubefirst gitops catalog applications",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gitops-catalog"
+                ],
+                "summary": "Returns a list of available Kubefirst gitops catalog applications",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.GitopsCatalogApps"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONFailureResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/gitops-catalog/apps/update": {
+            "get": {
+                "description": "Updates the list of available Kubefirst gitops catalog applications",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gitops-catalog"
+                ],
+                "summary": "Updates the list of available Kubefirst gitops catalog applications",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONFailureResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "description": "Return health status if the application is running.",
@@ -425,64 +483,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/types.JSONHealthResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/marketplace/apps": {
-            "get": {
-                "description": "Returns a list of available Kubefirst marketplace applications",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "marketplace"
-                ],
-                "summary": "Returns a list of available Kubefirst marketplace applications",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/types.MarketplaceApps"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/types.JSONFailureResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/marketplace/apps/update": {
-            "get": {
-                "description": "Updates the list of available Kubefirst marketplace applications",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "marketplace"
-                ],
-                "summary": "Updates the list of available Kubefirst marketplace applications",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/types.JSONSuccessResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/types.JSONFailureResponse"
                         }
                     }
                 }
@@ -568,7 +568,7 @@ const docTemplate = `{
         },
         "/services/:cluster_name/:service_name": {
             "post": {
-                "description": "Add a marketplace application to a cluster as a service",
+                "description": "Add a gitops catalog application to a cluster as a service",
                 "consumes": [
                     "application/json"
                 ],
@@ -578,7 +578,7 @@ const docTemplate = `{
                 "tags": [
                     "services"
                 ],
-                "summary": "Add a marketplace application to a cluster as a service",
+                "summary": "Add a gitops catalog application to a cluster as a service",
                 "parameters": [
                     {
                         "type": "string",
@@ -600,7 +600,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/types.MarketplaceAppCreateRequest"
+                            "$ref": "#/definitions/types.GitopsCatalogAppCreateRequest"
                         }
                     }
                 ],
@@ -620,7 +620,7 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Remove a marketplace application from a cluster",
+                "description": "Remove a gitops catalog application from a cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -630,7 +630,7 @@ const docTemplate = `{
                 "tags": [
                     "services"
                 ],
-                "summary": "Remove a marketplace application from a cluster",
+                "summary": "Remove a gitops catalog application from a cluster",
                 "parameters": [
                     {
                         "type": "string",
@@ -1081,6 +1081,74 @@ const docTemplate = `{
                 }
             }
         },
+        "types.GitopsCatalogApp": {
+            "type": "object",
+            "properties": {
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "secret_keys": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.GitopsCatalogAppSecretKey"
+                    }
+                }
+            }
+        },
+        "types.GitopsCatalogAppCreateRequest": {
+            "type": "object",
+            "properties": {
+                "secret_keys": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.GitopsCatalogAppSecretKey"
+                    }
+                }
+            }
+        },
+        "types.GitopsCatalogAppSecretKey": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.GitopsCatalogApps": {
+            "type": "object",
+            "properties": {
+                "apps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.GitopsCatalogApp"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "types.ImportClusterRequest": {
             "type": "object",
             "properties": {
@@ -1125,71 +1193,6 @@ const docTemplate = `{
                 "message": {
                     "type": "string",
                     "example": "success"
-                }
-            }
-        },
-        "types.MarketplaceApp": {
-            "type": "object",
-            "properties": {
-                "categories": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "description": {
-                    "type": "string"
-                },
-                "image_url": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "secret_keys": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/types.MarketplaceAppSecretKey"
-                    }
-                }
-            }
-        },
-        "types.MarketplaceAppCreateRequest": {
-            "type": "object",
-            "properties": {
-                "secret_keys": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/types.MarketplaceAppSecretKey"
-                    }
-                }
-            }
-        },
-        "types.MarketplaceAppSecretKey": {
-            "type": "object",
-            "properties": {
-                "label": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "string"
-                }
-            }
-        },
-        "types.MarketplaceApps": {
-            "type": "object",
-            "properties": {
-                "apps": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/types.MarketplaceApp"
-                    }
-                },
-                "name": {
-                    "type": "string"
                 }
             }
         },
