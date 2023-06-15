@@ -14,6 +14,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/kubefirst/kubefirst-api/internal/db"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -92,6 +93,14 @@ var BackupResolver = &net.Resolver{
 		}
 		return d.DialContext(ctx, network, "8.8.8.8:53")
 	},
+}
+
+// ScheduledGitopsCatalogUpdate
+func ScheduledGitopsCatalogUpdate() {
+	err := db.Client.UpdateGitopsCatalogApps()
+	if err != nil {
+		log.Warn(err)
+	}
 }
 
 // ValidateAuthenticationFields checks a map[string]string returned from looking up an

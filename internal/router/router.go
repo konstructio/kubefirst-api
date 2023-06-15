@@ -53,9 +53,9 @@ func SetupRouter() *gin.Engine {
 		v1.POST("/cluster/:cluster_name/export", router.PostExportCluster)
 		v1.POST("/cluster/:cluster_name/reset_progress", router.PostResetClusterProgress)
 
-		// Marketplace
-		v1.GET("/marketplace/apps", router.GetMarketplaceApps)
-		v1.GET("/marketplace/apps/update", router.UpdateMarketplaceApps)
+		// Gitops Catalog
+		v1.GET("/gitops-catalog/apps", router.GetGitopsCatalogApps)
+		v1.GET("/gitops-catalog/apps/update", router.UpdateGitopsCatalogApps)
 
 		// Services
 		v1.GET("/services/:cluster_name", router.GetServices)

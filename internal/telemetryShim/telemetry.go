@@ -8,12 +8,21 @@ package telemetryShim
 
 import (
 	"os"
+	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/configs"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 )
+
+// Heartbeat
+func Heartbeat(segmentClient *segment.SegmentClient) {
+	TransmitClusterZero(true, segmentClient, segment.MetricKubefirstHeartbeat, "")
+	for range time.Tick(time.Minute * 20) {
+		TransmitClusterZero(true, segmentClient, segment.MetricKubefirstHeartbeat, "")
+	}
+}
 
 // SetupTelemetry
 func SetupTelemetry(cl types.Cluster) (*segment.SegmentClient, error) {

@@ -50,18 +50,18 @@ func GetServices(c *gin.Context) {
 }
 
 // PostAddServiceToCluster godoc
-// @Summary Add a marketplace application to a cluster as a service
-// @Description Add a marketplace application to a cluster as a service
+// @Summary Add a gitops catalog application to a cluster as a service
+// @Description Add a gitops catalog application to a cluster as a service
 // @Tags services
 // @Accept json
 // @Produce json
 // @Param	cluster_name	path	string	true	"Cluster name"
 // @Param	service_name	path	string	true	"Service name to be added"
-// @Param	definition	body	types.MarketplaceAppCreateRequest	true	"Service create request in JSON format"
+// @Param	definition	body	types.GitopsCatalogAppCreateRequest	true	"Service create request in JSON format"
 // @Success 202 {object} types.JSONSuccessResponse
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /services/:cluster_name/:service_name [post]
-// PostAddServiceToCluster handles a request to add a service to a cluster based on a marketplace app
+// PostAddServiceToCluster handles a request to add a service to a cluster based on a gitops catalog app
 func PostAddServiceToCluster(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
 	if !param {
@@ -89,7 +89,7 @@ func PostAddServiceToCluster(c *gin.Context) {
 	}
 
 	// Verify service is a valid option and determine if it requires secrets
-	apps, err := db.Client.GetMarketplaceApps()
+	apps, err := db.Client.GetGitopsCatalogApps()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -97,7 +97,7 @@ func PostAddServiceToCluster(c *gin.Context) {
 		return
 	}
 	valid, hasKeys := false, false
-	var appDef types.MarketplaceApp
+	var appDef types.GitopsCatalogApp
 	for _, app := range apps.Apps {
 		if app.Name == serviceName {
 			valid = true
@@ -115,7 +115,7 @@ func PostAddServiceToCluster(c *gin.Context) {
 	}
 
 	// Bind to variable as application/json, handle error
-	var serviceDefinition types.MarketplaceAppCreateRequest
+	var serviceDefinition types.GitopsCatalogAppCreateRequest
 	err = c.Bind(&serviceDefinition)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -178,8 +178,8 @@ func PostAddServiceToCluster(c *gin.Context) {
 }
 
 // DeleteServiceFromCluster godoc
-// @Summary Remove a marketplace application from a cluster
-// @Description Remove a marketplace application from a cluster
+// @Summary Remove a gitops catalog application from a cluster
+// @Description Remove a gitops catalog application from a cluster
 // @Tags services
 // @Accept json
 // @Produce json
@@ -188,7 +188,7 @@ func PostAddServiceToCluster(c *gin.Context) {
 // @Success 202 {object} types.JSONSuccessResponse
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /services/:cluster_name/:service_name [delete]
-// DeleteServiceFromCluster handles a request to remove a marketplace application from a cluster
+// DeleteServiceFromCluster handles a request to remove a gitops catalog application from a cluster
 func DeleteServiceFromCluster(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
 	if !param {
@@ -216,7 +216,7 @@ func DeleteServiceFromCluster(c *gin.Context) {
 	}
 
 	// Verify service is a valid option and determine if it requires secrets
-	apps, err := db.Client.GetMarketplaceApps()
+	apps, err := db.Client.GetGitopsCatalogApps()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
