@@ -119,7 +119,12 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.Marketpl
 	}
 
 	// Sync registry
-	// todo: initiate registry sync
+	registryApplication, err := argocdClient.ArgoprojV1alpha1().Applications("argocd").Get(context.Background(), "registry", v1.GetOptions{})
+	if err != nil {
+		log.Warnf("cluster %s - could not get registry application data: %s", cl.ClusterName, err)
+	}
+	registryApplication.SetAnnotations(map[string]string{"argocd.argoproj.io/refresh": "hard"})
+
 	// Wait for app to be created
 	for i := 0; i < 50; i++ {
 		_, err := argocdClient.ArgoprojV1alpha1().Applications("argocd").Get(context.Background(), serviceName, v1.GetOptions{})
