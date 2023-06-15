@@ -17,6 +17,7 @@ import (
 	health "github.com/argoproj/gitops-engine/pkg/health"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	vaultapi "github.com/hashicorp/vault/api"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/marketplace"
@@ -24,6 +25,7 @@ import (
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/gitClient"
 	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/kubefirst/runtime/pkg/vault"
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -40,6 +42,54 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.Marketpl
 	gitopsDir := fmt.Sprintf("%s/.k1/%s/gitops", homeDir, cl.ClusterName)
 	gitopsRepo, _ = git.PlainOpen(gitopsDir)
 	serviceFile := fmt.Sprintf("%s/registry/%s/%s.yaml", gitopsDir, cl.ClusterName, serviceName)
+
+	var kcfg *k8s.KubernetesClient
+
+	switch cl.CloudProvider {
+	case "aws":
+		awscfg := awsinternal.NewAwsV3(
+			cl.CloudRegion,
+			cl.AWSAuth.AccessKeyID,
+			cl.AWSAuth.SecretAccessKey,
+			cl.AWSAuth.SessionToken,
+		)
+		kcfg = awsext.CreateEKSKubeconfig(&awscfg, cl.ClusterName)
+	case "civo", "digitalocean", "vultr":
+		kcfg = k8s.CreateKubeConfig(false, fmt.Sprintf("%s/kubeconfig", clusterDir))
+	}
+
+	// If there are secret values, create a vault secret
+	if len(appDef.SecretKeys) > 0 {
+		log.Infof("cluster %s - application %s has secrets, creating vault values", cl.ClusterName, appDef.Name)
+
+		s := make(map[string]interface{}, 0)
+
+		for _, secret := range appDef.SecretKeys {
+			s[secret.Name] = secret.Value
+		}
+
+		// Get token
+		existingKubernetesSecret, err := k8s.ReadSecretV2(kcfg.Clientset, vault.VaultNamespace, vault.VaultSecretName)
+		if err != nil || existingKubernetesSecret == nil {
+			return fmt.Errorf("cluster %s - error getting vault token: %s", cl.ClusterName, err)
+		}
+
+		vaultClient, err := vaultapi.NewClient(&vaultapi.Config{
+			Address: fmt.Sprintf("https://vault.%s", cl.DomainName),
+		})
+		if err != nil {
+			return fmt.Errorf("cluster %s - error initializing vault client: %s", cl.ClusterName, err)
+		}
+
+		vaultClient.SetToken(existingKubernetesSecret["root-token"])
+
+		resp, err := vaultClient.KVv2("secret").Put(context.Background(), appDef.Name, s)
+		if err != nil {
+			return fmt.Errorf("cluster %s - error putting vault secret: %s", cl.ClusterName, err)
+		}
+
+		log.Infof("cluster %s - created vault secret data for application %s %s", cl.ClusterName, appDef.Name, resp.VersionMetadata.CreatedTime)
+	}
 
 	// Create service files in gitops dir
 	err = gitClient.Pull(gitopsRepo, cl.GitProvider, "main")
@@ -98,28 +148,18 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.Marketpl
 	}
 
 	// Wait for ArgoCD application sync
-	var kcfg *k8s.KubernetesClient
-
-	switch cl.CloudProvider {
-	case "aws":
-		awscfg := awsinternal.NewAwsV3(
-			cl.CloudRegion,
-			cl.AWSAuth.AccessKeyID,
-			cl.AWSAuth.SecretAccessKey,
-			cl.AWSAuth.SessionToken,
-		)
-		kcfg = awsext.CreateEKSKubeconfig(&awscfg, cl.ClusterName)
-	case "civo", "digitalocean", "vultr":
-		kcfg = k8s.CreateKubeConfig(false, fmt.Sprintf("%s/kubeconfig", clusterDir))
-	}
-
 	argocdClient, err := argocdapi.NewForConfig(kcfg.RestConfig)
 	if err != nil {
 		return err
 	}
 
 	// Sync registry
-	// todo: initiate registry sync
+	registryApplication, err := argocdClient.ArgoprojV1alpha1().Applications("argocd").Get(context.Background(), "registry", v1.GetOptions{})
+	if err != nil {
+		log.Warnf("cluster %s - could not get registry application data: %s", cl.ClusterName, err)
+	}
+	registryApplication.SetAnnotations(map[string]string{"argocd.argoproj.io/refresh": "hard"})
+
 	// Wait for app to be created
 	for i := 0; i < 50; i++ {
 		_, err := argocdClient.ArgoprojV1alpha1().Applications("argocd").Get(context.Background(), serviceName, v1.GetOptions{})
