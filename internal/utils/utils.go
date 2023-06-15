@@ -101,6 +101,12 @@ func ScheduledGitopsCatalogUpdate() {
 	if err != nil {
 		log.Warn(err)
 	}
+	for range time.Tick(time.Minute * 30) {
+		err := db.Client.UpdateGitopsCatalogApps()
+		if err != nil {
+			log.Warn(err)
+		}
+	}
 }
 
 // ValidateAuthenticationFields checks a map[string]string returned from looking up an

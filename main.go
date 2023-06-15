@@ -80,14 +80,10 @@ func main() {
 	}
 	defer segmentClient.Client.Close()
 
-	// Startup tasks
-	err = db.Client.UpdateGitopsCatalogApps()
-	if err != nil {
-		log.Warn(err)
-	}
-
+	// Subroutine to automatically update gitops catalog
 	go utils.ScheduledGitopsCatalogUpdate()
 
+	// Subroutine to emit heartbeat
 	if useTelemetry {
 		go telemetryShim.Heartbeat(segmentClient)
 	}
