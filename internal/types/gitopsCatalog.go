@@ -25,9 +25,9 @@ type GitopsCatalogApp struct {
 // GitopsCatalogAppSecretKey describes a required secret value when creating a
 // service based on a gitops catalog app
 type GitopsCatalogAppSecretKey struct {
-	Name  string `bson:"name" json:"name"`
-	Label string `bson:"label,omitempty" json:"label,omitempty"`
-	Value string `bson:"value,omitempty" json:"value,omitempty"`
+	Name  string `bson:"name" json:"name" yaml:"name"`
+	Label string `bson:"label,omitempty" json:"label,omitempty" yaml:"label,omitempty"`
+	Value string `bson:"value,omitempty" json:"value,omitempty" yaml:"value,omitempty"`
 }
 
 // GitopsCatalogAppCreateRequest describes a request to create a service for a cluster
