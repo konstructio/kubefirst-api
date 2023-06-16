@@ -151,9 +151,12 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			vultrConf := vultr.VultrConfiguration{
 				Client:  vultr.NewVultr(cl.VultrAuth.Token),
 				Context: context.Background(),
+				Region:  cl.CloudRegion,
+				// https://www.vultr.com/docs/vultr-object-storage/
+				ObjectStorageRegion: "ewr",
 			}
 
-			objst, err := vultrConf.CreateObjectStorage(clctrl.CloudRegion, clctrl.KubefirstStateStoreBucketName)
+			objst, err := vultrConf.CreateObjectStorage(clctrl.KubefirstStateStoreBucketName)
 			if err != nil {
 				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricStateStoreCreateFailed, err.Error())
 				log.Error(err.Error())
