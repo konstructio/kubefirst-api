@@ -16,6 +16,7 @@ import (
 
 	"github.com/civo/civogo"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
+	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/errors"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
@@ -26,7 +27,6 @@ import (
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
-	"github.com/kubefirst/runtime/pkg/terraform"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -48,7 +48,7 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 	}
 	defer segmentClient.Client.Close()
 
-	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricMgmtClusterDeleteStarted, "")
+	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricClusterDeleteStarted, "")
 
 	// Instantiate civo config
 	config := civo.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner)
@@ -67,7 +67,7 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 			tfEnvs := map[string]string{}
 			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, cl)
 			tfEnvs = civoext.GetGithubTerraformEnvs(tfEnvs, cl)
-			err := terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
+			err := terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Printf("error executing terraform destroy %s", tfEntrypoint)
 				errors.HandleClusterError(cl, err.Error())
@@ -121,7 +121,7 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 			tfEnvs := map[string]string{}
 			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, cl)
 			tfEnvs = civoext.GetGitlabTerraformEnvs(tfEnvs, gitlabClient.ParentGroupID, cl)
-			err = terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
+			err = terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Infof("error executing terraform destroy %s", tfEntrypoint)
 				errors.HandleClusterError(cl, err.Error())
@@ -238,7 +238,7 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 			}
 			tfEnvs = civoext.GetGitlabTerraformEnvs(tfEnvs, gid, cl)
 		}
-		err = terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
+		err = terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Printf("error executing terraform destroy %s", tfEntrypoint)
 			errors.HandleClusterError(cl, err.Error())
@@ -270,7 +270,7 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 		}
 	}
 
-	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricMgmtClusterDeleteCompleted, "")
+	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricClusterDeleteCompleted, "")
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", "deleted")
 	if err != nil {

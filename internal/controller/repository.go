@@ -25,12 +25,23 @@ import (
 
 // RepositoryPrep
 func (clctrl *ClusterController) RepositoryPrep() error {
+	// Logging handler
+	// Logs to stdout to maintain compatibility with event streaming
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "",
+	})
+	log.SetReportCaller(false)
+	log.SetOutput(os.Stdout)
+
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
 
 	if !cl.GitopsReadyCheck {
+		log.Info("initializing the gitops repository - this may take several minutes")
+
 		switch clctrl.CloudProvider {
 		case "aws":
 			err := awsinternal.PrepareGitRepositories(
@@ -39,8 +50,8 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.ClusterType,
 				AWSDestinationGitopsRepoGitURL,
 				clctrl.ProviderConfig.(*awsinternal.AwsConfig).GitopsDir,
-				clctrl.GitopsTemplateBranchFlag,
-				clctrl.GitopsTemplateURLFlag,
+				clctrl.GitopsTemplateBranch,
+				clctrl.GitopsTemplateURL,
 				AWSDestinationMetaphorRepoGitURL,
 				clctrl.ProviderConfig.(*awsinternal.AwsConfig).K1Dir,
 				clctrl.CreateTokens("gitops").(*awsinternal.GitOpsDirectoryValues),
@@ -57,8 +68,8 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.ClusterType,
 				CivoDestinationGitopsRepoGitURL,
 				clctrl.ProviderConfig.(*civo.CivoConfig).GitopsDir,
-				clctrl.GitopsTemplateBranchFlag,
-				clctrl.GitopsTemplateURLFlag,
+				clctrl.GitopsTemplateBranch,
+				clctrl.GitopsTemplateURL,
 				CivoDestinationMetaphorRepoGitURL,
 				clctrl.ProviderConfig.(*civo.CivoConfig).K1Dir,
 				clctrl.CreateTokens("gitops").(*civo.GitOpsDirectoryValues),
@@ -76,8 +87,8 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.ClusterType,
 				DigitaloceanDestinationGitopsRepoGitURL,
 				clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).GitopsDir,
-				clctrl.GitopsTemplateBranchFlag,
-				clctrl.GitopsTemplateURLFlag,
+				clctrl.GitopsTemplateBranch,
+				clctrl.GitopsTemplateURL,
 				DigitaloceanDestinationMetaphorRepoGitURL,
 				clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).K1Dir,
 				clctrl.CreateTokens("gitops").(*digitalocean.GitOpsDirectoryValues),
@@ -95,8 +106,8 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.ClusterType,
 				VultrDestinationGitopsRepoGitURL,
 				clctrl.ProviderConfig.(*vultr.VultrConfig).GitopsDir,
-				clctrl.GitopsTemplateBranchFlag,
-				clctrl.GitopsTemplateURLFlag,
+				clctrl.GitopsTemplateBranch,
+				clctrl.GitopsTemplateURL,
 				VultrDestinationMetaphorRepoGitURL,
 				clctrl.ProviderConfig.(*vultr.VultrConfig).K1Dir,
 				clctrl.CreateTokens("gitops").(*vultr.GitOpsDirectoryValues),
@@ -113,6 +124,8 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 		if err != nil {
 			return err
 		}
+
+		log.Info("gitops repository initialized")
 	}
 
 	return nil

@@ -13,6 +13,7 @@ import (
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
+	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
@@ -23,7 +24,6 @@ import (
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
-	"github.com/kubefirst/runtime/pkg/terraform"
 	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 )
@@ -93,9 +93,9 @@ func (clctrl *ClusterController) CreateCluster() error {
 				return err
 			}
 
-			err = terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*awsinternal.AwsConfig).TerraformClient, tfEntrypoint, tfEnvs)
+			err = terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.(*awsinternal.AwsConfig).TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
-				msg := fmt.Sprintf("error creating aws resources with terraform %s : %s", tfEntrypoint, err)
+				msg := fmt.Sprintf("error creating aws resources with terraform %s: %s", tfEntrypoint, err)
 				log.Error(msg)
 				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
 				if err != nil {
@@ -116,9 +116,9 @@ func (clctrl *ClusterController) CreateCluster() error {
 			tfEntrypoint := clctrl.ProviderConfig.(*civo.CivoConfig).GitopsDir + "/terraform/civo"
 			tfEnvs := map[string]string{}
 			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, &cl)
-			err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*civo.CivoConfig).TerraformClient, tfEntrypoint, tfEnvs)
+			err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.(*civo.CivoConfig).TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
-				msg := fmt.Sprintf("error creating civo resources with terraform %s : %s", tfEntrypoint, err)
+				msg := fmt.Sprintf("error creating civo resources with terraform %s: %s", tfEntrypoint, err)
 				log.Error(msg)
 				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
 				if err != nil {
@@ -139,9 +139,9 @@ func (clctrl *ClusterController) CreateCluster() error {
 			tfEntrypoint := clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).GitopsDir + "/terraform/digitalocean"
 			tfEnvs := map[string]string{}
 			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, &cl)
-			err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient, tfEntrypoint, tfEnvs)
+			err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
-				msg := fmt.Sprintf("error creating digital ocean resources with terraform %s : %s", tfEntrypoint, err)
+				msg := fmt.Sprintf("error creating digital ocean resources with terraform %s: %s", tfEntrypoint, err)
 				log.Error(msg)
 				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
 				if err != nil {
@@ -162,9 +162,9 @@ func (clctrl *ClusterController) CreateCluster() error {
 			tfEntrypoint := clctrl.ProviderConfig.(*vultr.VultrConfig).GitopsDir + "/terraform/vultr"
 			tfEnvs := map[string]string{}
 			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
-			err := terraform.InitApplyAutoApprove(clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient, tfEntrypoint, tfEnvs)
+			err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
-				msg := fmt.Sprintf("error creating vultr resources with terraform %s : %s", tfEntrypoint, err)
+				msg := fmt.Sprintf("error creating vultr resources with terraform %s: %s", tfEntrypoint, err)
 				log.Error(msg)
 				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
 				if err != nil {
@@ -243,7 +243,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				GitRunner:            fmt.Sprintf("%s Runner", clctrl.GitProvider),
 				GitRunnerDescription: fmt.Sprintf("Self Hosted %s Runner", clctrl.GitProvider),
 				GitRunnerNS:          fmt.Sprintf("%s-runner", clctrl.GitProvider),
-				GitURL:               clctrl.GitopsTemplateURLFlag,
+				GitURL:               clctrl.GitopsTemplateURL,
 
 				GitHubHost:  fmt.Sprintf("https://github.com/%s/gitops.git", clctrl.GitOwner),
 				GitHubOwner: clctrl.GitOwner,
@@ -308,7 +308,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				GitRunner:            fmt.Sprintf("%s Runner", clctrl.GitProvider),
 				GitRunnerDescription: fmt.Sprintf("Self Hosted %s Runner", clctrl.GitProvider),
 				GitRunnerNS:          fmt.Sprintf("%s-runner", clctrl.GitProvider),
-				GitURL:               clctrl.GitopsTemplateURLFlag,
+				GitURL:               clctrl.GitopsTemplateURL,
 
 				GitHubHost:  fmt.Sprintf("https://github.com/%s/gitops.git", clctrl.GitOwner),
 				GitHubOwner: clctrl.GitOwner,
@@ -370,7 +370,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				GitRunner:            fmt.Sprintf("%s Runner", clctrl.GitProvider),
 				GitRunnerDescription: fmt.Sprintf("Self Hosted %s Runner", clctrl.GitProvider),
 				GitRunnerNS:          fmt.Sprintf("%s-runner", clctrl.GitProvider),
-				GitURL:               clctrl.GitopsTemplateURLFlag,
+				GitURL:               clctrl.GitopsTemplateURL,
 
 				GitHubHost:  fmt.Sprintf("https://github.com/%s/gitops.git", clctrl.GitOwner),
 				GitHubOwner: clctrl.GitOwner,
@@ -433,7 +433,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				GitRunner:            fmt.Sprintf("%s Runner", clctrl.GitProvider),
 				GitRunnerDescription: fmt.Sprintf("Self Hosted %s Runner", clctrl.GitProvider),
 				GitRunnerNS:          fmt.Sprintf("%s-runner", clctrl.GitProvider),
-				GitURL:               clctrl.GitopsTemplateURLFlag,
+				GitURL:               clctrl.GitopsTemplateURL,
 
 				GitHubHost:  fmt.Sprintf("https://github.com/%s/gitops.git", clctrl.GitOwner),
 				GitHubOwner: clctrl.GitOwner,

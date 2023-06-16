@@ -8,12 +8,21 @@ package telemetryShim
 
 import (
 	"os"
+	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/configs"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 )
+
+// Heartbeat
+func Heartbeat(segmentClient *segment.SegmentClient) {
+	TransmitClusterZero(true, segmentClient, segment.MetricKubefirstHeartbeat, "")
+	for range time.Tick(time.Minute * 20) {
+		TransmitClusterZero(true, segmentClient, segment.MetricKubefirstHeartbeat, "")
+	}
+}
 
 // SetupTelemetry
 func SetupTelemetry(cl types.Cluster) (*segment.SegmentClient, error) {
@@ -34,10 +43,35 @@ func SetupTelemetry(cl types.Cluster) (*segment.SegmentClient, error) {
 	return segmentClient, nil
 }
 
+func SetupInitialTelemetry(clusterID string, clusterType string, installMethod string) (*segment.SegmentClient, error) {
+	// Segment Client
+	segmentClient := &segment.SegmentClient{
+		CliVersion:        configs.K1Version,
+		ClusterID:         clusterID,
+		ClusterType:       clusterType,
+		KubefirstClient:   "api",
+		KubefirstTeam:     os.Getenv("KUBEFIRST_TEAM"),
+		KubefirstTeamInfo: os.Getenv("KUBEFIRST_TEAM_INFO"),
+		InstallMethod:     installMethod,
+	}
+	segmentClient.SetupClient()
+
+	return segmentClient, nil
+}
+
 // Transmit sends a metric via Segment
 func Transmit(useTelemetry bool, segmentClient *segment.SegmentClient, metricName string, errorMessage string) {
 	if useTelemetry {
 		segmentMsg := segmentClient.SendCountMetric(metricName, errorMessage)
+		if segmentMsg != "" {
+			log.Info(segmentMsg)
+		}
+	}
+}
+
+func TransmitClusterZero(useTelemetry bool, segmentClient *segment.SegmentClient, metricName string, errorMessage string) {
+	if useTelemetry {
+		segmentMsg := segmentClient.SendCountClusterZeroMetric(metricName, errorMessage)
 		if segmentMsg != "" {
 			log.Info(segmentMsg)
 		}

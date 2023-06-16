@@ -53,12 +53,9 @@ func SetupRouter() *gin.Engine {
 		v1.POST("/cluster/:cluster_name/export", router.PostExportCluster)
 		v1.POST("/cluster/:cluster_name/reset_progress", router.PostResetClusterProgress)
 
-		// Deprecated
-		// AWS
-		// v1.GET("/aws/profiles", router.GetAWSProfiles)
-
-		// Marketplace
-		v1.GET("/marketplace/apps", router.GetMarketplaceApps)
+		// Gitops Catalog
+		v1.GET("/gitops-catalog/apps", router.GetGitopsCatalogApps)
+		v1.GET("/gitops-catalog/apps/update", router.UpdateGitopsCatalogApps)
 
 		// Services
 		v1.GET("/services/:cluster_name", router.GetServices)
@@ -78,6 +75,9 @@ func SetupRouter() *gin.Engine {
 
 		// Event streaming
 		v1.GET("/stream", router.GetLogs)
+
+		// Telemetry
+		v1.POST("/telemetry/:cluster_name", router.PostTelemetry)
 	}
 
 	// swagger-ui

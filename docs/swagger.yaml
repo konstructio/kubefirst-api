@@ -14,13 +14,6 @@ definitions:
       validated:
         type: boolean
     type: object
-  types.AWSProfilesResponse:
-    properties:
-      profiles:
-        items:
-          type: string
-        type: array
-    type: object
   types.CivoAuth:
     properties:
       token:
@@ -41,6 +34,7 @@ definitions:
       _id:
         type: string
       alerts_email:
+        description: Identifiers
         type: string
       argocd_auth_token:
         type: string
@@ -117,6 +111,10 @@ definitions:
         type: boolean
       gitops_ready_check:
         type: boolean
+      gitops_template_branch:
+        type: string
+      gitops_template_url:
+        type: string
       in_progress:
         type: boolean
       install_tools_check:
@@ -143,6 +141,7 @@ definitions:
       state_store_details:
         $ref: '#/definitions/types.StateStoreDetails'
       status:
+        description: Status
         type: string
       useTelemetry:
         description: Telemetry
@@ -187,6 +186,10 @@ definitions:
         - gitlab
         type: string
       git_token:
+        type: string
+      gitops_template_branch:
+        type: string
+      gitops_template_url:
         type: string
       type:
         enum:
@@ -243,6 +246,50 @@ definitions:
           type: string
         type: array
     type: object
+  types.GitopsCatalogApp:
+    properties:
+      categories:
+        items:
+          type: string
+        type: array
+      description:
+        type: string
+      display_name:
+        type: string
+      image_url:
+        type: string
+      name:
+        type: string
+      secret_keys:
+        items:
+          $ref: '#/definitions/types.GitopsCatalogAppSecretKey'
+        type: array
+    type: object
+  types.GitopsCatalogAppCreateRequest:
+    properties:
+      secret_keys:
+        items:
+          $ref: '#/definitions/types.GitopsCatalogAppSecretKey'
+        type: array
+    type: object
+  types.GitopsCatalogAppSecretKey:
+    properties:
+      label:
+        type: string
+      name:
+        type: string
+      value:
+        type: string
+    type: object
+  types.GitopsCatalogApps:
+    properties:
+      apps:
+        items:
+          $ref: '#/definitions/types.GitopsCatalogApp'
+        type: array
+      name:
+        type: string
+    type: object
   types.ImportClusterRequest:
     properties:
       cloud_provider:
@@ -273,46 +320,6 @@ definitions:
       message:
         example: success
         type: string
-    type: object
-  types.MarketplaceApp:
-    properties:
-      categories:
-        items:
-          type: string
-        type: array
-      description:
-        type: string
-      image_url:
-        type: string
-      name:
-        type: string
-      secret_keys:
-        items:
-          $ref: '#/definitions/types.MarketplaceAppSecretKey'
-        type: array
-    type: object
-  types.MarketplaceAppCreateRequest:
-    properties:
-      secret_keys:
-        items:
-          $ref: '#/definitions/types.MarketplaceAppSecretKey'
-        type: array
-    type: object
-  types.MarketplaceAppSecretKey:
-    properties:
-      label:
-        type: string
-      name:
-        type: string
-      value:
-        type: string
-    type: object
-  types.MarketplaceApps:
-    properties:
-      apps:
-        items:
-          $ref: '#/definitions/types.MarketplaceApp'
-        type: array
     type: object
   types.RegionListRequest:
     properties:
@@ -375,6 +382,11 @@ definitions:
       name:
         type: string
     type: object
+  types.TelemetryRequest:
+    properties:
+      event:
+        type: string
+    type: object
   types.VultrAuth:
     properties:
       token:
@@ -414,25 +426,6 @@ paths:
             $ref: '#/definitions/types.JSONFailureResponse'
       summary: Returns status of whether or not an AWS hosted zone is validated for
         use with Kubefirst
-      tags:
-      - aws
-  /aws/profiles:
-    get:
-      consumes:
-      - application/json
-      description: Returns a list of configured AWS profiles
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/types.AWSProfilesResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/types.JSONFailureResponse'
-      summary: Returns a list of configured AWS profiles
       tags:
       - aws
   /civo/domain/validate/:domain:
@@ -672,6 +665,44 @@ paths:
         account
       tags:
       - domain
+  /gitops-catalog/apps:
+    get:
+      consumes:
+      - application/json
+      description: Returns a list of available Kubefirst gitops catalog applications
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.GitopsCatalogApps'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Returns a list of available Kubefirst gitops catalog applications
+      tags:
+      - gitops-catalog
+  /gitops-catalog/apps/update:
+    get:
+      consumes:
+      - application/json
+      description: Updates the list of available Kubefirst gitops catalog applications
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.JSONSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Updates the list of available Kubefirst gitops catalog applications
+      tags:
+      - gitops-catalog
   /health:
     get:
       description: Return health status if the application is running.
@@ -685,25 +716,6 @@ paths:
       summary: Return health status if the application is running.
       tags:
       - health
-  /marketplace/apps:
-    get:
-      consumes:
-      - application/json
-      description: Returns a list of available Kubefirst marketplace applications
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/types.MarketplaceApps'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/types.JSONFailureResponse'
-      summary: Returns a list of available Kubefirst marketplace applications
-      tags:
-      - marketplace
   /region/:cloud_provider:
     post:
       consumes:
@@ -759,7 +771,7 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Remove a marketplace application from a cluster
+      description: Remove a gitops catalog application from a cluster
       parameters:
       - description: Cluster name
         in: path
@@ -782,13 +794,13 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/types.JSONFailureResponse'
-      summary: Remove a marketplace application from a cluster
+      summary: Remove a gitops catalog application from a cluster
       tags:
       - services
     post:
       consumes:
       - application/json
-      description: Add a marketplace application to a cluster as a service
+      description: Add a gitops catalog application to a cluster as a service
       parameters:
       - description: Cluster name
         in: path
@@ -805,7 +817,7 @@ paths:
         name: definition
         required: true
         schema:
-          $ref: '#/definitions/types.MarketplaceAppCreateRequest'
+          $ref: '#/definitions/types.GitopsCatalogAppCreateRequest'
       produces:
       - application/json
       responses:
@@ -817,7 +829,7 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/types.JSONFailureResponse'
-      summary: Add a marketplace application to a cluster as a service
+      summary: Add a gitops catalog application to a cluster as a service
       tags:
       - services
   /stream:
@@ -827,4 +839,29 @@ paths:
       summary: Stream API server logs
       tags:
       - logs
+  /telemetry/:cluster_name:
+    post:
+      consumes:
+      - application/json
+      description: Create a Telemetry Event
+      parameters:
+      - description: Cluster name
+        in: path
+        name: cluster_name
+        required: true
+        type: string
+      - description: event request in JSON format
+        in: body
+        name: definition
+        required: true
+        schema:
+          $ref: '#/definitions/types.TelemetryRequest'
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/types.JSONSuccessResponse'
+      summary: Create a Telemetry Event
+      tags:
+      - telemetry
 swagger: "2.0"

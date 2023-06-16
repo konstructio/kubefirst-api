@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"time"
 
+	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/errors"
@@ -25,7 +26,6 @@ import (
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
-	"github.com/kubefirst/runtime/pkg/terraform"
 	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 )
@@ -48,7 +48,7 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 	}
 	defer segmentClient.Client.Close()
 
-	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricMgmtClusterDeleteStarted, "")
+	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricClusterDeleteStarted, "")
 
 	// Instantiate vultr config
 	config := vultr.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner)
@@ -67,7 +67,7 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 			tfEnvs := map[string]string{}
 			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, cl)
 			tfEnvs = vultrext.GetGithubTerraformEnvs(tfEnvs, cl)
-			err := terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
+			err := terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Printf("error executing terraform destroy %s", tfEntrypoint)
 				errors.HandleClusterError(cl, err.Error())
@@ -121,7 +121,7 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 			tfEnvs := map[string]string{}
 			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, cl)
 			tfEnvs = vultrext.GetGitlabTerraformEnvs(tfEnvs, gitlabClient.ParentGroupID, cl)
-			err = terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
+			err = terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				log.Infof("error executing terraform destroy %s", tfEntrypoint)
 				errors.HandleClusterError(cl, err.Error())
@@ -245,7 +245,7 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 			}
 			tfEnvs = vultrext.GetGitlabTerraformEnvs(tfEnvs, gid, cl)
 		}
-		err = terraform.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
+		err = terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Printf("error executing terraform destroy %s", tfEntrypoint)
 			errors.HandleClusterError(cl, err.Error())
@@ -285,7 +285,7 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 		}
 	}
 
-	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricMgmtClusterDeleteCompleted, "")
+	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricClusterDeleteCompleted, "")
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", "deleted")
 	if err != nil {

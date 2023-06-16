@@ -13,33 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/aws"
 	"github.com/kubefirst/kubefirst-api/internal/types"
-	//log "github.com/sirupsen/logrus"
 )
-
-// GetAWSProfiles godoc
-// @Summary Returns a list of configured AWS profiles
-// @Description Returns a list of configured AWS profiles
-// @Tags aws
-// @Accept json
-// @Produce json
-// @Success 200 {object} types.AWSProfilesResponse
-// @Failure 400 {object} types.JSONFailureResponse
-// @Router /aws/profiles [get]
-// GetAWSProfiles returns AWS profiles found on the local host
-func GetAWSProfiles(c *gin.Context) {
-	// Fetch profiles
-	awsConfig := &aws.Conf
-	profiles, err := awsConfig.ListLocalProfiles("")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: err.Error(),
-		})
-		return
-	}
-	c.JSON(http.StatusOK, types.AWSProfilesResponse{
-		Profiles: profiles,
-	})
-}
 
 // GetValidateAWSDomain godoc
 // @Summary Returns status of whether or not an AWS hosted zone is validated for use with Kubefirst

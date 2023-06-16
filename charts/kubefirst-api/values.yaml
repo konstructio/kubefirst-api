@@ -5,8 +5,13 @@
 replicaCount: 1
 
 image:
-  repository: public.ecr.aws/kubefirst/kubefirst-api
-  pullPolicy: IfNotPresent
+  api:
+    repository: public.ecr.aws/kubefirst/kubefirst-api
+    pullPolicy: IfNotPresent
+  hook:
+    repository: public.ecr.aws/kubefirst/metrics-client
+    pullPolicy: Always
+    tag: amd64
 
 imagePullSecrets: []
 nameOverride: ''
@@ -87,11 +92,11 @@ tolerations: []
 affinity: {}
 
 env: []
-envFrom: []   
+envFrom: []
 
-existingSecret: ""
+existingSecret: ''
 # defaults to in cluster mongodb, accepts a host name like `your-db.123abcd.mongodb.net`
-atlasDbHost: ""
-atlasDbUsername: ""
-mongodbHost: ""
-mongodbUsername: ""
+atlasDbHost: ''
+atlasDbUsername: ''
+mongodbHost: ''
+mongodbUsername: ''

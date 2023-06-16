@@ -18,11 +18,11 @@ import (
 )
 
 type MongoDBClient struct {
-	Client                *mongo.Client
-	Context               context.Context
-	ClustersCollection    *mongo.Collection
-	MarketplaceCollection *mongo.Collection
-	ServicesCollection    *mongo.Collection
+	Client                  *mongo.Client
+	Context                 context.Context
+	ClustersCollection      *mongo.Collection
+	GitopsCatalogCollection *mongo.Collection
+	ServicesCollection      *mongo.Collection
 }
 
 var Client = Connect()
@@ -54,27 +54,29 @@ func Connect() *MongoDBClient {
 
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
-		log.Fatal("could not create mongodb client: %s", err)
+		log.Fatalf("could not create mongodb client: %s", err)
 	}
 
 	cl := MongoDBClient{
-		Client:                client,
-		Context:               ctx,
-		ClustersCollection:    client.Database("api").Collection("clusters"),
-		MarketplaceCollection: client.Database("api").Collection("marketplace"),
-		ServicesCollection:    client.Database("api").Collection("services"),
+		Client:                  client,
+		Context:                 ctx,
+		ClustersCollection:      client.Database("api").Collection("clusters"),
+		GitopsCatalogCollection: client.Database("api").Collection("gitops-catalog"),
+		ServicesCollection:      client.Database("api").Collection("services"),
 	}
 
 	return &cl
 }
 
 // TestDatabaseConnection
-func (mdbcl *MongoDBClient) TestDatabaseConnection() error {
+func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
 	err := mdbcl.Client.Database("admin").RunCommand(mdbcl.Context, bson.D{{"ping", 1}}).Err()
 	if err != nil {
 		log.Fatalf("error connecting to mongodb: %s", err)
 	}
-	log.Infof("connected to mongodb host %s", os.Getenv("MONGODB_HOST"))
+	if !silent {
+		log.Infof("connected to mongodb host %s", os.Getenv("MONGODB_HOST"))
+	}
 
 	return nil
 }

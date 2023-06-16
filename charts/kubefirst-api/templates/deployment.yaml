@@ -1,3 +1,5 @@
+{{- $clusterId := randAlphaNum 6 | quote -}}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -53,6 +55,14 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.existingSecret | default "kubefirst-initial-secrets" }}
                   key: mongodb-root-password
+            - name: INSTALL_METHOD
+              value: {{ .Values.installMethod | default "helm" | quote }}
+            - name: CLUSTER_ID
+              value: {{ .Values.clusterId | default $clusterId }} 
+            - name: CLUSTER_TYPE
+              value: {{ .Values.clusterType | default "bootstrap" | quote }}
+            - name: USE_TELEMETRY
+              value: {{ .Values.useTelemetry | default "true" | quote }}
           {{- if .Values.env }}
             {{- range $envVar := .Values.env }}
             - name: {{ $envVar.name }}
@@ -65,8 +75,8 @@ spec:
           {{- end }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.image.api.repository }}:{{ .Values.image.api.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.api.pullPolicy }}
           ports:
             - name: http
               containerPort: 8081
@@ -102,3 +112,37 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "kubefirst-api.fullname" . }}-pi-hook
+  labels:
+    {{- include "kubefirst-api.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      name: {{ include "kubefirst-api.fullname" . }}-pi-hook
+      labels:
+        {{- include "kubefirst-api.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: {{ include "kubefirst-api.fullname" . }}-pi-hook
+          image: "{{ .Values.image.hook.repository }}:{{ .Values.image.hook.tag }}"
+          imagePullPolicy: {{ .Values.image.hook.pullPolicy }}
+          args: [
+            "transmit",
+            "--type",
+            "cluster-zero",
+            "--cluster-id",
+            {{ .Values.clusterId | default $clusterId }},
+            "--cluster-type",
+            {{ .Values.clusterType | default "bootstrap" | quote }},
+            "--install-method",
+            {{ .Values.installMethod | default "helm" | quote }}
+          ]

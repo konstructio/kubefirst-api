@@ -149,7 +149,7 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
-	//
+	// Create kubeconfig client
 	kcfg := k8s.CreateKubeConfig(false, ctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
 
 	// SetupMinioStorage(kcfg, ctrl.ProviderConfig.K1Dir, ctrl.GitProvider)
@@ -227,7 +227,7 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 	}
 	defer segmentClient.Client.Close()
 
-	telemetryShim.Transmit(rec.UseTelemetry, segmentClient, segment.MetricMgmtClusterInstallCompleted, "")
+	telemetryShim.Transmit(rec.UseTelemetry, segmentClient, segment.MetricClusterInstallCompleted, "")
 
 	// Create default service entries
 	cl, _ := db.Client.GetCluster(ctrl.ClusterName)
