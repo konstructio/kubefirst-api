@@ -259,6 +259,23 @@ func AddDefaultServices(cl *types.Cluster) error {
 
 	defaults := []types.Service{
 		{
+			Name:        cl.GitProvider,
+			Default:     true,
+			Description: "The git repositories contain all the Infrastructure as Code and GitOps configurations.",
+			Image:       fmt.Sprintf("https://assets.kubefirst.com/console/%s.svg", cl.GitProvider),
+			Links: []string{fmt.Sprintf("https://%s/%s/gitops", cl.GitHost, cl.GitOwner),
+				fmt.Sprintf("https://%s/%s/metaphor", cl.GitHost, cl.GitOwner)},
+			Status: "",
+		},
+		{
+			Name:        "Vault",
+			Default:     true,
+			Description: "Kubefirst's secrets manager and identity provider.",
+			Image:       "https://assets.kubefirst.com/console/vault.svg",
+			Links:       []string{fmt.Sprintf("https://vault.%s", cl.DomainName)},
+			Status:      "",
+		},
+		{
 			Name:        "Argo CD",
 			Default:     true,
 			Description: "A GitOps oriented continuous delivery tool for managing all of our applications across our Kubernetes clusters.",
@@ -283,15 +300,6 @@ func AddDefaultServices(cl *types.Cluster) error {
 			Status:      "",
 		},
 		{
-			Name:        cl.GitProvider,
-			Default:     true,
-			Description: "The git repositories contain all the Infrastructure as Code and GitOps configurations.",
-			Image:       fmt.Sprintf("https://assets.kubefirst.com/console/%s.svg", cl.GitProvider),
-			Links: []string{fmt.Sprintf("https://%s/%s/gitops", cl.GitHost, cl.GitOwner),
-				fmt.Sprintf("https://%s/%s/metaphor", cl.GitHost, cl.GitOwner)},
-			Status: "",
-		},
-		{
 			Name:        "Metaphor",
 			Default:     true,
 			Description: "A multi-environment demonstration space for frontend application best practices that's easy to apply to other projects.",
@@ -300,14 +308,6 @@ func AddDefaultServices(cl *types.Cluster) error {
 				fmt.Sprintf("https://metaphor-staging.%s", cl.DomainName),
 				fmt.Sprintf("https://metaphor-production.%s", cl.DomainName)},
 			Status: "",
-		},
-		{
-			Name:        "Vault",
-			Default:     true,
-			Description: "Kubefirst's secrets manager and identity provider.",
-			Image:       "https://assets.kubefirst.com/console/vault.svg",
-			Links:       []string{fmt.Sprintf("https://vault.%s", cl.DomainName)},
-			Status:      "",
 		},
 	}
 
