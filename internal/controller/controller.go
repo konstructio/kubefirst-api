@@ -12,6 +12,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
@@ -115,7 +116,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 
 	// If record exists but status is deleted, entry should be deleted
 	// and process should start fresh
-	if recordExists && rec.Status == "deleted" {
+	if recordExists && rec.Status == constants.ClusterStatusDeleted {
 		err = clctrl.MdbCl.DeleteCluster(def.ClusterName)
 		if err != nil {
 			return fmt.Errorf("could not delete existing cluster %s: %s", def.ClusterName, err)
@@ -260,7 +261,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		ID:                    primitive.NewObjectID(),
 		CreationTimestamp:     fmt.Sprintf("%v", time.Now().UTC()),
 		UseTelemetry:          clctrl.UseTelemetry,
-		Status:                "provisioning",
+		Status:                constants.ClusterStatusProvisioning,
 		AlertsEmail:           clctrl.AlertsEmail,
 		ClusterName:           clctrl.ClusterName,
 		CloudProvider:         clctrl.CloudProvider,
@@ -308,7 +309,7 @@ func (clctrl *ClusterController) HandleError(condition string) error {
 	if err != nil {
 		return err
 	}
-	err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "status", "error")
+	err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "status", constants.ClusterStatusError)
 	if err != nil {
 		return err
 	}

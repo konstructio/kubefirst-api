@@ -16,6 +16,7 @@ import (
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
+	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/errors"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
@@ -52,7 +53,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 	// Instantiate aws config
 	config := awsinternal.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner)
 
-	err = db.Client.UpdateCluster(cl.ClusterName, "status", "deleting")
+	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleting)
 	if err != nil {
 		return err
 	}
@@ -261,7 +262,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 
 	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricClusterDeleteCompleted, "")
 
-	err = db.Client.UpdateCluster(cl.ClusterName, "status", "deleted")
+	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleted)
 	if err != nil {
 		return err
 	}

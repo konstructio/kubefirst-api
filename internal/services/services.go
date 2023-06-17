@@ -19,6 +19,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	vaultapi "github.com/hashicorp/vault/api"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
+	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/gitopsCatalog"
 	"github.com/kubefirst/kubefirst-api/internal/types"
@@ -32,6 +33,11 @@ import (
 
 // CreateService
 func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCatalogApp, req *types.GitopsCatalogAppCreateRequest) error {
+	switch cl.Status {
+	case constants.ClusterStatusDeleted, constants.ClusterStatusDeleting, constants.ClusterStatusError, constants.ClusterStatusProvisioning:
+		return fmt.Errorf("cluster %s - unable to deploy service %s to cluster: cannot deploy services to a cluster in %s state", cl.ClusterName, serviceName, cl.Status)
+	}
+
 	var gitopsRepo *git.Repository
 
 	homeDir, err := os.UserHomeDir()
@@ -59,12 +65,12 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 	}
 
 	// If there are secret values, create a vault secret
-	if len(appDef.SecretKeys) > 0 {
+	if len(req.SecretKeys) > 0 {
 		log.Infof("cluster %s - application %s has secrets, creating vault values", cl.ClusterName, appDef.Name)
 
 		s := make(map[string]interface{}, 0)
 
-		for _, secret := range appDef.SecretKeys {
+		for _, secret := range req.SecretKeys {
 			s[secret.Name] = secret.Value
 		}
 

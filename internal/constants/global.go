@@ -12,4 +12,11 @@ const (
 
 	// The name of the Secret that holds authentication credentials
 	KubefirstAuthSecretName = "kubefirst-secret"
+
+	// Cluster statuses
+	ClusterStatusDeleted      = "deleted"
+	ClusterStatusDeleting     = "deleting"
+	ClusterStatusError        = "error"
+	ClusterStatusProvisioned  = "provisioned"
+	ClusterStatusProvisioning = "provisioning"
 )

@@ -17,6 +17,7 @@ import (
 
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
+	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/errors"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
@@ -53,7 +54,7 @@ func DeleteDigitaloceanCluster(cl *types.Cluster) error {
 	// Instantiate digitalocean config
 	config := digitalocean.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner)
 
-	err = db.Client.UpdateCluster(cl.ClusterName, "status", "deleting")
+	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleting)
 	if err != nil {
 		return err
 	}
@@ -287,7 +288,7 @@ func DeleteDigitaloceanCluster(cl *types.Cluster) error {
 
 	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricClusterDeleteCompleted, "")
 
-	err = db.Client.UpdateCluster(cl.ClusterName, "status", "deleted")
+	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleted)
 	if err != nil {
 		return err
 	}
