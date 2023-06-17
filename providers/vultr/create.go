@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/services"
@@ -201,7 +202,7 @@ func CreateVultrCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
-	err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "status", "provisioned")
+	err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "status", constants.ClusterStatusProvisioned)
 	if err != nil {
 		return err
 	}

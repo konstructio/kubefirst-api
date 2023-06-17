@@ -60,8 +60,8 @@ func DeleteCluster(c *gin.Context) {
 			log.Warnf("error updating cluster last_condition field: %s", err)
 		}
 	}
-	if rec.Status == "error" {
-		err = db.Client.UpdateCluster(rec.ClusterName, "status", "deleting")
+	if rec.Status == constants.ClusterStatusError {
+		err = db.Client.UpdateCluster(rec.ClusterName, "status", constants.ClusterStatusDeleting)
 		if err != nil {
 			log.Warnf("error updating cluster status field: %s", err)
 		}
@@ -221,8 +221,8 @@ func PostCreateCluster(c *gin.Context) {
 				log.Warnf("error updating cluster last_condition field: %s", err)
 			}
 		}
-		if cluster.Status == "error" {
-			err = db.Client.UpdateCluster(cluster.ClusterName, "status", "provisioning")
+		if cluster.Status == constants.ClusterStatusError {
+			err = db.Client.UpdateCluster(cluster.ClusterName, "status", constants.ClusterStatusProvisioning)
 			if err != nil {
 				log.Warnf("error updating cluster status field: %s", err)
 			}
