@@ -79,6 +79,21 @@ Some variables are required, others are optional depending on deployment type.
 | `MONGODB_USERNAME`  | Required when using Atlas.                                                                                                                       | If using Atlas |
 | `MONGODB_PASSWORD`  | Required when using Atlas.                                                                                                                       | If using Atlas |
 | `IN_CLUSTER`        | Specify whether or not the API is running inside a Kubernetes cluster. By default, this is assumed `false`.                                      | No             |
+| `CLUSTER_ID`        | The ID of the cluster running API.                                                                                                               | Yes            |
+| `CLUSTER_TYPE`      | Cluster type.                                                                                                                                    | Yes            |
+| `INSTALL_METHOD`    | Description of the method through which the API was deployed. Example: `helm`                                                                    | Yes            |
+
+To run locally: 
+
+```bash
+export MONGODB_USERNAME=
+export MONGODB_PASSWORD=
+export MONGODB_HOST_TYPE=atlas / local
+export MONGODB_HOST=
+export CLUSTER_TYPE=
+export CLUSTER_ID=
+export INSTALL_METHOD=
+```
 
 ## Provider Support
 

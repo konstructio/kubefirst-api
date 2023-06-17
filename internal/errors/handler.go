@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package errors
 
 import (
+	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 )
@@ -17,7 +18,7 @@ func HandleClusterError(cl *types.Cluster, condition string) error {
 	if err != nil {
 		return err
 	}
-	err = db.Client.UpdateCluster(cl.ClusterName, "status", "error")
+	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusError)
 	if err != nil {
 		return err
 	}
