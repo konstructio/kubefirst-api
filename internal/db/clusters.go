@@ -46,6 +46,9 @@ func (mdbcl *MongoDBClient) GetCluster(clusterName string) (types.Cluster, error
 	var result types.Cluster
 	err := mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return types.Cluster{}, fmt.Errorf("cluster not found")
+		}
 		return types.Cluster{}, fmt.Errorf("error getting cluster %s: %s", clusterName, err)
 	}
 
