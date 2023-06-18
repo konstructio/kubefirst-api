@@ -24,14 +24,13 @@ func (mdbcl *MongoDBClient) CreateClusterServiceList(cl *types.Cluster) error {
 		// This error means your query did not match any documents.
 		if err == mongo.ErrNoDocuments {
 			// Create if entry does not exist
-			insert, err := mdbcl.ServicesCollection.InsertOne(mdbcl.Context, types.ClusterServiceList{
+			_, err := mdbcl.ServicesCollection.InsertOne(mdbcl.Context, types.ClusterServiceList{
 				ClusterName: cl.ClusterName,
 				Services:    []types.Service{},
 			})
 			if err != nil {
 				return fmt.Errorf("error inserting cluster service list for cluster %s: %s", cl.ClusterName, err)
 			}
-			log.Info(insert)
 		}
 	} else {
 		log.Infof("cluster service list record for %s already exists - skipping", cl.ClusterName)
