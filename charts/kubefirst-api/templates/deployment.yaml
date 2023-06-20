@@ -37,7 +37,7 @@ spec:
             [
               'sh',
               '-c',
-              'until nc -vz ${MONGODB_SERVICE_HOST} ${MONGODB_SERVICE_PORT_MONGODB}; do echo "Waiting for mongodb..."; sleep 3; done;',
+              'until nc -vz ${MONGODB_SERVICE_HOST} 27017; do echo "Waiting for mongodb..."; sleep 3; done;',
             ]
       containers:
         - name: {{ .Chart.Name }}
