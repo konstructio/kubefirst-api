@@ -100,3 +100,6 @@ atlasDbHost: ''
 atlasDbUsername: ''
 mongodbHost: ''
 mongodbUsername: ''
+
+initContainer:
+  enabled: false
