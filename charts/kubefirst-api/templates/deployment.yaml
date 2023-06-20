@@ -29,6 +29,7 @@ spec:
       serviceAccountName: {{ include "kubefirst-api.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.initContainer.enabled }}
       initContainers:
         - name: wait-for-mongodb
           image: busybox:latest
@@ -42,6 +43,7 @@ spec:
           env:
             - name: MONGODB_HOST
               value: {{ if not .Values.atlasDbHost }}{{ .Values.mongodbHost | default (printf "%s-mongodb.%s.svc.cluster.local" (.Release.Name ) (.Release.Namespace )) }}{{ else }}{{ .Values.atlasDbHost }}{{ end }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
         # ! need to address hostname of service below, also address namespace
