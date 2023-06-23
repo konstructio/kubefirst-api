@@ -14,6 +14,7 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 	"github.com/kubefirst/runtime/pkg"
@@ -23,6 +24,7 @@ import (
 	"github.com/kubefirst/runtime/pkg/github"
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/handlers"
+	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/services"
 	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
@@ -130,6 +132,15 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		clusterID = pkg.GenerateClusterID()
 	}
 
+	// Telemetry handler
+	segmentClient, err := telemetryShim.SetupTelemetry(rec)
+	if err != nil {
+		return err
+	}
+	defer segmentClient.Client.Close()
+
+	telemetryShim.Transmit(rec.UseTelemetry, segmentClient, segment.MetricClusterInstallStarted, "")
+
 	clctrl.AlertsEmail = def.AdminEmail
 	clctrl.CloudProvider = def.CloudProvider
 	clctrl.CloudRegion = def.CloudRegion
@@ -170,7 +181,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 
 	clctrl.KubefirstTeam = os.Getenv("KUBEFIRST_TEAM")
 	if clctrl.KubefirstTeam == "" {
-		clctrl.KubefirstTeam = "false"
+		clctrl.KubefirstTeam = "undefined"
 	}
 	clctrl.AtlantisWebhookSecret = pkg.Random(20)
 	clctrl.AtlantisWebhookURL = fmt.Sprintf("https://atlantis.%s/events", clctrl.DomainName)
