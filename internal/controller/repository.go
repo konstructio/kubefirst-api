@@ -9,7 +9,6 @@ package controller
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/go-git/go-git/v5"
 	gitssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
@@ -17,8 +16,8 @@ import (
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
-	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/segment"
+	internalssh "github.com/kubefirst/runtime/pkg/ssh"
 	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 )
@@ -196,36 +195,13 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			log.Infof("error opening repo at: %s", metaphorDir)
 		}
 
-		// For GitLab, we currently need to add an ssh key to the authenticating user
-		if clctrl.GitProvider == "gitlab" {
-			gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitToken, clctrl.GitOwner)
-			if err != nil {
-				return err
-			}
-			keys, err := gitlabClient.GetUserSSHKeys()
-			if err != nil {
-				log.Error("unable to check for ssh keys in gitlab: %s", err.Error())
-			}
-
-			var keyName = "kbot-ssh-key"
-			var keyFound bool = false
-			for _, key := range keys {
-				if key.Title == keyName {
-					if strings.Contains(key.Key, strings.TrimSuffix(clctrl.PublicKey, "\n")) {
-						log.Infof("ssh key %s already exists and key is up to date, continuing", keyName)
-						keyFound = true
-					} else {
-						log.Errorf("ssh key %s already exists and key data has drifted - please remove before continuing", keyName)
-					}
-				}
-			}
-			if !keyFound {
-				log.Infof("creating ssh key %s...", keyName)
-				err := gitlabClient.AddUserSSHKey(keyName, clctrl.PublicKey)
-				if err != nil {
-					log.Errorf("error adding ssh key %s: %s", keyName, err.Error())
-				}
-			}
+		err = internalssh.EvalSSHKey(&internalssh.EvalSSHKeyRequest{
+			GitProvider:     cl.GitProvider,
+			GitlabGroupFlag: cl.GitOwner,
+			GitToken:        cl.GitToken,
+		})
+		if err != nil {
+			return err
 		}
 
 		// Push gitops repo to remote
