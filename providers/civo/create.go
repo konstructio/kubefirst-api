@@ -179,6 +179,7 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 
 	err = ctrl.RunUsersTerraform()
 	if err != nil {
+		ctrl.HandleError(err.Error())
 		return err
 	}
 
