@@ -78,6 +78,10 @@ spec:
               value: {{ .Values.clusterType | default "bootstrap" | quote }}
             - name: USE_TELEMETRY
               value: {{ .Values.useTelemetry | default "true" | quote }}
+            - name: KUBEFIRST_TEAM
+              value: {{ .Values.kubefirstTeam | default "false" | quote }}
+            - name: KUBEFIRST_TEAM_INFO
+              value: {{ .Values.kubefirstTeamInfo | default "" }}
           {{- if .Values.env }}
             {{- range $envVar := .Values.env }}
             - name: {{ $envVar.name }}
@@ -159,5 +163,9 @@ spec:
             "--cluster-type",
             {{ .Values.clusterType | default "bootstrap" | quote }},
             "--install-method",
-            {{ .Values.installMethod | default "helm" | quote }}
+            {{ .Values.installMethod | default "helm" | quote }},
+            "--kubefirst-team",
+            {{ .Values.kubefirstTeam | default "false" | quote }},
+            "--kubefirst-team-info",
+            {{ .Values.kubefirstTeamInfo | default "" }}
           ]
