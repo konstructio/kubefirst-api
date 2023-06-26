@@ -165,7 +165,7 @@ spec:
             "--install-method",
             {{ .Values.installMethod | default "helm" | quote }},
             "--kubefirst-team",
-            {{ .Values.kubefirstTeam | default "false" | quote }},
+            {{ .Values.kubefirstTeam | default "undefined" | quote }},
             "--kubefirst-team-info",
-            {{ .Values.kubefirstTeamInfo | default "" }}
+            {{ .Values.kubefirstTeamInfo | default "undefined" }}
           ]
