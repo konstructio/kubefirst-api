@@ -81,7 +81,7 @@ spec:
             - name: KUBEFIRST_TEAM
               value: {{ .Values.kubefirstTeam | default "false" | quote }}
             - name: KUBEFIRST_TEAM_INFO
-              value: {{ .Values.kubefirstTeamInfo | default "" }}
+              value: {{ .Values.kubefirstTeamInfo | default "" | quote }}
           {{- if .Values.env }}
             {{- range $envVar := .Values.env }}
             - name: {{ $envVar.name }}
