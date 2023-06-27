@@ -26,7 +26,7 @@ const (
 // DeleteCluster
 func (mdbcl *MongoDBClient) DeleteCluster(clusterName string) error {
 	// Find
-	filter := bson.D{{"cluster_name", clusterName}}
+	filter := bson.D{{Key: "cluster_name", Value: clusterName}}
 
 	// Delete
 	resp, err := mdbcl.ClustersCollection.DeleteOne(mdbcl.Context, filter)
@@ -42,7 +42,7 @@ func (mdbcl *MongoDBClient) DeleteCluster(clusterName string) error {
 // GetCluster
 func (mdbcl *MongoDBClient) GetCluster(clusterName string) (types.Cluster, error) {
 	// Find
-	filter := bson.D{{"cluster_name", clusterName}}
+	filter := bson.D{{Key: "cluster_name", Value: clusterName}}
 	var result types.Cluster
 	err := mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {
@@ -85,7 +85,7 @@ func (mdbcl *MongoDBClient) GetClusters() ([]types.Cluster, error) {
 
 // InsertCluster
 func (mdbcl *MongoDBClient) InsertCluster(cl types.Cluster) error {
-	filter := bson.D{{"cluster_name", cl.ClusterName}}
+	filter := bson.D{{Key: "cluster_name", Value: cl.ClusterName}}
 	var result types.Cluster
 	err := mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {
@@ -108,7 +108,7 @@ func (mdbcl *MongoDBClient) InsertCluster(cl types.Cluster) error {
 // UpdateCluster
 func (mdbcl *MongoDBClient) UpdateCluster(clusterName string, field string, value interface{}) error {
 	// Find
-	filter := bson.D{{"cluster_name", clusterName}}
+	filter := bson.D{{Key: "cluster_name", Value: clusterName}}
 	var result types.Cluster
 	err := mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {
@@ -116,8 +116,8 @@ func (mdbcl *MongoDBClient) UpdateCluster(clusterName string, field string, valu
 	}
 
 	// Update
-	filter = bson.D{{"_id", result.ID}}
-	update := bson.D{{"$set", bson.D{{field, value}}}}
+	filter = bson.D{{Key: "_id", Value: result.ID}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: field, Value: value}}}}
 	_, err = mdbcl.ClustersCollection.UpdateOne(mdbcl.Context, filter, update)
 	if err != nil {
 		return fmt.Errorf("error updating cluster %s: %s", clusterName, err)
@@ -134,7 +134,7 @@ func (mdbcl *MongoDBClient) Export(clusterName string) error {
 	var remoteFilePath = fmt.Sprintf("%s.json", clusterName)
 
 	// Find
-	filter := bson.D{{"cluster_name", clusterName}}
+	filter := bson.D{{Key: "cluster_name", Value: clusterName}}
 	var result types.Cluster
 	err := mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {

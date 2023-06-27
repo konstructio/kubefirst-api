@@ -154,7 +154,7 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 		}
 		err = argocd.ArgoCDApplicationCleanup(kcfg.Clientset, removeArgoCDApps)
 		if err != nil {
-			log.Errorf("encountered error during argocd application cleanup: %s")
+			log.Errorf("encountered error during argocd application cleanup: %s", err)
 		}
 		// Pause before cluster destroy to prevent a race condition
 		log.Info("waiting for argocd application deletion to complete...")
