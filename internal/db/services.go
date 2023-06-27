@@ -17,7 +17,7 @@ import (
 
 // CreateClusterServiceList adds an entry for a cluster to the service list
 func (mdbcl *MongoDBClient) CreateClusterServiceList(cl *types.Cluster) error {
-	filter := bson.D{{"cluster_name", cl.ClusterName}}
+	filter := bson.D{{Key: "cluster_name", Value: cl.ClusterName}}
 	var result types.Cluster
 	err := mdbcl.ServicesCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {
@@ -42,7 +42,7 @@ func (mdbcl *MongoDBClient) CreateClusterServiceList(cl *types.Cluster) error {
 // DeleteClusterServiceListEntry removes a service entry from a cluster's service list
 func (mdbcl *MongoDBClient) DeleteClusterServiceListEntry(clusterName string, def *types.Service) error {
 	// Find
-	filter := bson.D{{"cluster_name", clusterName}}
+	filter := bson.D{{Key: "cluster_name", Value: clusterName}}
 
 	// Update
 	update := bson.M{"$pull": bson.M{"services": def}}
@@ -59,7 +59,7 @@ func (mdbcl *MongoDBClient) DeleteClusterServiceListEntry(clusterName string, de
 // GetService returns a single service associated with a given cluster
 func (mdbcl *MongoDBClient) GetService(clusterName string, serviceName string) (types.Service, error) {
 	// Find
-	filter := bson.D{{"cluster_name", clusterName}}
+	filter := bson.D{{Key: "cluster_name", Value: clusterName}}
 	var result types.ClusterServiceList
 	err := mdbcl.ServicesCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {
@@ -78,7 +78,7 @@ func (mdbcl *MongoDBClient) GetService(clusterName string, serviceName string) (
 // GetServices returns services associated with a given cluster
 func (mdbcl *MongoDBClient) GetServices(clusterName string) (types.ClusterServiceList, error) {
 	// Find
-	filter := bson.D{{"cluster_name", clusterName}}
+	filter := bson.D{{Key: "cluster_name", Value: clusterName}}
 	var result types.ClusterServiceList
 	err := mdbcl.ServicesCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {
@@ -91,7 +91,7 @@ func (mdbcl *MongoDBClient) GetServices(clusterName string) (types.ClusterServic
 // InsertClusterServiceListEntry appends a service entry for a cluster's service list
 func (mdbcl *MongoDBClient) InsertClusterServiceListEntry(clusterName string, def *types.Service) error {
 	// Find
-	filter := bson.D{{"cluster_name", clusterName}}
+	filter := bson.D{{Key: "cluster_name", Value: clusterName}}
 
 	// Update
 	update := bson.M{"$push": bson.M{"services": def}}

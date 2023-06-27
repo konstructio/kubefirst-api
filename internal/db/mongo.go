@@ -70,7 +70,7 @@ func Connect() *MongoDBClient {
 
 // TestDatabaseConnection
 func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
-	err := mdbcl.Client.Database("admin").RunCommand(mdbcl.Context, bson.D{{"ping", 1}}).Err()
+	err := mdbcl.Client.Database("admin").RunCommand(mdbcl.Context, bson.D{{Key: "ping", Value: 1}}).Err()
 	if err != nil {
 		log.Fatalf("error connecting to mongodb: %s", err)
 	}

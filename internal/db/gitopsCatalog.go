@@ -35,8 +35,8 @@ func (mdbcl *MongoDBClient) UpdateGitopsCatalogApps() error {
 		log.Errorf("error reading gitops catalog apps at startup: %s", err)
 	}
 
-	filter := bson.D{{"name", "gitops_catalog_application_list"}}
-	update := bson.D{{"$set", bson.D{{"apps", mpapps.Apps}}}}
+	filter := bson.D{{Key: "name", Value: "gitops_catalog_application_list"}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "apps", Value: mpapps.Apps}}}}
 	opts := options.Update().SetUpsert(true)
 
 	_, err = mdbcl.GitopsCatalogCollection.UpdateOne(mdbcl.Context, filter, update, opts)
