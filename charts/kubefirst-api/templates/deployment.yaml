@@ -28,7 +28,22 @@ spec:
       {{- end }}
       serviceAccountName: {{ include "kubefirst-api.serviceAccountName" . }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}  
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.initContainer.enabled }}
+      initContainers:
+        - name: wait-for-mongodb
+          image: busybox:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            [
+              'sh',
+              '-c',
+              'until nc -vz ${MONGODB_HOST} 27017; do echo "Waiting for mongodb..."; sleep 3; done;',
+            ]
+          env:
+            - name: MONGODB_HOST
+              value: {{ if not .Values.atlasDbHost }}{{ .Values.mongodbHost | default (printf "%s-mongodb.%s.svc.cluster.local" (.Release.Name ) (.Release.Namespace )) }}{{ else }}{{ .Values.atlasDbHost }}{{ end }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
         # ! need to address hostname of service below, also address namespace
@@ -63,6 +78,10 @@ spec:
               value: {{ .Values.clusterType | default "bootstrap" | quote }}
             - name: USE_TELEMETRY
               value: {{ .Values.useTelemetry | default "true" | quote }}
+            - name: KUBEFIRST_TEAM
+              value: {{ .Values.kubefirstTeam | default "false" | quote }}
+            - name: KUBEFIRST_TEAM_INFO
+              value: {{ .Values.kubefirstTeamInfo | default "" }}
           {{- if .Values.env }}
             {{- range $envVar := .Values.env }}
             - name: {{ $envVar.name }}
@@ -144,5 +163,9 @@ spec:
             "--cluster-type",
             {{ .Values.clusterType | default "bootstrap" | quote }},
             "--install-method",
-            {{ .Values.installMethod | default "helm" | quote }}
+            {{ .Values.installMethod | default "helm" | quote }},
+            "--kubefirst-team",
+            {{ .Values.kubefirstTeam | default "undefined" | quote }},
+            "--kubefirst-team-info",
+            {{ .Values.kubefirstTeamInfo | default "undefined" }}
           ]

@@ -202,9 +202,10 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			if err != nil {
 				return err
 			}
+
 			keys, err := gitlabClient.GetUserSSHKeys()
 			if err != nil {
-				log.Error("unable to check for ssh keys in gitlab: %s", err.Error())
+				log.Errorf("unable to check for ssh keys in gitlab: %s", err.Error())
 			}
 
 			var keyName = "kbot-ssh-key"

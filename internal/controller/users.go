@@ -104,5 +104,6 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 			return err
 		}
 	}
+
 	return nil
 }

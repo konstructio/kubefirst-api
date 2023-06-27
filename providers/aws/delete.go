@@ -156,7 +156,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 				removeArgoCDApps := []string{"ingress-nginx-components", "ingress-nginx"}
 				err = argocd.ArgoCDApplicationCleanup(kcfg.Clientset, removeArgoCDApps)
 				if err != nil {
-					log.Errorf("encountered error during argocd application cleanup: %s")
+					log.Errorf("encountered error during argocd application cleanup: %s", err)
 				}
 
 				log.Info("opening argocd port forward")

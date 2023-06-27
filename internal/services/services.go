@@ -9,6 +9,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 
@@ -23,6 +24,7 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/gitopsCatalog"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/runtime/pkg/argocd"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/gitClient"
 	"github.com/kubefirst/runtime/pkg/k8s"
@@ -33,6 +35,15 @@ import (
 
 // CreateService
 func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCatalogApp, req *types.GitopsCatalogAppCreateRequest) error {
+	// Logging handler
+	// Logs to stdout to maintain compatibility with event streaming
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "",
+	})
+	log.SetReportCaller(false)
+	log.SetOutput(os.Stdout)
+
 	switch cl.Status {
 	case constants.ClusterStatusDeleted, constants.ClusterStatusDeleting, constants.ClusterStatusError, constants.ClusterStatusProvisioning:
 		return fmt.Errorf("cluster %s - unable to deploy service %s to cluster: cannot deploy services to a cluster in %s state", cl.ClusterName, serviceName, cl.Status)
@@ -160,11 +171,18 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 	}
 
 	// Sync registry
-	registryApplication, err := argocdClient.ArgoprojV1alpha1().Applications("argocd").Get(context.Background(), "registry", v1.GetOptions{})
+	argoCDHost := fmt.Sprintf("https://argocd.%s", cl.DomainName)
+	httpClient := http.Client{Timeout: time.Second * 10}
+	argoCDToken, err := argocd.GetArgocdTokenV2(&httpClient, argoCDHost, "admin", cl.ArgoCDPassword)
 	if err != nil {
-		log.Warnf("cluster %s - could not get registry application data: %s", cl.ClusterName, err)
+		log.Warnf("error getting argocd token: %s", err)
+		return err
 	}
-	registryApplication.SetAnnotations(map[string]string{"argocd.argoproj.io/refresh": "hard"})
+	err = argocd.RefreshRegistryApplication(argoCDHost, argoCDToken)
+	if err != nil {
+		log.Warnf("error refreshing registry application: %s", err)
+		return err
+	}
 
 	// Wait for app to be created
 	for i := 0; i < 50; i++ {
@@ -179,6 +197,7 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 			return fmt.Errorf("cluster %s - error waiting for app %s to be created: %s", cl.ClusterName, serviceName, err)
 		}
 	}
+
 	// Wait for app to be synchronized and healthy
 	for i := 0; i < 50; i++ {
 		if i == 50 {
