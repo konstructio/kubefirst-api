@@ -118,7 +118,6 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 	err = gitShim.PullWithAuth(gitopsRepo, cl.GitProvider, "main", publicKeys)
 	if err != nil {
 		log.Warnf("cluster %s - error pulling gitops repo: %s", cl.ClusterName, err)
-		return err
 	}
 	files, err := gitopsCatalog.ReadApplicationDirectory(serviceName)
 	if err != nil {
