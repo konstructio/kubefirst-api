@@ -22,6 +22,7 @@ import (
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/internal/gitopsCatalog"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/pkg/argocd"
@@ -59,6 +60,11 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 	gitopsDir := fmt.Sprintf("%s/.k1/%s/gitops", homeDir, cl.ClusterName)
 	gitopsRepo, _ = git.PlainOpen(gitopsDir)
 	serviceFile := fmt.Sprintf("%s/registry/%s/%s.yaml", gitopsDir, cl.ClusterName, serviceName)
+
+	publicKeys, err := ssh.NewPublicKeys("git", []byte(cl.PrivateKey), "")
+	if err != nil {
+		return err
+	}
 
 	var kcfg *k8s.KubernetesClient
 
@@ -109,9 +115,10 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 	}
 
 	// Create service files in gitops dir
-	err = gitClient.Pull(gitopsRepo, cl.GitProvider, "main")
+	err = gitShim.PullWithAuth(gitopsRepo, cl.GitProvider, "main", publicKeys)
 	if err != nil {
 		log.Warnf("cluster %s - error pulling gitops repo: %s", cl.ClusterName, err)
+		return err
 	}
 	files, err := gitopsCatalog.ReadApplicationDirectory(serviceName)
 	if err != nil {
@@ -132,16 +139,12 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 			return err
 		}
 	}
-	f.Close()
+	defer f.Close()
 
 	// Commit to gitops repository
 	err = gitClient.Commit(gitopsRepo, fmt.Sprintf("committing files for service %s", serviceName))
 	if err != nil {
 		return fmt.Errorf("cluster %s - error committing service file: %s", cl.ClusterName, err)
-	}
-	publicKeys, err := ssh.NewPublicKeys("git", []byte(cl.PrivateKey), "")
-	if err != nil {
-		return err
 	}
 	err = gitopsRepo.Push(&git.PushOptions{
 		RemoteName: cl.GitProvider,
@@ -230,8 +233,13 @@ func DeleteService(cl *types.Cluster, serviceName string) error {
 	gitopsRepo, _ = git.PlainOpen(gitopsDir)
 	serviceFile := fmt.Sprintf("%s/registry/%s/%s.yaml", gitopsDir, cl.ClusterName, serviceName)
 
+	publicKeys, err := ssh.NewPublicKeys("git", []byte(cl.PrivateKey), "")
+	if err != nil {
+		return err
+	}
+
 	// Delete service files from gitops dir
-	err = gitClient.Pull(gitopsRepo, cl.GitProvider, "main")
+	err = gitShim.PullWithAuth(gitopsRepo, cl.GitProvider, "main", publicKeys)
 	if err != nil {
 		log.Warnf("cluster %s - error pulling gitops repo: %s", cl.ClusterName, err)
 	}
@@ -249,10 +257,6 @@ func DeleteService(cl *types.Cluster, serviceName string) error {
 	err = gitClient.Commit(gitopsRepo, fmt.Sprintf("deleting files for service %s", serviceName))
 	if err != nil {
 		return fmt.Errorf("cluster %s - error deleting service file: %s", cl.ClusterName, err)
-	}
-	publicKeys, err := ssh.NewPublicKeys("git", []byte(cl.PrivateKey), "")
-	if err != nil {
-		return err
 	}
 	err = gitopsRepo.Push(&git.PushOptions{
 		RemoteName: cl.GitProvider,
