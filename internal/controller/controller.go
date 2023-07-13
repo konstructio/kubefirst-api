@@ -19,14 +19,12 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 	"github.com/kubefirst/runtime/pkg"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
-	"github.com/kubefirst/runtime/pkg/civo"
-	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/github"
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/handlers"
+	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/services"
-	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -49,7 +47,7 @@ type ClusterController struct {
 	AwsSecretAccessKey string
 
 	// configs
-	ProviderConfig interface{}
+	ProviderConfig providerConfigs.ProviderConfig
 
 	// git
 	GitopsTemplateURL    string
@@ -236,16 +234,16 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	// Instantiate provider configuration
 	switch clctrl.CloudProvider {
 	case "aws":
-		clctrl.ProviderConfig = awsinternal.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
 	case "civo":
-		clctrl.ProviderConfig = civo.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
-		clctrl.ProviderConfig.(*civo.CivoConfig).CivoToken = clctrl.CivoAuth.Token
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
+		clctrl.ProviderConfig.CivoToken = clctrl.CivoAuth.Token
 	case "digitalocean":
-		clctrl.ProviderConfig = digitalocean.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
-		clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).DigitaloceanToken = clctrl.DigitaloceanAuth.Token
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
+		clctrl.ProviderConfig.DigitaloceanToken = clctrl.DigitaloceanAuth.Token
 	case "vultr":
-		clctrl.ProviderConfig = vultr.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
-		clctrl.ProviderConfig.(*vultr.VultrConfig).VultrToken = clctrl.VultrAuth.Token
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
+		clctrl.ProviderConfig.VultrToken = clctrl.VultrAuth.Token
 	}
 
 	// Instantiate provider clients

@@ -26,6 +26,7 @@ import (
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 )
@@ -51,7 +52,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricClusterDeleteStarted, "")
 
 	// Instantiate aws config
-	config := awsinternal.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner)
+	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner)
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleting)
 	if err != nil {
@@ -188,7 +189,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 					return err
 				}
 
-				log.Infof("port-forward to argocd is available at %s", awsinternal.ArgocdPortForwardURL)
+				log.Infof("port-forward to argocd is available at %s", providerConfigs.ArgocdPortForwardURL)
 
 				customTransport := http.DefaultTransport.(*http.Transport).Clone()
 				customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}

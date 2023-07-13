@@ -27,6 +27,7 @@ import (
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 )
@@ -52,7 +53,7 @@ func DeleteDigitaloceanCluster(cl *types.Cluster) error {
 	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricClusterDeleteStarted, "")
 
 	// Instantiate digitalocean config
-	config := digitalocean.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner)
+	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner)
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleting)
 	if err != nil {
@@ -209,7 +210,7 @@ func DeleteDigitaloceanCluster(cl *types.Cluster) error {
 					return err
 				}
 
-				log.Infof("port-forward to argocd is available at %s", digitalocean.ArgocdPortForwardURL)
+				log.Infof("port-forward to argocd is available at %s", providerConfigs.ArgocdPortForwardURL)
 
 				customTransport := http.DefaultTransport.(*http.Transport).Clone()
 				customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}

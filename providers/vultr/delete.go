@@ -26,6 +26,7 @@ import (
 	"github.com/kubefirst/runtime/pkg/argocd"
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
@@ -52,7 +53,7 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricClusterDeleteStarted, "")
 
 	// Instantiate vultr config
-	config := vultr.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner)
+	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner)
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleting)
 	if err != nil {
@@ -208,7 +209,7 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 					return err
 				}
 
-				log.Infof("port-forward to argocd is available at %s", vultr.ArgocdPortForwardURL)
+				log.Infof("port-forward to argocd is available at %s", providerConfigs.ArgocdPortForwardURL)
 
 				customTransport := http.DefaultTransport.(*http.Transport).Clone()
 				customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}

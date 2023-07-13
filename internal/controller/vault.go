@@ -18,13 +18,9 @@ import (
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	awsinternal "github.com/kubefirst/runtime/pkg/aws"
-	"github.com/kubefirst/runtime/pkg/civo"
-	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/vault"
-	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -60,14 +56,8 @@ func (clctrl *ClusterController) InitializeVault() error {
 		switch clctrl.CloudProvider {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-		case "civo":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
-			vaultHandlerPath = "github.com:kubefirst/manifests.git/vault-handler/replicas-3"
-		case "digitalocean":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig)
-			vaultHandlerPath = "github.com:kubefirst/manifests.git/vault-handler/replicas-3"
-		case "vultr":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
+		case "civo", "digitalocean", "vultr":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 			vaultHandlerPath = "github.com:kubefirst/manifests.git/vault-handler/replicas-3"
 		}
 
@@ -170,12 +160,8 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		switch clctrl.CloudProvider {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-		case "civo":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
-		case "digitalocean":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig)
-		case "vultr":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
+		case "civo", "digitalocean", "vultr":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 		}
 
 		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricVaultTerraformApplyStarted, "")
@@ -211,8 +197,8 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 				tfEnvs["TF_VAR_owner_group_id"] = strconv.Itoa(clctrl.GitlabOwnerGroupID)
 			}
 
-			tfEntrypoint = clctrl.ProviderConfig.(*awsinternal.AwsConfig).GitopsDir + "/terraform/vault"
-			terraformClient = clctrl.ProviderConfig.(*awsinternal.AwsConfig).TerraformClient
+			tfEntrypoint = clctrl.ProviderConfig.GitopsDir + "/terraform/vault"
+			terraformClient = clctrl.ProviderConfig.TerraformClient
 		case "civo":
 			tfEnvs = civoext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, &cl)
@@ -223,8 +209,8 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 				tfEnvs["TF_VAR_owner_group_id"] = strconv.Itoa(clctrl.GitlabOwnerGroupID)
 			}
 
-			tfEntrypoint = clctrl.ProviderConfig.(*civo.CivoConfig).GitopsDir + "/terraform/vault"
-			terraformClient = clctrl.ProviderConfig.(*civo.CivoConfig).TerraformClient
+			tfEntrypoint = clctrl.ProviderConfig.GitopsDir + "/terraform/vault"
+			terraformClient = clctrl.ProviderConfig.TerraformClient
 		case "digitalocean":
 			tfEnvs = digitaloceanext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, &cl)
@@ -235,8 +221,8 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 				tfEnvs["TF_VAR_owner_group_id"] = strconv.Itoa(clctrl.GitlabOwnerGroupID)
 			}
 
-			tfEntrypoint = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).GitopsDir + "/terraform/vault"
-			terraformClient = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient
+			tfEntrypoint = clctrl.ProviderConfig.GitopsDir + "/terraform/vault"
+			terraformClient = clctrl.ProviderConfig.TerraformClient
 		case "vultr":
 			tfEnvs = vultrext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
@@ -247,8 +233,8 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 				tfEnvs["TF_VAR_owner_group_id"] = strconv.Itoa(clctrl.GitlabOwnerGroupID)
 			}
 
-			tfEntrypoint = clctrl.ProviderConfig.(*vultr.VultrConfig).GitopsDir + "/terraform/vault"
-			terraformClient = clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient
+			tfEntrypoint = clctrl.ProviderConfig.GitopsDir + "/terraform/vault"
+			terraformClient = clctrl.ProviderConfig.TerraformClient
 		}
 
 		err = terraformext.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
@@ -286,12 +272,8 @@ func (clctrl *ClusterController) WaitForVault() error {
 	switch clctrl.CloudProvider {
 	case "aws":
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-	case "civo":
-		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
-	case "digitalocean":
-		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig)
-	case "vultr":
-		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
+	case "civo", "digitalocean", "vultr":
+		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 	}
 
 	vaultStatefulSet, err := k8s.ReturnStatefulSetObject(
