@@ -38,6 +38,14 @@ const docTemplate = `{
                         "name": "domain",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -85,6 +93,14 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/types.CivoDomainValidationRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -116,6 +132,16 @@ const docTemplate = `{
                     "cluster"
                 ],
                 "summary": "Return all known configured Kubefirst clusters",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -154,6 +180,14 @@ const docTemplate = `{
                         "description": "Cluster name",
                         "name": "cluster_name",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -200,6 +234,14 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/types.ClusterDefinition"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -235,6 +277,14 @@ const docTemplate = `{
                         "description": "Cluster name",
                         "name": "cluster_name",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -274,6 +324,14 @@ const docTemplate = `{
                         "name": "cluster_name",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -311,6 +369,14 @@ const docTemplate = `{
                         "description": "Cluster name",
                         "name": "cluster_name",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -352,6 +418,14 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/types.ImportClusterRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -392,6 +466,14 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/types.DomainListRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -423,6 +505,16 @@ const docTemplate = `{
                     "gitops-catalog"
                 ],
                 "summary": "Returns a list of available Kubefirst gitops catalog applications",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -452,6 +544,16 @@ const docTemplate = `{
                     "gitops-catalog"
                 ],
                 "summary": "Updates the list of available Kubefirst gitops catalog applications",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -520,6 +622,14 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/types.RegionListRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -557,6 +667,14 @@ const docTemplate = `{
                         "description": "Cluster name",
                         "name": "cluster_name",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -612,6 +730,14 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/types.GitopsCatalogAppCreateRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -655,6 +781,14 @@ const docTemplate = `{
                         "name": "service_name",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -680,6 +814,16 @@ const docTemplate = `{
                     "logs"
                 ],
                 "summary": "Stream API server logs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {}
             }
         },
@@ -709,6 +853,14 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/types.TelemetryRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
