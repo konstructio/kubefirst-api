@@ -12,6 +12,7 @@ import (
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
+	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 )
@@ -40,9 +41,9 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 		switch cl.CloudProvider {
 		case "aws":
 			err := awsinternal.DownloadTools(
-				clctrl.ProviderConfig.(*awsinternal.AwsConfig),
-				awsinternal.KubectlClientVersion,
-				awsinternal.TerraformClientVersion,
+				&clctrl.ProviderConfig,
+				providerConfigs.KubectlClientVersion,
+				providerConfigs.TerraformClientVersion,
 			)
 			if err != nil {
 				log.Errorf("error downloading dependencies: %s", err)
@@ -50,11 +51,11 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 			}
 		case "civo":
 			err := civo.DownloadTools(
-				clctrl.ProviderConfig.(*civo.CivoConfig).KubectlClient,
-				civo.KubectlClientVersion,
-				civo.LocalhostOS,
-				civo.LocalhostArch,
-				civo.TerraformClientVersion,
+				clctrl.ProviderConfig.KubectlClient,
+				providerConfigs.KubectlClientVersion,
+				providerConfigs.LocalhostOS,
+				providerConfigs.LocalhostArch,
+				providerConfigs.TerraformClientVersion,
 				toolsDir,
 			)
 			if err != nil {
@@ -63,11 +64,11 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 			}
 		case "digitalocean":
 			err := digitalocean.DownloadTools(
-				clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).KubectlClient,
-				digitalocean.KubectlClientVersion,
-				digitalocean.LocalhostOS,
-				digitalocean.LocalhostArch,
-				digitalocean.TerraformClientVersion,
+				clctrl.ProviderConfig.KubectlClient,
+				providerConfigs.KubectlClientVersion,
+				providerConfigs.LocalhostOS,
+				providerConfigs.LocalhostArch,
+				providerConfigs.TerraformClientVersion,
 				toolsDir,
 			)
 			if err != nil {
@@ -76,11 +77,11 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 			}
 		case "vultr":
 			err := vultr.DownloadTools(
-				clctrl.ProviderConfig.(*vultr.VultrConfig).KubectlClient,
-				vultr.KubectlClientVersion,
-				vultr.LocalhostOS,
-				vultr.LocalhostArch,
-				vultr.TerraformClientVersion,
+				clctrl.ProviderConfig.KubectlClient,
+				providerConfigs.KubectlClientVersion,
+				providerConfigs.LocalhostOS,
+				providerConfigs.LocalhostArch,
+				providerConfigs.TerraformClientVersion,
 				toolsDir,
 			)
 			if err != nil {

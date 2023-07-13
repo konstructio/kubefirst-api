@@ -15,7 +15,6 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/kubefirst-api/internal/types"
-	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/ssl"
@@ -34,7 +33,7 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
-	err = ctrl.DownloadTools(ctrl.ProviderConfig.(*civo.CivoConfig).ToolsDir)
+	err = ctrl.DownloadTools(ctrl.ProviderConfig.ToolsDir)
 	if err != nil {
 		ctrl.HandleError(err.Error())
 		return err
@@ -104,7 +103,7 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 
 	//* check for ssl restore
 	log.Info("checking for tls secrets to restore")
-	secretsFilesToRestore, err := os.ReadDir(ctrl.ProviderConfig.(*civo.CivoConfig).SSLBackupDir + "/secrets")
+	secretsFilesToRestore, err := os.ReadDir(ctrl.ProviderConfig.SSLBackupDir + "/secrets")
 	if err != nil {
 		log.Infof("%s", err)
 	}
@@ -115,7 +114,7 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 		// https://raw.githubusercontent.com/cert-manager/cert-manager/v1.11.0/deploy/crds/crd-certificates.yaml
 		// add certificates, and clusterissuers
 		log.Infof("found %d tls secrets to restore", len(secretsFilesToRestore))
-		ssl.Restore(ctrl.ProviderConfig.(*civo.CivoConfig).SSLBackupDir, ctrl.DomainName, ctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
+		ssl.Restore(ctrl.ProviderConfig.SSLBackupDir, ctrl.DomainName, ctrl.ProviderConfig.Kubeconfig)
 	} else {
 		log.Info("no files found in secrets directory, continuing")
 	}
@@ -151,7 +150,7 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 	}
 
 	// Create kubeconfig client
-	kcfg := k8s.CreateKubeConfig(false, ctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
+	kcfg := k8s.CreateKubeConfig(false, ctrl.ProviderConfig.Kubeconfig)
 
 	// SetupMinioStorage(kcfg, ctrl.ProviderConfig.K1Dir, ctrl.GitProvider)
 

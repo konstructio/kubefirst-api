@@ -12,7 +12,6 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/kubefirst/runtime/pkg"
-	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/gitClient"
 )
 
@@ -27,7 +26,7 @@ func (clctrl *ClusterController) DetokenizeKMSKeyID() error {
 		switch clctrl.CloudProvider {
 		case "aws":
 			// KMS
-			gitopsRepo, err := git.PlainOpen(clctrl.ProviderConfig.(*awsinternal.AwsConfig).GitopsDir)
+			gitopsRepo, err := git.PlainOpen(clctrl.ProviderConfig.GitopsDir)
 			if err != nil {
 				return err
 			}
@@ -42,7 +41,7 @@ func (clctrl *ClusterController) DetokenizeKMSKeyID() error {
 			}
 
 			if err := pkg.ReplaceFileContent(
-				fmt.Sprintf("%s/registry/%s/components/vault/application.yaml", clctrl.ProviderConfig.(*awsinternal.AwsConfig).GitopsDir, clctrl.ClusterName),
+				fmt.Sprintf("%s/registry/%s/components/vault/application.yaml", clctrl.ProviderConfig.GitopsDir, clctrl.ClusterName),
 				"<AWS_KMS_KEY_ID>",
 				awsKmsKeyId,
 			); err != nil {

@@ -19,7 +19,6 @@ import (
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/ssl"
-	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -36,7 +35,7 @@ func CreateVultrCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
-	err = ctrl.DownloadTools(ctrl.ProviderConfig.(*vultr.VultrConfig).ToolsDir)
+	err = ctrl.DownloadTools(ctrl.ProviderConfig.ToolsDir)
 	if err != nil {
 		ctrl.HandleError(err.Error())
 		return err
@@ -100,7 +99,7 @@ func CreateVultrCluster(definition *types.ClusterDefinition) error {
 
 	//* check for ssl restore
 	log.Info("checking for tls secrets to restore")
-	secretsFilesToRestore, err := os.ReadDir(ctrl.ProviderConfig.(*vultr.VultrConfig).SSLBackupDir + "/secrets")
+	secretsFilesToRestore, err := os.ReadDir(ctrl.ProviderConfig.SSLBackupDir + "/secrets")
 	if err != nil {
 		log.Infof("%s", err)
 	}
@@ -111,7 +110,7 @@ func CreateVultrCluster(definition *types.ClusterDefinition) error {
 		// https://raw.githubusercontent.com/cert-manager/cert-manager/v1.11.0/deploy/crds/crd-certificates.yaml
 		// add certificates, and clusterissuers
 		log.Infof("found %d tls secrets to restore", len(secretsFilesToRestore))
-		ssl.Restore(ctrl.ProviderConfig.(*vultr.VultrConfig).SSLBackupDir, ctrl.DomainName, ctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
+		ssl.Restore(ctrl.ProviderConfig.SSLBackupDir, ctrl.DomainName, ctrl.ProviderConfig.Kubeconfig)
 	} else {
 		log.Info("no files found in secrets directory, continuing")
 	}
@@ -147,7 +146,7 @@ func CreateVultrCluster(definition *types.ClusterDefinition) error {
 	}
 
 	// Create kubeconfig client
-	kcfg := k8s.CreateKubeConfig(false, ctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
+	kcfg := k8s.CreateKubeConfig(false, ctrl.ProviderConfig.Kubeconfig)
 
 	// SetupMinioStorage(kcfg, ctrl.ProviderConfig.K1Dir, ctrl.GitProvider)
 

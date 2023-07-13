@@ -15,12 +15,8 @@ import (
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	awsinternal "github.com/kubefirst/runtime/pkg/aws"
-	"github.com/kubefirst/runtime/pkg/civo"
-	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
-	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -53,12 +49,8 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		switch clctrl.CloudProvider {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-		case "civo":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
-		case "digitalocean":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig)
-		case "vultr":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
+		case "civo", "digitalocean", "vultr":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 		}
 
 		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricUsersTerraformApplyStarted, "")
@@ -71,23 +63,23 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		case "aws":
 			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, &cl)
 			tfEnvs = awsext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
-			tfEntrypoint = clctrl.ProviderConfig.(*awsinternal.AwsConfig).GitopsDir + "/terraform/users"
-			terraformClient = clctrl.ProviderConfig.(*awsinternal.AwsConfig).TerraformClient
+			tfEntrypoint = clctrl.ProviderConfig.GitopsDir + "/terraform/users"
+			terraformClient = clctrl.ProviderConfig.TerraformClient
 		case "civo":
 			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, &cl)
 			tfEnvs = civoext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
-			tfEntrypoint = clctrl.ProviderConfig.(*civo.CivoConfig).GitopsDir + "/terraform/users"
-			terraformClient = clctrl.ProviderConfig.(*civo.CivoConfig).TerraformClient
+			tfEntrypoint = clctrl.ProviderConfig.GitopsDir + "/terraform/users"
+			terraformClient = clctrl.ProviderConfig.TerraformClient
 		case "digitalocean":
 			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, &cl)
 			tfEnvs = digitaloceanext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
-			tfEntrypoint = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).GitopsDir + "/terraform/users"
-			terraformClient = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient
+			tfEntrypoint = clctrl.ProviderConfig.GitopsDir + "/terraform/users"
+			terraformClient = clctrl.ProviderConfig.TerraformClient
 		case "vultr":
 			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
 			tfEnvs = vultrext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
-			tfEntrypoint = clctrl.ProviderConfig.(*vultr.VultrConfig).GitopsDir + "/terraform/users"
-			terraformClient = clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient
+			tfEntrypoint = clctrl.ProviderConfig.GitopsDir + "/terraform/users"
+			terraformClient = clctrl.ProviderConfig.TerraformClient
 		}
 
 		err = terraformext.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)

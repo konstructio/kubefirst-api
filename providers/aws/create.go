@@ -55,7 +55,7 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
-	err = ctrl.DownloadTools(ctrl.ProviderConfig.(*awsinternal.AwsConfig).ToolsDir)
+	err = ctrl.DownloadTools(ctrl.ProviderConfig.ToolsDir)
 	if err != nil {
 		ctrl.HandleError(err.Error())
 		return err
@@ -178,7 +178,7 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 			Data: map[string][]byte{
 				"type":          []byte("git"),
 				"name":          []byte(fmt.Sprintf("%s-gitops", ctrl.GitOwner)),
-				"url":           []byte(ctrl.ProviderConfig.(*awsinternal.AwsConfig).DestinationGitopsRepoGitURL),
+				"url":           []byte(ctrl.ProviderConfig.DestinationGitopsRepoGitURL),
 				"sshPrivateKey": []byte(rec.PrivateKey),
 			},
 		}

@@ -14,10 +14,10 @@ import (
 	"github.com/go-git/go-git/v5"
 	gitssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/gitlab"
+	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
@@ -44,76 +44,81 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 
 		switch clctrl.CloudProvider {
 		case "aws":
-			err := awsinternal.PrepareGitRepositories(
+			err := providerConfigs.PrepareGitRepositories(
+				clctrl.CloudProvider,
 				clctrl.GitProvider,
 				clctrl.ClusterName,
 				clctrl.ClusterType,
 				AWSDestinationGitopsRepoGitURL,
-				clctrl.ProviderConfig.(*awsinternal.AwsConfig).GitopsDir,
+				clctrl.ProviderConfig.GitopsDir,
 				clctrl.GitopsTemplateBranch,
 				clctrl.GitopsTemplateURL,
 				AWSDestinationMetaphorRepoGitURL,
-				clctrl.ProviderConfig.(*awsinternal.AwsConfig).K1Dir,
-				clctrl.CreateTokens("gitops").(*awsinternal.GitOpsDirectoryValues),
-				clctrl.ProviderConfig.(*awsinternal.AwsConfig).MetaphorDir,
-				clctrl.CreateTokens("metaphor").(*awsinternal.MetaphorTokenValues),
+				clctrl.ProviderConfig.K1Dir,
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitOpsDirectoryValues),
+				clctrl.ProviderConfig.MetaphorDir,
+				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues),
+				true,
 			)
 			if err != nil {
 				return err
 			}
 		case "civo":
-			err = civo.PrepareGitRepositories(
+			err := providerConfigs.PrepareGitRepositories(
+				clctrl.CloudProvider,
 				clctrl.GitProvider,
 				clctrl.ClusterName,
 				clctrl.ClusterType,
 				CivoDestinationGitopsRepoGitURL,
-				clctrl.ProviderConfig.(*civo.CivoConfig).GitopsDir,
+				clctrl.ProviderConfig.GitopsDir,
 				clctrl.GitopsTemplateBranch,
 				clctrl.GitopsTemplateURL,
 				CivoDestinationMetaphorRepoGitURL,
-				clctrl.ProviderConfig.(*civo.CivoConfig).K1Dir,
-				clctrl.CreateTokens("gitops").(*civo.GitOpsDirectoryValues),
-				clctrl.ProviderConfig.(*civo.CivoConfig).MetaphorDir,
-				clctrl.CreateTokens("metaphor").(*civo.MetaphorTokenValues),
+				clctrl.ProviderConfig.K1Dir,
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitOpsDirectoryValues),
+				clctrl.ProviderConfig.MetaphorDir,
+				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues),
 				civo.GetDomainApexContent(clctrl.DomainName),
 			)
 			if err != nil {
 				return err
 			}
 		case "digitalocean":
-			err = digitalocean.PrepareGitRepositories(
+			err = providerConfigs.PrepareGitRepositories(
+				clctrl.CloudProvider,
 				clctrl.GitProvider,
 				clctrl.ClusterName,
 				clctrl.ClusterType,
 				DigitaloceanDestinationGitopsRepoGitURL,
-				clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).GitopsDir,
+				clctrl.ProviderConfig.GitopsDir,
 				clctrl.GitopsTemplateBranch,
 				clctrl.GitopsTemplateURL,
 				DigitaloceanDestinationMetaphorRepoGitURL,
-				clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).K1Dir,
-				clctrl.CreateTokens("gitops").(*digitalocean.GitOpsDirectoryValues),
-				clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).MetaphorDir,
-				clctrl.CreateTokens("metaphor").(*digitalocean.MetaphorTokenValues),
-				civo.GetDomainApexContent(clctrl.DomainName),
+				clctrl.ProviderConfig.K1Dir,
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitOpsDirectoryValues),
+				clctrl.ProviderConfig.MetaphorDir,
+				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues),
+				digitalocean.GetDomainApexContent(clctrl.DomainName),
 			)
 			if err != nil {
 				return err
 			}
 		case "vultr":
-			err = vultr.PrepareGitRepositories(
+			err = providerConfigs.PrepareGitRepositories(
+				clctrl.CloudProvider,
 				clctrl.GitProvider,
 				clctrl.ClusterName,
 				clctrl.ClusterType,
 				VultrDestinationGitopsRepoGitURL,
-				clctrl.ProviderConfig.(*vultr.VultrConfig).GitopsDir,
+				clctrl.ProviderConfig.GitopsDir,
 				clctrl.GitopsTemplateBranch,
 				clctrl.GitopsTemplateURL,
 				VultrDestinationMetaphorRepoGitURL,
-				clctrl.ProviderConfig.(*vultr.VultrConfig).K1Dir,
-				clctrl.CreateTokens("gitops").(*vultr.GitOpsDirectoryValues),
-				clctrl.ProviderConfig.(*vultr.VultrConfig).MetaphorDir,
-				clctrl.CreateTokens("metaphor").(*vultr.MetaphorTokenValues),
-				civo.GetDomainApexContent(clctrl.DomainName),
+				clctrl.ProviderConfig.K1Dir,
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitOpsDirectoryValues),
+				clctrl.ProviderConfig.MetaphorDir,
+				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues),
+				vultr.GetDomainApexContent(clctrl.DomainName),
 			)
 			if err != nil {
 				return err
@@ -160,30 +165,10 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			log.Infof("generate public keys failed: %s\n", err.Error())
 		}
 
-		var gitopsDir, metaphorDir, destinationGitopsRepoGitURL, destinationMetaphorRepoGitURL string
-
-		switch clctrl.CloudProvider {
-		case "aws":
-			gitopsDir = clctrl.ProviderConfig.(*awsinternal.AwsConfig).GitopsDir
-			metaphorDir = clctrl.ProviderConfig.(*awsinternal.AwsConfig).MetaphorDir
-			destinationGitopsRepoGitURL = clctrl.ProviderConfig.(*awsinternal.AwsConfig).DestinationGitopsRepoGitURL
-			destinationMetaphorRepoGitURL = clctrl.ProviderConfig.(*awsinternal.AwsConfig).DestinationMetaphorRepoGitURL
-		case "civo":
-			gitopsDir = clctrl.ProviderConfig.(*civo.CivoConfig).GitopsDir
-			metaphorDir = clctrl.ProviderConfig.(*civo.CivoConfig).MetaphorDir
-			destinationGitopsRepoGitURL = clctrl.ProviderConfig.(*civo.CivoConfig).DestinationGitopsRepoGitURL
-			destinationMetaphorRepoGitURL = clctrl.ProviderConfig.(*civo.CivoConfig).DestinationMetaphorRepoGitURL
-		case "digitalocean":
-			gitopsDir = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).GitopsDir
-			metaphorDir = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).MetaphorDir
-			destinationGitopsRepoGitURL = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).DestinationGitopsRepoGitURL
-			destinationMetaphorRepoGitURL = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).DestinationMetaphorRepoGitURL
-		case "vultr":
-			gitopsDir = clctrl.ProviderConfig.(*vultr.VultrConfig).GitopsDir
-			metaphorDir = clctrl.ProviderConfig.(*vultr.VultrConfig).MetaphorDir
-			destinationGitopsRepoGitURL = clctrl.ProviderConfig.(*vultr.VultrConfig).DestinationGitopsRepoGitURL
-			destinationMetaphorRepoGitURL = clctrl.ProviderConfig.(*vultr.VultrConfig).DestinationMetaphorRepoGitURL
-		}
+		gitopsDir := clctrl.ProviderConfig.GitopsDir
+		metaphorDir := clctrl.ProviderConfig.MetaphorDir
+		destinationGitopsRepoGitURL := clctrl.ProviderConfig.DestinationGitopsRepoGitURL
+		destinationMetaphorRepoGitURL := clctrl.ProviderConfig.DestinationMetaphorRepoGitURL
 
 		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitopsRepoPushStarted, "")
 		gitopsRepo, err := git.PlainOpen(gitopsDir)

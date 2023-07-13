@@ -18,13 +18,10 @@ import (
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/runtime/configs"
-	awsinternal "github.com/kubefirst/runtime/pkg/aws"
-	"github.com/kubefirst/runtime/pkg/civo"
-	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/segment"
-	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -79,7 +76,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 
 			log.Info("creating aws cloud resources with terraform")
 
-			tfEntrypoint := clctrl.ProviderConfig.(*awsinternal.AwsConfig).GitopsDir + "/terraform/aws"
+			tfEntrypoint := clctrl.ProviderConfig.GitopsDir + "/terraform/aws"
 			tfEnvs := map[string]string{}
 			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, &cl)
 			iamCaller, err := clctrl.AwsClient.GetCallerIdentity()
@@ -93,7 +90,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 				return err
 			}
 
-			err = terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.(*awsinternal.AwsConfig).TerraformClient, tfEntrypoint, tfEnvs)
+			err = terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				msg := fmt.Sprintf("error creating aws resources with terraform %s: %s", tfEntrypoint, err)
 				log.Error(msg)
@@ -113,10 +110,10 @@ func (clctrl *ClusterController) CreateCluster() error {
 
 			log.Info("creating civo cloud resources with terraform")
 
-			tfEntrypoint := clctrl.ProviderConfig.(*civo.CivoConfig).GitopsDir + "/terraform/civo"
+			tfEntrypoint := clctrl.ProviderConfig.GitopsDir + "/terraform/civo"
 			tfEnvs := map[string]string{}
 			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, &cl)
-			err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.(*civo.CivoConfig).TerraformClient, tfEntrypoint, tfEnvs)
+			err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				msg := fmt.Sprintf("error creating civo resources with terraform %s: %s", tfEntrypoint, err)
 				log.Error(msg)
@@ -136,10 +133,10 @@ func (clctrl *ClusterController) CreateCluster() error {
 
 			log.Info("creating digital ocean cloud resources with terraform")
 
-			tfEntrypoint := clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).GitopsDir + "/terraform/digitalocean"
+			tfEntrypoint := clctrl.ProviderConfig.GitopsDir + "/terraform/digitalocean"
 			tfEnvs := map[string]string{}
 			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, &cl)
-			err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).TerraformClient, tfEntrypoint, tfEnvs)
+			err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				msg := fmt.Sprintf("error creating digital ocean resources with terraform %s: %s", tfEntrypoint, err)
 				log.Error(msg)
@@ -159,10 +156,10 @@ func (clctrl *ClusterController) CreateCluster() error {
 
 			log.Info("creating vultr cloud resources with terraform")
 
-			tfEntrypoint := clctrl.ProviderConfig.(*vultr.VultrConfig).GitopsDir + "/terraform/vultr"
+			tfEntrypoint := clctrl.ProviderConfig.GitopsDir + "/terraform/vultr"
 			tfEnvs := map[string]string{}
 			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
-			err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.(*vultr.VultrConfig).TerraformClient, tfEntrypoint, tfEnvs)
+			err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				msg := fmt.Sprintf("error creating vultr resources with terraform %s: %s", tfEntrypoint, err)
 				log.Error(msg)
@@ -199,8 +196,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 
 // CreateTokens
 func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
-	var gitopsTemplateTokens interface{}
-
+	var gitopsTemplateTokens *providerConfigs.GitOpsDirectoryValues
 	switch kind {
 	case "gitops":
 		switch clctrl.CloudProvider {
@@ -209,7 +205,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			if err != nil {
 				return err
 			}
-			gitopsTemplateTokens = &awsinternal.GitOpsDirectoryValues{
+			gitopsTemplateTokens = &providerConfigs.GitOpsDirectoryValues{
 				AlertsEmail:               clctrl.AlertsEmail,
 				AtlantisAllowList:         fmt.Sprintf("%s/%s/*", clctrl.GitHost, clctrl.GitOwner),
 				AwsIamArnAccountRoot:      fmt.Sprintf("arn:aws:iam::%s:root", *iamCaller.Account),
@@ -220,7 +216,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				ClusterName:               clctrl.ClusterName,
 				ClusterType:               clctrl.ClusterType,
 				DomainName:                clctrl.DomainName,
-				Kubeconfig:                clctrl.ProviderConfig.(*awsinternal.AwsConfig).Kubeconfig,
+				Kubeconfig:                clctrl.ProviderConfig.Kubeconfig,
 				KubefirstArtifactsBucket:  clctrl.KubefirstArtifactsBucketName,
 				KubefirstStateStoreBucket: clctrl.KubefirstStateStoreBucketName,
 				KubefirstTeam:             clctrl.KubefirstTeam,
@@ -264,8 +260,8 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 
 			switch clctrl.GitProvider {
 			case "github":
-				AWSDestinationGitopsRepoGitURL = clctrl.ProviderConfig.(*awsinternal.AwsConfig).DestinationGitopsRepoGitURL
-				AWSDestinationMetaphorRepoGitURL = clctrl.ProviderConfig.(*awsinternal.AwsConfig).DestinationMetaphorRepoGitURL
+				AWSDestinationGitopsRepoGitURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
+				AWSDestinationMetaphorRepoGitURL = clctrl.ProviderConfig.DestinationMetaphorRepoGitURL
 			case "gitlab":
 				gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitToken, clctrl.GitOwner)
 				if err != nil {
@@ -276,9 +272,9 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				AWSDestinationMetaphorRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
 
 			}
-			gitopsTemplateTokens.(*awsinternal.GitOpsDirectoryValues).GitOpsRepoGitURL = AWSDestinationGitopsRepoGitURL
+			gitopsTemplateTokens.GitOpsRepoGitURL = AWSDestinationGitopsRepoGitURL
 		case "civo":
-			gitopsTemplateTokens = &civo.GitOpsDirectoryValues{
+			gitopsTemplateTokens = &providerConfigs.GitOpsDirectoryValues{
 				AlertsEmail:               clctrl.AlertsEmail,
 				AtlantisAllowList:         fmt.Sprintf("%s/%s/*", clctrl.GitHost, clctrl.GitOwner),
 				CloudProvider:             clctrl.CloudProvider,
@@ -286,7 +282,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				ClusterName:               clctrl.ClusterName,
 				ClusterType:               clctrl.ClusterType,
 				DomainName:                clctrl.DomainName,
-				KubeconfigPath:            clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig,
+				KubeconfigPath:            clctrl.ProviderConfig.Kubeconfig,
 				KubefirstStateStoreBucket: clctrl.KubefirstStateStoreBucketName,
 				KubefirstTeam:             clctrl.KubefirstTeam,
 				KubefirstVersion:          configs.K1Version,
@@ -326,8 +322,8 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 
 			switch clctrl.GitProvider {
 			case "github":
-				CivoDestinationGitopsRepoGitURL = clctrl.ProviderConfig.(*civo.CivoConfig).DestinationGitopsRepoGitURL
-				CivoDestinationMetaphorRepoGitURL = clctrl.ProviderConfig.(*civo.CivoConfig).DestinationMetaphorRepoGitURL
+				CivoDestinationGitopsRepoGitURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
+				CivoDestinationMetaphorRepoGitURL = clctrl.ProviderConfig.DestinationMetaphorRepoGitURL
 			case "gitlab":
 				gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitToken, clctrl.GitOwner)
 				if err != nil {
@@ -338,9 +334,9 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				CivoDestinationMetaphorRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
 
 			}
-			gitopsTemplateTokens.(*civo.GitOpsDirectoryValues).GitOpsRepoGitURL = CivoDestinationGitopsRepoGitURL
+			gitopsTemplateTokens.GitOpsRepoGitURL = CivoDestinationGitopsRepoGitURL
 		case "digitalocean":
-			gitopsTemplateTokens = &digitalocean.GitOpsDirectoryValues{
+			gitopsTemplateTokens = &providerConfigs.GitOpsDirectoryValues{
 				AlertsEmail:               clctrl.AlertsEmail,
 				AtlantisAllowList:         fmt.Sprintf("%s/%s/*", clctrl.GitHost, clctrl.GitOwner),
 				CloudProvider:             clctrl.CloudProvider,
@@ -348,7 +344,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				ClusterName:               clctrl.ClusterName,
 				ClusterType:               clctrl.ClusterType,
 				DomainName:                clctrl.DomainName,
-				KubeconfigPath:            clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig,
+				KubeconfigPath:            clctrl.ProviderConfig.Kubeconfig,
 				KubefirstStateStoreBucket: clctrl.KubefirstStateStoreBucketName,
 				KubefirstTeam:             clctrl.KubefirstTeam,
 				KubefirstVersion:          configs.K1Version,
@@ -388,8 +384,8 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 
 			switch clctrl.GitProvider {
 			case "github":
-				DigitaloceanDestinationGitopsRepoGitURL = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).DestinationGitopsRepoGitURL
-				DigitaloceanDestinationMetaphorRepoGitURL = clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).DestinationMetaphorRepoGitURL
+				DigitaloceanDestinationGitopsRepoGitURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
+				DigitaloceanDestinationMetaphorRepoGitURL = clctrl.ProviderConfig.DestinationMetaphorRepoGitURL
 			case "gitlab":
 				gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitToken, clctrl.GitOwner)
 				if err != nil {
@@ -400,10 +396,10 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				DigitaloceanDestinationMetaphorRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
 
 			}
-			gitopsTemplateTokens.(*digitalocean.GitOpsDirectoryValues).GitOpsRepoGitURL = DigitaloceanDestinationGitopsRepoGitURL
-			gitopsTemplateTokens.(*digitalocean.GitOpsDirectoryValues).StateStoreBucketHostname = DigitaloceanStateStoreBucketName
+			gitopsTemplateTokens.GitOpsRepoGitURL = DigitaloceanDestinationGitopsRepoGitURL
+			gitopsTemplateTokens.StateStoreBucketHostname = DigitaloceanStateStoreBucketName
 		case "vultr":
-			gitopsTemplateTokens = &vultr.GitOpsDirectoryValues{
+			gitopsTemplateTokens = &providerConfigs.GitOpsDirectoryValues{
 				AlertsEmail:               clctrl.AlertsEmail,
 				AtlantisAllowList:         fmt.Sprintf("%s/%s/*", clctrl.GitHost, clctrl.GitOwner),
 				CloudProvider:             clctrl.CloudProvider,
@@ -411,7 +407,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				ClusterName:               clctrl.ClusterName,
 				ClusterType:               clctrl.ClusterType,
 				DomainName:                clctrl.DomainName,
-				KubeconfigPath:            clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig,
+				KubeconfigPath:            clctrl.ProviderConfig.Kubeconfig,
 				KubefirstStateStoreBucket: clctrl.KubefirstStateStoreBucketName,
 				KubefirstTeam:             clctrl.KubefirstTeam,
 				KubefirstVersion:          configs.K1Version,
@@ -451,8 +447,8 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 
 			switch clctrl.GitProvider {
 			case "github":
-				VultrDestinationGitopsRepoGitURL = clctrl.ProviderConfig.(*vultr.VultrConfig).DestinationGitopsRepoGitURL
-				VultrDestinationMetaphorRepoGitURL = clctrl.ProviderConfig.(*vultr.VultrConfig).DestinationMetaphorRepoGitURL
+				VultrDestinationGitopsRepoGitURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
+				VultrDestinationMetaphorRepoGitURL = clctrl.ProviderConfig.DestinationMetaphorRepoGitURL
 			case "gitlab":
 				gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitToken, clctrl.GitOwner)
 				if err != nil {
@@ -463,55 +459,20 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				VultrDestinationMetaphorRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
 
 			}
-			gitopsTemplateTokens.(*vultr.GitOpsDirectoryValues).GitOpsRepoGitURL = VultrDestinationGitopsRepoGitURL
-			gitopsTemplateTokens.(*vultr.GitOpsDirectoryValues).StateStoreBucketHostname = VultrStateStoreBucketHostname
+			gitopsTemplateTokens.GitOpsRepoGitURL = VultrDestinationGitopsRepoGitURL
+			gitopsTemplateTokens.StateStoreBucketHostname = VultrStateStoreBucketHostname
 		}
 
 		return gitopsTemplateTokens
 	case "metaphor":
-		var metaphorTemplateTokens interface{}
-
-		switch clctrl.CloudProvider {
-		case "aws":
-			metaphorTemplateTokens = &awsinternal.MetaphorTokenValues{
-				ClusterName:                   clctrl.ClusterName,
-				CloudRegion:                   clctrl.CloudRegion,
-				ContainerRegistryURL:          fmt.Sprintf("%s/%s/metaphor", clctrl.ContainerRegistryHost, clctrl.GitOwner),
-				DomainName:                    clctrl.DomainName,
-				MetaphorDevelopmentIngressURL: fmt.Sprintf("metaphor-development.%s", clctrl.DomainName),
-				MetaphorStagingIngressURL:     fmt.Sprintf("metaphor-staging.%s", clctrl.DomainName),
-				MetaphorProductionIngressURL:  fmt.Sprintf("metaphor-production.%s", clctrl.DomainName),
-			}
-		case "civo":
-			metaphorTemplateTokens = &civo.MetaphorTokenValues{
-				ClusterName:                   clctrl.ClusterName,
-				CloudRegion:                   clctrl.CloudRegion,
-				ContainerRegistryURL:          fmt.Sprintf("%s/%s/metaphor", clctrl.ContainerRegistryHost, clctrl.GitOwner),
-				DomainName:                    clctrl.DomainName,
-				MetaphorDevelopmentIngressURL: fmt.Sprintf("metaphor-development.%s", clctrl.DomainName),
-				MetaphorStagingIngressURL:     fmt.Sprintf("metaphor-staging.%s", clctrl.DomainName),
-				MetaphorProductionIngressURL:  fmt.Sprintf("metaphor-production.%s", clctrl.DomainName),
-			}
-		case "digitalocean":
-			metaphorTemplateTokens = &digitalocean.MetaphorTokenValues{
-				ClusterName:                   clctrl.ClusterName,
-				CloudRegion:                   clctrl.CloudRegion,
-				ContainerRegistryURL:          fmt.Sprintf("%s/%s/metaphor", clctrl.ContainerRegistryHost, clctrl.GitOwner),
-				DomainName:                    clctrl.DomainName,
-				MetaphorDevelopmentIngressURL: fmt.Sprintf("metaphor-development.%s", clctrl.DomainName),
-				MetaphorStagingIngressURL:     fmt.Sprintf("metaphor-staging.%s", clctrl.DomainName),
-				MetaphorProductionIngressURL:  fmt.Sprintf("metaphor-production.%s", clctrl.DomainName),
-			}
-		case "vultr":
-			metaphorTemplateTokens = &vultr.MetaphorTokenValues{
-				ClusterName:                   clctrl.ClusterName,
-				CloudRegion:                   clctrl.CloudRegion,
-				ContainerRegistryURL:          fmt.Sprintf("%s/%s/metaphor", clctrl.ContainerRegistryHost, clctrl.GitOwner),
-				DomainName:                    clctrl.DomainName,
-				MetaphorDevelopmentIngressURL: fmt.Sprintf("metaphor-development.%s", clctrl.DomainName),
-				MetaphorStagingIngressURL:     fmt.Sprintf("metaphor-staging.%s", clctrl.DomainName),
-				MetaphorProductionIngressURL:  fmt.Sprintf("metaphor-production.%s", clctrl.DomainName),
-			}
+		metaphorTemplateTokens := &providerConfigs.MetaphorTokenValues{
+			ClusterName:                   clctrl.ClusterName,
+			CloudRegion:                   clctrl.CloudRegion,
+			ContainerRegistryURL:          fmt.Sprintf("%s/%s/metaphor", clctrl.ContainerRegistryHost, clctrl.GitOwner),
+			DomainName:                    clctrl.DomainName,
+			MetaphorDevelopmentIngressURL: fmt.Sprintf("metaphor-development.%s", clctrl.DomainName),
+			MetaphorStagingIngressURL:     fmt.Sprintf("metaphor-staging.%s", clctrl.DomainName),
+			MetaphorProductionIngressURL:  fmt.Sprintf("metaphor-production.%s", clctrl.DomainName),
 		}
 
 		return metaphorTemplateTokens
@@ -531,19 +492,19 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 		switch clctrl.CloudProvider {
 		case "aws":
 		case "civo":
-			err := civoext.BootstrapCivoMgmtCluster(clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig, &cl)
+			err := civoext.BootstrapCivoMgmtCluster(clctrl.ProviderConfig.Kubeconfig, &cl)
 			if err != nil {
 				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
 		case "digitalocean":
-			err := digitaloceanext.BootstrapDigitaloceanMgmtCluster(clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig, &cl)
+			err := digitaloceanext.BootstrapDigitaloceanMgmtCluster(clctrl.ProviderConfig.Kubeconfig, &cl)
 			if err != nil {
 				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
 		case "vultr":
-			err := vultrext.BootstrapVultrMgmtCluster(clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig, &cl)
+			err := vultrext.BootstrapVultrMgmtCluster(clctrl.ProviderConfig.Kubeconfig, &cl)
 			if err != nil {
 				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
@@ -566,12 +527,8 @@ func (clctrl *ClusterController) ContainerRegistryAuth() (string, error) {
 	switch clctrl.CloudProvider {
 	case "aws":
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-	case "civo":
-		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
-	case "digitalocean":
-		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig)
-	case "vultr":
-		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
+	case "civo", "digitalocean", "vultr":
+		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 	}
 
 	// Container registry authentication creation
@@ -609,12 +566,8 @@ func (clctrl *ClusterController) WaitForClusterReady() error {
 	switch clctrl.CloudProvider {
 	case "aws":
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-	case "civo":
-		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*civo.CivoConfig).Kubeconfig)
-	case "digitalocean":
-		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*digitalocean.DigitaloceanConfig).Kubeconfig)
-	case "vultr":
-		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.(*vultr.VultrConfig).Kubeconfig)
+	case "civo", "digitalocean", "vultr":
+		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 	}
 
 	coreDNSDeployment, err := k8s.ReturnDeploymentObject(

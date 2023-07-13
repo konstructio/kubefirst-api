@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"github.com/kubefirst/kubefirst-api/internal/types"
-	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/vault"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
@@ -80,7 +80,7 @@ func GetGitlabTerraformEnvs(envs map[string]string, gid int, cl *types.Cluster) 
 
 func GetUsersTerraformEnvs(clientset *kubernetes.Clientset, cl *types.Cluster, envs map[string]string) map[string]string {
 	envs["VAULT_TOKEN"] = readVaultTokenFromSecret(clientset)
-	envs["VAULT_ADDR"] = awsinternal.VaultPortForwardURL
+	envs["VAULT_ADDR"] = providerConfigs.VaultPortForwardURL
 	envs[fmt.Sprintf("%s_TOKEN", strings.ToUpper(cl.GitProvider))] = cl.GitToken
 	envs[fmt.Sprintf("%s_OWNER", strings.ToUpper(cl.GitProvider))] = cl.GitOwner
 
@@ -91,10 +91,10 @@ func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *types.Cluster, e
 	envs[fmt.Sprintf("%s_TOKEN", strings.ToUpper(cl.GitProvider))] = cl.GitToken
 	envs[fmt.Sprintf("%s_OWNER", strings.ToUpper(cl.GitProvider))] = cl.GitOwner
 	envs["TF_VAR_email_address"] = cl.AlertsEmail
-	envs["TF_VAR_vault_addr"] = awsinternal.VaultPortForwardURL
+	envs["TF_VAR_vault_addr"] = providerConfigs.VaultPortForwardURL
 	envs["TF_VAR_vault_token"] = readVaultTokenFromSecret(clientset)
 	envs[fmt.Sprintf("TF_VAR_%s_token", cl.GitProvider)] = cl.GitToken
-	envs["VAULT_ADDR"] = awsinternal.VaultPortForwardURL
+	envs["VAULT_ADDR"] = providerConfigs.VaultPortForwardURL
 	envs["VAULT_TOKEN"] = readVaultTokenFromSecret(clientset)
 	envs["TF_VAR_atlantis_repo_webhook_secret"] = cl.AtlantisWebhookSecret
 	envs["TF_VAR_atlantis_repo_webhook_url"] = cl.AtlantisWebhookURL
