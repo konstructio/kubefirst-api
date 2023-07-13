@@ -706,6 +706,13 @@ paths:
   /health:
     get:
       description: Return health status if the application is running.
+      parameters:
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:

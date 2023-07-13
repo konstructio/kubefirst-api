@@ -26,6 +26,7 @@ import (
 // @Param	definition	body	types.TelemetryRequest	true	"event request in JSON format"
 // @Success 202 {object} types.JSONSuccessResponse
 // @Router /telemetry/:cluster_name [post]
+// @Param Authorization header string true "API key" default(Bearer <API key>)
 // PostTelemetry sents a new telemetry event
 func PostTelemetry(c *gin.Context) {
 	useTelemetry := true

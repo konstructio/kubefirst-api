@@ -30,6 +30,7 @@ func setHeaders(c *gin.Context) {
 // @Description Stream API server logs
 // @Tags logs
 // @Router /stream [get]
+// @Param Authorization header string true "API key" default(Bearer <API key>)
 // GetLogs
 func GetLogs(c *gin.Context) {
 	setHeaders(c)

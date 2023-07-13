@@ -23,6 +23,7 @@ import (
 // @Success 200 {object} types.GitopsCatalogApps
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /gitops-catalog/apps [get]
+// @Param Authorization header string true "API key" default(Bearer <API key>)
 // GetGitopsCatalogApps returns a list of available Kubefirst gitops catalog applications
 func GetGitopsCatalogApps(c *gin.Context) {
 	apps, err := db.Client.GetGitopsCatalogApps()
@@ -45,6 +46,7 @@ func GetGitopsCatalogApps(c *gin.Context) {
 // @Success 200 {object} types.JSONSuccessResponse
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /gitops-catalog/apps/update [get]
+// @Param Authorization header string true "API key" default(Bearer <API key>)
 // UpdateGitopsCatalogApps updates the list of available Kubefirst gitops catalog applications
 func UpdateGitopsCatalogApps(c *gin.Context) {
 	err := db.Client.UpdateGitopsCatalogApps()

@@ -25,6 +25,7 @@ import (
 // @Success 200 {object} types.AWSDomainValidateResponse
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /aws/domain/validate/:domain [get]
+// @Param Authorization header string true "API key" default(Bearer <API key>)
 // GetValidateAWSDomain returns status for an AWS domain validation
 func GetValidateAWSDomain(c *gin.Context) {
 	domainName, exists := c.Params.Get("domain")

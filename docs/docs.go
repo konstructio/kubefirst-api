@@ -478,6 +478,16 @@ const docTemplate = `{
                     "health"
                 ],
                 "summary": "Return health status if the application is running.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
