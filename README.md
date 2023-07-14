@@ -35,6 +35,9 @@ Kubefirst API runtime implementation.
     - [Digital Ocean](#digital-ocean)
     - [Vultr](#vultr)
     - [Deleting a Cluster](#deleting-a-cluster)
+  - [Authentication](#authentication)
+    - [Creating a User](#creating-a-user)
+    - [Authenticating](#authenticating)
   - [Swagger UI](#swagger-ui)
   - [Updating Swagger Docs](#updating-swagger-docs)
 
@@ -214,6 +217,41 @@ curl -X POST http://localhost:8081/api/v1/cluster/my-cool-cluster -H "Content-Ty
 
 ```bash
 curl -X DELETE http://localhost:8081/api/v1/cluster/my-cool-cluster
+```
+
+## Authentication
+
+### Creating a User
+
+All protected routes for the API require user authentication in the form of an API key. This can be done via the API's `cli`.
+
+Users are stored in the users collection within MongoDB. Note that there is no default user and you must run this command at least once to generate an API key.
+
+Running this command requires MongoDB connection parameters to be set as environment variables:
+
+```bash
+export MONGODB_HOST=
+export MONGODB_USERNAME=
+export MONGODB_PASSWORD=
+```
+
+You can generate an API key by running the following command in the `cli` directory:
+
+```bash
+❯ go run . create-api-user bob
+INFO[0000] created user bob with api key: 99961fafdb9d74cb415ab62b92faa8bc
+```
+
+The command will return the API key that can be used to authenticate with the API.
+
+### Authenticating
+
+The API expects an `Authorization` header with the content `Bearer <API key>`. For example:
+
+```bash
+❯ curl -X GET "localhost:8081/api/v1/cluster" \
+     -H "Authorization: Bearer my-api-key" \
+     -H "Content-Type:application/json"
 ```
 
 ## Swagger UI

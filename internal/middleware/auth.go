@@ -8,6 +8,8 @@ package middleware
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"net/http"
 	"strings"
 
@@ -15,6 +17,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
+
+// GenerateAPIKey generates a random string to serve as an API key
+func GenerateAPIKey(length int) string {
+	b := make([]byte, length)
+	if _, err := rand.Read(b); err != nil {
+		return ""
+	}
+
+	return hex.EncodeToString(b)
+}
 
 // ValidateAPIKey determines whether or not a request is authenticated with a valid API key
 func ValidateAPIKey(users *mongo.Collection) gin.HandlerFunc {
