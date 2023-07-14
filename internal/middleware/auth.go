@@ -8,7 +8,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -33,7 +32,6 @@ func ValidateAPIKey(users *mongo.Collection) gin.HandlerFunc {
 
 		filter := bson.D{{Key: "api_key", Value: APIKey}}
 		if err := users.FindOne(context.Background(), filter).Decode(&user); err != nil {
-			fmt.Println(user)
 			c.JSON(http.StatusUnauthorized, gin.H{"status": 401, "message": "Authentication failed - not a valid API key"})
 			c.Abort()
 

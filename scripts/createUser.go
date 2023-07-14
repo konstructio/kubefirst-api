@@ -23,15 +23,16 @@ func main() {
 	}
 
 	// Change user name here - API key will be automatically generated
+	apiKey := generateAPIKey(16)
 	err := db.Client.InsertUser(middleware.AuthorizedUser{
 		Name:   "myuser",
-		APIKey: generateAPIKey(16),
+		APIKey: apiKey,
 	})
 	if err != nil {
 		log.Fatalf("error creating user: %s", err)
 	}
 
-	log.Infof("created user")
+	log.Infof("created user - api key: %s", apiKey)
 }
 
 func generateAPIKey(length int) string {
