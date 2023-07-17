@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
@@ -18,7 +17,6 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
-	"github.com/kubefirst/runtime/configs"
 	"github.com/kubefirst/runtime/pkg"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/github"
@@ -29,6 +27,10 @@ import (
 	"github.com/kubefirst/runtime/pkg/services"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+const (
+	gitopsTemplateVersion = "v2.2.0"
 )
 
 type ClusterController struct {
@@ -164,22 +166,10 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	clctrl.Repositories = []string{"gitops", "metaphor"}
 	clctrl.Teams = []string{"admins", "developers"}
 
-	switch configs.K1Version {
-	case "development":
-		if strings.Contains(def.GitopsTemplateURL, "https://github.com/kubefirst/gitops-template.git") && def.GitopsTemplateBranch == "" {
-			clctrl.GitopsTemplateBranch = "main"
-		}
-	default:
-		switch def.GitopsTemplateURL {
-		case "https://github.com/kubefirst/gitops-template.git":
-			if def.GitopsTemplateBranch == "" {
-				clctrl.GitopsTemplateBranch = configs.K1Version
-			}
-		default:
-			if def.GitopsTemplateBranch == "" {
-				return fmt.Errorf("must supply gitops-template-branch when gitops-template-url is overridden")
-			}
-		}
+	if def.GitopsTemplateBranch != "" {
+		clctrl.GitopsTemplateBranch = def.GitopsTemplateBranch
+	} else {
+		clctrl.GitopsTemplateBranch = gitopsTemplateVersion
 	}
 
 	if def.GitopsTemplateURL != "" {
