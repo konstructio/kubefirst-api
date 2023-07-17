@@ -29,6 +29,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+const (
+	gitopsTemplateVersion = "v2.2.0"
+)
+
 type ClusterController struct {
 	CloudProvider string
 	CloudRegion   string
@@ -165,7 +169,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	if def.GitopsTemplateBranch != "" {
 		clctrl.GitopsTemplateBranch = def.GitopsTemplateBranch
 	} else {
-		clctrl.GitopsTemplateBranch = "main"
+		clctrl.GitopsTemplateBranch = gitopsTemplateVersion
 	}
 
 	if def.GitopsTemplateURL != "" {
