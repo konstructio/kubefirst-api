@@ -84,29 +84,6 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				log.Error(err.Error())
 			}
 
-			// Verify all credentials fields are present
-			var civoCredsFailureMessage string
-			switch {
-			case creds.AccessKeyID == "":
-				civoCredsFailureMessage = "when retrieving civo access credentials, AccessKeyID was empty - please retry your cluster creation"
-			case creds.ID == "":
-				civoCredsFailureMessage = "when retrieving civo access credentials, ID was empty - please retry your cluster creation"
-			case creds.Name == "":
-				civoCredsFailureMessage = "when retrieving civo access credentials, Name was empty - please retry your cluster creation"
-			case creds.SecretAccessKeyID == "":
-				civoCredsFailureMessage = "when retrieving civo access credentials, SecretAccessKeyID was empty - please retry your cluster creation"
-			}
-			if civoCredsFailureMessage != "" {
-				// Creds failed to properly parse, so remove them
-				err := civoConf.DeleteAccessCredentials(clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
-				if err != nil {
-					return err
-				}
-
-				// Return error
-				return fmt.Errorf(civoCredsFailureMessage)
-			}
-
 			stateStoreData = types.StateStoreCredentials{
 				AccessKeyID:     creds.AccessKeyID,
 				SecretAccessKey: creds.SecretAccessKeyID,
