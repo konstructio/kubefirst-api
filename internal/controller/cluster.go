@@ -17,7 +17,6 @@ import (
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	"github.com/kubefirst/runtime/configs"
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/providerConfigs"
@@ -196,6 +195,11 @@ func (clctrl *ClusterController) CreateCluster() error {
 
 // CreateTokens
 func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
+	kubefirstVersion := os.Getenv("KUBEFIRST_VERSION")
+	if kubefirstVersion == "" {
+		kubefirstVersion = "development"
+	}
+
 	var gitopsTemplateTokens *providerConfigs.GitOpsDirectoryValues
 	switch kind {
 	case "gitops":
@@ -220,7 +224,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				KubefirstArtifactsBucket:  clctrl.KubefirstArtifactsBucketName,
 				KubefirstStateStoreBucket: clctrl.KubefirstStateStoreBucketName,
 				KubefirstTeam:             clctrl.KubefirstTeam,
-				KubefirstVersion:          configs.K1Version,
+				KubefirstVersion:          kubefirstVersion,
 
 				ArgoCDIngressURL:               fmt.Sprintf("https://argocd.%s", clctrl.DomainName),
 				ArgoCDIngressNoHTTPSURL:        fmt.Sprintf("argocd.%s", clctrl.DomainName),
@@ -285,7 +289,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				KubeconfigPath:            clctrl.ProviderConfig.Kubeconfig,
 				KubefirstStateStoreBucket: clctrl.KubefirstStateStoreBucketName,
 				KubefirstTeam:             clctrl.KubefirstTeam,
-				KubefirstVersion:          configs.K1Version,
+				KubefirstVersion:          kubefirstVersion,
 
 				ArgoCDIngressURL:               fmt.Sprintf("https://argocd.%s", clctrl.DomainName),
 				ArgoCDIngressNoHTTPSURL:        fmt.Sprintf("argocd.%s", clctrl.DomainName),
@@ -347,7 +351,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				KubeconfigPath:            clctrl.ProviderConfig.Kubeconfig,
 				KubefirstStateStoreBucket: clctrl.KubefirstStateStoreBucketName,
 				KubefirstTeam:             clctrl.KubefirstTeam,
-				KubefirstVersion:          configs.K1Version,
+				KubefirstVersion:          kubefirstVersion,
 
 				ArgoCDIngressURL:               fmt.Sprintf("https://argocd.%s", clctrl.DomainName),
 				ArgoCDIngressNoHTTPSURL:        fmt.Sprintf("argocd.%s", clctrl.DomainName),
@@ -410,7 +414,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				KubeconfigPath:            clctrl.ProviderConfig.Kubeconfig,
 				KubefirstStateStoreBucket: clctrl.KubefirstStateStoreBucketName,
 				KubefirstTeam:             clctrl.KubefirstTeam,
-				KubefirstVersion:          configs.K1Version,
+				KubefirstVersion:          kubefirstVersion,
 
 				ArgoCDIngressURL:               fmt.Sprintf("https://argocd.%s", clctrl.DomainName),
 				ArgoCDIngressNoHTTPSURL:        fmt.Sprintf("argocd.%s", clctrl.DomainName),
