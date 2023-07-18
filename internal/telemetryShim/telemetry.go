@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/types"
-	"github.com/kubefirst/runtime/configs"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 )
@@ -26,9 +25,14 @@ func Heartbeat(segmentClient *segment.SegmentClient) {
 
 // SetupTelemetry
 func SetupTelemetry(cl types.Cluster) (*segment.SegmentClient, error) {
+	kubefirstVersion := os.Getenv("KUBEFIRST_VERSION")
+	if kubefirstVersion == "" {
+		kubefirstVersion = "development"
+	}
+
 	// Segment Client
 	segmentClient := &segment.SegmentClient{
-		CliVersion:        configs.K1Version,
+		CliVersion:        kubefirstVersion,
 		CloudProvider:     cl.CloudProvider,
 		ClusterID:         cl.ClusterID,
 		ClusterType:       cl.ClusterType,
@@ -44,9 +48,14 @@ func SetupTelemetry(cl types.Cluster) (*segment.SegmentClient, error) {
 }
 
 func SetupInitialTelemetry(clusterID string, clusterType string, installMethod string) (*segment.SegmentClient, error) {
+	kubefirstVersion := os.Getenv("KUBEFIRST_VERSION")
+	if kubefirstVersion == "" {
+		kubefirstVersion = "development"
+	}
+
 	// Segment Client
 	segmentClient := &segment.SegmentClient{
-		CliVersion:        configs.K1Version,
+		CliVersion:        kubefirstVersion,
 		ClusterID:         clusterID,
 		ClusterType:       clusterType,
 		KubefirstClient:   "api",
