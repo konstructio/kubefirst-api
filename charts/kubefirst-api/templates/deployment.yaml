@@ -83,7 +83,7 @@ spec:
             - name: KUBEFIRST_TEAM_INFO
               value: {{ .Values.kubefirstTeamInfo | default "" | quote }}
             - name: KUBEFIRST_VERSION
-              value: {{ .Values.global.kubefirstVersion }}
+              value: {{ .Values.global.kubefirstVersion | default "unset" }}
           {{- if .Values.env }}
             {{- range $envVar := .Values.env }}
             - name: {{ $envVar.name }}
@@ -173,4 +173,4 @@ spec:
           ]
           env:
             - name: KUBEFIRST_VERSION
-              value: {{ .Values.global.kubefirstVersion }}
+              value: {{ .Values.global.kubefirstVersion | default "unset" }}
