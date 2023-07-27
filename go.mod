@@ -15,14 +15,14 @@ require (
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/google/go-github/v52 v52.0.0
 	github.com/hashicorp/vault/api v1.9.0
-	github.com/kubefirst/runtime v0.2.8
+	github.com/kubefirst/runtime v0.2.13
 	github.com/minio/minio-go/v7 v7.0.49
 	github.com/rs/zerolog v1.29.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/swaggo/files v1.0.0
 	github.com/swaggo/gin-swagger v1.5.3
 	github.com/swaggo/swag v1.8.10
-	go.mongodb.org/mongo-driver v1.10.3
+	go.mongodb.org/mongo-driver v1.12.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.26.0
 	k8s.io/apimachinery v0.26.0
@@ -221,8 +221,8 @@ require (
 	github.com/xanzy/go-gitlab v0.81.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
-	github.com/xdg-go/scram v1.1.1 // indirect
-	github.com/xdg-go/stringprep v1.0.3 // indirect
+	github.com/xdg-go/scram v1.1.2 // indirect
+	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
