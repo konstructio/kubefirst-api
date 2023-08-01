@@ -18,6 +18,7 @@ type GitInitParameters struct {
 	GitProvider  string
 	GitToken     string
 	GitOwner     string
+	GitProtocol  string
 	Repositories []string
 	Teams        []string
 	GithubOrg    string

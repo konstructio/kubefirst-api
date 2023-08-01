@@ -27,19 +27,19 @@ import (
 // Global Controller Variables
 // AWS
 // gitlab may have subgroups, so the destination gitops/metaphor repo git urls may be different
-var AWSDestinationGitopsRepoGitURL, AWSDestinationMetaphorRepoGitURL string
+var AWSDestinationGitopsRepoURL, AWSDestinationMetaphorRepoURL string
 
 // Civo
 // gitlab may have subgroups, so the destination gitops/metaphor repo git urls may be different
-var CivoDestinationGitopsRepoGitURL, CivoDestinationMetaphorRepoGitURL string
+var CivoDestinationGitopsRepoURL, CivoDestinationMetaphorRepoURL string
 
 // Digital Ocean
 // gitlab may have subgroups, so the destination gitops/metaphor repo git urls may be different
-var DigitaloceanDestinationGitopsRepoGitURL, DigitaloceanDestinationMetaphorRepoGitURL string
+var DigitaloceanDestinationGitopsRepoURL, DigitaloceanDestinationMetaphorRepoURL string
 
 // Vultr
 // gitlab may have subgroups, so the destination gitops/metaphor repo git urls may be different
-var VultrDestinationGitopsRepoGitURL, VultrDestinationMetaphorRepoGitURL string
+var VultrDestinationGitopsRepoURL, VultrDestinationMetaphorRepoURL string
 
 // CreateCluster
 func (clctrl *ClusterController) CreateCluster() error {
@@ -200,7 +200,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 		kubefirstVersion = "development"
 	}
 
-	var gitopsTemplateTokens *providerConfigs.GitOpsDirectoryValues
+	var gitopsTemplateTokens *providerConfigs.GitopsDirectoryValues
 	switch kind {
 	case "gitops":
 		switch clctrl.CloudProvider {
@@ -209,7 +209,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			if err != nil {
 				return err
 			}
-			gitopsTemplateTokens = &providerConfigs.GitOpsDirectoryValues{
+			gitopsTemplateTokens = &providerConfigs.GitopsDirectoryValues{
 				AlertsEmail:               clctrl.AlertsEmail,
 				AtlantisAllowList:         fmt.Sprintf("%s/%s/*", clctrl.GitHost, clctrl.GitOwner),
 				AwsIamArnAccountRoot:      fmt.Sprintf("arn:aws:iam::%s:root", *iamCaller.Account),
@@ -254,8 +254,8 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				GitlabOwnerGroupID: clctrl.GitlabOwnerGroupID,
 				GitlabUser:         clctrl.GitUser,
 
-				GitOpsRepoAtlantisWebhookURL: clctrl.AtlantisWebhookURL,
-				GitOpsRepoNoHTTPSURL:         fmt.Sprintf("%s.com/%s/gitops.git", clctrl.GitHost, clctrl.GitOwner),
+				GitopsRepoAtlantisWebhookURL: clctrl.AtlantisWebhookURL,
+				GitopsRepoNoHTTPSURL:         fmt.Sprintf("%s.com/%s/gitops.git", clctrl.GitHost, clctrl.GitOwner),
 				ClusterId:                    clctrl.ClusterID,
 
 				AtlantisWebhookURL:   clctrl.AtlantisWebhookURL,
@@ -264,21 +264,31 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 
 			switch clctrl.GitProvider {
 			case "github":
-				AWSDestinationGitopsRepoGitURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
-				AWSDestinationMetaphorRepoGitURL = clctrl.ProviderConfig.DestinationMetaphorRepoGitURL
+				AWSDestinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoURL
+				AWSDestinationMetaphorRepoURL = clctrl.ProviderConfig.DestinationMetaphorRepoURL
 			case "gitlab":
 				gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitToken, clctrl.GitOwner)
 				if err != nil {
 					return err
 				}
 				// Format git url based on full path to group
-				AWSDestinationGitopsRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)
-				AWSDestinationMetaphorRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
-
+				// Format git url based on full path to group
+				switch clctrl.ProviderConfig.GitProtocol {
+				case "https":
+					clctrl.ProviderConfig.DestinationGitopsRepoHttpsURL = fmt.Sprintf("https://gitlab.com/%s/gitops.git", gitlabClient.ParentGroupPath)
+					clctrl.ProviderConfig.DestinationMetaphorRepoHttpsURL = fmt.Sprintf("https://gitlab.com/%s/metaphor.git", gitlabClient.ParentGroupPath)
+					AWSDestinationGitopsRepoURL = fmt.Sprintf("https://gitlab.com/%s/gitops.git", gitlabClient.ParentGroupPath)
+					AWSDestinationMetaphorRepoURL = fmt.Sprintf("https://gitlab.com/%s/metaphor.git", gitlabClient.ParentGroupPath)
+				default:
+					clctrl.ProviderConfig.DestinationGitopsRepoHttpsURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)
+					clctrl.ProviderConfig.DestinationMetaphorRepoHttpsURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
+					AWSDestinationGitopsRepoURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)
+					AWSDestinationMetaphorRepoURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
+				}
 			}
-			gitopsTemplateTokens.GitOpsRepoGitURL = AWSDestinationGitopsRepoGitURL
+			gitopsTemplateTokens.GitopsRepoURL = AWSDestinationGitopsRepoURL
 		case "civo":
-			gitopsTemplateTokens = &providerConfigs.GitOpsDirectoryValues{
+			gitopsTemplateTokens = &providerConfigs.GitopsDirectoryValues{
 				AlertsEmail:               clctrl.AlertsEmail,
 				AtlantisAllowList:         fmt.Sprintf("%s/%s/*", clctrl.GitHost, clctrl.GitOwner),
 				CloudProvider:             clctrl.CloudProvider,
@@ -319,28 +329,38 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				GitlabOwnerGroupID: clctrl.GitlabOwnerGroupID,
 				GitlabUser:         clctrl.GitUser,
 
-				GitOpsRepoAtlantisWebhookURL: clctrl.AtlantisWebhookURL,
-				GitOpsRepoNoHTTPSURL:         fmt.Sprintf("%s.com/%s/gitops.git", clctrl.GitHost, clctrl.GitOwner),
+				GitopsRepoAtlantisWebhookURL: clctrl.AtlantisWebhookURL,
+				GitopsRepoNoHTTPSURL:         fmt.Sprintf("%s.com/%s/gitops.git", clctrl.GitHost, clctrl.GitOwner),
 				ClusterId:                    clctrl.ClusterID,
 			}
 
 			switch clctrl.GitProvider {
 			case "github":
-				CivoDestinationGitopsRepoGitURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
-				CivoDestinationMetaphorRepoGitURL = clctrl.ProviderConfig.DestinationMetaphorRepoGitURL
+				CivoDestinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoURL
+				CivoDestinationMetaphorRepoURL = clctrl.ProviderConfig.DestinationMetaphorRepoURL
 			case "gitlab":
 				gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitToken, clctrl.GitOwner)
 				if err != nil {
 					return err
 				}
 				// Format git url based on full path to group
-				CivoDestinationGitopsRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)
-				CivoDestinationMetaphorRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
-
+				// Format git url based on full path to group
+				switch clctrl.ProviderConfig.GitProtocol {
+				case "https":
+					clctrl.ProviderConfig.DestinationGitopsRepoHttpsURL = fmt.Sprintf("https://gitlab.com/%s/gitops.git", gitlabClient.ParentGroupPath)
+					clctrl.ProviderConfig.DestinationMetaphorRepoHttpsURL = fmt.Sprintf("https://gitlab.com/%s/metaphor.git", gitlabClient.ParentGroupPath)
+					CivoDestinationGitopsRepoURL = fmt.Sprintf("https://gitlab.com/%s/gitops.git", gitlabClient.ParentGroupPath)
+					CivoDestinationMetaphorRepoURL = fmt.Sprintf("https://gitlab.com/%s/metaphor.git", gitlabClient.ParentGroupPath)
+				default:
+					clctrl.ProviderConfig.DestinationGitopsRepoHttpsURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)
+					clctrl.ProviderConfig.DestinationMetaphorRepoHttpsURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
+					CivoDestinationGitopsRepoURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)
+					CivoDestinationMetaphorRepoURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
+				}
 			}
-			gitopsTemplateTokens.GitOpsRepoGitURL = CivoDestinationGitopsRepoGitURL
+			gitopsTemplateTokens.GitopsRepoURL = CivoDestinationGitopsRepoURL
 		case "digitalocean":
-			gitopsTemplateTokens = &providerConfigs.GitOpsDirectoryValues{
+			gitopsTemplateTokens = &providerConfigs.GitopsDirectoryValues{
 				AlertsEmail:               clctrl.AlertsEmail,
 				AtlantisAllowList:         fmt.Sprintf("%s/%s/*", clctrl.GitHost, clctrl.GitOwner),
 				CloudProvider:             clctrl.CloudProvider,
@@ -381,29 +401,39 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				GitlabOwnerGroupID: clctrl.GitlabOwnerGroupID,
 				GitlabUser:         clctrl.GitUser,
 
-				GitOpsRepoAtlantisWebhookURL: clctrl.AtlantisWebhookURL,
-				GitOpsRepoNoHTTPSURL:         fmt.Sprintf("%s.com/%s/gitops.git", clctrl.GitHost, clctrl.GitOwner),
+				GitopsRepoAtlantisWebhookURL: clctrl.AtlantisWebhookURL,
+				GitopsRepoNoHTTPSURL:         fmt.Sprintf("%s.com/%s/gitops.git", clctrl.GitHost, clctrl.GitOwner),
 				ClusterId:                    clctrl.ClusterID,
 			}
 
 			switch clctrl.GitProvider {
 			case "github":
-				DigitaloceanDestinationGitopsRepoGitURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
-				DigitaloceanDestinationMetaphorRepoGitURL = clctrl.ProviderConfig.DestinationMetaphorRepoGitURL
+				DigitaloceanDestinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoURL
+				DigitaloceanDestinationMetaphorRepoURL = clctrl.ProviderConfig.DestinationMetaphorRepoURL
 			case "gitlab":
 				gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitToken, clctrl.GitOwner)
 				if err != nil {
 					return err
 				}
 				// Format git url based on full path to group
-				DigitaloceanDestinationGitopsRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)
-				DigitaloceanDestinationMetaphorRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
-
+				// Format git url based on full path to group
+				switch clctrl.ProviderConfig.GitProtocol {
+				case "https":
+					clctrl.ProviderConfig.DestinationGitopsRepoHttpsURL = fmt.Sprintf("https://gitlab.com/%s/gitops.git", gitlabClient.ParentGroupPath)
+					clctrl.ProviderConfig.DestinationMetaphorRepoHttpsURL = fmt.Sprintf("https://gitlab.com/%s/metaphor.git", gitlabClient.ParentGroupPath)
+					DigitaloceanDestinationGitopsRepoURL = fmt.Sprintf("https://gitlab.com/%s/gitops.git", gitlabClient.ParentGroupPath)
+					DigitaloceanDestinationMetaphorRepoURL = fmt.Sprintf("https://gitlab.com/%s/metaphor.git", gitlabClient.ParentGroupPath)
+				default:
+					clctrl.ProviderConfig.DestinationGitopsRepoHttpsURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)
+					clctrl.ProviderConfig.DestinationMetaphorRepoHttpsURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
+					DigitaloceanDestinationGitopsRepoURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)
+					DigitaloceanDestinationMetaphorRepoURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
+				}
 			}
-			gitopsTemplateTokens.GitOpsRepoGitURL = DigitaloceanDestinationGitopsRepoGitURL
+			gitopsTemplateTokens.GitopsRepoURL = DigitaloceanDestinationGitopsRepoURL
 			gitopsTemplateTokens.StateStoreBucketHostname = DigitaloceanStateStoreBucketName
 		case "vultr":
-			gitopsTemplateTokens = &providerConfigs.GitOpsDirectoryValues{
+			gitopsTemplateTokens = &providerConfigs.GitopsDirectoryValues{
 				AlertsEmail:               clctrl.AlertsEmail,
 				AtlantisAllowList:         fmt.Sprintf("%s/%s/*", clctrl.GitHost, clctrl.GitOwner),
 				CloudProvider:             clctrl.CloudProvider,
@@ -444,26 +474,36 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				GitlabOwnerGroupID: clctrl.GitlabOwnerGroupID,
 				GitlabUser:         clctrl.GitUser,
 
-				GitOpsRepoAtlantisWebhookURL: clctrl.AtlantisWebhookURL,
-				GitOpsRepoNoHTTPSURL:         fmt.Sprintf("%s.com/%s/gitops.git", clctrl.GitHost, clctrl.GitOwner),
+				GitopsRepoAtlantisWebhookURL: clctrl.AtlantisWebhookURL,
+				GitopsRepoNoHTTPSURL:         fmt.Sprintf("%s.com/%s/gitops.git", clctrl.GitHost, clctrl.GitOwner),
 				ClusterId:                    clctrl.ClusterID,
 			}
 
 			switch clctrl.GitProvider {
 			case "github":
-				VultrDestinationGitopsRepoGitURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
-				VultrDestinationMetaphorRepoGitURL = clctrl.ProviderConfig.DestinationMetaphorRepoGitURL
+				VultrDestinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoURL
+				VultrDestinationMetaphorRepoURL = clctrl.ProviderConfig.DestinationMetaphorRepoURL
 			case "gitlab":
 				gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitToken, clctrl.GitOwner)
 				if err != nil {
 					return err
 				}
 				// Format git url based on full path to group
-				VultrDestinationGitopsRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)
-				VultrDestinationMetaphorRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
-
+				// Format git url based on full path to group
+				switch clctrl.ProviderConfig.GitProtocol {
+				case "https":
+					clctrl.ProviderConfig.DestinationGitopsRepoHttpsURL = fmt.Sprintf("https://gitlab.com/%s/gitops.git", gitlabClient.ParentGroupPath)
+					clctrl.ProviderConfig.DestinationMetaphorRepoHttpsURL = fmt.Sprintf("https://gitlab.com/%s/metaphor.git", gitlabClient.ParentGroupPath)
+					VultrDestinationGitopsRepoURL = fmt.Sprintf("https://gitlab.com/%s/gitops.git", gitlabClient.ParentGroupPath)
+					VultrDestinationMetaphorRepoURL = fmt.Sprintf("https://gitlab.com/%s/metaphor.git", gitlabClient.ParentGroupPath)
+				default:
+					clctrl.ProviderConfig.DestinationGitopsRepoHttpsURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)
+					clctrl.ProviderConfig.DestinationMetaphorRepoHttpsURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
+					VultrDestinationGitopsRepoURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)
+					VultrDestinationMetaphorRepoURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
+				}
 			}
-			gitopsTemplateTokens.GitOpsRepoGitURL = VultrDestinationGitopsRepoGitURL
+			gitopsTemplateTokens.GitopsRepoURL = VultrDestinationGitopsRepoURL
 			gitopsTemplateTokens.StateStoreBucketHostname = VultrStateStoreBucketHostname
 		}
 
@@ -491,28 +531,53 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 	if err != nil {
 		return err
 	}
+	clientSet, err := k8s.GetClientSet(clctrl.ProviderConfig.Kubeconfig)
+	if err != nil {
+		return err
+	}
+	//create namespaces
+	err = providerConfigs.K8sNamespaces(clientSet)
+	if err != nil {
+		return err
+	}
 
 	if !cl.ClusterSecretsCreatedCheck {
 		switch clctrl.CloudProvider {
 		case "aws":
+			err := awsext.BootstrapAWSMgmtCluster(
+				clientSet,
+				&cl, &clctrl.ProviderConfig,
+				clctrl.AwsClient,
+				clctrl.ProviderConfig.GitopsDirectoryValues.ContainerRegistryURL,
+			)
+			if err != nil {
+				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
+				return err
+			}
 		case "civo":
-			err := civoext.BootstrapCivoMgmtCluster(clctrl.ProviderConfig.Kubeconfig, &cl)
+			err := civoext.BootstrapCivoMgmtCluster(clientSet, &cl, &clctrl.ProviderConfig)
 			if err != nil {
 				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
 		case "digitalocean":
-			err := digitaloceanext.BootstrapDigitaloceanMgmtCluster(clctrl.ProviderConfig.Kubeconfig, &cl)
+			err := digitaloceanext.BootstrapDigitaloceanMgmtCluster(clientSet, &cl, &clctrl.ProviderConfig)
 			if err != nil {
 				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
 		case "vultr":
-			err := vultrext.BootstrapVultrMgmtCluster(clctrl.ProviderConfig.Kubeconfig, &cl)
+			err := vultrext.BootstrapVultrMgmtCluster(clientSet, &cl, &clctrl.ProviderConfig)
 			if err != nil {
 				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
+		}
+
+		//create service accounts
+		err = providerConfigs.ServiceAccounts(clientSet)
+		if err != nil {
+			return err
 		}
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cluster_secrets_created_check", true)

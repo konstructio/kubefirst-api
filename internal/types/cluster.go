@@ -12,18 +12,31 @@ import (
 
 // ClusterDefinition describes an incoming request to create a cluster
 type ClusterDefinition struct {
-	AdminEmail           string `json:"admin_email" binding:"required"`
-	CloudProvider        string `json:"cloud_provider" binding:"required,oneof=aws civo digitalocean vultr"`
-	CloudRegion          string `json:"cloud_region" binding:"required"`
-	ClusterName          string `json:"cluster_name,omitempty"`
-	DomainName           string `json:"domain_name" binding:"required"`
+
+	//Cluster
+	AdminEmail    string `json:"admin_email" binding:"required"`
+	CloudProvider string `json:"cloud_provider" binding:"required,oneof=aws civo digitalocean vultr"`
+	CloudRegion   string `json:"cloud_region" binding:"required"`
+	ClusterName   string `json:"cluster_name,omitempty"`
+	DomainName    string `json:"domain_name" binding:"required"`
+	Type          string `json:"type" binding:"required,oneof=mgmt workload"`
+
+	//Git
 	GitopsTemplateURL    string `json:"gitops_template_url"`
 	GitopsTemplateBranch string `json:"gitops_template_branch"`
 	GitProvider          string `json:"git_provider" binding:"required,oneof=github gitlab"`
+	GitProtocol          string `bson:"git_protocol" json:"git_protocol" binding:"required,oneof=ssh https"`
 	GitOwner             string `json:"git_owner" binding:"required"`
 	GitToken             string `json:"git_token" binding:"required"`
-	Type                 string `json:"type" binding:"required,oneof=mgmt workload"`
 
+	//AWS
+	ECR bool `json:"ecr,omitempty"`
+
+	//Cloudflare
+	CloudflareApiToken string `json:"cf_api_token,omitempty"`
+	DnsProvider        string `json:"dns_provider,omitempty" binding:"required"`
+
+	//Auth
 	AWSAuth          AWSAuth          `json:"aws_auth,omitempty"`
 	CivoAuth         CivoAuth         `json:"civo_auth,omitempty"`
 	DigitaloceanAuth DigitaloceanAuth `json:"do_auth,omitempty"`
@@ -48,16 +61,19 @@ type Cluster struct {
 	ClusterID     string `bson:"cluster_id" json:"cluster_id"`
 	ClusterType   string `bson:"cluster_type" json:"cluster_type"`
 	DomainName    string `bson:"domain_name" json:"domain_name"`
+	DnsProvider   string `bson:"dns_provider" json:"dns_provider"`
 
 	// Auth
-	AWSAuth          AWSAuth          `bson:"aws_auth,omitempty" json:"aws_auth,omitempty"`
-	CivoAuth         CivoAuth         `bson:"civo_auth,omitempty" json:"civo_auth,omitempty"`
-	DigitaloceanAuth DigitaloceanAuth `bson:"do_auth,omitempty" json:"do_auth,omitempty"`
-	VultrAuth        VultrAuth        `bson:"vultr_auth,omitempty" json:"vultr_auth,omitempty"`
+	AWSAuth            AWSAuth          `bson:"aws_auth,omitempty" json:"aws_auth,omitempty"`
+	CivoAuth           CivoAuth         `bson:"civo_auth,omitempty" json:"civo_auth,omitempty"`
+	DigitaloceanAuth   DigitaloceanAuth `bson:"do_auth,omitempty" json:"do_auth,omitempty"`
+	VultrAuth          VultrAuth        `bson:"vultr_auth,omitempty" json:"vultr_auth,omitempty"`
+	CloudflareApiToken string           `bson:"cf_api_token,omitempty" json:"cf_api_token,omitempty"`
 
 	GitopsTemplateURL    string `bson:"gitops_template_url" json:"gitops_template_url"`
 	GitopsTemplateBranch string `bson:"gitops_template_branch" json:"gitops_template_branch"`
 	GitProvider          string `bson:"git_provider" json:"git_provider"`
+	GitProtocol          string `bson:"git_protocol" json:"git_protocol"`
 	GitHost              string `bson:"git_host" json:"git_host"`
 	GitOwner             string `bson:"git_owner" json:"git_owner"`
 	GitUser              string `bson:"git_user" json:"git_user"`
@@ -78,6 +94,9 @@ type Cluster struct {
 	ArgoCDUsername  string `bson:"argocd_username" json:"argocd_username"`
 	ArgoCDPassword  string `bson:"argocd_password" json:"argocd_password"`
 	ArgoCDAuthToken string `bson:"argocd_auth_token" json:"argocd_auth_token"`
+
+	//container Registry
+	ECR bool `bson:"ecr" json:"ecr"`
 
 	// kms
 	AWSAccountId              string `bson:"aws_account_id,omitempty" json:"aws_account_id,omitempty"`

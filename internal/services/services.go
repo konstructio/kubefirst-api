@@ -289,7 +289,7 @@ func AddDefaultServices(cl *types.Cluster) error {
 		{
 			Name:        cl.GitProvider,
 			Default:     true,
-			Description: "The git repositories contain all the Infrastructure as Code and GitOps configurations.",
+			Description: "The git repositories contain all the Infrastructure as Code and Gitops configurations.",
 			Image:       fmt.Sprintf("https://assets.kubefirst.com/console/%s.svg", cl.GitProvider),
 			Links: []string{fmt.Sprintf("https://%s/%s/gitops", cl.GitHost, cl.GitOwner),
 				fmt.Sprintf("https://%s/%s/metaphor", cl.GitHost, cl.GitOwner)},
@@ -306,7 +306,7 @@ func AddDefaultServices(cl *types.Cluster) error {
 		{
 			Name:        "Argo CD",
 			Default:     true,
-			Description: "A GitOps oriented continuous delivery tool for managing all of our applications across our Kubernetes clusters.",
+			Description: "A Gitops oriented continuous delivery tool for managing all of our applications across our Kubernetes clusters.",
 			Image:       "https://assets.kubefirst.com/console/argocd.svg",
 			Links:       []string{fmt.Sprintf("https://argocd.%s", cl.DomainName)},
 			Status:      "",

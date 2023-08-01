@@ -4,7 +4,7 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package digitalocean
+package aws
 
 import (
 	"context"
@@ -12,15 +12,21 @@ import (
 	"strings"
 
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/runtime/pkg/aws"
 	config "github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/rs/zerolog/log"
-
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-func BootstrapDigitaloceanMgmtCluster(clientset *kubernetes.Clientset, cl *types.Cluster, config *config.ProviderConfig) error {
+func BootstrapAWSMgmtCluster(
+	clientset *kubernetes.Clientset,
+	cl *types.Cluster,
+	config *config.ProviderConfig,
+	awsClient *aws.AWSConfiguration,
+	ContainerRegistryURL string,
+) error {
 
 	secretData := map[string][]byte{}
 
@@ -42,7 +48,6 @@ func BootstrapDigitaloceanMgmtCluster(clientset *kubernetes.Clientset, cl *types
 			"sshPrivateKey": []byte(cl.PrivateKey),
 		}
 	}
-
 	// Create secrets
 	createSecrets := []*v1.Secret{
 		// argocd
@@ -56,10 +61,12 @@ func BootstrapDigitaloceanMgmtCluster(clientset *kubernetes.Clientset, cl *types
 			Data: secretData,
 		},
 		{
-			ObjectMeta: metav1.ObjectMeta{Name: "digitalocean-creds", Namespace: "external-dns"},
+			// the aws-token isn't actually used for aws,
+			//we just provide it so we can tokenize generically for cloudflare across all the providers
+			ObjectMeta: metav1.ObjectMeta{Name: "aws-creds", Namespace: "external-dns"},
 			Data: map[string][]byte{
-				"digitalocean-token": []byte(cl.DigitaloceanAuth.Token),
-				"cf-api-token":       []byte(cl.CloudflareApiToken),
+				"aws-token":    []byte(""),
+				"cf-api-token": []byte(cl.CloudflareApiToken),
 			},
 		},
 	}
@@ -73,6 +80,27 @@ func BootstrapDigitaloceanMgmtCluster(clientset *kubernetes.Clientset, cl *types
 				log.Fatal().Msgf("error creating kubernetes secret %s/%s: %s", secret.Namespace, secret.Name, err)
 			}
 			log.Info().Msgf("created kubernetes secret: %s/%s", secret.Namespace, secret.Name)
+		}
+	}
+
+	//flag out the ecr token
+
+	if cl.ECR {
+		ecrToken, err := awsClient.GetECRAuthToken()
+		if err != nil {
+			return err
+		}
+
+		dockerConfigString := fmt.Sprintf(`{"auths": {"%s": {"auth": "%s"}}}`, ContainerRegistryURL, ecrToken)
+		dockerCfgSecret := &v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{Name: "docker-config", Namespace: "argo"},
+			Data:       map[string][]byte{"config.json": []byte(dockerConfigString)},
+			Type:       "Opaque",
+		}
+		_, err = clientset.CoreV1().Secrets(dockerCfgSecret.ObjectMeta.Namespace).Create(context.TODO(), dockerCfgSecret, metav1.CreateOptions{})
+		if err != nil {
+			log.Info().Msgf("error creating kubernetes secret %s/%s: %s", dockerCfgSecret.Namespace, dockerCfgSecret.Name, err)
+			return err
 		}
 	}
 

@@ -34,6 +34,7 @@ func (clctrl *ClusterController) GitInit() error {
 			GitProvider:  clctrl.GitProvider,
 			GitToken:     clctrl.GitToken,
 			GitOwner:     clctrl.GitOwner,
+			GitProtocol:  clctrl.GitProtocol,
 			Repositories: clctrl.Repositories,
 			Teams:        clctrl.Teams,
 			GithubOrg:    clctrl.GitOwner,
