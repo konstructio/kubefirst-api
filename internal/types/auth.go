@@ -18,6 +18,11 @@ type CivoAuth struct {
 	Token string `bson:"token" json:"token"`
 }
 
+// VultrAuth holds necessary auth credentials for interacting with vultr
+type CloudflareAuth struct {
+	Token string `bson:"token" json:"token"`
+}
+
 // DigitaloceanAuth holds necessary auth credentials for interacting with digitalocean
 type DigitaloceanAuth struct {
 	Token        string `bson:"token" json:"token"`

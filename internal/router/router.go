@@ -64,7 +64,7 @@ func SetupRouter() *gin.Engine {
 		v1.DELETE("/services/:cluster_name/:service_name", middleware.ValidateAPIKey(), router.DeleteServiceFromCluster)
 
 		// Domains
-		v1.POST("/domain/:cloud_provider", middleware.ValidateAPIKey(), router.PostDomains)
+		v1.POST("/domain/:dns_provider", middleware.ValidateAPIKey(), router.PostDomains)
 		v1.GET("/domain/validate/aws/:domain", middleware.ValidateAPIKey(), router.GetValidateAWSDomain)
 		v1.GET("/domain/validate/civo/:domain", middleware.ValidateAPIKey(), router.GetValidateCivoDomain)
 
