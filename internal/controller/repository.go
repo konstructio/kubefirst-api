@@ -49,16 +49,17 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.GitProvider,
 				clctrl.ClusterName,
 				clctrl.ClusterType,
-				AWSDestinationGitopsRepoGitURL,
+				AWSDestinationGitopsRepoURL,
 				clctrl.ProviderConfig.GitopsDir,
 				clctrl.GitopsTemplateBranch,
 				clctrl.GitopsTemplateURL,
-				AWSDestinationMetaphorRepoGitURL,
+				AWSDestinationMetaphorRepoURL,
 				clctrl.ProviderConfig.K1Dir,
-				clctrl.CreateTokens("gitops").(*providerConfigs.GitOpsDirectoryValues),
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues),
 				clctrl.ProviderConfig.MetaphorDir,
 				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues),
 				true,
+				cl.GitProtocol,
 			)
 			if err != nil {
 				return err
@@ -69,16 +70,17 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.GitProvider,
 				clctrl.ClusterName,
 				clctrl.ClusterType,
-				CivoDestinationGitopsRepoGitURL,
+				CivoDestinationGitopsRepoURL,
 				clctrl.ProviderConfig.GitopsDir,
 				clctrl.GitopsTemplateBranch,
 				clctrl.GitopsTemplateURL,
-				CivoDestinationMetaphorRepoGitURL,
+				CivoDestinationMetaphorRepoURL,
 				clctrl.ProviderConfig.K1Dir,
-				clctrl.CreateTokens("gitops").(*providerConfigs.GitOpsDirectoryValues),
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues),
 				clctrl.ProviderConfig.MetaphorDir,
 				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues),
 				civo.GetDomainApexContent(clctrl.DomainName),
+				cl.GitProtocol,
 			)
 			if err != nil {
 				return err
@@ -89,16 +91,17 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.GitProvider,
 				clctrl.ClusterName,
 				clctrl.ClusterType,
-				DigitaloceanDestinationGitopsRepoGitURL,
+				DigitaloceanDestinationGitopsRepoURL,
 				clctrl.ProviderConfig.GitopsDir,
 				clctrl.GitopsTemplateBranch,
 				clctrl.GitopsTemplateURL,
-				DigitaloceanDestinationMetaphorRepoGitURL,
+				DigitaloceanDestinationMetaphorRepoURL,
 				clctrl.ProviderConfig.K1Dir,
-				clctrl.CreateTokens("gitops").(*providerConfigs.GitOpsDirectoryValues),
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues),
 				clctrl.ProviderConfig.MetaphorDir,
 				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues),
 				digitalocean.GetDomainApexContent(clctrl.DomainName),
+				cl.GitProtocol,
 			)
 			if err != nil {
 				return err
@@ -109,16 +112,17 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.GitProvider,
 				clctrl.ClusterName,
 				clctrl.ClusterType,
-				VultrDestinationGitopsRepoGitURL,
+				VultrDestinationGitopsRepoURL,
 				clctrl.ProviderConfig.GitopsDir,
 				clctrl.GitopsTemplateBranch,
 				clctrl.GitopsTemplateURL,
-				VultrDestinationMetaphorRepoGitURL,
+				VultrDestinationMetaphorRepoURL,
 				clctrl.ProviderConfig.K1Dir,
-				clctrl.CreateTokens("gitops").(*providerConfigs.GitOpsDirectoryValues),
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues),
 				clctrl.ProviderConfig.MetaphorDir,
 				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues),
 				vultr.GetDomainApexContent(clctrl.DomainName),
+				cl.GitProtocol,
 			)
 			if err != nil {
 				return err
@@ -167,7 +171,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 
 		gitopsDir := clctrl.ProviderConfig.GitopsDir
 		metaphorDir := clctrl.ProviderConfig.MetaphorDir
-		destinationGitopsRepoGitURL := clctrl.ProviderConfig.DestinationGitopsRepoGitURL
+		DestinationGitopsRepoURL := clctrl.ProviderConfig.DestinationGitopsRepoURL
 		destinationMetaphorRepoGitURL := clctrl.ProviderConfig.DestinationMetaphorRepoGitURL
 
 		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitopsRepoPushStarted, "")
@@ -222,7 +226,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			},
 		)
 		if err != nil {
-			msg := fmt.Sprintf("error pushing detokenized gitops repository to remote %s: %s", destinationGitopsRepoGitURL, err)
+			msg := fmt.Sprintf("error pushing detokenized gitops repository to remote %s: %s", DestinationGitopsRepoURL, err)
 			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitopsRepoPushFailed, msg)
 			return fmt.Errorf(msg)
 		}

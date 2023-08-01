@@ -40,6 +40,7 @@ type ClusterController struct {
 	ClusterID     string
 	ClusterType   string
 	DomainName    string
+	DnsProvider   string
 	AlertsEmail   string
 
 	// auth
@@ -47,6 +48,7 @@ type ClusterController struct {
 	CivoAuth           types.CivoAuth
 	DigitaloceanAuth   types.DigitaloceanAuth
 	VultrAuth          types.VultrAuth
+	CloudflareApiToken string
 	AwsAccessKeyID     string
 	AwsSecretAccessKey string
 
@@ -57,6 +59,7 @@ type ClusterController struct {
 	GitopsTemplateURL    string
 	GitopsTemplateBranch string
 	GitProvider          string
+	GitProtocol          string
 	GitHost              string
 	GitOwner             string
 	GitUser              string
@@ -238,15 +241,15 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	// Instantiate provider configuration
 	switch clctrl.CloudProvider {
 	case "aws":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner, clctrl.GitProtocol, clctrl.CloudflareApiToken)
 	case "civo":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner, clctrl.GitProtocol, clctrl.CloudflareApiToken)
 		clctrl.ProviderConfig.CivoToken = clctrl.CivoAuth.Token
 	case "digitalocean":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner, clctrl.GitProtocol, clctrl.CloudflareApiToken)
 		clctrl.ProviderConfig.DigitaloceanToken = clctrl.DigitaloceanAuth.Token
 	case "vultr":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner, clctrl.GitProtocol, clctrl.CloudflareApiToken)
 		clctrl.ProviderConfig.VultrToken = clctrl.VultrAuth.Token
 	}
 

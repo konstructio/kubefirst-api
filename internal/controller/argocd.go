@@ -231,22 +231,22 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		switch clctrl.CloudProvider {
 		case "aws":
 			registryApplicationObject = argocd.GetArgoCDApplicationObject(
-				clctrl.ProviderConfig.DestinationGitopsRepoGitURL,
+				clctrl.ProviderConfig.DestinationGitopsRepoURL,
 				fmt.Sprintf("registry/%s", clctrl.ClusterName),
 			)
 		case "civo":
 			registryApplicationObject = argocd.GetArgoCDApplicationObject(
-				clctrl.ProviderConfig.DestinationGitopsRepoGitURL,
+				clctrl.ProviderConfig.DestinationGitopsRepoURL,
 				fmt.Sprintf("registry/%s", clctrl.ClusterName),
 			)
 		case "digitalocean":
 			registryApplicationObject = argocd.GetArgoCDApplicationObject(
-				clctrl.ProviderConfig.DestinationGitopsRepoGitURL,
+				clctrl.ProviderConfig.DestinationGitopsRepoURL,
 				fmt.Sprintf("registry/%s", clctrl.ClusterName),
 			)
 		case "vultr":
 			registryApplicationObject = argocd.GetArgoCDApplicationObject(
-				clctrl.ProviderConfig.DestinationGitopsRepoGitURL,
+				clctrl.ProviderConfig.DestinationGitopsRepoURL,
 				fmt.Sprintf("registry/%s", clctrl.ClusterName),
 			)
 		}
