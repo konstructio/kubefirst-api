@@ -15,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 	"github.com/kubefirst/kubefirst-api/providers/aws"
@@ -444,6 +445,13 @@ func PostImportCluster(c *gin.Context) {
 
 	// Export
 	err = db.Client.Restore(&req)
+	// Create default service entries
+	cl, _ := db.Client.GetCluster(req.ClusterName)
+	err = services.AddDefaultServices(&cl)
+	if err != nil {
+		log.Errorf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
+	}
+
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: fmt.Sprintf("error importing cluster %s: %s", req.ClusterName, err),

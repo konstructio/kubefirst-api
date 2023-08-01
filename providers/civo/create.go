@@ -184,21 +184,21 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 
 	// Wait for console Deployment Pods to transition to Running
 	log.Info("deploying kubefirst console and verifying cluster installation is complete")
-	consoleDeployment, err := k8s.ReturnDeploymentObject(
+	kubefirstApiDeployment, err := k8s.ReturnDeploymentObject(
 		kcfg.Clientset,
 		"app.kubernetes.io/instance",
 		"kubefirst-console",
 		"kubefirst",
-		1200,
+		12,
 	)
 	if err != nil {
-		log.Errorf("Error finding console Deployment: %s", err)
+		log.Errorf("Error finding kubefirst api Deployment: %s", err)
 		ctrl.HandleError(err.Error())
 		return err
 	}
-	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, consoleDeployment, 120)
+	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, kubefirstApiDeployment, 2)
 	if err != nil {
-		log.Errorf("Error waiting for console Deployment ready state: %s", err)
+		log.Errorf("Error waiting for kubefirst api Deployment ready state: %s", err)
 
 		ctrl.HandleError(err.Error())
 		return err
@@ -215,6 +215,13 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 	}
 
 	log.Info("cluster creation complete")
+
+	//* export and import cluster
+	err = ctrl.ExportClusterRecord()
+	if err != nil {
+		log.Errorf("Error exporting cluster record: %s", err)
+		return err
+	}
 
 	// Telemetry handler
 	rec, err := ctrl.GetCurrentClusterRecord()
