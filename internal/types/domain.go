@@ -13,6 +13,7 @@ type DomainListRequest struct {
 	CivoAuth         CivoAuth         `json:"civo_auth,omitempty"`
 	DigitaloceanAuth DigitaloceanAuth `json:"do_auth,omitempty"`
 	VultrAuth        VultrAuth        `json:"vultr_auth,omitempty"`
+	CloudflareAuth   CloudflareAuth   `json:"cloudflare_auth,omitempty"`
 }
 
 // DomainListResponse
