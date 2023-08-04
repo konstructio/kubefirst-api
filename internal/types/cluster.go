@@ -19,6 +19,7 @@ type ClusterDefinition struct {
 	CloudRegion   string `json:"cloud_region" binding:"required"`
 	ClusterName   string `json:"cluster_name,omitempty"`
 	DomainName    string `json:"domain_name" binding:"required"`
+	DnsProvider   string `json:"dns_provider,omitempty" binding:"required"`
 	Type          string `json:"type" binding:"required,oneof=mgmt workload"`
 
 	//Git
@@ -32,15 +33,12 @@ type ClusterDefinition struct {
 	//AWS
 	ECR bool `json:"ecr,omitempty"`
 
-	//Cloudflare
-	CloudflareApiToken string `json:"cf_api_token,omitempty"`
-	DnsProvider        string `json:"dns_provider,omitempty" binding:"required"`
-
 	//Auth
 	AWSAuth          AWSAuth          `json:"aws_auth,omitempty"`
 	CivoAuth         CivoAuth         `json:"civo_auth,omitempty"`
 	DigitaloceanAuth DigitaloceanAuth `json:"do_auth,omitempty"`
 	VultrAuth        VultrAuth        `json:"vultr_auth,omitempty"`
+	CloudflareAuth   CloudflareAuth   `json:"cloudflare_auth,omitempty"`
 }
 
 // Cluster describes the configuration storage for a Kubefirst cluster object
@@ -64,11 +62,11 @@ type Cluster struct {
 	DnsProvider   string `bson:"dns_provider" json:"dns_provider"`
 
 	// Auth
-	AWSAuth            AWSAuth          `bson:"aws_auth,omitempty" json:"aws_auth,omitempty"`
-	CivoAuth           CivoAuth         `bson:"civo_auth,omitempty" json:"civo_auth,omitempty"`
-	DigitaloceanAuth   DigitaloceanAuth `bson:"do_auth,omitempty" json:"do_auth,omitempty"`
-	VultrAuth          VultrAuth        `bson:"vultr_auth,omitempty" json:"vultr_auth,omitempty"`
-	CloudflareApiToken string           `bson:"cf_api_token,omitempty" json:"cf_api_token,omitempty"`
+	AWSAuth          AWSAuth          `bson:"aws_auth,omitempty" json:"aws_auth,omitempty"`
+	CivoAuth         CivoAuth         `bson:"civo_auth,omitempty" json:"civo_auth,omitempty"`
+	DigitaloceanAuth DigitaloceanAuth `bson:"do_auth,omitempty" json:"do_auth,omitempty"`
+	VultrAuth        VultrAuth        `bson:"vultr_auth,omitempty" json:"vultr_auth,omitempty"`
+	CloudflareAuth   CloudflareAuth   `bson:"cf_api_token,omitempty" json:"cf_api_token,omitempty"`
 
 	GitopsTemplateURL    string `bson:"gitops_template_url" json:"gitops_template_url"`
 	GitopsTemplateBranch string `bson:"gitops_template_branch" json:"gitops_template_branch"`

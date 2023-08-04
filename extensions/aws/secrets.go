@@ -65,8 +65,8 @@ func BootstrapAWSMgmtCluster(
 			//we just provide it so we can tokenize generically for cloudflare across all the providers
 			ObjectMeta: metav1.ObjectMeta{Name: "aws-creds", Namespace: "external-dns"},
 			Data: map[string][]byte{
-				"aws-token":    []byte(""),
-				"cf-api-token": []byte(cl.CloudflareApiToken),
+				"aws-token":    []byte("VALUE IGNORED, DOES NOT USE TOKEN, USES SERVICE ACCOUNT"),
+				"cf-api-token": []byte(cl.CloudflareAuth.Token),
 			},
 		},
 	}
