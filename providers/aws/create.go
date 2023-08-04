@@ -27,6 +27,7 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
+	// Update cluster status in database
 	err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", true)
 	if err != nil {
 		return err
@@ -78,6 +79,7 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
+	//Where detokeinization happens
 	err = ctrl.RepositoryPrep()
 	if err != nil {
 		ctrl.HandleError(err.Error())

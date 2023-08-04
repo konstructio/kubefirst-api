@@ -10,8 +10,10 @@ import (
 	"context"
 	"fmt"
 
+	cloudflare_api "github.com/cloudflare/cloudflare-go"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/runtime/pkg/civo"
+	"github.com/kubefirst/runtime/pkg/cloudflare"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/dns"
 	"github.com/kubefirst/runtime/pkg/segment"
@@ -36,7 +38,7 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 	if !cl.DomainLivenessCheck {
 		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricDomainLivenessStarted, "")
 
-		switch clctrl.CloudProvider {
+		switch clctrl.DnsProvider {
 		case "aws":
 			domainLiveness := clctrl.AwsClient.TestHostedZoneLiveness(clctrl.DomainName)
 
@@ -59,6 +61,24 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 
 			log.Infof("domainId: %s", domainId)
 			domainLiveness := civoConf.TestDomainLiveness(clctrl.DomainName, domainId, clctrl.CloudRegion)
+
+			err = clctrl.HandleDomainLiveness(domainLiveness)
+			if err != nil {
+				return err
+			}
+		case "cloudflare":
+
+			client, err := cloudflare_api.NewWithAPIToken(clctrl.CloudflareAuth.Token)
+			if err != nil {
+				return err
+			}
+
+			cloudflareConf := cloudflare.CloudflareConfiguration{
+				Client:  client,
+				Context: context.Background(),
+			}
+
+			domainLiveness := cloudflareConf.TestDomainLiveness(clctrl.DomainName)
 
 			err = clctrl.HandleDomainLiveness(domainLiveness)
 			if err != nil {
