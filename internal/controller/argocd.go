@@ -228,28 +228,10 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		log.Info("applying the registry application to argocd")
 		var registryApplicationObject *v1alpha1.Application
 
-		switch clctrl.CloudProvider {
-		case "aws":
-			registryApplicationObject = argocd.GetArgoCDApplicationObject(
-				clctrl.ProviderConfig.DestinationGitopsRepoURL,
-				fmt.Sprintf("registry/%s", clctrl.ClusterName),
-			)
-		case "civo":
-			registryApplicationObject = argocd.GetArgoCDApplicationObject(
-				clctrl.ProviderConfig.DestinationGitopsRepoURL,
-				fmt.Sprintf("registry/%s", clctrl.ClusterName),
-			)
-		case "digitalocean":
-			registryApplicationObject = argocd.GetArgoCDApplicationObject(
-				clctrl.ProviderConfig.DestinationGitopsRepoURL,
-				fmt.Sprintf("registry/%s", clctrl.ClusterName),
-			)
-		case "vultr":
-			registryApplicationObject = argocd.GetArgoCDApplicationObject(
-				clctrl.ProviderConfig.DestinationGitopsRepoURL,
-				fmt.Sprintf("registry/%s", clctrl.ClusterName),
-			)
-		}
+		registryApplicationObject = argocd.GetArgoCDApplicationObject(
+			clctrl.ProviderConfig.DestinationGitopsRepoURL,
+			fmt.Sprintf("registry/%s", clctrl.ClusterName),
+		)
 
 		_, _ = argocdClient.ArgoprojV1alpha1().Applications("argocd").Create(context.Background(), registryApplicationObject, metav1.CreateOptions{})
 

@@ -8,7 +8,6 @@ package api
 
 import (
 	"fmt"
-	"io"
 	"os"
 
 	"net/http"
@@ -189,8 +188,8 @@ func GetClusters(c *gin.Context) {
 // PostCreateCluster handles a request to create a cluster
 func PostCreateCluster(c *gin.Context) {
 
-	jsonData, err := io.ReadAll(c.Request.Body)
-	fmt.Sprintf(string(jsonData))
+	// jsonData, err := io.ReadAll(c.Request.Body)
+	// fmt.Spintf(string(jsonData))
 	clusterName, param := c.Params.Get("cluster_name")
 	if !param {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -201,7 +200,7 @@ func PostCreateCluster(c *gin.Context) {
 
 	// Bind to variable as application/json, handle error
 	var clusterDefinition types.ClusterDefinition
-	err = c.Bind(&clusterDefinition)
+	err := c.Bind(&clusterDefinition)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
