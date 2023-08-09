@@ -63,6 +63,9 @@ func (clctrl *ClusterController) InitializeBot() error {
 	}
 
 	publicKeys, err := ssh.NewPublicKeys("git", []byte(cl.GitAuth.PrivateKey), "")
+	if err != nil {
+		return err
+	}
 	clctrl.GitAuth.GitopsPublicKeys = *publicKeys
 
 	return nil
