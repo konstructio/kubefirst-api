@@ -217,7 +217,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 		err = gitopsRepo.Push(
 			&git.PushOptions{
 				RemoteName: clctrl.GitProvider,
-				Auth:       &cl.GitAuth.HttpAuth,
+				Auth:       HttpAuth,
 			},
 		)
 		if err != nil {
@@ -230,7 +230,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 		err = metaphorRepo.Push(
 			&git.PushOptions{
 				RemoteName: "origin",
-				Auth:       &cl.GitAuth.HttpAuth,
+				Auth:       HttpAuth,
 			},
 		)
 		if err != nil {
