@@ -226,8 +226,12 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 
 		log.Info("applying the registry application to argocd")
 
+		registryURL, err := clctrl.GitURL()
+		if err != nil {
+			return err
+		}
 		registryApplicationObject := argocd.GetArgoCDApplicationObject(
-			clctrl.ProviderConfig.DestinationGitopsRepoURL,
+			registryURL,
 			fmt.Sprintf("registry/%s", clctrl.ClusterName),
 		)
 

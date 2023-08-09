@@ -30,6 +30,7 @@ func BootstrapAWSMgmtCluster(
 
 	secretData := map[string][]byte{}
 
+	// Switch auth method and url based on GitProtocol
 	if cl.GitProtocol == "https" {
 		// http basic auth
 		secretData = map[string][]byte{
@@ -44,7 +45,7 @@ func BootstrapAWSMgmtCluster(
 		secretData = map[string][]byte{
 			"type":          []byte("git"),
 			"name":          []byte(fmt.Sprintf("%s-gitops", cl.GitUser)),
-			"url":           []byte(config.DestinationGitopsRepoURL),
+			"url":           []byte(config.DestinationGitopsRepoGitURL),
 			"sshPrivateKey": []byte(cl.PrivateKey),
 		}
 	}
