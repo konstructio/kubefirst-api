@@ -43,7 +43,7 @@ Kubefirst API runtime implementation.
 
 ## Running Locally
 
-The API is available at `:8081/api/v1` while running.
+The API is available at `http://localhost:8081/api/v1` while running.
 
 ### Build the Binary
 
@@ -223,31 +223,6 @@ curl -X DELETE http://localhost:8081/api/v1/cluster/my-cool-cluster
 
 ## Authentication
 
-### Creating a User
-
-All protected routes for the API require user authentication in the form of an API key. This can be done via the API's `cli`.
-
-Users are stored in the users collection within MongoDB. Note that there is no default user and you must run this command at least once to generate an API key.
-
-Running this command requires MongoDB connection parameters to be set as environment variables:
-
-```bash
-export MONGODB_HOST=
-export MONGODB_USERNAME=
-export MONGODB_PASSWORD=
-```
-
-You can generate an API key by running the following command in the `cli` directory:
-
-```bash
-❯ go run . create-api-user bob
-INFO[0000] created user bob with api key: 99961fafdb9d74cb415ab62b92faa8bc
-```
-
-The command will return the API key that can be used to authenticate with the API.
-
-### Authenticating
-
 The API expects an `Authorization` header with the content `Bearer <API key>`. For example:
 
 ```bash
@@ -255,6 +230,8 @@ The API expects an `Authorization` header with the content `Bearer <API key>`. F
      -H "Authorization: Bearer my-api-key" \
      -H "Content-Type:application/json"
 ```
+
+The provided bearer token is validated against an auto-generated key that gets stored in secret `kubefirst-initial-secrets` provided by this chart. It's then consumed by this same chart's deployment as an environment variable `K1_ACCESS_TOKEN` for the comparison. The console application will have access to this same namespaced secret and can leverage the bearer token to authorize calls to the `kubefirst-api` and `kubefirst-api-ee` services.
 
 ## Swagger UI
 
