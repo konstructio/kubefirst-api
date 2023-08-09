@@ -29,18 +29,18 @@ func BootstrapVultrMgmtCluster(clientset *kubernetes.Clientset, cl *types.Cluste
 		// http basic auth
 		secretData = map[string][]byte{
 			"type":     []byte("git"),
-			"name":     []byte(fmt.Sprintf("%s-gitops", cl.GitUser)),
+			"name":     []byte(fmt.Sprintf("%s-gitops", cl.GitAuth.User)),
 			"url":      []byte(config.DestinationGitopsRepoURL),
-			"username": []byte(cl.GitUser),
-			"password": []byte([]byte(fmt.Sprintf(cl.GitToken))),
+			"username": []byte(cl.GitAuth.User),
+			"password": []byte([]byte(fmt.Sprintf(cl.GitAuth.Token))),
 		}
 	} else {
 		// ssh
 		secretData = map[string][]byte{
 			"type":          []byte("git"),
-			"name":          []byte(fmt.Sprintf("%s-gitops", cl.GitUser)),
+			"name":          []byte(fmt.Sprintf("%s-gitops", cl.GitAuth.User)),
 			"url":           []byte(config.DestinationGitopsRepoGitURL),
-			"sshPrivateKey": []byte(cl.PrivateKey),
+			"sshPrivateKey": []byte(cl.GitAuth.PrivateKey),
 		}
 	}
 

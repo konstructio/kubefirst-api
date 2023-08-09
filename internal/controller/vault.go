@@ -180,7 +180,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 			usernamePasswordString = fmt.Sprintf("%s:%s", "container-registry-auth", registryAuth)
 			base64DockerAuth = base64.StdEncoding.EncodeToString([]byte(usernamePasswordString))
 		} else {
-			usernamePasswordString = fmt.Sprintf("%s:%s", clctrl.GitUser, clctrl.GitToken)
+			usernamePasswordString = fmt.Sprintf("%s:%s", clctrl.GitAuth.User, clctrl.GitAuth.Token)
 			base64DockerAuth = base64.StdEncoding.EncodeToString([]byte(usernamePasswordString))
 		}
 

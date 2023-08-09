@@ -321,4 +321,4 @@ replace (
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.24.2
 )
 
-replace github.com/kubefirst/runtime => /Users/claywd/projects/kubefirst/runtime
+replace github.com/kubefirst/runtime => /root/kubefirst/runtime

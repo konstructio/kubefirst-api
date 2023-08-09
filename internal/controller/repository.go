@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/go-git/go-git/v5"
-	githttps "github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
@@ -166,11 +165,6 @@ func (clctrl *ClusterController) RepositoryPush() error {
 	defer segmentClient.Client.Close()
 
 	if !cl.GitopsPushedCheck {
-		//* generate http credentials for git auth over https
-		httpAuth := &githttps.BasicAuth{
-			Username: clctrl.GitUser,
-			Password: clctrl.GitToken,
-		}
 
 		gitopsDir := clctrl.ProviderConfig.GitopsDir
 		metaphorDir := clctrl.ProviderConfig.MetaphorDir
@@ -188,7 +182,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 
 		// For GitLab, we currently need to add an ssh key to the authenticating user
 		if clctrl.GitProvider == "gitlab" {
-			gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitToken, clctrl.GitOwner)
+			gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitAuth.Token, clctrl.GitAuth.Owner)
 			if err != nil {
 				return err
 			}
@@ -223,7 +217,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 		err = gitopsRepo.Push(
 			&git.PushOptions{
 				RemoteName: clctrl.GitProvider,
-				Auth:       httpAuth,
+				Auth:       &cl.GitAuth.HttpAuth,
 			},
 		)
 		if err != nil {
@@ -236,7 +230,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 		err = metaphorRepo.Push(
 			&git.PushOptions{
 				RemoteName: "origin",
-				Auth:       httpAuth,
+				Auth:       &cl.GitAuth.HttpAuth,
 			},
 		)
 		if err != nil {
@@ -245,7 +239,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			return fmt.Errorf(msg)
 		}
 
-		log.Infof("successfully pushed gitops and metaphor repositories to git@%s/%s", clctrl.GitHost, clctrl.GitOwner)
+		log.Infof("successfully pushed gitops and metaphor repositories to git@%s/%s", clctrl.GitHost, clctrl.GitAuth.Owner)
 		// todo delete the local gitops repo and re-clone it
 		// todo that way we can stop worrying about which origin we're going to push to
 		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitopsRepoPushCompleted, "")
