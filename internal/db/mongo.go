@@ -23,7 +23,7 @@ type MongoDBClient struct {
 	ClustersCollection      *mongo.Collection
 	GitopsCatalogCollection *mongo.Collection
 	ServicesCollection      *mongo.Collection
-	UsersCollection         *mongo.Collection
+	// UsersCollection         *mongo.Collection
 }
 
 var Client = Connect()
@@ -64,7 +64,7 @@ func Connect() *MongoDBClient {
 		ClustersCollection:      client.Database("api").Collection("clusters"),
 		GitopsCatalogCollection: client.Database("api").Collection("gitops-catalog"),
 		ServicesCollection:      client.Database("api").Collection("services"),
-		UsersCollection:         client.Database("api").Collection("users"),
+		// UsersCollection:         client.Database("api").Collection("users"),
 	}
 
 	return &cl

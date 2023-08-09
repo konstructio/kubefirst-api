@@ -70,6 +70,11 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.existingSecret | default "kubefirst-initial-secrets" }}
                   key: mongodb-root-password
+            - name: K1_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.existingSecret | default "kubefirst-initial-secrets" }}
+                  key: K1_ACCESS_TOKEN
             - name: INSTALL_METHOD
               value: {{ .Values.installMethod | default "helm" | quote }}
             - name: CLUSTER_ID

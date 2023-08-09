@@ -85,6 +85,7 @@ Some variables are required, others are optional depending on deployment type.
 | `CLUSTER_ID`        | The ID of the cluster running API.                                                                                                               | Yes            |
 | `CLUSTER_TYPE`      | Cluster type.                                                                                                                                    | Yes            |
 | `INSTALL_METHOD`    | Description of the method through which the API was deployed. Example: `helm`                                                                    | Yes            |
+| `K1_ACCESS_TOKEN`    | Access token in authorization header to prevent unsolicited in-cluster access | Yes            |
 
 To run locally: 
 
@@ -96,6 +97,7 @@ export MONGODB_HOST=
 export CLUSTER_TYPE=
 export CLUSTER_ID=
 export INSTALL_METHOD=
+export K1_ACCESS_TOKEN=localexample
 ```
 
 ## Provider Support
@@ -256,7 +258,7 @@ The API expects an `Authorization` header with the content `Bearer <API key>`. F
 
 ## Swagger UI
 
-When the app is running, the UI is available via http://:8081/swagger/index.html.
+When the app is running, the UI is available via http://localhost:8081/swagger/index.html.
 
 ## Updating Swagger Docs
 

@@ -46,40 +46,40 @@ func SetupRouter() *gin.Engine {
 	v1 := r.Group("api/v1")
 	{
 		// Cluster
-		v1.GET("/cluster", middleware.ValidateAPIKey(db.Client.UsersCollection), router.GetClusters)
-		v1.POST("/cluster/import", middleware.ValidateAPIKey(db.Client.UsersCollection), router.PostImportCluster)
+		v1.GET("/cluster", middleware.ValidateAPIKey(), router.GetClusters)
+		v1.POST("/cluster/import", middleware.ValidateAPIKey(), router.PostImportCluster)
 
-		v1.GET("/cluster/:cluster_name", middleware.ValidateAPIKey(db.Client.UsersCollection), router.GetCluster)
-		v1.DELETE("/cluster/:cluster_name", middleware.ValidateAPIKey(db.Client.UsersCollection), router.DeleteCluster)
-		v1.POST("/cluster/:cluster_name", middleware.ValidateAPIKey(db.Client.UsersCollection), router.PostCreateCluster)
-		v1.POST("/cluster/:cluster_name/export", middleware.ValidateAPIKey(db.Client.UsersCollection), router.PostExportCluster)
-		v1.POST("/cluster/:cluster_name/reset_progress", middleware.ValidateAPIKey(db.Client.UsersCollection), router.PostResetClusterProgress)
+		v1.GET("/cluster/:cluster_name", middleware.ValidateAPIKey(), router.GetCluster)
+		v1.DELETE("/cluster/:cluster_name", middleware.ValidateAPIKey(), router.DeleteCluster)
+		v1.POST("/cluster/:cluster_name", middleware.ValidateAPIKey(), router.PostCreateCluster)
+		v1.POST("/cluster/:cluster_name/export", middleware.ValidateAPIKey(), router.PostExportCluster)
+		v1.POST("/cluster/:cluster_name/reset_progress", middleware.ValidateAPIKey(), router.PostResetClusterProgress)
 
 		// Gitops Catalog
-		v1.GET("/gitops-catalog/apps", middleware.ValidateAPIKey(db.Client.UsersCollection), router.GetGitopsCatalogApps)
-		v1.GET("/gitops-catalog/apps/update", middleware.ValidateAPIKey(db.Client.UsersCollection), router.UpdateGitopsCatalogApps)
+		v1.GET("/gitops-catalog/apps", middleware.ValidateAPIKey(), router.GetGitopsCatalogApps)
+		v1.GET("/gitops-catalog/apps/update", middleware.ValidateAPIKey(), router.UpdateGitopsCatalogApps)
 
 		// Services
-		v1.GET("/services/:cluster_name", middleware.ValidateAPIKey(db.Client.UsersCollection), router.GetServices)
-		v1.POST("/services/:cluster_name/:service_name", middleware.ValidateAPIKey(db.Client.UsersCollection), router.PostAddServiceToCluster)
-		v1.DELETE("/services/:cluster_name/:service_name", middleware.ValidateAPIKey(db.Client.UsersCollection), router.DeleteServiceFromCluster)
+		v1.GET("/services/:cluster_name", middleware.ValidateAPIKey(), router.GetServices)
+		v1.POST("/services/:cluster_name/:service_name", middleware.ValidateAPIKey(), router.PostAddServiceToCluster)
+		v1.DELETE("/services/:cluster_name/:service_name", middleware.ValidateAPIKey(), router.DeleteServiceFromCluster)
 
 		// Domains
-		v1.POST("/domain/:cloud_provider", middleware.ValidateAPIKey(db.Client.UsersCollection), router.PostDomains)
-		v1.GET("/domain/validate/aws/:domain", middleware.ValidateAPIKey(db.Client.UsersCollection), router.GetValidateAWSDomain)
-		v1.GET("/domain/validate/civo/:domain", middleware.ValidateAPIKey(db.Client.UsersCollection), router.GetValidateCivoDomain)
+		v1.POST("/domain/:cloud_provider", middleware.ValidateAPIKey(), router.PostDomains)
+		v1.GET("/domain/validate/aws/:domain", middleware.ValidateAPIKey(), router.GetValidateAWSDomain)
+		v1.GET("/domain/validate/civo/:domain", middleware.ValidateAPIKey(), router.GetValidateCivoDomain)
 
 		// Regions
-		v1.POST("/region/:cloud_provider", middleware.ValidateAPIKey(db.Client.UsersCollection), router.PostRegions)
+		v1.POST("/region/:cloud_provider", middleware.ValidateAPIKey(), router.PostRegions)
 
 		// Utilities
 		v1.GET("/health", router.GetHealth)
 
 		// Event streaming
-		v1.GET("/stream", middleware.ValidateAPIKey(db.Client.UsersCollection), router.GetLogs)
+		v1.GET("/stream", middleware.ValidateAPIKey(), router.GetLogs)
 
 		// Telemetry
-		v1.POST("/telemetry/:cluster_name", middleware.ValidateAPIKey(db.Client.UsersCollection), router.PostTelemetry)
+		v1.POST("/telemetry/:cluster_name", middleware.ValidateAPIKey(), router.PostTelemetry)
 	}
 
 	// swagger-ui
