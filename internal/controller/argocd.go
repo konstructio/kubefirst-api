@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	argocdapi "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
@@ -226,9 +225,8 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		}
 
 		log.Info("applying the registry application to argocd")
-		var registryApplicationObject *v1alpha1.Application
 
-		registryApplicationObject = argocd.GetArgoCDApplicationObject(
+		registryApplicationObject := argocd.GetArgoCDApplicationObject(
 			clctrl.ProviderConfig.DestinationGitopsRepoURL,
 			fmt.Sprintf("registry/%s", clctrl.ClusterName),
 		)
