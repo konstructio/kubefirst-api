@@ -17,6 +17,7 @@ import (
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
+	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 )
@@ -252,4 +253,42 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 	}
 
 	return nil
+}
+
+func (clctrl *ClusterController) GitURL() (string, error) {
+
+	var destinationGitopsRepoURL string
+
+	switch clctrl.GitProvider {
+	case "github":
+
+		// Define constant url based on flag input, only expecting 2 protocols
+		switch clctrl.GitProtocol {
+		case "ssh": //"ssh"
+			destinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
+		}
+	case "gitlab":
+		gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitToken, clctrl.GitOwner)
+		if err != nil {
+			return "", err
+		}
+		// Format git url based on full path to group
+		switch clctrl.ProviderConfig.GitProtocol {
+		case "https":
+			// Update the urls in the cluster for gitlab parent groups
+			clctrl.ProviderConfig.DestinationGitopsRepoHttpsURL = fmt.Sprintf("https://gitlab.com/%s/gitops.git", gitlabClient.ParentGroupPath)
+			clctrl.ProviderConfig.DestinationMetaphorRepoHttpsURL = fmt.Sprintf("https://gitlab.com/%s/metaphor.git", gitlabClient.ParentGroupPath)
+			// Return the url used for detokenization
+			destinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoHttpsURL
+
+		default:
+			// Update the urls in the cluster for gitlab parent group
+			clctrl.ProviderConfig.DestinationGitopsRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)
+			clctrl.ProviderConfig.DestinationMetaphorRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
+			// Return the url used for detokenization
+			destinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
+		}
+	}
+
+	return destinationGitopsRepoURL, nil
 }
