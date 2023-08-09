@@ -9,7 +9,6 @@ package api
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/middleware"
 	router "github.com/kubefirst/kubefirst-api/internal/router/api/v1"
 	log "github.com/sirupsen/logrus"
