@@ -51,11 +51,11 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.GitProvider,
 				clctrl.ClusterName,
 				clctrl.ClusterType,
-				AWSDestinationGitopsRepoURL,
+				clctrl.ProviderConfig.DestinationGitopsRepoURL,
 				clctrl.ProviderConfig.GitopsDir,
 				clctrl.GitopsTemplateBranch,
 				clctrl.GitopsTemplateURL,
-				AWSDestinationMetaphorRepoURL,
+				clctrl.ProviderConfig.DestinationMetaphorRepoURL,
 				clctrl.ProviderConfig.K1Dir,
 				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), //tokens created on the fly
 				clctrl.ProviderConfig.MetaphorDir,
@@ -72,11 +72,11 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.GitProvider,
 				clctrl.ClusterName,
 				clctrl.ClusterType,
-				CivoDestinationGitopsRepoURL,
+				clctrl.ProviderConfig.DestinationGitopsRepoURL,
 				clctrl.ProviderConfig.GitopsDir,
 				clctrl.GitopsTemplateBranch,
 				clctrl.GitopsTemplateURL,
-				CivoDestinationMetaphorRepoURL,
+				clctrl.ProviderConfig.DestinationMetaphorRepoURL,
 				clctrl.ProviderConfig.K1Dir,
 				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), //tokens created on the fly
 				clctrl.ProviderConfig.MetaphorDir,
@@ -93,11 +93,11 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.GitProvider,
 				clctrl.ClusterName,
 				clctrl.ClusterType,
-				DigitaloceanDestinationGitopsRepoURL,
+				clctrl.ProviderConfig.DestinationGitopsRepoURL,
 				clctrl.ProviderConfig.GitopsDir,
 				clctrl.GitopsTemplateBranch,
 				clctrl.GitopsTemplateURL,
-				DigitaloceanDestinationMetaphorRepoURL,
+				clctrl.ProviderConfig.DestinationMetaphorRepoURL,
 				clctrl.ProviderConfig.K1Dir,
 				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), //tokens created on the fly
 				clctrl.ProviderConfig.MetaphorDir,
@@ -114,11 +114,11 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.GitProvider,
 				clctrl.ClusterName,
 				clctrl.ClusterType,
-				VultrDestinationGitopsRepoURL,
+				clctrl.ProviderConfig.DestinationGitopsRepoURL,
 				clctrl.ProviderConfig.GitopsDir,
 				clctrl.GitopsTemplateBranch,
 				clctrl.GitopsTemplateURL,
-				VultrDestinationMetaphorRepoURL,
+				clctrl.ProviderConfig.DestinationMetaphorRepoURL,
 				clctrl.ProviderConfig.K1Dir,
 				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), //tokens created on the fly
 				clctrl.ProviderConfig.MetaphorDir,
@@ -174,8 +174,6 @@ func (clctrl *ClusterController) RepositoryPush() error {
 
 		gitopsDir := clctrl.ProviderConfig.GitopsDir
 		metaphorDir := clctrl.ProviderConfig.MetaphorDir
-		DestinationGitopsRepoURL := clctrl.ProviderConfig.DestinationGitopsRepoURL
-		destinationMetaphorRepoURL := clctrl.ProviderConfig.DestinationMetaphorRepoURL
 
 		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitopsRepoPushStarted, "")
 		gitopsRepo, err := git.PlainOpen(gitopsDir)
@@ -229,7 +227,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			},
 		)
 		if err != nil {
-			msg := fmt.Sprintf("error pushing detokenized gitops repository to remote %s: %s", DestinationGitopsRepoURL, err)
+			msg := fmt.Sprintf("error pushing detokenized gitops repository to remote %s: %s", clctrl.ProviderConfig.DestinationGitopsRepoURL, err)
 			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitopsRepoPushFailed, msg)
 			return fmt.Errorf(msg)
 		}
@@ -242,7 +240,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			},
 		)
 		if err != nil {
-			msg := fmt.Sprintf("error pushing detokenized metaphor repository to remote %s: %s", destinationMetaphorRepoURL, err)
+			msg := fmt.Sprintf("error pushing detokenized metaphor repository to remote %s: %s", clctrl.ProviderConfig.DestinationMetaphorRepoURL, err)
 			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitopsRepoPushFailed, msg)
 			return fmt.Errorf(msg)
 		}

@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	gitopsTemplateVersion = "v2.2.0"
+	gitopsTemplateVersion = "main"
 )
 
 type ClusterController struct {
@@ -162,6 +162,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	clctrl.CivoAuth = def.CivoAuth
 	clctrl.DigitaloceanAuth = def.DigitaloceanAuth
 	clctrl.VultrAuth = def.VultrAuth
+	clctrl.CloudflareAuth = def.CloudflareAuth
 
 	clctrl.Repositories = []string{"gitops", "metaphor"}
 	clctrl.Teams = []string{"admins", "developers"}
@@ -196,6 +197,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 
 	// Initialize git parameters
 	clctrl.GitProvider = def.GitProvider
+	clctrl.GitProtocol = def.GitProtocol
 	clctrl.GitToken = def.GitToken
 	clctrl.GitOwner = def.GitOwner
 
@@ -249,11 +251,14 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		CloudProvider:         clctrl.CloudProvider,
 		CloudRegion:           clctrl.CloudRegion,
 		DomainName:            clctrl.DomainName,
+		DnsProvider:           clctrl.DnsProvider,
 		ClusterID:             clctrl.ClusterID,
+		ECR:                   clctrl.ECR,
 		ClusterType:           clctrl.ClusterType,
 		GitopsTemplateURL:     clctrl.GitopsTemplateURL,
 		GitopsTemplateBranch:  clctrl.GitopsTemplateBranch,
 		GitProvider:           clctrl.GitProvider,
+		GitProtocol:           clctrl.GitProtocol,
 		GitHost:               clctrl.GitHost,
 		GitOwner:              clctrl.GitOwner,
 		GitUser:               clctrl.GitUser,

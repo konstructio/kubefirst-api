@@ -20,29 +20,11 @@ import (
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 )
-
-// Global Controller Variables
-// AWS
-// gitlab may have subgroups, so the destination gitops/metaphor repo git urls may be different
-var AWSDestinationGitopsRepoURL, AWSDestinationMetaphorRepoURL string
-
-// Civo
-// gitlab may have subgroups, so the destination gitops/metaphor repo git urls may be different
-var CivoDestinationGitopsRepoURL, CivoDestinationMetaphorRepoURL string
-
-// Digital Ocean
-// gitlab may have subgroups, so the destination gitops/metaphor repo git urls may be different
-var DigitaloceanDestinationGitopsRepoURL, DigitaloceanDestinationMetaphorRepoURL string
-
-// Vultr
-// gitlab may have subgroups, so the destination gitops/metaphor repo git urls may be different
-var VultrDestinationGitopsRepoURL, VultrDestinationMetaphorRepoURL string
 
 // CreateCluster
 func (clctrl *ClusterController) CreateCluster() error {
@@ -204,49 +186,6 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 		kubefirstVersion = "development"
 	}
 
-	// Handle repo urls for gitops and metaphor
-	switch clctrl.GitProvider {
-	case "github":
-		AWSDestinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoURL
-		AWSDestinationMetaphorRepoURL = clctrl.ProviderConfig.DestinationMetaphorRepoURL
-		CivoDestinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoURL
-		CivoDestinationMetaphorRepoURL = clctrl.ProviderConfig.DestinationMetaphorRepoURL
-		DigitaloceanDestinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoURL
-		DigitaloceanDestinationMetaphorRepoURL = clctrl.ProviderConfig.DestinationMetaphorRepoURL
-		VultrDestinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoURL
-		VultrDestinationMetaphorRepoURL = clctrl.ProviderConfig.DestinationMetaphorRepoURL
-	case "gitlab":
-		gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitToken, clctrl.GitOwner)
-		if err != nil {
-			return err
-		}
-		// Format git url based on full path to group
-		switch clctrl.ProviderConfig.GitProtocol {
-		case "https":
-			clctrl.ProviderConfig.DestinationGitopsRepoHttpsURL = fmt.Sprintf("https://gitlab.com/%s/gitops.git", gitlabClient.ParentGroupPath)
-			clctrl.ProviderConfig.DestinationMetaphorRepoHttpsURL = fmt.Sprintf("https://gitlab.com/%s/metaphor.git", gitlabClient.ParentGroupPath)
-			AWSDestinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoHttpsURL
-			AWSDestinationMetaphorRepoURL = clctrl.ProviderConfig.DestinationMetaphorRepoHttpsURL
-			CivoDestinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoHttpsURL
-			CivoDestinationMetaphorRepoURL = clctrl.ProviderConfig.DestinationMetaphorRepoHttpsURL
-			DigitaloceanDestinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoHttpsURL
-			DigitaloceanDestinationMetaphorRepoURL = clctrl.ProviderConfig.DestinationMetaphorRepoHttpsURL
-			VultrDestinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoHttpsURL
-			VultrDestinationMetaphorRepoURL = clctrl.ProviderConfig.DestinationMetaphorRepoHttpsURL
-		default:
-			clctrl.ProviderConfig.DestinationGitopsRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)
-			clctrl.ProviderConfig.DestinationMetaphorRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
-			AWSDestinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
-			AWSDestinationMetaphorRepoURL = clctrl.ProviderConfig.DestinationMetaphorRepoGitURL
-			CivoDestinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
-			CivoDestinationMetaphorRepoURL = clctrl.ProviderConfig.DestinationMetaphorRepoGitURL
-			DigitaloceanDestinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
-			DigitaloceanDestinationMetaphorRepoURL = clctrl.ProviderConfig.DestinationMetaphorRepoGitURL
-			VultrDestinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
-			VultrDestinationMetaphorRepoURL = clctrl.ProviderConfig.DestinationMetaphorRepoHttpsURL
-		}
-	}
-
 	//handle set gitops tokens/values
 	switch kind {
 	case "gitops": //repo name
@@ -258,6 +197,12 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 		} else {
 			externalDNSProviderTokenEnvName = fmt.Sprintf("%s_TOKEN", strings.ToUpper(clctrl.CloudProvider))
 			externalDNSProviderSecretKey = fmt.Sprintf("%s-token", clctrl.CloudProvider)
+		}
+
+		// switch repo url based on gitProtocol and gitlab group parents.
+		destinationGitopsRepoURL, err := clctrl.GitURL()
+		if err != nil {
+			return err
 		}
 
 		// Default gitopsTemplateTokens
@@ -293,6 +238,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			GitRunnerDescription: fmt.Sprintf("Self Hosted %s Runner", clctrl.GitProvider),
 			GitRunnerNS:          fmt.Sprintf("%s-runner", clctrl.GitProvider),
 			GitURL:               clctrl.GitopsTemplateURL,
+			GitopsRepoURL:        destinationGitopsRepoURL,
 
 			GitHubHost:  fmt.Sprintf("https://github.com/%s/gitops.git", clctrl.GitOwner),
 			GitHubOwner: clctrl.GitOwner,
@@ -342,16 +288,6 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			} else {
 				log.Info("Not using ECR but instead %s", clctrl.GitProvider)
 			}
-
-			gitopsTemplateTokens.GitopsRepoURL = AWSDestinationGitopsRepoURL
-		case "civo":
-			gitopsTemplateTokens.GitopsRepoURL = CivoDestinationGitopsRepoURL
-		case "digitalocean":
-			gitopsTemplateTokens.GitopsRepoURL = DigitaloceanDestinationGitopsRepoURL
-			gitopsTemplateTokens.StateStoreBucketHostname = DigitaloceanStateStoreBucketName
-		case "vultr":
-			gitopsTemplateTokens.GitopsRepoURL = VultrDestinationGitopsRepoURL
-			gitopsTemplateTokens.StateStoreBucketHostname = VultrStateStoreBucketHostname
 		}
 
 		return gitopsTemplateTokens
