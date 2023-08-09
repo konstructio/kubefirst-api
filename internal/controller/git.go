@@ -11,6 +11,7 @@ import (
 	"os"
 
 	githttps "github.com/go-git/go-git/v5/plumbing/transport/http"
+	gitssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
@@ -23,6 +24,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var HttpAuth *githttps.BasicAuth
+var PublicKeys *gitssh.PublicKeys
+
 // GitInit
 func (clctrl *ClusterController) GitInit() error {
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
@@ -30,7 +34,7 @@ func (clctrl *ClusterController) GitInit() error {
 		return err
 	}
 
-	clctrl.GitAuth.HttpAuth = githttps.BasicAuth{
+	HttpAuth = &githttps.BasicAuth{
 		Username: clctrl.GitAuth.User,
 		Password: clctrl.GitAuth.Token,
 	}

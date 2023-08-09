@@ -6,11 +6,6 @@ See the LICENSE file for more details.
 */
 package types
 
-import (
-	githttps "github.com/go-git/go-git/v5/plumbing/transport/http"
-	gitssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
-)
-
 // AWSAuth holds necessary auth credentials for interacting with aws
 type AWSAuth struct {
 	AccessKeyID     string `bson:"access_key_id" json:"access_key_id"`
@@ -50,11 +45,10 @@ type StateStoreCredentials struct {
 
 // Auth for Git Provider
 type GitAuth struct {
-	Token            string             `bson:"git_token,omitempty" json:"git_token,omitempty"`
-	User             string             `bson:"git_username,omitempty" json:"git_username,omitempty"`
-	Owner            string             `bson:"git_owner,omitempty" json:"git_owner,omitempty"`
-	PublicKey        string             `bson:"public_key,omitempty" json:"public_key,omitempty"`
-	PrivateKey       string             `bson:"private_key,omitempty" json:"private_key,omitempty"`
-	HttpAuth         githttps.BasicAuth `bson:"http_basic_auth,omitempty" json:"http_basic_auth,omitempty"`
-	GitopsPublicKeys gitssh.PublicKeys  `bson:"ssh_key_auth,omitempty" json:"ssh_key_auth,omitempty"`
+	Token      string `bson:"git_token,omitempty" json:"git_token,omitempty"`
+	User       string `bson:"git_username,omitempty" json:"git_username,omitempty"`
+	Owner      string `bson:"git_owner,omitempty" json:"git_owner,omitempty"`
+	PublicKey  string `bson:"public_key,omitempty" json:"public_key,omitempty"`
+	PrivateKey string `bson:"private_key,omitempty" json:"private_key,omitempty"`
+	PublicKeys string `bson:"private_keys,omitempty" json:"private_keys,omitempty"`
 }

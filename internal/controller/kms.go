@@ -56,7 +56,7 @@ func (clctrl *ClusterController) DetokenizeKMSKeyID() error {
 
 			err = gitopsRepo.Push(&git.PushOptions{
 				RemoteName: clctrl.GitProvider,
-				Auth:       &clctrl.GitAuth.HttpAuth,
+				Auth:       HttpAuth,
 			})
 			if err != nil {
 				return err
