@@ -27,8 +27,6 @@ type ClusterDefinition struct {
 	GitopsTemplateBranch string `json:"gitops_template_branch"`
 	GitProvider          string `json:"git_provider" binding:"required,oneof=github gitlab"`
 	GitProtocol          string `bson:"git_protocol" json:"git_protocol" binding:"required,oneof=ssh https"`
-	GitOwner             string `json:"git_owner" binding:"required"`
-	GitToken             string `json:"git_token" binding:"required"`
 
 	//AWS
 	ECR bool `json:"ecr,omitempty"`
@@ -39,6 +37,7 @@ type ClusterDefinition struct {
 	DigitaloceanAuth DigitaloceanAuth `json:"do_auth,omitempty"`
 	VultrAuth        VultrAuth        `json:"vultr_auth,omitempty"`
 	CloudflareAuth   CloudflareAuth   `json:"cloudflare_auth,omitempty"`
+	GitAuth          GitAuth          `json:"git_auth,omitempty"`
 }
 
 // Cluster describes the configuration storage for a Kubefirst cluster object
@@ -67,15 +66,13 @@ type Cluster struct {
 	DigitaloceanAuth DigitaloceanAuth `bson:"do_auth,omitempty" json:"do_auth,omitempty"`
 	VultrAuth        VultrAuth        `bson:"vultr_auth,omitempty" json:"vultr_auth,omitempty"`
 	CloudflareAuth   CloudflareAuth   `bson:"cf_api_token,omitempty" json:"cf_api_token,omitempty"`
+	GitAuth          GitAuth          `json:"git_auth,omitempty"`
 
 	GitopsTemplateURL    string `bson:"gitops_template_url" json:"gitops_template_url"`
 	GitopsTemplateBranch string `bson:"gitops_template_branch" json:"gitops_template_branch"`
 	GitProvider          string `bson:"git_provider" json:"git_provider"`
 	GitProtocol          string `bson:"git_protocol" json:"git_protocol"`
 	GitHost              string `bson:"git_host" json:"git_host"`
-	GitOwner             string `bson:"git_owner" json:"git_owner"`
-	GitUser              string `bson:"git_user" json:"git_user"`
-	GitToken             string `bson:"git_token" json:"git_token"`
 	GitlabOwnerGroupID   int    `bson:"gitlab_owner_group_id" json:"gitlab_owner_group_id"`
 
 	AtlantisWebhookSecret string `bson:"atlantis_webhook_secret" json:"atlantis_webhook_secret"`
@@ -84,10 +81,6 @@ type Cluster struct {
 
 	StateStoreCredentials StateStoreCredentials `bson:"state_store_credentials,omitempty" json:"state_store_credentials,omitempty"`
 	StateStoreDetails     StateStoreDetails     `bson:"state_store_details,omitempty" json:"state_store_details,omitempty"`
-
-	PublicKey  string `bson:"public_key" json:"public_key"`
-	PrivateKey string `bson:"private_key" json:"private_key"`
-	PublicKeys string `bson:"public_keys" json:"public_keys"`
 
 	ArgoCDUsername  string `bson:"argocd_username" json:"argocd_username"`
 	ArgoCDPassword  string `bson:"argocd_password" json:"argocd_password"`

@@ -208,7 +208,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 		// Default gitopsTemplateTokens
 		gitopsTemplateTokens := &providerConfigs.GitopsDirectoryValues{
 			AlertsEmail:               clctrl.AlertsEmail,
-			AtlantisAllowList:         fmt.Sprintf("%s/%s/*", clctrl.GitHost, clctrl.GitOwner),
+			AtlantisAllowList:         fmt.Sprintf("%s/%s/*", clctrl.GitHost, clctrl.GitAuth.Owner),
 			CloudProvider:             clctrl.CloudProvider,
 			CloudRegion:               clctrl.CloudRegion,
 			ClusterName:               clctrl.ClusterName,
@@ -240,17 +240,17 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			GitURL:               clctrl.GitopsTemplateURL,
 			GitopsRepoURL:        destinationGitopsRepoURL,
 
-			GitHubHost:  fmt.Sprintf("https://github.com/%s/gitops.git", clctrl.GitOwner),
-			GitHubOwner: clctrl.GitOwner,
-			GitHubUser:  clctrl.GitUser,
+			GitHubHost:  fmt.Sprintf("https://github.com/%s/gitops.git", clctrl.GitAuth.Owner),
+			GitHubOwner: clctrl.GitAuth.Owner,
+			GitHubUser:  clctrl.GitAuth.User,
 
 			GitlabHost:         clctrl.GitHost,
-			GitlabOwner:        clctrl.GitOwner,
+			GitlabOwner:        clctrl.GitAuth.Owner,
 			GitlabOwnerGroupID: clctrl.GitlabOwnerGroupID,
-			GitlabUser:         clctrl.GitUser,
+			GitlabUser:         clctrl.GitAuth.User,
 
 			GitopsRepoAtlantisWebhookURL: clctrl.AtlantisWebhookURL,
-			GitopsRepoNoHTTPSURL:         fmt.Sprintf("%s.com/%s/gitops.git", clctrl.GitHost, clctrl.GitOwner),
+			GitopsRepoNoHTTPSURL:         fmt.Sprintf("%s.com/%s/gitops.git", clctrl.GitHost, clctrl.GitAuth.Owner),
 			ClusterId:                    clctrl.ClusterID,
 
 			// external-dns optionality to provide cloudflare support regardless of cloud provider
@@ -295,7 +295,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 		metaphorTemplateTokens := &providerConfigs.MetaphorTokenValues{
 			ClusterName:                   clctrl.ClusterName,
 			CloudRegion:                   clctrl.CloudRegion,
-			ContainerRegistryURL:          fmt.Sprintf("%s/%s/metaphor", clctrl.ContainerRegistryHost, clctrl.GitOwner),
+			ContainerRegistryURL:          fmt.Sprintf("%s/%s/metaphor", clctrl.ContainerRegistryHost, clctrl.GitAuth.Owner),
 			DomainName:                    clctrl.DomainName,
 			MetaphorDevelopmentIngressURL: fmt.Sprintf("metaphor-development.%s", clctrl.DomainName),
 			MetaphorStagingIngressURL:     fmt.Sprintf("metaphor-staging.%s", clctrl.DomainName),
@@ -385,10 +385,10 @@ func (clctrl *ClusterController) ContainerRegistryAuth() (string, error) {
 	// Container registry authentication creation
 	containerRegistryAuth := gitShim.ContainerRegistryAuth{
 		GitProvider:           clctrl.GitProvider,
-		GitUser:               clctrl.GitUser,
-		GitToken:              clctrl.GitToken,
-		GitlabGroupFlag:       clctrl.GitOwner,
-		GithubOwner:           clctrl.GitOwner,
+		GitUser:               clctrl.GitAuth.User,
+		GitToken:              clctrl.GitAuth.Token,
+		GitlabGroupFlag:       clctrl.GitAuth.Owner,
+		GithubOwner:           clctrl.GitAuth.Owner,
 		ContainerRegistryHost: clctrl.ContainerRegistryHost,
 		Clientset:             kcfg.Clientset,
 	}

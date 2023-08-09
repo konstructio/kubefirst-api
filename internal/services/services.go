@@ -61,9 +61,13 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 	gitopsRepo, _ = git.PlainOpen(gitopsDir)
 	serviceFile := fmt.Sprintf("%s/registry/%s/%s.yaml", gitopsDir, cl.ClusterName, serviceName)
 
-	publicKeys, err := ssh.NewPublicKeys("git", []byte(cl.PrivateKey), "")
-	if err != nil {
-		return err
+	//Leaving this here until I know where else it is used and caching the keys for now
+	if cl.GitAuth.GitopsPublicKeys.User == "" {
+		publicKeys, err := ssh.NewPublicKeys("git", []byte(cl.GitAuth.PrivateKey), "")
+		if err != nil {
+			return err
+		}
+		cl.GitAuth.GitopsPublicKeys = *publicKeys
 	}
 
 	var kcfg *k8s.KubernetesClient
@@ -115,7 +119,7 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 	}
 
 	// Create service files in gitops dir
-	err = gitShim.PullWithAuth(gitopsRepo, cl.GitProvider, "main", publicKeys)
+	err = gitShim.PullWithAuth(gitopsRepo, cl.GitProvider, "main", &cl.GitAuth.HttpAuth)
 	if err != nil {
 		log.Warnf("cluster %s - error pulling gitops repo: %s", cl.ClusterName, err)
 	}
@@ -147,7 +151,7 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 	}
 	err = gitopsRepo.Push(&git.PushOptions{
 		RemoteName: cl.GitProvider,
-		Auth:       publicKeys,
+		Auth:       &cl.GitAuth.HttpAuth,
 	})
 	if err != nil {
 		return fmt.Errorf("cluster %s - error pushing commit for service file: %s", cl.ClusterName, err)
@@ -232,13 +236,17 @@ func DeleteService(cl *types.Cluster, serviceName string) error {
 	gitopsRepo, _ = git.PlainOpen(gitopsDir)
 	serviceFile := fmt.Sprintf("%s/registry/%s/%s.yaml", gitopsDir, cl.ClusterName, serviceName)
 
-	publicKeys, err := ssh.NewPublicKeys("git", []byte(cl.PrivateKey), "")
-	if err != nil {
-		return err
+	//Leaving this here until I know where else it is used and caching the keys for now
+	if cl.GitAuth.GitopsPublicKeys.User == "" {
+		publicKeys, err := ssh.NewPublicKeys("git", []byte(cl.GitAuth.PrivateKey), "")
+		if err != nil {
+			return err
+		}
+		cl.GitAuth.GitopsPublicKeys = *publicKeys
 	}
 
 	// Delete service files from gitops dir
-	err = gitShim.PullWithAuth(gitopsRepo, cl.GitProvider, "main", publicKeys)
+	err = gitShim.PullWithAuth(gitopsRepo, cl.GitProvider, "main", &cl.GitAuth.HttpAuth)
 	if err != nil {
 		log.Warnf("cluster %s - error pulling gitops repo: %s", cl.ClusterName, err)
 	}
@@ -259,7 +267,7 @@ func DeleteService(cl *types.Cluster, serviceName string) error {
 	}
 	err = gitopsRepo.Push(&git.PushOptions{
 		RemoteName: cl.GitProvider,
-		Auth:       publicKeys,
+		Auth:       &cl.GitAuth.HttpAuth,
 	})
 	if err != nil {
 		return fmt.Errorf("cluster %s - error pushing commit for service file: %s", cl.ClusterName, err)
@@ -291,8 +299,8 @@ func AddDefaultServices(cl *types.Cluster) error {
 			Default:     true,
 			Description: "The git repositories contain all the Infrastructure as Code and Gitops configurations.",
 			Image:       fmt.Sprintf("https://assets.kubefirst.com/console/%s.svg", cl.GitProvider),
-			Links: []string{fmt.Sprintf("https://%s/%s/gitops", cl.GitHost, cl.GitOwner),
-				fmt.Sprintf("https://%s/%s/metaphor", cl.GitHost, cl.GitOwner)},
+			Links: []string{fmt.Sprintf("https://%s/%s/gitops", cl.GitHost, cl.GitAuth.Owner),
+				fmt.Sprintf("https://%s/%s/metaphor", cl.GitHost, cl.GitAuth.Owner)},
 			Status: "",
 		},
 		{

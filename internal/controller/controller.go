@@ -49,6 +49,7 @@ type ClusterController struct {
 	DigitaloceanAuth   types.DigitaloceanAuth
 	VultrAuth          types.VultrAuth
 	CloudflareAuth     types.CloudflareAuth
+	GitAuth            types.GitAuth
 	AwsAccessKeyID     string
 	AwsSecretAccessKey string
 
@@ -198,8 +199,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	// Initialize git parameters
 	clctrl.GitProvider = def.GitProvider
 	clctrl.GitProtocol = def.GitProtocol
-	clctrl.GitToken = def.GitToken
-	clctrl.GitOwner = def.GitOwner
+	clctrl.GitAuth = def.GitAuth
 
 	err = clctrl.SetGitTokens(*def)
 	if err != nil {
@@ -209,15 +209,15 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	// Instantiate provider configuration
 	switch clctrl.CloudProvider {
 	case "aws":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token)
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token)
 	case "civo":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token)
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token)
 		clctrl.ProviderConfig.CivoToken = clctrl.CivoAuth.Token
 	case "digitalocean":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token)
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token)
 		clctrl.ProviderConfig.DigitaloceanToken = clctrl.DigitaloceanAuth.Token
 	case "vultr":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token)
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token)
 		clctrl.ProviderConfig.VultrToken = clctrl.VultrAuth.Token
 	}
 
@@ -260,9 +260,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		GitProvider:           clctrl.GitProvider,
 		GitProtocol:           clctrl.GitProtocol,
 		GitHost:               clctrl.GitHost,
-		GitOwner:              clctrl.GitOwner,
-		GitUser:               clctrl.GitUser,
-		GitToken:              clctrl.GitToken,
+		GitAuth:               clctrl.GitAuth,
 		GitlabOwnerGroupID:    clctrl.GitlabOwnerGroupID,
 		AtlantisWebhookSecret: clctrl.AtlantisWebhookSecret,
 		AtlantisWebhookURL:    clctrl.AtlantisWebhookURL,
@@ -291,36 +289,36 @@ func (clctrl *ClusterController) SetGitTokens(def types.ClusterDefinition) error
 		clctrl.GitHost = "github.com"
 		clctrl.ContainerRegistryHost = "ghcr.io"
 		// Verify token scopes
-		err := github.VerifyTokenPermissions(def.GitToken)
+		err := github.VerifyTokenPermissions(def.GitAuth.Token)
 		if err != nil {
 			return err
 		}
 		// Get authenticated user's name
-		githubUser, err := gitHubHandler.GetGitHubUser(clctrl.GitToken)
+		githubUser, err := gitHubHandler.GetGitHubUser(def.GitAuth.Token)
 		if err != nil {
 			return err
 		}
-		clctrl.GitUser = githubUser
+		clctrl.GitAuth.User = githubUser
 	case "gitlab":
 		clctrl.GitHost = "gitlab.com"
 		clctrl.ContainerRegistryHost = "registry.gitlab.com"
 		// Verify token scopes
-		err := gitlab.VerifyTokenPermissions(def.GitToken)
+		err := gitlab.VerifyTokenPermissions(def.GitAuth.Token)
 		if err != nil {
 			return err
 		}
-		gitlabClient, err := gitlab.NewGitLabClient(def.GitToken, def.GitOwner)
+		gitlabClient, err := gitlab.NewGitLabClient(def.GitAuth.Token, def.GitAuth.Owner)
 		if err != nil {
 			return err
 		}
-		clctrl.GitOwner = gitlabClient.ParentGroupPath
+		clctrl.GitAuth.Owner = gitlabClient.ParentGroupPath
 		clctrl.GitlabOwnerGroupID = gitlabClient.ParentGroupID
 		// Get authenticated user's name
 		user, _, err := gitlabClient.Client.Users.CurrentUser()
 		if err != nil {
 			return fmt.Errorf("unable to get authenticated user info - please make sure GITLAB_TOKEN env var is set %s", err.Error())
 		}
-		clctrl.GitUser = user.Username
+		clctrl.GitAuth.User = user.Username
 	default:
 		return fmt.Errorf("invalid git provider option")
 	}

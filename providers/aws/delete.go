@@ -52,7 +52,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricClusterDeleteStarted, "")
 
 	// Instantiate aws config
-	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner, cl.GitProtocol, cl.CloudflareAuth.Token)
+	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.Token)
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleting)
 	if err != nil {
@@ -84,7 +84,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 	case "gitlab":
 		if cl.GitTerraformApplyCheck {
 			log.Info("destroying gitlab resources with terraform")
-			gitlabClient, err := gitlab.NewGitLabClient(cl.GitToken, cl.GitOwner)
+			gitlabClient, err := gitlab.NewGitLabClient(cl.GitAuth.Token, cl.GitAuth.Owner)
 			if err != nil {
 				return err
 			}
@@ -250,7 +250,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 
 	// remove ssh key provided one was created
 	if cl.GitProvider == "gitlab" {
-		gitlabClient, err := gitlab.NewGitLabClient(cl.GitToken, cl.GitOwner)
+		gitlabClient, err := gitlab.NewGitLabClient(cl.GitAuth.Token, cl.GitAuth.Owner)
 		if err != nil {
 			return err
 		}
