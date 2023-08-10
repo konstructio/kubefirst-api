@@ -90,7 +90,7 @@ func BootstrapAWSMgmtCluster(
 			return err
 		}
 
-		dockerConfigString := fmt.Sprintf(`{"auths": {"%s": {"auth": "%s"}}}`, fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", config.GitopsDirectoryValues.AwsAccountID, cl.CloudRegion), ecrToken)
+		dockerConfigString := fmt.Sprintf(`{"auths": {"%s": {"auth": "%s"}}}`, fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", cl.AWSAccountId, cl.CloudRegion), ecrToken)
 		dockerCfgSecret := &v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{Name: "docker-config", Namespace: "argo"},
 			Data:       map[string][]byte{"config.json": []byte(dockerConfigString)},

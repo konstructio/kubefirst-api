@@ -86,7 +86,7 @@ type Cluster struct {
 	ArgoCDPassword  string `bson:"argocd_password" json:"argocd_password"`
 	ArgoCDAuthToken string `bson:"argocd_auth_token" json:"argocd_auth_token"`
 
-	//container Registry
+	// Container Registry and Secrets
 	ECR bool `bson:"ecr" json:"ecr"`
 
 	// kms
