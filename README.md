@@ -35,12 +35,15 @@ Kubefirst API runtime implementation.
     - [Digital Ocean](#digital-ocean)
     - [Vultr](#vultr)
     - [Deleting a Cluster](#deleting-a-cluster)
+  - [Authentication](#authentication)
+    - [Creating a User](#creating-a-user)
+    - [Authenticating](#authenticating)
   - [Swagger UI](#swagger-ui)
   - [Updating Swagger Docs](#updating-swagger-docs)
 
 ## Running Locally
 
-The API is available at `:8081/api/v1` while running.
+The API is available at `http://localhost:8081/api/v1` while running.
 
 ### Build the Binary
 
@@ -82,6 +85,7 @@ Some variables are required, others are optional depending on deployment type.
 | `CLUSTER_ID`        | The ID of the cluster running API.                                                                                                               | Yes            |
 | `CLUSTER_TYPE`      | Cluster type.                                                                                                                                    | Yes            |
 | `INSTALL_METHOD`    | Description of the method through which the API was deployed. Example: `helm`                                                                    | Yes            |
+| `K1_ACCESS_TOKEN`    | Access token in authorization header to prevent unsolicited in-cluster access | Yes            |
 
 To run locally: 
 
@@ -93,6 +97,7 @@ export MONGODB_HOST=
 export CLUSTER_TYPE=
 export CLUSTER_ID=
 export INSTALL_METHOD=
+export K1_ACCESS_TOKEN=localexample
 ```
 
 ## Provider Support
@@ -216,9 +221,21 @@ curl -X POST http://localhost:8081/api/v1/cluster/my-cool-cluster -H "Content-Ty
 curl -X DELETE http://localhost:8081/api/v1/cluster/my-cool-cluster
 ```
 
+## Authentication
+
+The API expects an `Authorization` header with the content `Bearer <API key>`. For example:
+
+```bash
+❯ curl -X GET "localhost:8081/api/v1/cluster" \
+     -H "Authorization: Bearer my-api-key" \
+     -H "Content-Type:application/json"
+```
+
+The provided bearer token is validated against an auto-generated key that gets stored in secret `kubefirst-initial-secrets` provided by this chart. It's then consumed by this same chart's deployment as an environment variable `K1_ACCESS_TOKEN` for the comparison. The console application will have access to this same namespaced secret and can leverage the bearer token to authorize calls to the `kubefirst-api` and `kubefirst-api-ee` services.
+
 ## Swagger UI
 
-When the app is running, the UI is available via http://:8081/swagger/index.html.
+When the app is running, the UI is available via http://localhost:8081/swagger/index.html.
 
 ## Updating Swagger Docs
 

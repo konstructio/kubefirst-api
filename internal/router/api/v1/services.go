@@ -27,6 +27,7 @@ import (
 // @Success 200 {object} types.ClusterServiceList
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /services/:cluster_name [get]
+// @Param Authorization header string true "API key" default(Bearer <API key>)
 // GetServices returns a list of services for a cluster
 func GetServices(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
@@ -61,6 +62,7 @@ func GetServices(c *gin.Context) {
 // @Success 202 {object} types.JSONSuccessResponse
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /services/:cluster_name/:service_name [post]
+// @Param Authorization header string true "API key" default(Bearer <API key>)
 // PostAddServiceToCluster handles a request to add a service to a cluster based on a gitops catalog app
 func PostAddServiceToCluster(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
@@ -188,6 +190,7 @@ func PostAddServiceToCluster(c *gin.Context) {
 // @Success 202 {object} types.JSONSuccessResponse
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /services/:cluster_name/:service_name [delete]
+// @Param Authorization header string true "API key" default(Bearer <API key>)
 // DeleteServiceFromCluster handles a request to remove a gitops catalog application from a cluster
 func DeleteServiceFromCluster(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")

@@ -29,6 +29,7 @@ import (
 // @Success 200 {object} types.DomainListResponse
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /domain/:cloud_provider [post]
+// @Param Authorization header string true "API key" default(Bearer <API key>)
 // PostDomains returns registered domains/hosted zones for a cloud provider account
 func PostDomains(c *gin.Context) {
 	cloudProvider, param := c.Params.Get("cloud_provider")

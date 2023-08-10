@@ -32,6 +32,14 @@
                         "name": "domain",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -79,6 +87,14 @@
                         "schema": {
                             "$ref": "#/definitions/types.CivoDomainValidationRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -110,6 +126,16 @@
                     "cluster"
                 ],
                 "summary": "Return all known configured Kubefirst clusters",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -148,6 +174,14 @@
                         "description": "Cluster name",
                         "name": "cluster_name",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -194,6 +228,14 @@
                         "schema": {
                             "$ref": "#/definitions/types.ClusterDefinition"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -229,6 +271,14 @@
                         "description": "Cluster name",
                         "name": "cluster_name",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -268,6 +318,14 @@
                         "name": "cluster_name",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -305,6 +363,14 @@
                         "description": "Cluster name",
                         "name": "cluster_name",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -346,6 +412,14 @@
                         "schema": {
                             "$ref": "#/definitions/types.ImportClusterRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -386,6 +460,14 @@
                         "schema": {
                             "$ref": "#/definitions/types.DomainListRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -417,6 +499,16 @@
                     "gitops-catalog"
                 ],
                 "summary": "Returns a list of available Kubefirst gitops catalog applications",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -446,6 +538,16 @@
                     "gitops-catalog"
                 ],
                 "summary": "Updates the list of available Kubefirst gitops catalog applications",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -472,6 +574,16 @@
                     "health"
                 ],
                 "summary": "Return health status if the application is running.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -504,6 +616,14 @@
                         "schema": {
                             "$ref": "#/definitions/types.RegionListRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -541,6 +661,14 @@
                         "description": "Cluster name",
                         "name": "cluster_name",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -596,6 +724,14 @@
                         "schema": {
                             "$ref": "#/definitions/types.GitopsCatalogAppCreateRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -639,6 +775,14 @@
                         "name": "service_name",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -664,6 +808,16 @@
                     "logs"
                 ],
                 "summary": "Stream API server logs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {}
             }
         },
@@ -693,6 +847,14 @@
                         "schema": {
                             "$ref": "#/definitions/types.TelemetryRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
