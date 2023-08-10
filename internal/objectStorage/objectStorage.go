@@ -94,13 +94,13 @@ func PutClusterObject(cr *types.StateStoreCredentials, d *types.StateStoreDetail
 }
 
 // GetClusterObject imports a cluster definition as json
-func GetClusterObject(cr *types.StateStoreCredentials, d *types.StateStoreDetails, localFilePath string, remoteFilePath string) error {
+func GetClusterObject(cr *types.StateStoreCredentials, d *types.StateStoreDetails, localFilePath string, remoteFilePath string, secure bool) error {
 	ctx := context.Background()
 
 	// Initialize minio client
 	minioClient, err := minio.New(d.Hostname, &minio.Options{
 		Creds:  credentials.NewStaticV4(cr.AccessKeyID, cr.SecretAccessKey, ""),
-		Secure: true,
+		Secure: secure,
 	})
 	if err != nil {
 		return fmt.Errorf("error initializing minio client: %s", err)
@@ -108,12 +108,14 @@ func GetClusterObject(cr *types.StateStoreCredentials, d *types.StateStoreDetail
 
 	_, err = minioClient.BucketExists(ctx, d.Name)
 	if err != nil {
+		log.Info(err)
 		return err
 	}
 
 	// Get object from bucket
 	reader, err := minioClient.GetObject(ctx, d.Name, remoteFilePath, minio.GetObjectOptions{})
 	if err != nil {
+		log.Info(err)
 		return fmt.Errorf("error retrieving cluster object from bucket: %s", err)
 	}
 	defer reader.Close()

@@ -196,12 +196,16 @@ func (mdbcl *MongoDBClient) Restore(req *types.ImportClusterRequest) error {
 
 	var bucketHostname string
 	switch req.CloudProvider {
+	case "aws":
+		bucketHostname = "s3.amazonaws.com"
 	case "civo":
 		bucketHostname = fmt.Sprintf("objectstore.%s.civo.com", req.CloudRegion)
 	case "digitalocean":
 		bucketHostname = fmt.Sprintf("%s.digitaloceanspaces.com", req.CloudRegion)
 	case "vultr":
 		bucketHostname = fmt.Sprintf("%s.vultrobjects.com", req.CloudRegion)
+	case "k3d":
+		bucketHostname = "minio.minio.svc.cluster.local:9000"
 	}
 
 	// Retrieve the object from state storage bucket
@@ -210,15 +214,13 @@ func (mdbcl *MongoDBClient) Restore(req *types.ImportClusterRequest) error {
 			AccessKeyID:     req.StateStoreCredentials.AccessKeyID,
 			SecretAccessKey: req.StateStoreCredentials.SecretAccessKey,
 		},
-		// todo: to support AWS, additional fields are required
-		// AWSStateStoreBucket
-		// AWSArtifactsBucket
 		&types.StateStoreDetails{
 			Name:     req.StateStoreDetails.Name,
 			Hostname: bucketHostname,
 		},
 		localFilePath,
 		remoteFilePath,
+		req.CloudProvider != "k3d",
 	)
 	if err != nil {
 		return err
