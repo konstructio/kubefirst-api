@@ -25,7 +25,6 @@ func BootstrapAWSMgmtCluster(
 	cl *types.Cluster,
 	config *config.ProviderConfig,
 	awsClient *aws.AWSConfiguration,
-	ContainerRegistryURL string,
 ) error {
 
 	secretData := map[string][]byte{}

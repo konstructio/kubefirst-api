@@ -339,7 +339,6 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 				&cl,
 				&clctrl.ProviderConfig,
 				clctrl.AwsClient,
-				clctrl.ProviderConfig.GitopsDirectoryValues.ContainerRegistryURL,
 			)
 			if err != nil {
 				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
@@ -387,6 +386,27 @@ func (clctrl *ClusterController) ContainerRegistryAuth() (string, error) {
 	switch clctrl.CloudProvider {
 	case "aws":
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+
+		// Container registry authentication creation
+		if !clctrl.ECR {
+
+		}
+		containerRegistryAuth := gitShim.ContainerRegistryAuth{
+			GitProvider:           clctrl.GitProvider,
+			GitUser:               clctrl.GitAuth.User,
+			GitToken:              clctrl.GitAuth.Token,
+			GitlabGroupFlag:       clctrl.GitAuth.Owner,
+			GithubOwner:           clctrl.GitAuth.Owner,
+			ContainerRegistryHost: clctrl.ContainerRegistryHost,
+			Clientset:             kcfg.Clientset,
+		}
+		containerRegistryAuthToken, err := gitShim.CreateContainerRegistrySecret(&containerRegistryAuth)
+		if err != nil {
+			log.Errorf("error generating container registry authentication: %s", err)
+			return "", err
+		}
+
+		return containerRegistryAuthToken, nil
 	case "civo", "digitalocean", "vultr":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 	}
