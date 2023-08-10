@@ -9,6 +9,7 @@ package controller
 import (
 	"os"
 
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/runtime/pkg/segment"
 	internalssh "github.com/kubefirst/runtime/pkg/ssh"
@@ -39,26 +40,28 @@ func (clctrl *ClusterController) InitializeBot() error {
 	defer segmentClient.Client.Close()
 
 	if !cl.KbotSetupCheck {
-		sshPrivateKey, sshPublicKey, err := internalssh.CreateSshKeyPair()
+		clctrl.GitAuth.PrivateKey, clctrl.GitAuth.PublicKey, err = internalssh.CreateSshKeyPair()
 		if err != nil {
 			log.Errorf("error generating ssh keys: %s", err)
 			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricKbotSetupFailed, err.Error())
 			return err
 		}
 
-		clctrl.PublicKey = sshPublicKey
-		clctrl.PrivateKey = sshPrivateKey
-
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "public_key", sshPublicKey)
+		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "public_key", clctrl.GitAuth.PublicKey)
 		if err != nil {
 			return err
 		}
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "private_key", sshPrivateKey)
+		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "private_key", clctrl.GitAuth.PrivateKey)
 		if err != nil {
 			return err
 		}
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "kbot_setup_check", true)
+		if err != nil {
+			return err
+		}
+
+		PublicKeys, err = ssh.NewPublicKeys("git", []byte(clctrl.GitAuth.PrivateKey), "")
 		if err != nil {
 			return err
 		}

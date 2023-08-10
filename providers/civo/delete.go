@@ -52,39 +52,26 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricClusterDeleteStarted, "")
 
 	// Instantiate civo config
-	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitOwner)
+	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.Token)
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleting)
 	if err != nil {
 		return err
 	}
 
-	switch cl.GitProvider {
-	case "github":
-		if cl.GitTerraformApplyCheck {
-			log.Info("destroying github resources with terraform")
+	tfEnvs := map[string]string{}
+	var tfEntrypoint string
 
-			tfEntrypoint := config.GitopsDir + "/terraform/github"
-			tfEnvs := map[string]string{}
+	if cl.GitTerraformApplyCheck {
+		log.Info("destroying %s resources with terraform", cl.GitProvider)
+		switch cl.GitProvider {
+		case "github":
+			tfEntrypoint = config.GitopsDir + "/terraform/github"
 			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, cl)
 			tfEnvs = civoext.GetGithubTerraformEnvs(tfEnvs, cl)
-			err := terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
-			if err != nil {
-				log.Printf("error executing terraform destroy %s", tfEntrypoint)
-				errors.HandleClusterError(cl, err.Error())
-				return err
-			}
-			log.Info("github resources terraform destroyed")
 
-			err = db.Client.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
-			if err != nil {
-				return err
-			}
-		}
-	case "gitlab":
-		if cl.GitTerraformApplyCheck {
-			log.Info("destroying gitlab resources with terraform")
-			gitlabClient, err := gitlab.NewGitLabClient(cl.GitToken, cl.GitOwner)
+		case "gitlab":
+			gitlabClient, err := gitlab.NewGitLabClient(cl.GitAuth.Token, cl.GitAuth.Owner)
 			if err != nil {
 				return err
 			}
@@ -117,24 +104,23 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 					log.Infof("project %s does not exist, skipping", project)
 				}
 			}
-
-			tfEntrypoint := config.GitopsDir + "/terraform/gitlab"
-			tfEnvs := map[string]string{}
+			tfEntrypoint = config.GitopsDir + "/terraform/gitlab"
 			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, cl)
 			tfEnvs = civoext.GetGitlabTerraformEnvs(tfEnvs, gitlabClient.ParentGroupID, cl)
-			err = terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
-			if err != nil {
-				log.Infof("error executing terraform destroy %s", tfEntrypoint)
-				errors.HandleClusterError(cl, err.Error())
-				return err
-			}
+		}
 
-			log.Info("gitlab resources terraform destroyed")
+		err = terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
+		if err != nil {
+			log.Infof("error executing terraform destroy %s", tfEntrypoint)
+			errors.HandleClusterError(cl, err.Error())
+			return err
+		}
 
-			err = db.Client.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
-			if err != nil {
-				return err
-			}
+		log.Info("%s resources terraform destroyed", cl.GitProvider)
+
+		err = db.Client.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -260,7 +246,7 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 
 	// remove ssh key provided one was created
 	if cl.GitProvider == "gitlab" {
-		gitlabClient, err := gitlab.NewGitLabClient(cl.GitToken, cl.GitOwner)
+		gitlabClient, err := gitlab.NewGitLabClient(cl.GitAuth.Token, cl.GitAuth.Owner)
 		if err != nil {
 			return err
 		}

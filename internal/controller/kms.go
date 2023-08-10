@@ -10,7 +10,6 @@ import (
 	"fmt"
 
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/gitClient"
 )
@@ -53,14 +52,11 @@ func (clctrl *ClusterController) DetokenizeKMSKeyID() error {
 				return err
 			}
 
-			publicKeys, err := ssh.NewPublicKeys("git", []byte(cl.PrivateKey), "")
-			if err != nil {
-				return err
-			}
+			//Leaving this here until I know where else it is used and caching the keys for now
 
 			err = gitopsRepo.Push(&git.PushOptions{
 				RemoteName: clctrl.GitProvider,
-				Auth:       publicKeys,
+				Auth:       HttpAuth,
 			})
 			if err != nil {
 				return err

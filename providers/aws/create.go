@@ -7,10 +7,6 @@ See the LICENSE file for more details.
 package aws
 
 import (
-	"context"
-	"fmt"
-	"strings"
-
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
@@ -19,12 +15,9 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
-	"github.com/kubefirst/runtime/pkg/bootstrap"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func CreateAWSCluster(definition *types.ClusterDefinition) error {
@@ -34,6 +27,7 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
+	// Update cluster status in database
 	err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", true)
 	if err != nil {
 		return err
@@ -85,6 +79,7 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
+	//Where detokeinization happens
 	err = ctrl.RepositoryPrep()
 	if err != nil {
 		ctrl.HandleError(err.Error())
@@ -160,86 +155,26 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 
 	kcfg := awsext.CreateEKSKubeconfig(&ctrl.AwsClient.Config, ctrl.ClusterName)
 
-	if !rec.ClusterSecretsCreatedCheck {
-		log.Info("creating service accounts and namespaces")
+	// Needs wait after cluster create
+	err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+	if err != nil {
+		return err
+	}
 
-		err = bootstrap.ServiceAccounts(kcfg.Clientset)
+	err = ctrl.ClusterSecretsBootstrap()
+	if err != nil {
+		ctrl.HandleError(err.Error())
+		return err
+	}
+
+	err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "cluster_secrets_created_check", true)
+	if err != nil {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
 		if err != nil {
 			return err
 		}
 
-		secret := &v1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:        "repo-credentials-template",
-				Namespace:   "argocd",
-				Annotations: map[string]string{"managed-by": "argocd.argoproj.io"},
-				Labels:      map[string]string{"argocd.argoproj.io/secret-type": "repository"},
-			},
-			Data: map[string][]byte{
-				"type":          []byte("git"),
-				"name":          []byte(fmt.Sprintf("%s-gitops", ctrl.GitOwner)),
-				"url":           []byte(ctrl.ProviderConfig.DestinationGitopsRepoGitURL),
-				"sshPrivateKey": []byte(rec.PrivateKey),
-			},
-		}
-
-		_, err = kcfg.Clientset.CoreV1().Secrets(secret.ObjectMeta.Namespace).Get(context.TODO(), secret.ObjectMeta.Name, metav1.GetOptions{})
-		if err == nil {
-			log.Infof("kubernetes secret %s/%s already created - skipping", secret.Namespace, secret.Name)
-		} else if strings.Contains(err.Error(), "not found") {
-			err := k8s.CreateSecretV2(kcfg.Clientset, secret)
-			if err != nil {
-				log.Infof("error creating kubernetes secret %s/%s: %s", secret.Namespace, secret.Name, err)
-
-				err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-				if err != nil {
-					return err
-				}
-
-				return err
-			}
-			log.Infof("created kubernetes secret: %s/%s", secret.Namespace, secret.Name)
-		}
-
-		log.Info("secret create for argocd to connect to gitops repo")
-
-		ecrToken, err := awsClient.GetECRAuthToken()
-		if err != nil {
-			return err
-		}
-
-		iamCaller, err := ctrl.AwsClient.GetCallerIdentity()
-		if err != nil {
-			return err
-		}
-
-		dockerConfigString := fmt.Sprintf(`{"auths": {"%s": {"auth": "%s"}}}`, fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", *iamCaller.Account, ctrl.CloudRegion), ecrToken)
-		dockerCfgSecret := &v1.Secret{
-			ObjectMeta: metav1.ObjectMeta{Name: "docker-config", Namespace: "argo"},
-			Data:       map[string][]byte{"config.json": []byte(dockerConfigString)},
-			Type:       "Opaque",
-		}
-		_, err = kcfg.Clientset.CoreV1().Secrets(dockerCfgSecret.ObjectMeta.Namespace).Create(context.TODO(), dockerCfgSecret, metav1.CreateOptions{})
-		if err != nil {
-			log.Infof("error creating kubernetes secret %s/%s: %s", dockerCfgSecret.Namespace, dockerCfgSecret.Name, err)
-
-			err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-			if err != nil {
-				return err
-			}
-
-			return err
-		}
-
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "cluster_secrets_created_check", true)
-		if err != nil {
-			err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-			if err != nil {
-				return err
-			}
-
-			return err
-		}
+		return err
 	}
 
 	err = ctrl.DeployRegistryApplication()

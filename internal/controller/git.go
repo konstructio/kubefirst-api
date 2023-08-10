@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"os"
 
+	githttps "github.com/go-git/go-git/v5/plumbing/transport/http"
+	gitssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
@@ -17,9 +19,13 @@ import (
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
+	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 )
+
+var HttpAuth *githttps.BasicAuth
+var PublicKeys *gitssh.PublicKeys
 
 // GitInit
 func (clctrl *ClusterController) GitInit() error {
@@ -28,16 +34,22 @@ func (clctrl *ClusterController) GitInit() error {
 		return err
 	}
 
+	HttpAuth = &githttps.BasicAuth{
+		Username: clctrl.GitAuth.User,
+		Password: clctrl.GitAuth.Token,
+	}
+
 	if !cl.GitInitCheck {
 		// Check for git resources in provider
 		initGitParameters := gitShim.GitInitParameters{
 			GitProvider:  clctrl.GitProvider,
-			GitToken:     clctrl.GitToken,
-			GitOwner:     clctrl.GitOwner,
+			GitToken:     clctrl.GitAuth.Token,
+			GitOwner:     clctrl.GitAuth.Owner,
+			GitProtocol:  clctrl.GitProtocol,
 			Repositories: clctrl.Repositories,
 			Teams:        clctrl.Teams,
-			GithubOrg:    clctrl.GitOwner,
-			GitlabGroup:  clctrl.GitOwner,
+			GithubOrg:    clctrl.GitAuth.Owner,
+			GitlabGroup:  clctrl.GitAuth.Owner,
 		}
 		err := gitShim.InitializeGitProvider(&initGitParameters)
 		if err != nil {
@@ -97,7 +109,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 					return fmt.Errorf(msg)
 				}
 
-				log.Infof("Created git repositories and teams for github.com/%s", clctrl.GitOwner)
+				log.Infof("Created git repositories and teams for github.com/%s", clctrl.GitAuth.Owner)
 				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
 			case "gitlab":
 				// //* create teams and repositories in gitlab
@@ -116,7 +128,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 					return fmt.Errorf(msg)
 				}
 
-				log.Infof("created git projects and groups for gitlab.com/%s", clctrl.GitOwner)
+				log.Infof("created git projects and groups for gitlab.com/%s", clctrl.GitAuth.Owner)
 				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
 			}
 		case "civo":
@@ -138,7 +150,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 					return fmt.Errorf(msg)
 				}
 
-				log.Infof("Created git repositories and teams for github.com/%s", clctrl.GitOwner)
+				log.Infof("Created git repositories and teams for github.com/%s", clctrl.GitAuth.Owner)
 				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
 			case "gitlab":
 				// //* create teams and repositories in gitlab
@@ -157,7 +169,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 					return fmt.Errorf(msg)
 				}
 
-				log.Infof("created git projects and groups for gitlab.com/%s", clctrl.GitOwner)
+				log.Infof("created git projects and groups for gitlab.com/%s", clctrl.GitAuth.Owner)
 				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
 			}
 		case "digitalocean":
@@ -179,7 +191,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 					return fmt.Errorf(msg)
 				}
 
-				log.Infof("Created git repositories and teams for github.com/%s", clctrl.GitOwner)
+				log.Infof("Created git repositories and teams for github.com/%s", clctrl.GitAuth.Owner)
 				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
 			case "gitlab":
 				// //* create teams and repositories in gitlab
@@ -198,7 +210,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 					return fmt.Errorf(msg)
 				}
 
-				log.Infof("created git projects and groups for gitlab.com/%s", clctrl.GitOwner)
+				log.Infof("created git projects and groups for gitlab.com/%s", clctrl.GitAuth.Owner)
 				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
 			}
 		case "vultr":
@@ -220,7 +232,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 					return fmt.Errorf(msg)
 				}
 
-				log.Infof("Created git repositories and teams for github.com/%s", clctrl.GitOwner)
+				log.Infof("Created git repositories and teams for github.com/%s", clctrl.GitAuth.Owner)
 				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
 			case "gitlab":
 				// //* create teams and repositories in gitlab
@@ -239,7 +251,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 					return fmt.Errorf(msg)
 				}
 
-				log.Infof("created git projects and groups for gitlab.com/%s", clctrl.GitOwner)
+				log.Infof("created git projects and groups for gitlab.com/%s", clctrl.GitAuth.Owner)
 				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitTerraformApplyCompleted, "")
 			}
 		}
@@ -251,4 +263,42 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 	}
 
 	return nil
+}
+
+func (clctrl *ClusterController) GitURL() (string, error) {
+
+	var destinationGitopsRepoURL string
+
+	switch clctrl.GitProvider {
+	case "github":
+
+		// Define constant url based on flag input, only expecting 2 protocols
+		switch clctrl.GitProtocol {
+		case "ssh": //"ssh"
+			destinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
+		}
+	case "gitlab":
+		gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitAuth.Token, clctrl.GitAuth.Owner)
+		if err != nil {
+			return "", err
+		}
+		// Format git url based on full path to group
+		switch clctrl.ProviderConfig.GitProtocol {
+		case "https":
+			// Update the urls in the cluster for gitlab parent groups
+			clctrl.ProviderConfig.DestinationGitopsRepoHttpsURL = fmt.Sprintf("https://gitlab.com/%s/gitops.git", gitlabClient.ParentGroupPath)
+			clctrl.ProviderConfig.DestinationMetaphorRepoHttpsURL = fmt.Sprintf("https://gitlab.com/%s/metaphor.git", gitlabClient.ParentGroupPath)
+			// Return the url used for detokenization
+			destinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoHttpsURL
+
+		default:
+			// Update the urls in the cluster for gitlab parent group
+			clctrl.ProviderConfig.DestinationGitopsRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)
+			clctrl.ProviderConfig.DestinationMetaphorRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
+			// Return the url used for detokenization
+			destinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
+		}
+	}
+
+	return destinationGitopsRepoURL, nil
 }

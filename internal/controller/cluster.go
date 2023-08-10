@@ -9,7 +9,10 @@ package controller
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 
+	"github.com/imdario/mergo"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
@@ -17,29 +20,11 @@ import (
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 )
-
-// Global Controller Variables
-// AWS
-// gitlab may have subgroups, so the destination gitops/metaphor repo git urls may be different
-var AWSDestinationGitopsRepoGitURL, AWSDestinationMetaphorRepoGitURL string
-
-// Civo
-// gitlab may have subgroups, so the destination gitops/metaphor repo git urls may be different
-var CivoDestinationGitopsRepoGitURL, CivoDestinationMetaphorRepoGitURL string
-
-// Digital Ocean
-// gitlab may have subgroups, so the destination gitops/metaphor repo git urls may be different
-var DigitaloceanDestinationGitopsRepoGitURL, DigitaloceanDestinationMetaphorRepoGitURL string
-
-// Vultr
-// gitlab may have subgroups, so the destination gitops/metaphor repo git urls may be different
-var VultrDestinationGitopsRepoGitURL, VultrDestinationMetaphorRepoGitURL string
 
 // CreateCluster
 func (clctrl *ClusterController) CreateCluster() error {
@@ -83,6 +68,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 				return err
 			}
 			tfEnvs["TF_VAR_aws_account_id"] = *iamCaller.Account
+			tfEnvs["TF_VAR_use_ecr"] = strconv.FormatBool(clctrl.ECR) //Flag out the ecr terraform
 
 			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "aws_account_id", *iamCaller.Account)
 			if err != nil {
@@ -200,285 +186,121 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 		kubefirstVersion = "development"
 	}
 
-	var gitopsTemplateTokens *providerConfigs.GitOpsDirectoryValues
+	//handle set gitops tokens/values
 	switch kind {
-	case "gitops":
+	case "gitops": //repo name
+
+		var externalDNSProviderTokenEnvName, externalDNSProviderSecretKey string
+		if clctrl.DnsProvider == "cloudflare" {
+			externalDNSProviderTokenEnvName = "CF_API_TOKEN"
+			externalDNSProviderSecretKey = "cf-api-token"
+		} else {
+			externalDNSProviderTokenEnvName = fmt.Sprintf("%s_TOKEN", strings.ToUpper(clctrl.CloudProvider))
+			externalDNSProviderSecretKey = fmt.Sprintf("%s-token", clctrl.CloudProvider)
+		}
+
+		// switch repo url based on gitProtocol and gitlab group parents.
+		destinationGitopsRepoURL, err := clctrl.GitURL()
+		if err != nil {
+			return err
+		}
+
+		// Default gitopsTemplateTokens
+		gitopsTemplateTokens := &providerConfigs.GitopsDirectoryValues{
+			AlertsEmail:               clctrl.AlertsEmail,
+			AtlantisAllowList:         fmt.Sprintf("%s/%s/*", clctrl.GitHost, clctrl.GitAuth.Owner),
+			CloudProvider:             clctrl.CloudProvider,
+			CloudRegion:               clctrl.CloudRegion,
+			ClusterName:               clctrl.ClusterName,
+			ClusterType:               clctrl.ClusterType,
+			DomainName:                clctrl.DomainName,
+			KubefirstStateStoreBucket: clctrl.KubefirstStateStoreBucketName,
+			KubefirstTeam:             clctrl.KubefirstTeam,
+			KubefirstVersion:          kubefirstVersion,
+			Kubeconfig:                clctrl.ProviderConfig.Kubeconfig, //AWS
+			KubeconfigPath:            clctrl.ProviderConfig.Kubeconfig, //Not AWS
+
+			ArgoCDIngressURL:               fmt.Sprintf("https://argocd.%s", clctrl.DomainName),
+			ArgoCDIngressNoHTTPSURL:        fmt.Sprintf("argocd.%s", clctrl.DomainName),
+			ArgoWorkflowsIngressURL:        fmt.Sprintf("https://argo.%s", clctrl.DomainName),
+			ArgoWorkflowsIngressNoHTTPSURL: fmt.Sprintf("argo.%s", clctrl.DomainName),
+			AtlantisIngressURL:             fmt.Sprintf("https://atlantis.%s", clctrl.DomainName),
+			AtlantisIngressNoHTTPSURL:      fmt.Sprintf("atlantis.%s", clctrl.DomainName),
+			ChartMuseumIngressURL:          fmt.Sprintf("https://chartmuseum.%s", clctrl.DomainName),
+			VaultIngressURL:                fmt.Sprintf("https://vault.%s", clctrl.DomainName),
+			VaultIngressNoHTTPSURL:         fmt.Sprintf("vault.%s", clctrl.DomainName),
+			VouchIngressURL:                fmt.Sprintf("https://vouch.%s", clctrl.DomainName),
+
+			GitDescription:       fmt.Sprintf("%s hosted git", clctrl.GitProvider),
+			GitNamespace:         "N/A",
+			GitProvider:          clctrl.GitProvider,
+			GitRunner:            fmt.Sprintf("%s Runner", clctrl.GitProvider),
+			GitRunnerDescription: fmt.Sprintf("Self Hosted %s Runner", clctrl.GitProvider),
+			GitRunnerNS:          fmt.Sprintf("%s-runner", clctrl.GitProvider),
+			GitURL:               clctrl.GitopsTemplateURL,
+			GitopsRepoURL:        destinationGitopsRepoURL,
+
+			GitHubHost:  fmt.Sprintf("https://github.com/%s/gitops.git", clctrl.GitAuth.Owner),
+			GitHubOwner: clctrl.GitAuth.Owner,
+			GitHubUser:  clctrl.GitAuth.User,
+
+			GitlabHost:         clctrl.GitHost,
+			GitlabOwner:        clctrl.GitAuth.Owner,
+			GitlabOwnerGroupID: clctrl.GitlabOwnerGroupID,
+			GitlabUser:         clctrl.GitAuth.User,
+
+			GitopsRepoAtlantisWebhookURL: clctrl.AtlantisWebhookURL,
+			GitopsRepoNoHTTPSURL:         fmt.Sprintf("%s.com/%s/gitops.git", clctrl.GitHost, clctrl.GitAuth.Owner),
+			ClusterId:                    clctrl.ClusterID,
+
+			// external-dns optionality to provide cloudflare support regardless of cloud provider
+			ExternalDNSProviderName:         clctrl.DnsProvider,
+			ExternalDNSProviderTokenEnvName: externalDNSProviderTokenEnvName,
+			ExternalDNSProviderSecretName:   fmt.Sprintf("%s-creds", clctrl.CloudProvider),
+			ExternalDNSProviderSecretKey:    externalDNSProviderSecretKey,
+		}
+
+		//Handle provider specific tokens
 		switch clctrl.CloudProvider {
 		case "aws":
 			iamCaller, err := clctrl.AwsClient.GetCallerIdentity()
 			if err != nil {
 				return err
 			}
-			gitopsTemplateTokens = &providerConfigs.GitOpsDirectoryValues{
-				AlertsEmail:               clctrl.AlertsEmail,
-				AtlantisAllowList:         fmt.Sprintf("%s/%s/*", clctrl.GitHost, clctrl.GitOwner),
-				AwsIamArnAccountRoot:      fmt.Sprintf("arn:aws:iam::%s:root", *iamCaller.Account),
-				AwsNodeCapacityType:       "ON_DEMAND", // todo adopt cli flag
-				AwsAccountID:              *iamCaller.Account,
-				CloudProvider:             clctrl.CloudProvider,
-				CloudRegion:               clctrl.CloudRegion,
-				ClusterName:               clctrl.ClusterName,
-				ClusterType:               clctrl.ClusterType,
-				DomainName:                clctrl.DomainName,
-				Kubeconfig:                clctrl.ProviderConfig.Kubeconfig,
-				KubefirstArtifactsBucket:  clctrl.KubefirstArtifactsBucketName,
-				KubefirstStateStoreBucket: clctrl.KubefirstStateStoreBucketName,
-				KubefirstTeam:             clctrl.KubefirstTeam,
-				KubefirstVersion:          kubefirstVersion,
 
-				ArgoCDIngressURL:               fmt.Sprintf("https://argocd.%s", clctrl.DomainName),
-				ArgoCDIngressNoHTTPSURL:        fmt.Sprintf("argocd.%s", clctrl.DomainName),
-				ArgoWorkflowsIngressURL:        fmt.Sprintf("https://argo.%s", clctrl.DomainName),
-				ArgoWorkflowsIngressNoHTTPSURL: fmt.Sprintf("argo.%s", clctrl.DomainName),
-				AtlantisIngressURL:             fmt.Sprintf("https://atlantis.%s", clctrl.DomainName),
-				AtlantisIngressNoHTTPSURL:      fmt.Sprintf("atlantis.%s", clctrl.DomainName),
-				ChartMuseumIngressURL:          fmt.Sprintf("https://chartmuseum.%s", clctrl.DomainName),
-				VaultIngressURL:                fmt.Sprintf("https://vault.%s", clctrl.DomainName),
-				VaultIngressNoHTTPSURL:         fmt.Sprintf("vault.%s", clctrl.DomainName),
-				VouchIngressURL:                fmt.Sprintf("https://vouch.%s", clctrl.DomainName),
+			//to be added to general tokens struct
+			awsAdditionalTokens := &providerConfigs.GitopsDirectoryValues{
+				AwsIamArnAccountRoot: fmt.Sprintf("arn:aws:iam::%s:root", *iamCaller.Account),
+				AwsNodeCapacityType:  "ON_DEMAND", // todo adopt cli flag
+				AwsAccountID:         *iamCaller.Account,
 
-				GitDescription:       fmt.Sprintf("%s hosted git", clctrl.GitProvider),
-				GitNamespace:         "N/A",
-				GitProvider:          clctrl.GitProvider,
-				GitRunner:            fmt.Sprintf("%s Runner", clctrl.GitProvider),
-				GitRunnerDescription: fmt.Sprintf("Self Hosted %s Runner", clctrl.GitProvider),
-				GitRunnerNS:          fmt.Sprintf("%s-runner", clctrl.GitProvider),
-				GitURL:               clctrl.GitopsTemplateURL,
+				Kubeconfig:               clctrl.ProviderConfig.Kubeconfig,
+				KubefirstArtifactsBucket: clctrl.KubefirstArtifactsBucketName,
 
-				GitHubHost:  fmt.Sprintf("https://github.com/%s/gitops.git", clctrl.GitOwner),
-				GitHubOwner: clctrl.GitOwner,
-				GitHubUser:  clctrl.GitUser,
-
-				GitlabHost:         clctrl.GitHost,
-				GitlabOwner:        clctrl.GitOwner,
-				GitlabOwnerGroupID: clctrl.GitlabOwnerGroupID,
-				GitlabUser:         clctrl.GitUser,
-
-				GitOpsRepoAtlantisWebhookURL: clctrl.AtlantisWebhookURL,
-				GitOpsRepoNoHTTPSURL:         fmt.Sprintf("%s.com/%s/gitops.git", clctrl.GitHost, clctrl.GitOwner),
-				ClusterId:                    clctrl.ClusterID,
-
-				AtlantisWebhookURL:   clctrl.AtlantisWebhookURL,
-				ContainerRegistryURL: fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", *iamCaller.Account, clctrl.CloudRegion),
+				AtlantisWebhookURL: clctrl.AtlantisWebhookURL,
 			}
+			// Merge aws additional tokens and gitopsTemplateTokens
+			mergo.Merge(&gitopsTemplateTokens, awsAdditionalTokens)
 
-			switch clctrl.GitProvider {
-			case "github":
-				AWSDestinationGitopsRepoGitURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
-				AWSDestinationMetaphorRepoGitURL = clctrl.ProviderConfig.DestinationMetaphorRepoGitURL
-			case "gitlab":
-				gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitToken, clctrl.GitOwner)
-				if err != nil {
-					return err
-				}
-				// Format git url based on full path to group
-				AWSDestinationGitopsRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)
-				AWSDestinationMetaphorRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
-
+			if clctrl.ECR {
+				gitopsTemplateTokens.ContainerRegistryURL = fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", *iamCaller.Account, clctrl.CloudRegion)
+				log.Info("Using ECR URL %s", gitopsTemplateTokens.ContainerRegistryURL)
+			} else {
+				log.Info("Not using ECR but instead %s", clctrl.GitProvider)
 			}
-			gitopsTemplateTokens.GitOpsRepoGitURL = AWSDestinationGitopsRepoGitURL
-		case "civo":
-			gitopsTemplateTokens = &providerConfigs.GitOpsDirectoryValues{
-				AlertsEmail:               clctrl.AlertsEmail,
-				AtlantisAllowList:         fmt.Sprintf("%s/%s/*", clctrl.GitHost, clctrl.GitOwner),
-				CloudProvider:             clctrl.CloudProvider,
-				CloudRegion:               clctrl.CloudRegion,
-				ClusterName:               clctrl.ClusterName,
-				ClusterType:               clctrl.ClusterType,
-				DomainName:                clctrl.DomainName,
-				KubeconfigPath:            clctrl.ProviderConfig.Kubeconfig,
-				KubefirstStateStoreBucket: clctrl.KubefirstStateStoreBucketName,
-				KubefirstTeam:             clctrl.KubefirstTeam,
-				KubefirstVersion:          kubefirstVersion,
-
-				ArgoCDIngressURL:               fmt.Sprintf("https://argocd.%s", clctrl.DomainName),
-				ArgoCDIngressNoHTTPSURL:        fmt.Sprintf("argocd.%s", clctrl.DomainName),
-				ArgoWorkflowsIngressURL:        fmt.Sprintf("https://argo.%s", clctrl.DomainName),
-				ArgoWorkflowsIngressNoHTTPSURL: fmt.Sprintf("argo.%s", clctrl.DomainName),
-				AtlantisIngressURL:             fmt.Sprintf("https://atlantis.%s", clctrl.DomainName),
-				AtlantisIngressNoHTTPSURL:      fmt.Sprintf("atlantis.%s", clctrl.DomainName),
-				ChartMuseumIngressURL:          fmt.Sprintf("https://chartmuseum.%s", clctrl.DomainName),
-				VaultIngressURL:                fmt.Sprintf("https://vault.%s", clctrl.DomainName),
-				VaultIngressNoHTTPSURL:         fmt.Sprintf("vault.%s", clctrl.DomainName),
-				VouchIngressURL:                fmt.Sprintf("https://vouch.%s", clctrl.DomainName),
-
-				GitDescription:       fmt.Sprintf("%s hosted git", clctrl.GitProvider),
-				GitNamespace:         "N/A",
-				GitProvider:          clctrl.GitProvider,
-				GitRunner:            fmt.Sprintf("%s Runner", clctrl.GitProvider),
-				GitRunnerDescription: fmt.Sprintf("Self Hosted %s Runner", clctrl.GitProvider),
-				GitRunnerNS:          fmt.Sprintf("%s-runner", clctrl.GitProvider),
-				GitURL:               clctrl.GitopsTemplateURL,
-
-				GitHubHost:  fmt.Sprintf("https://github.com/%s/gitops.git", clctrl.GitOwner),
-				GitHubOwner: clctrl.GitOwner,
-				GitHubUser:  clctrl.GitUser,
-
-				GitlabHost:         clctrl.GitHost,
-				GitlabOwner:        clctrl.GitOwner,
-				GitlabOwnerGroupID: clctrl.GitlabOwnerGroupID,
-				GitlabUser:         clctrl.GitUser,
-
-				GitOpsRepoAtlantisWebhookURL: clctrl.AtlantisWebhookURL,
-				GitOpsRepoNoHTTPSURL:         fmt.Sprintf("%s.com/%s/gitops.git", clctrl.GitHost, clctrl.GitOwner),
-				ClusterId:                    clctrl.ClusterID,
-			}
-
-			switch clctrl.GitProvider {
-			case "github":
-				CivoDestinationGitopsRepoGitURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
-				CivoDestinationMetaphorRepoGitURL = clctrl.ProviderConfig.DestinationMetaphorRepoGitURL
-			case "gitlab":
-				gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitToken, clctrl.GitOwner)
-				if err != nil {
-					return err
-				}
-				// Format git url based on full path to group
-				CivoDestinationGitopsRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)
-				CivoDestinationMetaphorRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
-
-			}
-			gitopsTemplateTokens.GitOpsRepoGitURL = CivoDestinationGitopsRepoGitURL
-		case "digitalocean":
-			gitopsTemplateTokens = &providerConfigs.GitOpsDirectoryValues{
-				AlertsEmail:               clctrl.AlertsEmail,
-				AtlantisAllowList:         fmt.Sprintf("%s/%s/*", clctrl.GitHost, clctrl.GitOwner),
-				CloudProvider:             clctrl.CloudProvider,
-				CloudRegion:               clctrl.CloudRegion,
-				ClusterName:               clctrl.ClusterName,
-				ClusterType:               clctrl.ClusterType,
-				DomainName:                clctrl.DomainName,
-				KubeconfigPath:            clctrl.ProviderConfig.Kubeconfig,
-				KubefirstStateStoreBucket: clctrl.KubefirstStateStoreBucketName,
-				KubefirstTeam:             clctrl.KubefirstTeam,
-				KubefirstVersion:          kubefirstVersion,
-
-				ArgoCDIngressURL:               fmt.Sprintf("https://argocd.%s", clctrl.DomainName),
-				ArgoCDIngressNoHTTPSURL:        fmt.Sprintf("argocd.%s", clctrl.DomainName),
-				ArgoWorkflowsIngressURL:        fmt.Sprintf("https://argo.%s", clctrl.DomainName),
-				ArgoWorkflowsIngressNoHTTPSURL: fmt.Sprintf("argo.%s", clctrl.DomainName),
-				AtlantisIngressURL:             fmt.Sprintf("https://atlantis.%s", clctrl.DomainName),
-				AtlantisIngressNoHTTPSURL:      fmt.Sprintf("atlantis.%s", clctrl.DomainName),
-				ChartMuseumIngressURL:          fmt.Sprintf("https://chartmuseum.%s", clctrl.DomainName),
-				VaultIngressURL:                fmt.Sprintf("https://vault.%s", clctrl.DomainName),
-				VaultIngressNoHTTPSURL:         fmt.Sprintf("vault.%s", clctrl.DomainName),
-				VouchIngressURL:                fmt.Sprintf("https://vouch.%s", clctrl.DomainName),
-
-				GitDescription:       fmt.Sprintf("%s hosted git", clctrl.GitProvider),
-				GitNamespace:         "N/A",
-				GitProvider:          clctrl.GitProvider,
-				GitRunner:            fmt.Sprintf("%s Runner", clctrl.GitProvider),
-				GitRunnerDescription: fmt.Sprintf("Self Hosted %s Runner", clctrl.GitProvider),
-				GitRunnerNS:          fmt.Sprintf("%s-runner", clctrl.GitProvider),
-				GitURL:               clctrl.GitopsTemplateURL,
-
-				GitHubHost:  fmt.Sprintf("https://github.com/%s/gitops.git", clctrl.GitOwner),
-				GitHubOwner: clctrl.GitOwner,
-				GitHubUser:  clctrl.GitUser,
-
-				GitlabHost:         clctrl.GitHost,
-				GitlabOwner:        clctrl.GitOwner,
-				GitlabOwnerGroupID: clctrl.GitlabOwnerGroupID,
-				GitlabUser:         clctrl.GitUser,
-
-				GitOpsRepoAtlantisWebhookURL: clctrl.AtlantisWebhookURL,
-				GitOpsRepoNoHTTPSURL:         fmt.Sprintf("%s.com/%s/gitops.git", clctrl.GitHost, clctrl.GitOwner),
-				ClusterId:                    clctrl.ClusterID,
-			}
-
-			switch clctrl.GitProvider {
-			case "github":
-				DigitaloceanDestinationGitopsRepoGitURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
-				DigitaloceanDestinationMetaphorRepoGitURL = clctrl.ProviderConfig.DestinationMetaphorRepoGitURL
-			case "gitlab":
-				gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitToken, clctrl.GitOwner)
-				if err != nil {
-					return err
-				}
-				// Format git url based on full path to group
-				DigitaloceanDestinationGitopsRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)
-				DigitaloceanDestinationMetaphorRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
-
-			}
-			gitopsTemplateTokens.GitOpsRepoGitURL = DigitaloceanDestinationGitopsRepoGitURL
-			gitopsTemplateTokens.StateStoreBucketHostname = DigitaloceanStateStoreBucketName
-		case "vultr":
-			gitopsTemplateTokens = &providerConfigs.GitOpsDirectoryValues{
-				AlertsEmail:               clctrl.AlertsEmail,
-				AtlantisAllowList:         fmt.Sprintf("%s/%s/*", clctrl.GitHost, clctrl.GitOwner),
-				CloudProvider:             clctrl.CloudProvider,
-				CloudRegion:               clctrl.CloudRegion,
-				ClusterName:               clctrl.ClusterName,
-				ClusterType:               clctrl.ClusterType,
-				DomainName:                clctrl.DomainName,
-				KubeconfigPath:            clctrl.ProviderConfig.Kubeconfig,
-				KubefirstStateStoreBucket: clctrl.KubefirstStateStoreBucketName,
-				KubefirstTeam:             clctrl.KubefirstTeam,
-				KubefirstVersion:          kubefirstVersion,
-
-				ArgoCDIngressURL:               fmt.Sprintf("https://argocd.%s", clctrl.DomainName),
-				ArgoCDIngressNoHTTPSURL:        fmt.Sprintf("argocd.%s", clctrl.DomainName),
-				ArgoWorkflowsIngressURL:        fmt.Sprintf("https://argo.%s", clctrl.DomainName),
-				ArgoWorkflowsIngressNoHTTPSURL: fmt.Sprintf("argo.%s", clctrl.DomainName),
-				AtlantisIngressURL:             fmt.Sprintf("https://atlantis.%s", clctrl.DomainName),
-				AtlantisIngressNoHTTPSURL:      fmt.Sprintf("atlantis.%s", clctrl.DomainName),
-				ChartMuseumIngressURL:          fmt.Sprintf("https://chartmuseum.%s", clctrl.DomainName),
-				VaultIngressURL:                fmt.Sprintf("https://vault.%s", clctrl.DomainName),
-				VaultIngressNoHTTPSURL:         fmt.Sprintf("vault.%s", clctrl.DomainName),
-				VouchIngressURL:                fmt.Sprintf("https://vouch.%s", clctrl.DomainName),
-
-				GitDescription:       fmt.Sprintf("%s hosted git", clctrl.GitProvider),
-				GitNamespace:         "N/A",
-				GitProvider:          clctrl.GitProvider,
-				GitRunner:            fmt.Sprintf("%s Runner", clctrl.GitProvider),
-				GitRunnerDescription: fmt.Sprintf("Self Hosted %s Runner", clctrl.GitProvider),
-				GitRunnerNS:          fmt.Sprintf("%s-runner", clctrl.GitProvider),
-				GitURL:               clctrl.GitopsTemplateURL,
-
-				GitHubHost:  fmt.Sprintf("https://github.com/%s/gitops.git", clctrl.GitOwner),
-				GitHubOwner: clctrl.GitOwner,
-				GitHubUser:  clctrl.GitUser,
-
-				GitlabHost:         clctrl.GitHost,
-				GitlabOwner:        clctrl.GitOwner,
-				GitlabOwnerGroupID: clctrl.GitlabOwnerGroupID,
-				GitlabUser:         clctrl.GitUser,
-
-				GitOpsRepoAtlantisWebhookURL: clctrl.AtlantisWebhookURL,
-				GitOpsRepoNoHTTPSURL:         fmt.Sprintf("%s.com/%s/gitops.git", clctrl.GitHost, clctrl.GitOwner),
-				ClusterId:                    clctrl.ClusterID,
-			}
-
-			switch clctrl.GitProvider {
-			case "github":
-				VultrDestinationGitopsRepoGitURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
-				VultrDestinationMetaphorRepoGitURL = clctrl.ProviderConfig.DestinationMetaphorRepoGitURL
-			case "gitlab":
-				gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitToken, clctrl.GitOwner)
-				if err != nil {
-					return err
-				}
-				// Format git url based on full path to group
-				VultrDestinationGitopsRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)
-				VultrDestinationMetaphorRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
-
-			}
-			gitopsTemplateTokens.GitOpsRepoGitURL = VultrDestinationGitopsRepoGitURL
-			gitopsTemplateTokens.StateStoreBucketHostname = VultrStateStoreBucketHostname
 		}
 
 		return gitopsTemplateTokens
-	case "metaphor":
+	case "metaphor": //repo name
 		metaphorTemplateTokens := &providerConfigs.MetaphorTokenValues{
 			ClusterName:                   clctrl.ClusterName,
 			CloudRegion:                   clctrl.CloudRegion,
-			ContainerRegistryURL:          fmt.Sprintf("%s/%s/metaphor", clctrl.ContainerRegistryHost, clctrl.GitOwner),
+			ContainerRegistryURL:          fmt.Sprintf("%s/%s/metaphor", clctrl.ContainerRegistryHost, clctrl.GitAuth.Owner),
 			DomainName:                    clctrl.DomainName,
 			MetaphorDevelopmentIngressURL: fmt.Sprintf("metaphor-development.%s", clctrl.DomainName),
 			MetaphorStagingIngressURL:     fmt.Sprintf("metaphor-staging.%s", clctrl.DomainName),
 			MetaphorProductionIngressURL:  fmt.Sprintf("metaphor-production.%s", clctrl.DomainName),
 		}
-
 		return metaphorTemplateTokens
 	}
 
@@ -491,28 +313,53 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 	if err != nil {
 		return err
 	}
+	clientSet, err := k8s.GetClientSet(clctrl.ProviderConfig.Kubeconfig)
+	if err != nil {
+		return err
+	}
+	//create namespaces
+	err = providerConfigs.K8sNamespaces(clientSet)
+	if err != nil {
+		return err
+	}
 
 	if !cl.ClusterSecretsCreatedCheck {
 		switch clctrl.CloudProvider {
 		case "aws":
+			err := awsext.BootstrapAWSMgmtCluster(
+				clientSet,
+				&cl, &clctrl.ProviderConfig,
+				clctrl.AwsClient,
+				clctrl.ProviderConfig.GitopsDirectoryValues.ContainerRegistryURL,
+			)
+			if err != nil {
+				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
+				return err
+			}
 		case "civo":
-			err := civoext.BootstrapCivoMgmtCluster(clctrl.ProviderConfig.Kubeconfig, &cl)
+			err := civoext.BootstrapCivoMgmtCluster(clientSet, &cl, &clctrl.ProviderConfig)
 			if err != nil {
 				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
 		case "digitalocean":
-			err := digitaloceanext.BootstrapDigitaloceanMgmtCluster(clctrl.ProviderConfig.Kubeconfig, &cl)
+			err := digitaloceanext.BootstrapDigitaloceanMgmtCluster(clientSet, &cl, &clctrl.ProviderConfig)
 			if err != nil {
 				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
 		case "vultr":
-			err := vultrext.BootstrapVultrMgmtCluster(clctrl.ProviderConfig.Kubeconfig, &cl)
+			err := vultrext.BootstrapVultrMgmtCluster(clientSet, &cl, &clctrl.ProviderConfig)
 			if err != nil {
 				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
+		}
+
+		//create service accounts
+		err = providerConfigs.ServiceAccounts(clientSet)
+		if err != nil {
+			return err
 		}
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cluster_secrets_created_check", true)
@@ -538,10 +385,10 @@ func (clctrl *ClusterController) ContainerRegistryAuth() (string, error) {
 	// Container registry authentication creation
 	containerRegistryAuth := gitShim.ContainerRegistryAuth{
 		GitProvider:           clctrl.GitProvider,
-		GitUser:               clctrl.GitUser,
-		GitToken:              clctrl.GitToken,
-		GitlabGroupFlag:       clctrl.GitOwner,
-		GithubOwner:           clctrl.GitOwner,
+		GitUser:               clctrl.GitAuth.User,
+		GitToken:              clctrl.GitAuth.Token,
+		GitlabGroupFlag:       clctrl.GitAuth.Owner,
+		GithubOwner:           clctrl.GitAuth.Owner,
 		ContainerRegistryHost: clctrl.ContainerRegistryHost,
 		Clientset:             kcfg.Clientset,
 	}
