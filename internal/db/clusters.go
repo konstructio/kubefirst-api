@@ -213,6 +213,7 @@ func (mdbcl *MongoDBClient) Restore(req *types.ImportClusterRequest) error {
 		&types.StateStoreCredentials{
 			AccessKeyID:     req.StateStoreCredentials.AccessKeyID,
 			SecretAccessKey: req.StateStoreCredentials.SecretAccessKey,
+			SessionToken:    req.StateStoreCredentials.SessionToken,
 		},
 		&types.StateStoreDetails{
 			Name:     req.StateStoreDetails.Name,

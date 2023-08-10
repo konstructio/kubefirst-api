@@ -99,7 +99,7 @@ func GetClusterObject(cr *types.StateStoreCredentials, d *types.StateStoreDetail
 
 	// Initialize minio client
 	minioClient, err := minio.New(d.Hostname, &minio.Options{
-		Creds:  credentials.NewStaticV4(cr.AccessKeyID, cr.SecretAccessKey, ""),
+		Creds:  credentials.NewStaticV4(cr.AccessKeyID, cr.SecretAccessKey, cr.SessionToken),
 		Secure: secure,
 	})
 	if err != nil {

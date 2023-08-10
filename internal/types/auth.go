@@ -39,6 +39,7 @@ type VultrAuth struct {
 type StateStoreCredentials struct {
 	AccessKeyID     string `bson:"access_key_id,omitempty" json:"access_key_id,omitempty"`
 	SecretAccessKey string `bson:"secret_access_key,omitempty" json:"secret_access_key,omitempty"`
+	SessionToken    string `bson:"session_token,omitempty" json:"session_token,omitempty"`
 	Name            string `bson:"name,omitempty" json:"name,omitempty"`
 	ID              string `bson:"id,omitempty" json:"id,omitempty"`
 }

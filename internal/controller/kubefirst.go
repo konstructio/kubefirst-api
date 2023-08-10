@@ -10,19 +10,19 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/db"
-	"github.com/kubefirst/kubefirst-api/internal/types"
-	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/kubefirst/runtime/pkg"
+	runtimetypes "github.com/kubefirst/runtime/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 
 // ExportClusterRecord will export cluster record to mgmt cluster
 func (clctrl *ClusterController) ExportClusterRecord() error {
-	kcfg := k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 	cluster, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 
 	err = db.Client.Export(clctrl.ClusterName)
@@ -31,46 +31,45 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 		return err
 	}
 
-	log.Println("Cluster exported:", clctrl.ClusterName)
+	time.Sleep(time.Second * 10)
 
-	//* kubefirst api port-forward
-	kubefirstApiStopChannel := make(chan struct{}, 1)
-	defer func() {
-		close(kubefirstApiStopChannel)
-	}()
-	k8s.OpenPortForwardPodWrapper(
-		kcfg.Clientset,
-		kcfg.RestConfig,
-		"kubefirst-console-kubefirst-api",
-		"kubefirst",
-		8081,
-		8085,
-		kubefirstApiStopChannel,
-	)
+	err = pkg.IsAppAvailable(fmt.Sprintf("%s/api/proxyHealth", pkg.KubefirstConsoleLocalURLCloud), "kubefirst api")
+	if err != nil {
+		log.Error("unable to start kubefirst api")
+	}
 
-	time.Sleep(time.Second * 20)
+	importObject := runtimetypes.ImportClusterRequest{
+		ClusterName:   cluster.ClusterName,
+		CloudRegion:   cluster.CloudRegion,
+		CloudProvider: cluster.CloudProvider,
+	}
+	importObject.StateStoreCredentials.AccessKeyID = cluster.StateStoreCredentials.AccessKeyID
+	importObject.StateStoreCredentials.ID = cluster.StateStoreCredentials.ID
+	importObject.StateStoreCredentials.Name = cluster.StateStoreCredentials.Name
+	importObject.StateStoreCredentials.SecretAccessKey = cluster.StateStoreCredentials.SecretAccessKey
+	importObject.StateStoreCredentials.SessionToken = cluster.StateStoreCredentials.SessionToken
 
-	importUrl := "http://localhost:8085/api/v1/cluster/import"
+	importObject.StateStoreDetails.Hostname = cluster.StateStoreDetails.Hostname
+	importObject.StateStoreDetails.ID = cluster.StateStoreDetails.ID
+	importObject.StateStoreDetails.Name = cluster.StateStoreDetails.Name
 
-	importObject := types.ImportClusterRequest{
-		ClusterName:           clctrl.ClusterName,
-		CloudRegion:           clctrl.CloudRegion,
-		CloudProvider:         clctrl.CloudProvider,
-		StateStoreCredentials: cluster.StateStoreCredentials,
-		StateStoreDetails:     cluster.StateStoreDetails,
+	requestObject := runtimetypes.ProxyImportRequest{
+		Body: importObject,
+		Url:  "/cluster/import",
 	}
 
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
 	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	httpClient := http.Client{Transport: customTransport}
 
-	payload, err := json.Marshal(importObject)
+	payload, err := json.Marshal(requestObject)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, importUrl, bytes.NewReader(payload))
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/proxy", pkg.KubefirstConsoleLocalURLCloud), bytes.NewReader(payload))
 	if err != nil {
+		log.Errorf("error %s", err)
 		return err
 	}
 	req.Header.Add("Content-Type", "application/json")
@@ -78,11 +77,12 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 
 	res, err := httpClient.Do(req)
 	if err != nil {
+		log.Errorf("error %s", err)
 		return err
 	}
 
 	if res.StatusCode != http.StatusOK {
-		log.Println("unable to import cluster", res.StatusCode)
+		log.Errorf("unable to import cluster %s", res.Status)
 		return nil
 	}
 
@@ -91,7 +91,7 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 		return err
 	}
 
-	log.Println("Import:", string(body))
+	log.Infof("Import: %s", string(body))
 
 	return nil
 }

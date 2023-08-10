@@ -17,7 +17,7 @@ require (
 	github.com/google/go-github/v52 v52.0.0
 	github.com/hashicorp/vault/api v1.9.0
 	github.com/imdario/mergo v0.3.13
-	github.com/kubefirst/runtime v0.3.0
+	github.com/kubefirst/runtime v0.3.7-0.20230810151133-d5e29c479e09
 	github.com/minio/minio-go/v7 v7.0.49
 	github.com/rs/zerolog v1.29.0
 	github.com/sirupsen/logrus v1.9.0
@@ -320,5 +320,3 @@ replace (
 	k8s.io/pod-security-admission => k8s.io/pod-security-admission v0.24.2
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.24.2
 )
-
-replace github.com/kubefirst/runtime => /root/kubefirst/runtime
