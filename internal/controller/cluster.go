@@ -200,7 +200,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 		}
 
 		// switch repo url based on gitProtocol and gitlab group parents.
-		destinationGitopsRepoURL, err := clctrl.GitURL()
+		destinationGitopsRepoURL, err := clctrl.GetRepoURL()
 		if err != nil {
 			return err
 		}

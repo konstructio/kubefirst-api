@@ -226,7 +226,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 
 		log.Info("applying the registry application to argocd")
 
-		registryURL, err := clctrl.GitURL()
+		registryURL, err := clctrl.GetRepoURL()
 		if err != nil {
 			return err
 		}

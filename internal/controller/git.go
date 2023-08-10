@@ -255,7 +255,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 	return nil
 }
 
-func (clctrl *ClusterController) GitURL() (string, error) {
+func (clctrl *ClusterController) GetRepoURL() (string, error) {
 
 	var destinationGitopsRepoURL string
 
