@@ -85,14 +85,13 @@ func BootstrapAWSMgmtCluster(
 	}
 
 	//flag out the ecr token
-
 	if cl.ECR {
 		ecrToken, err := awsClient.GetECRAuthToken()
 		if err != nil {
 			return err
 		}
 
-		dockerConfigString := fmt.Sprintf(`{"auths": {"%s": {"auth": "%s"}}}`, ContainerRegistryURL, ecrToken)
+		dockerConfigString := fmt.Sprintf(`{"auths": {"%s": {"auth": "%s"}}}`, fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", config.GitopsDirectoryValues.AwsAccountID, cl.CloudRegion), ecrToken)
 		dockerCfgSecret := &v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{Name: "docker-config", Namespace: "argo"},
 			Data:       map[string][]byte{"config.json": []byte(dockerConfigString)},
