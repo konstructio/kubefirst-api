@@ -36,6 +36,7 @@ import (
 // @Success 202 {object} types.JSONSuccessResponse
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /cluster/:cluster_name [delete]
+// @Param Authorization header string true "API key" default(Bearer <API key>)
 // DeleteCluster handles a request to delete a cluster
 func DeleteCluster(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
@@ -126,6 +127,7 @@ func DeleteCluster(c *gin.Context) {
 // @Success 200 {object} types.Cluster
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /cluster/:cluster_name [get]
+// @Param Authorization header string true "API key" default(Bearer <API key>)
 // GetCluster returns a specific configured cluster
 func GetCluster(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
@@ -157,6 +159,7 @@ func GetCluster(c *gin.Context) {
 // @Success 200 {object} []types.Cluster
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /cluster [get]
+// @Param Authorization header string true "API key" default(Bearer <API key>)
 // GetClusters returns all known configured clusters
 func GetClusters(c *gin.Context) {
 	// Retrieve all clusters info
@@ -182,6 +185,7 @@ func GetClusters(c *gin.Context) {
 // @Success 202 {object} types.JSONSuccessResponse
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /cluster/:cluster_name [post]
+// @Param Authorization header string true "API key" default(Bearer <API key>)
 // PostCreateCluster handles a request to create a cluster
 func PostCreateCluster(c *gin.Context) {
 
@@ -400,6 +404,7 @@ func PostCreateCluster(c *gin.Context) {
 // @Success 202 {object} types.JSONSuccessResponse
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /cluster/:cluster_name/export [post]
+// @Param Authorization header string true "API key" default(Bearer <API key>)
 // PostExportCluster handles a request to export a cluster
 func PostExportCluster(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
@@ -434,6 +439,7 @@ func PostExportCluster(c *gin.Context) {
 // @Success 202 {object} types.JSONSuccessResponse
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /cluster/import [post]
+// @Param Authorization header string true "API key" default(Bearer <API key>)
 // PostImportCluster handles a request to import a cluster
 func PostImportCluster(c *gin.Context) {
 	// Bind to variable as application/json, handle error
@@ -477,6 +483,7 @@ func PostImportCluster(c *gin.Context) {
 // @Success 202 {object} types.JSONSuccessResponse
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /cluster/:cluster_name/reset_progress [post]
+// @Param Authorization header string true "API key" default(Bearer <API key>)
 // PostResetClusterProgress removes a cluster progress marker from a cluster entry
 func PostResetClusterProgress(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")

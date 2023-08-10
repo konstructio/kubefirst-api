@@ -27,6 +27,7 @@ import (
 // @Success 200 {object} types.CivoDomainValidationResponse
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /civo/domain/validate/:domain [get]
+// @Param Authorization header string true "API key" default(Bearer <API key>)
 // GetValidateCivoDomain returns status for a Civo domain validation
 func GetValidateCivoDomain(c *gin.Context) {
 	domainName, exists := c.Params.Get("domain")

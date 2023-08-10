@@ -413,6 +413,12 @@ paths:
         name: domain
         required: true
         type: string
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -446,6 +452,12 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.CivoDomainValidationRequest'
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -466,6 +478,13 @@ paths:
       consumes:
       - application/json
       description: Return all known configured Kubefirst clusters
+      parameters:
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -493,6 +512,12 @@ paths:
         name: cluster_name
         required: true
         type: string
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -515,6 +540,12 @@ paths:
       - description: Cluster name
         in: path
         name: cluster_name
+        required: true
+        type: string
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
         required: true
         type: string
       produces:
@@ -547,6 +578,12 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.ClusterDefinition'
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -572,6 +609,12 @@ paths:
         name: cluster_name
         required: true
         type: string
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -595,6 +638,12 @@ paths:
       - description: Cluster name
         in: path
         name: cluster_name
+        required: true
+        type: string
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
         required: true
         type: string
       produces:
@@ -623,6 +672,12 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.ImportClusterRequest'
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -650,6 +705,12 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.DomainListRequest'
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -670,6 +731,13 @@ paths:
       consumes:
       - application/json
       description: Returns a list of available Kubefirst gitops catalog applications
+      parameters:
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -689,6 +757,13 @@ paths:
       consumes:
       - application/json
       description: Updates the list of available Kubefirst gitops catalog applications
+      parameters:
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -706,6 +781,13 @@ paths:
   /health:
     get:
       description: Return health status if the application is running.
+      parameters:
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -728,6 +810,12 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.RegionListRequest'
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -751,6 +839,12 @@ paths:
       - description: Cluster name
         in: path
         name: cluster_name
+        required: true
+        type: string
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
         required: true
         type: string
       produces:
@@ -781,6 +875,12 @@ paths:
       - description: Service name to be removed
         in: path
         name: service_name
+        required: true
+        type: string
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
         required: true
         type: string
       produces:
@@ -818,6 +918,12 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.GitopsCatalogAppCreateRequest'
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -835,6 +941,13 @@ paths:
   /stream:
     get:
       description: Stream API server logs
+      parameters:
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
+        required: true
+        type: string
       responses: {}
       summary: Stream API server logs
       tags:
@@ -856,6 +969,12 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/types.TelemetryRequest'
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
+        required: true
+        type: string
       responses:
         "202":
           description: Accepted

@@ -23,6 +23,7 @@ import (
 // @Produce json
 // @Success 200 {object} types.JSONHealthResponse
 // @Router /health [get]
+// @Param Authorization header string true "API key" default(Bearer <API key>)
 func GetHealth(c *gin.Context) {
 	// Logging handler
 	// Logs to stdout to maintain compatibility with event streaming
