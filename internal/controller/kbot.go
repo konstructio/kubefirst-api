@@ -9,7 +9,6 @@ package controller
 import (
 	"os"
 
-	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/runtime/pkg/segment"
 	internalssh "github.com/kubefirst/runtime/pkg/ssh"
@@ -61,10 +60,6 @@ func (clctrl *ClusterController) InitializeBot() error {
 			return err
 		}
 
-		PublicKeys, err = ssh.NewPublicKeys("git", []byte(clctrl.GitAuth.PrivateKey), "")
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil

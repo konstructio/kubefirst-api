@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/go-git/go-git/v5"
+	githttps "github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/gitClient"
 )
@@ -56,7 +57,10 @@ func (clctrl *ClusterController) DetokenizeKMSKeyID() error {
 
 			err = gitopsRepo.Push(&git.PushOptions{
 				RemoteName: clctrl.GitProvider,
-				Auth:       HttpAuth,
+				Auth: &githttps.BasicAuth{
+					Username: clctrl.GitAuth.User,
+					Password: clctrl.GitAuth.Token,
+				},
 			})
 			if err != nil {
 				return err
