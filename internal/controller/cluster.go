@@ -313,10 +313,18 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 	if err != nil {
 		return err
 	}
-	clientSet, err := k8s.GetClientSet(clctrl.ProviderConfig.Kubeconfig)
-	if err != nil {
-		return err
+
+	var kcfg *k8s.KubernetesClient
+
+	switch clctrl.CloudProvider {
+	case "aws":
+		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+	case "civo", "digitalocean", "vultr":
+		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 	}
+
+	clientSet := kcfg.Clientset
+
 	//create namespaces
 	err = providerConfigs.K8sNamespaces(clientSet)
 	if err != nil {
@@ -328,7 +336,8 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 		case "aws":
 			err := awsext.BootstrapAWSMgmtCluster(
 				clientSet,
-				&cl, &clctrl.ProviderConfig,
+				&cl,
+				&clctrl.ProviderConfig,
 				clctrl.AwsClient,
 				clctrl.ProviderConfig.GitopsDirectoryValues.ContainerRegistryURL,
 			)

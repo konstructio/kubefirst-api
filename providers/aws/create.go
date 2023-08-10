@@ -110,29 +110,14 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
+	// Get Cluster kubeconfig and save to path so we can reference like everything else
+	kcfg := awsext.CreateEKSKubeconfig(&ctrl.AwsClient.Config, ctrl.ClusterName)
+
 	err = ctrl.WaitForClusterReady()
 	if err != nil {
 		ctrl.HandleError(err.Error())
 		return err
 	}
-
-	// //* check for ssl restore
-	// log.Info().Msg("checking for tls secrets to restore")
-	// secretsFilesToRestore, err := ioutil.ReadDir(config.SSLBackupDir + "/secrets")
-	// if err != nil {
-	// 	log.Info().Msgf("%s", err)
-	// }
-	// if len(secretsFilesToRestore) != 0 {
-	// 	// todo would like these but requires CRD's and is not currently supported
-	// 	// add crds ( use execShellReturnErrors? )
-	// 	// https://raw.githubusercontent.com/cert-manager/cert-manager/v1.11.0/deploy/crds/crd-clusterissuers.yaml
-	// 	// https://raw.githubusercontent.com/cert-manager/cert-manager/v1.11.0/deploy/crds/crd-certificates.yaml
-	// 	// add certificates, and clusterissuers
-	// 	log.Info().Msgf("found %d tls secrets to restore", len(secretsFilesToRestore))
-	// 	ssl.Restore(config.SSLBackupDir, domainNameFlag, config.Kubeconfig)
-	// } else {
-	// 	log.Info().Msg("no files found in secrets directory, continuing")
-	// }
 
 	// Cluster bootstrap (aws specific)
 	rec, err := ctrl.GetCurrentClusterRecord()
@@ -152,8 +137,6 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 		ctrl.HandleError(err.Error())
 		return err
 	}
-
-	kcfg := awsext.CreateEKSKubeconfig(&ctrl.AwsClient.Config, ctrl.ClusterName)
 
 	// Needs wait after cluster create
 	err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)

@@ -197,7 +197,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			var keyFound bool = false
 			for _, key := range keys {
 				if key.Title == keyName {
-					if strings.Contains(key.Key, strings.TrimSuffix(clctrl.PublicKey, "\n")) {
+					if strings.Contains(key.Key, strings.TrimSuffix(clctrl.GitAuth.PublicKey, "\n")) {
 						log.Infof("ssh key %s already exists and key is up to date, continuing", keyName)
 						keyFound = true
 					} else {
@@ -207,7 +207,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			}
 			if !keyFound {
 				log.Infof("creating ssh key %s...", keyName)
-				err := gitlabClient.AddUserSSHKey(keyName, clctrl.PublicKey)
+				err := gitlabClient.AddUserSSHKey(keyName, clctrl.GitAuth.PublicKey)
 				if err != nil {
 					log.Errorf("error adding ssh key %s: %s", keyName, err.Error())
 				}

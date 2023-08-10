@@ -91,12 +91,6 @@ type ClusterController struct {
 	KubefirstStateStoreBucketName string
 	KubefirstArtifactsBucketName  string
 
-	// keys
-	// kbot public key
-	PublicKey string
-	// kbot private key
-	PrivateKey string
-
 	// Telemetry
 	UseTelemetry bool
 
