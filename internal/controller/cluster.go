@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/imdario/mergo"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
@@ -269,18 +268,12 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			}
 
 			//to be added to general tokens struct
-			awsAdditionalTokens := &providerConfigs.GitopsDirectoryValues{
-				AwsIamArnAccountRoot: fmt.Sprintf("arn:aws:iam::%s:root", *iamCaller.Account),
-				AwsNodeCapacityType:  "ON_DEMAND", // todo adopt cli flag
-				AwsAccountID:         *iamCaller.Account,
-
-				Kubeconfig:               clctrl.ProviderConfig.Kubeconfig,
-				KubefirstArtifactsBucket: clctrl.KubefirstArtifactsBucketName,
-
-				AtlantisWebhookURL: clctrl.AtlantisWebhookURL,
-			}
-			// Merge aws additional tokens and gitopsTemplateTokens
-			mergo.Merge(&gitopsTemplateTokens, awsAdditionalTokens)
+			gitopsTemplateTokens.AwsIamArnAccountRoot = fmt.Sprintf("arn:aws:iam::%s:root", *iamCaller.Account)
+			gitopsTemplateTokens.AwsNodeCapacityType = "ON_DEMAND" // todo adopt cli flag
+			gitopsTemplateTokens.AwsAccountID = *iamCaller.Account
+			gitopsTemplateTokens.Kubeconfig = clctrl.ProviderConfig.Kubeconfig
+			gitopsTemplateTokens.KubefirstArtifactsBucket = clctrl.KubefirstArtifactsBucketName
+			gitopsTemplateTokens.AtlantisWebhookURL = clctrl.AtlantisWebhookURL
 
 			if clctrl.ECR {
 				gitopsTemplateTokens.ContainerRegistryURL = fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", *iamCaller.Account, clctrl.CloudRegion)
