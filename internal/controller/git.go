@@ -257,7 +257,8 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 
 func (clctrl *ClusterController) GetRepoURL() (string, error) {
 
-	var destinationGitopsRepoURL string
+	// default case is https
+	destinationGitopsRepoURL := clctrl.ProviderConfig.DestinationGitopsRepoURL
 
 	switch clctrl.GitProvider {
 	case "github":
