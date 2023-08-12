@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/imdario/mergo"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
@@ -304,15 +303,6 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 // ClusterSecretsBootstrap
 func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
-	if err != nil {
-		return err
-	}
-	clientSet, err := k8s.GetClientSet(clctrl.ProviderConfig.Kubeconfig)
-	if err != nil {
-		return err
-	}
-	//create namespaces
-	err = providerConfigs.K8sNamespaces(clientSet)
 	if err != nil {
 		return err
 	}

@@ -9,7 +9,6 @@ package controller
 import (
 	"os"
 
-	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/runtime/pkg/segment"
 	internalssh "github.com/kubefirst/runtime/pkg/ssh"
