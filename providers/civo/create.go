@@ -184,19 +184,19 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 
 	// Wait for console Deployment Pods to transition to Running
 	log.Info("deploying kubefirst console and verifying cluster installation is complete")
-	kubefirstApiDeployment, err := k8s.ReturnDeploymentObject(
+	consoleDeployment, err := k8s.ReturnDeploymentObject(
 		kcfg.Clientset,
 		"app.kubernetes.io/instance",
 		"kubefirst-console",
 		"kubefirst",
-		12,
+		1200,
 	)
 	if err != nil {
 		log.Errorf("Error finding kubefirst api Deployment: %s", err)
 		ctrl.HandleError(err.Error())
 		return err
 	}
-	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, kubefirstApiDeployment, 2)
+	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, consoleDeployment, 120)
 	if err != nil {
 		log.Errorf("Error waiting for kubefirst api Deployment ready state: %s", err)
 
