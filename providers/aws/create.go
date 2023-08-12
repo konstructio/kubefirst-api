@@ -111,8 +111,10 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 	}
 
 	// Get Cluster kubeconfig and save to path so we can reference like everything else
-	kcfg := awsext.CreateEKSKubeconfig(&ctrl.AwsClient.Config, ctrl.ClusterName)
-
+	//TODO replace constant references to a new config with references to an existing config created here
+	// for all cloud providers
+	ctrl.Kcfg = awsext.CreateEKSKubeconfig(&ctrl.AwsClient.Config, ctrl.ClusterName)
+	kcfg := ctrl.Kcfg
 	err = ctrl.WaitForClusterReady()
 	if err != nil {
 		ctrl.HandleError(err.Error())

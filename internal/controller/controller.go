@@ -22,6 +22,7 @@ import (
 	"github.com/kubefirst/runtime/pkg/github"
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/handlers"
+	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/services"
@@ -99,6 +100,7 @@ type ClusterController struct {
 
 	// Provider clients
 	AwsClient *awsinternal.AWSConfiguration
+	Kcfg      *k8s.KubernetesClient
 }
 
 // InitController
