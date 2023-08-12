@@ -26,7 +26,7 @@ type ClusterDefinition struct {
 	GitopsTemplateURL    string `json:"gitops_template_url"`
 	GitopsTemplateBranch string `json:"gitops_template_branch"`
 	GitProvider          string `json:"git_provider" binding:"required,oneof=github gitlab"`
-	GitProtocol          string `bson:"git_protocol" json:"git_protocol" binding:"required,oneof=ssh https"`
+	GitProtocol          string `json:"git_protocol" binding:"required,oneof=ssh https"`
 
 	//AWS
 	ECR bool `json:"ecr,omitempty"`
@@ -66,7 +66,7 @@ type Cluster struct {
 	DigitaloceanAuth DigitaloceanAuth `bson:"do_auth,omitempty" json:"do_auth,omitempty"`
 	VultrAuth        VultrAuth        `bson:"vultr_auth,omitempty" json:"vultr_auth,omitempty"`
 	CloudflareAuth   CloudflareAuth   `bson:"cf_api_token,omitempty" json:"cf_api_token,omitempty"`
-	GitAuth          GitAuth          `json:"git_auth,omitempty"`
+	GitAuth          GitAuth          `bson:"git_auth,omitempty" json:"git_auth,omitempty"`
 
 	GitopsTemplateURL    string `bson:"gitops_template_url" json:"gitops_template_url"`
 	GitopsTemplateBranch string `bson:"gitops_template_branch" json:"gitops_template_branch"`
@@ -86,7 +86,7 @@ type Cluster struct {
 	ArgoCDPassword  string `bson:"argocd_password" json:"argocd_password"`
 	ArgoCDAuthToken string `bson:"argocd_auth_token" json:"argocd_auth_token"`
 
-	//container Registry
+	// Container Registry and Secrets
 	ECR bool `bson:"ecr" json:"ecr"`
 
 	// kms

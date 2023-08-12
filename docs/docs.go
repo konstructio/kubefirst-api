@@ -922,6 +922,14 @@ const docTemplate = `{
                 }
             }
         },
+        "types.CloudflareAuth": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
         "types.Cluster": {
             "type": "object",
             "properties": {
@@ -977,6 +985,9 @@ const docTemplate = `{
                 "aws_kms_key_id": {
                     "type": "string"
                 },
+                "cf_api_token": {
+                    "$ref": "#/definitions/types.CloudflareAuth"
+                },
                 "civo_auth": {
                     "$ref": "#/definitions/types.CivoAuth"
                 },
@@ -1007,6 +1018,9 @@ const docTemplate = `{
                 "creation_timestamp": {
                     "type": "string"
                 },
+                "dns_provider": {
+                    "type": "string"
+                },
                 "do_auth": {
                     "$ref": "#/definitions/types.DigitaloceanAuth"
                 },
@@ -1016,13 +1030,20 @@ const docTemplate = `{
                 "domain_name": {
                     "type": "string"
                 },
+                "ecr": {
+                    "description": "Container Registry and Secrets",
+                    "type": "boolean"
+                },
+                "git_auth": {
+                    "$ref": "#/definitions/types.GitAuth"
+                },
                 "git_host": {
                     "type": "string"
                 },
                 "git_init_check": {
                     "type": "boolean"
                 },
-                "git_owner": {
+                "git_protocol": {
                     "type": "string"
                 },
                 "git_provider": {
@@ -1030,12 +1051,6 @@ const docTemplate = `{
                 },
                 "git_terraform_apply_check": {
                     "type": "boolean"
-                },
-                "git_token": {
-                    "type": "string"
-                },
-                "git_user": {
-                    "type": "string"
                 },
                 "gitlab_owner_group_id": {
                     "type": "integer"
@@ -1066,15 +1081,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "last_condition": {
-                    "type": "string"
-                },
-                "private_key": {
-                    "type": "string"
-                },
-                "public_key": {
-                    "type": "string"
-                },
-                "public_keys": {
                     "type": "string"
                 },
                 "state_store_create_check": {
@@ -1117,18 +1123,24 @@ const docTemplate = `{
                 "admin_email",
                 "cloud_provider",
                 "cloud_region",
+                "dns_provider",
                 "domain_name",
-                "git_owner",
+                "git_protocol",
                 "git_provider",
-                "git_token",
                 "type"
             ],
             "properties": {
                 "admin_email": {
+                    "description": "Cluster",
                     "type": "string"
                 },
                 "aws_auth": {
-                    "$ref": "#/definitions/types.AWSAuth"
+                    "description": "Auth",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/types.AWSAuth"
+                        }
+                    ]
                 },
                 "civo_auth": {
                     "$ref": "#/definitions/types.CivoAuth"
@@ -1145,7 +1157,13 @@ const docTemplate = `{
                 "cloud_region": {
                     "type": "string"
                 },
+                "cloudflare_auth": {
+                    "$ref": "#/definitions/types.CloudflareAuth"
+                },
                 "cluster_name": {
+                    "type": "string"
+                },
+                "dns_provider": {
                     "type": "string"
                 },
                 "do_auth": {
@@ -1154,8 +1172,19 @@ const docTemplate = `{
                 "domain_name": {
                     "type": "string"
                 },
-                "git_owner": {
-                    "type": "string"
+                "ecr": {
+                    "description": "AWS",
+                    "type": "boolean"
+                },
+                "git_auth": {
+                    "$ref": "#/definitions/types.GitAuth"
+                },
+                "git_protocol": {
+                    "type": "string",
+                    "enum": [
+                        "ssh",
+                        "https"
+                    ]
                 },
                 "git_provider": {
                     "type": "string",
@@ -1164,13 +1193,11 @@ const docTemplate = `{
                         "gitlab"
                     ]
                 },
-                "git_token": {
-                    "type": "string"
-                },
                 "gitops_template_branch": {
                     "type": "string"
                 },
                 "gitops_template_url": {
+                    "description": "Git",
                     "type": "string"
                 },
                 "type": {
@@ -1225,6 +1252,9 @@ const docTemplate = `{
                 "cloud_region": {
                     "type": "string"
                 },
+                "cloudflare_auth": {
+                    "$ref": "#/definitions/types.CloudflareAuth"
+                },
                 "do_auth": {
                     "$ref": "#/definitions/types.DigitaloceanAuth"
                 },
@@ -1241,6 +1271,29 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "types.GitAuth": {
+            "type": "object",
+            "properties": {
+                "git_owner": {
+                    "type": "string"
+                },
+                "git_token": {
+                    "type": "string"
+                },
+                "git_username": {
+                    "type": "string"
+                },
+                "private_key": {
+                    "type": "string"
+                },
+                "public_key": {
+                    "type": "string"
+                },
+                "public_keys": {
+                    "type": "string"
                 }
             }
         },
@@ -1482,6 +1535,8 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "Kubefirst API",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
+	LeftDelim:        "{{",
+	RightDelim:       "}}",
 }
 
 func init() {

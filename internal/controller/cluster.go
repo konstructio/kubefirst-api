@@ -200,7 +200,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 		}
 
 		// switch repo url based on gitProtocol and gitlab group parents.
-		destinationGitopsRepoURL, err := clctrl.GitURL()
+		destinationGitopsRepoURL, err := clctrl.GetRepoURL()
 		if err != nil {
 			return err
 		}
@@ -269,18 +269,12 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			}
 
 			//to be added to general tokens struct
-			awsAdditionalTokens := &providerConfigs.GitopsDirectoryValues{
-				AwsIamArnAccountRoot: fmt.Sprintf("arn:aws:iam::%s:root", *iamCaller.Account),
-				AwsNodeCapacityType:  "ON_DEMAND", // todo adopt cli flag
-				AwsAccountID:         *iamCaller.Account,
-
-				Kubeconfig:               clctrl.ProviderConfig.Kubeconfig,
-				KubefirstArtifactsBucket: clctrl.KubefirstArtifactsBucketName,
-
-				AtlantisWebhookURL: clctrl.AtlantisWebhookURL,
-			}
-			// Merge aws additional tokens and gitopsTemplateTokens
-			mergo.Merge(&gitopsTemplateTokens, awsAdditionalTokens)
+			gitopsTemplateTokens.AwsIamArnAccountRoot = fmt.Sprintf("arn:aws:iam::%s:root", *iamCaller.Account)
+			gitopsTemplateTokens.AwsNodeCapacityType = "ON_DEMAND" // todo adopt cli flag
+			gitopsTemplateTokens.AwsAccountID = *iamCaller.Account
+			gitopsTemplateTokens.Kubeconfig = clctrl.ProviderConfig.Kubeconfig
+			gitopsTemplateTokens.KubefirstArtifactsBucket = clctrl.KubefirstArtifactsBucketName
+			gitopsTemplateTokens.AtlantisWebhookURL = clctrl.AtlantisWebhookURL
 
 			if clctrl.ECR {
 				gitopsTemplateTokens.ContainerRegistryURL = fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", *iamCaller.Account, clctrl.CloudRegion)
@@ -323,14 +317,31 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 		return err
 	}
 
+	var kcfg *k8s.KubernetesClient
+
+	switch clctrl.CloudProvider {
+	case "aws":
+		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+	case "civo", "digitalocean", "vultr":
+		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+	}
+
+	clientSet := kcfg.Clientset
+
+	//create namespaces
+	err = providerConfigs.K8sNamespaces(clientSet)
+	if err != nil {
+		return err
+	}
+
 	if !cl.ClusterSecretsCreatedCheck {
 		switch clctrl.CloudProvider {
 		case "aws":
 			err := awsext.BootstrapAWSMgmtCluster(
 				clientSet,
-				&cl, &clctrl.ProviderConfig,
+				&cl,
+				&clctrl.ProviderConfig,
 				clctrl.AwsClient,
-				clctrl.ProviderConfig.GitopsDirectoryValues.ContainerRegistryURL,
 			)
 			if err != nil {
 				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
@@ -378,6 +389,27 @@ func (clctrl *ClusterController) ContainerRegistryAuth() (string, error) {
 	switch clctrl.CloudProvider {
 	case "aws":
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+
+		// Container registry authentication creation
+		if !clctrl.ECR {
+
+		}
+		containerRegistryAuth := gitShim.ContainerRegistryAuth{
+			GitProvider:           clctrl.GitProvider,
+			GitUser:               clctrl.GitAuth.User,
+			GitToken:              clctrl.GitAuth.Token,
+			GitlabGroupFlag:       clctrl.GitAuth.Owner,
+			GithubOwner:           clctrl.GitAuth.Owner,
+			ContainerRegistryHost: clctrl.ContainerRegistryHost,
+			Clientset:             kcfg.Clientset,
+		}
+		containerRegistryAuthToken, err := gitShim.CreateContainerRegistrySecret(&containerRegistryAuth)
+		if err != nil {
+			log.Errorf("error generating container registry authentication: %s", err)
+			return "", err
+		}
+
+		return containerRegistryAuthToken, nil
 	case "civo", "digitalocean", "vultr":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 	}
@@ -416,7 +448,7 @@ func (clctrl *ClusterController) WaitForClusterReady() error {
 
 	switch clctrl.CloudProvider {
 	case "aws":
-		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+		kcfg = clctrl.Kcfg //awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 	case "civo", "digitalocean", "vultr":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 	}

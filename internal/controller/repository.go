@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/go-git/go-git/v5"
+	githttps "github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
@@ -196,7 +197,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			var keyFound bool = false
 			for _, key := range keys {
 				if key.Title == keyName {
-					if strings.Contains(key.Key, strings.TrimSuffix(clctrl.PublicKey, "\n")) {
+					if strings.Contains(key.Key, strings.TrimSuffix(clctrl.GitAuth.PublicKey, "\n")) {
 						log.Infof("ssh key %s already exists and key is up to date, continuing", keyName)
 						keyFound = true
 					} else {
@@ -206,18 +207,21 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			}
 			if !keyFound {
 				log.Infof("creating ssh key %s...", keyName)
-				err := gitlabClient.AddUserSSHKey(keyName, clctrl.PublicKey)
+				err := gitlabClient.AddUserSSHKey(keyName, clctrl.GitAuth.PublicKey)
 				if err != nil {
 					log.Errorf("error adding ssh key %s: %s", keyName, err.Error())
 				}
 			}
 		}
 
-		// Push gitops repo to remote
+		// push metaphor repo to remote
 		err = gitopsRepo.Push(
 			&git.PushOptions{
 				RemoteName: clctrl.GitProvider,
-				Auth:       HttpAuth,
+				Auth: &githttps.BasicAuth{
+					Username: clctrl.GitAuth.User,
+					Password: clctrl.GitAuth.Token,
+				},
 			},
 		)
 		if err != nil {
@@ -230,7 +234,10 @@ func (clctrl *ClusterController) RepositoryPush() error {
 		err = metaphorRepo.Push(
 			&git.PushOptions{
 				RemoteName: "origin",
-				Auth:       HttpAuth,
+				Auth: &githttps.BasicAuth{
+					Username: clctrl.GitAuth.User,
+					Password: clctrl.GitAuth.Token,
+				},
 			},
 		)
 		if err != nil {

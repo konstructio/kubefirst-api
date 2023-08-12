@@ -47,11 +47,11 @@ func (clctrl *ClusterController) InitializeBot() error {
 			return err
 		}
 
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "public_key", clctrl.GitAuth.PublicKey)
+		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "git_auth.public_key", clctrl.GitAuth.PublicKey)
 		if err != nil {
 			return err
 		}
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "private_key", clctrl.GitAuth.PrivateKey)
+		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "git_auth.private_key", clctrl.GitAuth.PrivateKey)
 		if err != nil {
 			return err
 		}
@@ -61,10 +61,6 @@ func (clctrl *ClusterController) InitializeBot() error {
 			return err
 		}
 
-		PublicKeys, err = ssh.NewPublicKeys("git", []byte(clctrl.GitAuth.PrivateKey), "")
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil

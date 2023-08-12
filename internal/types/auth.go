@@ -51,5 +51,5 @@ type GitAuth struct {
 	Owner      string `bson:"git_owner,omitempty" json:"git_owner,omitempty"`
 	PublicKey  string `bson:"public_key,omitempty" json:"public_key,omitempty"`
 	PrivateKey string `bson:"private_key,omitempty" json:"private_key,omitempty"`
-	PublicKeys string `bson:"private_keys,omitempty" json:"private_keys,omitempty"`
+	PublicKeys string `bson:"public_keys,omitempty" json:"public_keys,omitempty"`
 }
