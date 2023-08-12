@@ -29,6 +29,11 @@ definitions:
       validated:
         type: boolean
     type: object
+  types.CloudflareAuth:
+    properties:
+      token:
+        type: string
+    type: object
   types.Cluster:
     properties:
       _id:
@@ -65,6 +70,8 @@ definitions:
         type: boolean
       aws_kms_key_id:
         type: string
+      cf_api_token:
+        $ref: '#/definitions/types.CloudflareAuth'
       civo_auth:
         $ref: '#/definitions/types.CivoAuth'
       cloud_provider:
@@ -85,26 +92,29 @@ definitions:
         type: string
       creation_timestamp:
         type: string
+      dns_provider:
+        type: string
       do_auth:
         $ref: '#/definitions/types.DigitaloceanAuth'
       domain_liveness_check:
         type: boolean
       domain_name:
         type: string
+      ecr:
+        description: Container Registry and Secrets
+        type: boolean
+      git_auth:
+        $ref: '#/definitions/types.GitAuth'
       git_host:
         type: string
       git_init_check:
         type: boolean
-      git_owner:
+      git_protocol:
         type: string
       git_provider:
         type: string
       git_terraform_apply_check:
         type: boolean
-      git_token:
-        type: string
-      git_user:
-        type: string
       gitlab_owner_group_id:
         type: integer
       gitops_pushed_check:
@@ -125,12 +135,6 @@ definitions:
       kubefirst_team:
         type: string
       last_condition:
-        type: string
-      private_key:
-        type: string
-      public_key:
-        type: string
-      public_keys:
         type: string
       state_store_create_check:
         type: boolean
@@ -158,9 +162,12 @@ definitions:
   types.ClusterDefinition:
     properties:
       admin_email:
+        description: Cluster
         type: string
       aws_auth:
-        $ref: '#/definitions/types.AWSAuth'
+        allOf:
+        - $ref: '#/definitions/types.AWSAuth'
+        description: Auth
       civo_auth:
         $ref: '#/definitions/types.CivoAuth'
       cloud_provider:
@@ -172,24 +179,35 @@ definitions:
         type: string
       cloud_region:
         type: string
+      cloudflare_auth:
+        $ref: '#/definitions/types.CloudflareAuth'
       cluster_name:
+        type: string
+      dns_provider:
         type: string
       do_auth:
         $ref: '#/definitions/types.DigitaloceanAuth'
       domain_name:
         type: string
-      git_owner:
+      ecr:
+        description: AWS
+        type: boolean
+      git_auth:
+        $ref: '#/definitions/types.GitAuth'
+      git_protocol:
+        enum:
+        - ssh
+        - https
         type: string
       git_provider:
         enum:
         - github
         - gitlab
         type: string
-      git_token:
-        type: string
       gitops_template_branch:
         type: string
       gitops_template_url:
+        description: Git
         type: string
       type:
         enum:
@@ -202,10 +220,10 @@ definitions:
     - admin_email
     - cloud_provider
     - cloud_region
+    - dns_provider
     - domain_name
-    - git_owner
+    - git_protocol
     - git_provider
-    - git_token
     - type
     type: object
   types.ClusterServiceList:
@@ -234,6 +252,8 @@ definitions:
         $ref: '#/definitions/types.CivoAuth'
       cloud_region:
         type: string
+      cloudflare_auth:
+        $ref: '#/definitions/types.CloudflareAuth'
       do_auth:
         $ref: '#/definitions/types.DigitaloceanAuth'
       vultr_auth:
@@ -245,6 +265,21 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  types.GitAuth:
+    properties:
+      git_owner:
+        type: string
+      git_token:
+        type: string
+      git_username:
+        type: string
+      private_key:
+        type: string
+      public_key:
+        type: string
+      public_keys:
+        type: string
     type: object
   types.GitopsCatalogApp:
     properties:
