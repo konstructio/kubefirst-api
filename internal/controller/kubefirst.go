@@ -33,7 +33,9 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 
 	time.Sleep(time.Second * 10)
 
-	err = pkg.IsAppAvailable(fmt.Sprintf("%s/api/proxyHealth", pkg.KubefirstConsoleLocalURLCloud), "kubefirst api")
+	consoleCloudUrl := fmt.Sprintf("https://kubefirst.%s", cluster.DomainName)
+
+	err = pkg.IsAppAvailable(fmt.Sprintf("%s/api/proxyHealth", consoleCloudUrl), "kubefirst api")
 	if err != nil {
 		log.Error("unable to start kubefirst api")
 	}
@@ -67,7 +69,7 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/proxy", pkg.KubefirstConsoleLocalURLCloud), bytes.NewReader(payload))
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/proxy", consoleCloudUrl), bytes.NewReader(payload))
 	if err != nil {
 		log.Errorf("error %s", err)
 		return err
