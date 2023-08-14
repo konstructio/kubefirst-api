@@ -18,6 +18,11 @@ type CivoAuth struct {
 	Token string `bson:"token" json:"token"`
 }
 
+// VultrAuth holds necessary auth credentials for interacting with vultr
+type CloudflareAuth struct {
+	Token string `bson:"token" json:"token"`
+}
+
 // DigitaloceanAuth holds necessary auth credentials for interacting with digitalocean
 type DigitaloceanAuth struct {
 	Token        string `bson:"token" json:"token"`
@@ -36,4 +41,14 @@ type StateStoreCredentials struct {
 	SecretAccessKey string `bson:"secret_access_key,omitempty" json:"secret_access_key,omitempty"`
 	Name            string `bson:"name,omitempty" json:"name,omitempty"`
 	ID              string `bson:"id,omitempty" json:"id,omitempty"`
+}
+
+// Auth for Git Provider
+type GitAuth struct {
+	Token      string `bson:"git_token,omitempty" json:"git_token,omitempty"`
+	User       string `bson:"git_username,omitempty" json:"git_username,omitempty"`
+	Owner      string `bson:"git_owner,omitempty" json:"git_owner,omitempty"`
+	PublicKey  string `bson:"public_key,omitempty" json:"public_key,omitempty"`
+	PrivateKey string `bson:"private_key,omitempty" json:"private_key,omitempty"`
+	PublicKeys string `bson:"public_keys,omitempty" json:"public_keys,omitempty"`
 }

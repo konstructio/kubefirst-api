@@ -39,21 +39,18 @@ func (clctrl *ClusterController) InitializeBot() error {
 	defer segmentClient.Client.Close()
 
 	if !cl.KbotSetupCheck {
-		sshPrivateKey, sshPublicKey, err := internalssh.CreateSshKeyPair()
+		clctrl.GitAuth.PrivateKey, clctrl.GitAuth.PublicKey, err = internalssh.CreateSshKeyPair()
 		if err != nil {
 			log.Errorf("error generating ssh keys: %s", err)
 			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricKbotSetupFailed, err.Error())
 			return err
 		}
 
-		clctrl.PublicKey = sshPublicKey
-		clctrl.PrivateKey = sshPrivateKey
-
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "public_key", sshPublicKey)
+		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "git_auth.public_key", clctrl.GitAuth.PublicKey)
 		if err != nil {
 			return err
 		}
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "private_key", sshPrivateKey)
+		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "git_auth.private_key", clctrl.GitAuth.PrivateKey)
 		if err != nil {
 			return err
 		}
@@ -62,6 +59,7 @@ func (clctrl *ClusterController) InitializeBot() error {
 		if err != nil {
 			return err
 		}
+
 	}
 
 	return nil

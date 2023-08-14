@@ -11,10 +11,12 @@ import (
 	"fmt"
 	"net/http"
 
+	cloudflare_api "github.com/cloudflare/cloudflare-go"
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
+	cloudflare "github.com/kubefirst/runtime/pkg/cloudflare"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/vultr"
 )
@@ -32,10 +34,10 @@ import (
 // @Param Authorization header string true "API key" default(Bearer <API key>)
 // PostDomains returns registered domains/hosted zones for a cloud provider account
 func PostDomains(c *gin.Context) {
-	cloudProvider, param := c.Params.Get("cloud_provider")
+	dnsProvider, param := c.Params.Get("dns_provider")
 	if !param {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: ":cloud_provider not provided",
+			Message: ":dns_provider not provided",
 		})
 		return
 	}
@@ -52,7 +54,7 @@ func PostDomains(c *gin.Context) {
 
 	var domainListResponse types.DomainListResponse
 
-	switch cloudProvider {
+	switch dnsProvider {
 	case "aws":
 		if domainListRequest.AWSAuth.AccessKeyID == "" ||
 			domainListRequest.AWSAuth.SecretAccessKey == "" ||
@@ -79,6 +81,38 @@ func PostDomains(c *gin.Context) {
 			return
 		}
 		domainListResponse.Domains = domains
+	case "cloudflare":
+		//check for token, make sure it aint blank
+		if domainListRequest.CloudflareAuth.Token == "" {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: "missing authentication credentials in request, please check and try again",
+			})
+			return
+		}
+
+		client, err := cloudflare_api.NewWithAPIToken(domainListRequest.CloudflareAuth.Token)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: fmt.Sprintf("Could not create cloudflare client, %v", err),
+			})
+			return
+		}
+
+		cloudflareConf := cloudflare.CloudflareConfiguration{
+			Client:  client,
+			Context: context.Background(),
+		}
+
+		domains, err := cloudflareConf.GetDNSDomains()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+
+		domainListResponse.Domains = domains
+
 	case "civo":
 		if domainListRequest.CivoAuth.Token == "" {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -141,7 +175,7 @@ func PostDomains(c *gin.Context) {
 		domainListResponse.Domains = domains
 	default:
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: fmt.Sprintf("unsupported provider: %s", cloudProvider),
+			Message: fmt.Sprintf("unsupported provider: %s", dnsProvider),
 		})
 		return
 	}

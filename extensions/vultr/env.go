@@ -41,10 +41,10 @@ func GetVultrTerraformEnvs(envs map[string]string, cl *types.Cluster) map[string
 }
 
 func GetGithubTerraformEnvs(envs map[string]string, cl *types.Cluster) map[string]string {
-	envs["GITHUB_TOKEN"] = cl.GitToken
-	envs["GITHUB_OWNER"] = cl.GitOwner
+	envs["GITHUB_TOKEN"] = cl.GitAuth.Token
+	envs["GITHUB_OWNER"] = cl.GitAuth.Owner
 	envs["TF_VAR_atlantis_repo_webhook_secret"] = cl.AtlantisWebhookSecret
-	envs["TF_VAR_kbot_ssh_public_key"] = cl.PublicKey
+	envs["TF_VAR_kbot_ssh_public_key"] = cl.GitAuth.PublicKey
 	envs["VULTR_API_KEY"] = cl.VultrAuth.Token
 	envs["AWS_ACCESS_KEY_ID"] = cl.StateStoreCredentials.AccessKeyID
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
@@ -55,18 +55,18 @@ func GetGithubTerraformEnvs(envs map[string]string, cl *types.Cluster) map[strin
 }
 
 func GetGitlabTerraformEnvs(envs map[string]string, gid int, cl *types.Cluster) map[string]string {
-	envs["GITLAB_TOKEN"] = cl.GitToken
-	envs["GITLAB_OWNER"] = cl.GitOwner
+	envs["GITLAB_TOKEN"] = cl.GitAuth.Token
+	envs["GITLAB_OWNER"] = cl.GitAuth.Owner
 	envs["TF_VAR_atlantis_repo_webhook_secret"] = cl.AtlantisWebhookSecret
 	envs["TF_VAR_atlantis_repo_webhook_url"] = cl.AtlantisWebhookURL
-	envs["TF_VAR_kbot_ssh_public_key"] = cl.PublicKey
+	envs["TF_VAR_kbot_ssh_public_key"] = cl.GitAuth.PublicKey
 	envs["VULTR_API_KEY"] = cl.VultrAuth.Token
 	envs["AWS_ACCESS_KEY_ID"] = cl.StateStoreCredentials.AccessKeyID
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
 	envs["TF_VAR_aws_access_key_id"] = cl.StateStoreCredentials.AccessKeyID
 	envs["TF_VAR_aws_secret_access_key"] = cl.StateStoreCredentials.SecretAccessKey
 	envs["TF_VAR_owner_group_id"] = strconv.Itoa(gid)
-	envs["TF_VAR_gitlab_owner"] = cl.GitOwner
+	envs["TF_VAR_gitlab_owner"] = cl.GitAuth.Owner
 
 	return envs
 }
@@ -74,8 +74,8 @@ func GetGitlabTerraformEnvs(envs map[string]string, gid int, cl *types.Cluster) 
 func GetUsersTerraformEnvs(clientset *kubernetes.Clientset, cl *types.Cluster, envs map[string]string) map[string]string {
 	envs["VAULT_TOKEN"] = readVaultTokenFromSecret(clientset)
 	envs["VAULT_ADDR"] = providerConfigs.VaultPortForwardURL
-	envs[fmt.Sprintf("%s_TOKEN", strings.ToUpper(cl.GitProvider))] = cl.GitToken
-	envs[fmt.Sprintf("%s_OWNER", strings.ToUpper(cl.GitProvider))] = cl.GitOwner
+	envs[fmt.Sprintf("%s_TOKEN", strings.ToUpper(cl.GitProvider))] = cl.GitAuth.Token
+	envs[fmt.Sprintf("%s_OWNER", strings.ToUpper(cl.GitProvider))] = cl.GitAuth.Owner
 	envs["VULTR_API_KEY"] = cl.VultrAuth.Token
 	envs["AWS_ACCESS_KEY_ID"] = cl.StateStoreCredentials.AccessKeyID
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
@@ -86,19 +86,19 @@ func GetUsersTerraformEnvs(clientset *kubernetes.Clientset, cl *types.Cluster, e
 }
 
 func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *types.Cluster, envs map[string]string) map[string]string {
-	envs[fmt.Sprintf("%s_TOKEN", strings.ToUpper(cl.GitProvider))] = cl.GitToken
-	envs[fmt.Sprintf("%s_OWNER", strings.ToUpper(cl.GitProvider))] = cl.GitOwner
+	envs[fmt.Sprintf("%s_TOKEN", strings.ToUpper(cl.GitProvider))] = cl.GitAuth.Token
+	envs[fmt.Sprintf("%s_OWNER", strings.ToUpper(cl.GitProvider))] = cl.GitAuth.Owner
 	envs["TF_VAR_email_address"] = cl.AlertsEmail
 	envs["TF_VAR_vault_addr"] = providerConfigs.VaultPortForwardURL
 	envs["TF_VAR_vault_token"] = readVaultTokenFromSecret(clientset)
-	envs[fmt.Sprintf("TF_VAR_%s_token", cl.GitProvider)] = cl.GitToken
+	envs[fmt.Sprintf("TF_VAR_%s_token", cl.GitProvider)] = cl.GitAuth.Token
 	envs["VAULT_ADDR"] = providerConfigs.VaultPortForwardURL
 	envs["VAULT_TOKEN"] = readVaultTokenFromSecret(clientset)
 	envs["TF_VAR_vultr_token"] = cl.VultrAuth.Token
 	envs["TF_VAR_atlantis_repo_webhook_secret"] = cl.AtlantisWebhookSecret
 	envs["TF_VAR_atlantis_repo_webhook_url"] = cl.AtlantisWebhookURL
-	envs["TF_VAR_kbot_ssh_private_key"] = cl.PrivateKey
-	envs["TF_VAR_kbot_ssh_public_key"] = cl.PublicKey
+	envs["TF_VAR_kbot_ssh_private_key"] = cl.GitAuth.PrivateKey
+	envs["TF_VAR_kbot_ssh_public_key"] = cl.GitAuth.PublicKey
 	envs["VULTR_API_KEY"] = cl.VultrAuth.Token
 	envs["AWS_ACCESS_KEY_ID"] = cl.StateStoreCredentials.AccessKeyID
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey

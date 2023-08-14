@@ -22,6 +22,7 @@ import (
 	"github.com/kubefirst/runtime/pkg/github"
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/handlers"
+	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/services"
@@ -30,7 +31,7 @@ import (
 )
 
 const (
-	gitopsTemplateVersion = "v2.2.0"
+	gitopsTemplateVersion = "v2.2.7"
 )
 
 type ClusterController struct {
@@ -40,6 +41,7 @@ type ClusterController struct {
 	ClusterID     string
 	ClusterType   string
 	DomainName    string
+	DnsProvider   string
 	AlertsEmail   string
 
 	// auth
@@ -47,6 +49,8 @@ type ClusterController struct {
 	CivoAuth           types.CivoAuth
 	DigitaloceanAuth   types.DigitaloceanAuth
 	VultrAuth          types.VultrAuth
+	CloudflareAuth     types.CloudflareAuth
+	GitAuth            types.GitAuth
 	AwsAccessKeyID     string
 	AwsSecretAccessKey string
 
@@ -57,6 +61,7 @@ type ClusterController struct {
 	GitopsTemplateURL    string
 	GitopsTemplateBranch string
 	GitProvider          string
+	GitProtocol          string
 	GitHost              string
 	GitOwner             string
 	GitUser              string
@@ -65,6 +70,7 @@ type ClusterController struct {
 
 	// container registry
 	ContainerRegistryHost string
+	ECR                   bool
 
 	// http
 	HttpClient *http.Client
@@ -86,12 +92,6 @@ type ClusterController struct {
 	KubefirstStateStoreBucketName string
 	KubefirstArtifactsBucketName  string
 
-	// keys
-	// kbot public key
-	PublicKey string
-	// kbot private key
-	PrivateKey string
-
 	// Telemetry
 	UseTelemetry bool
 
@@ -100,6 +100,7 @@ type ClusterController struct {
 
 	// Provider clients
 	AwsClient *awsinternal.AWSConfiguration
+	Kcfg      *k8s.KubernetesClient
 }
 
 // InitController
@@ -143,28 +144,27 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 
 	telemetryShim.Transmit(rec.UseTelemetry, segmentClient, segment.MetricClusterInstallStarted, "")
 
+	//Copy Cluster Definiion to Cluster Controller
 	clctrl.AlertsEmail = def.AdminEmail
 	clctrl.CloudProvider = def.CloudProvider
 	clctrl.CloudRegion = def.CloudRegion
 	clctrl.ClusterName = def.ClusterName
 	clctrl.ClusterID = clusterID
 	clctrl.DomainName = def.DomainName
+	clctrl.DnsProvider = def.DnsProvider
 	clctrl.ClusterType = def.Type
 	clctrl.HttpClient = http.DefaultClient
 
-	switch clctrl.CloudProvider {
-	case "aws":
-		clctrl.AWSAuth = def.AWSAuth
-	case "civo":
-		clctrl.CivoAuth = def.CivoAuth
-	case "digitalocean":
-		clctrl.DigitaloceanAuth = def.DigitaloceanAuth
-	case "vultr":
-		clctrl.VultrAuth = def.VultrAuth
-	}
+	clctrl.AWSAuth = def.AWSAuth
+	clctrl.CivoAuth = def.CivoAuth
+	clctrl.DigitaloceanAuth = def.DigitaloceanAuth
+	clctrl.VultrAuth = def.VultrAuth
+	clctrl.CloudflareAuth = def.CloudflareAuth
 
 	clctrl.Repositories = []string{"gitops", "metaphor"}
 	clctrl.Teams = []string{"admins", "developers"}
+
+	clctrl.ECR = def.ECR
 
 	if def.GitopsTemplateBranch != "" {
 		clctrl.GitopsTemplateBranch = def.GitopsTemplateBranch
@@ -173,7 +173,11 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	}
 
 	if def.GitopsTemplateURL != "" {
-		clctrl.GitopsTemplateURL = def.GitopsTemplateURL
+		if def.GitopsTemplateBranch != "" {
+			clctrl.GitopsTemplateURL = def.GitopsTemplateURL
+		} else {
+			return fmt.Errorf("must supply branch of gitops template repo when supplying a gitops template url")
+		}
 	} else {
 		clctrl.GitopsTemplateURL = "https://github.com/kubefirst/gitops-template.git"
 	}
@@ -190,67 +194,30 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 
 	// Initialize git parameters
 	clctrl.GitProvider = def.GitProvider
-	clctrl.GitToken = def.GitToken
-	clctrl.GitOwner = def.GitOwner
+	clctrl.GitProtocol = def.GitProtocol
+	clctrl.GitAuth = def.GitAuth
 
-	switch def.GitProvider {
-	case "github":
-		gitHubService := services.NewGitHubService(clctrl.HttpClient)
-		gitHubHandler := handlers.NewGitHubHandler(gitHubService)
-
-		clctrl.GitHost = "github.com"
-		clctrl.ContainerRegistryHost = "ghcr.io"
-		// Verify token scopes
-		err := github.VerifyTokenPermissions(def.GitToken)
-		if err != nil {
-			return err
-		}
-		// Get authenticated user's name
-		githubUser, err := gitHubHandler.GetGitHubUser(clctrl.GitToken)
-		if err != nil {
-			return err
-		}
-		clctrl.GitUser = githubUser
-	case "gitlab":
-		clctrl.GitHost = "gitlab.com"
-		clctrl.ContainerRegistryHost = "registry.gitlab.com"
-		// Verify token scopes
-		err := gitlab.VerifyTokenPermissions(def.GitToken)
-		if err != nil {
-			return err
-		}
-		gitlabClient, err := gitlab.NewGitLabClient(def.GitToken, def.GitOwner)
-		if err != nil {
-			return err
-		}
-		clctrl.GitOwner = gitlabClient.ParentGroupPath
-		clctrl.GitlabOwnerGroupID = gitlabClient.ParentGroupID
-		// Get authenticated user's name
-		user, _, err := gitlabClient.Client.Users.CurrentUser()
-		if err != nil {
-			return fmt.Errorf("unable to get authenticated user info - please make sure GITLAB_TOKEN env var is set %s", err.Error())
-		}
-		clctrl.GitUser = user.Username
-	default:
-		return fmt.Errorf("invalid git provider option")
+	err = clctrl.SetGitTokens(*def)
+	if err != nil {
+		return err
 	}
 
 	// Instantiate provider configuration
 	switch clctrl.CloudProvider {
 	case "aws":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token)
 	case "civo":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token)
 		clctrl.ProviderConfig.CivoToken = clctrl.CivoAuth.Token
 	case "digitalocean":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token)
 		clctrl.ProviderConfig.DigitaloceanToken = clctrl.DigitaloceanAuth.Token
 	case "vultr":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitOwner)
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token)
 		clctrl.ProviderConfig.VultrToken = clctrl.VultrAuth.Token
 	}
 
-	// Instantiate provider clients
+	// Instantiate provider clients and copy cluster controller to cluster type
 	switch clctrl.CloudProvider {
 	case "aws":
 		clctrl.AwsClient = &awsinternal.AWSConfiguration{
@@ -280,15 +247,16 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		CloudProvider:         clctrl.CloudProvider,
 		CloudRegion:           clctrl.CloudRegion,
 		DomainName:            clctrl.DomainName,
+		DnsProvider:           clctrl.DnsProvider,
 		ClusterID:             clctrl.ClusterID,
+		ECR:                   clctrl.ECR,
 		ClusterType:           clctrl.ClusterType,
 		GitopsTemplateURL:     clctrl.GitopsTemplateURL,
 		GitopsTemplateBranch:  clctrl.GitopsTemplateBranch,
 		GitProvider:           clctrl.GitProvider,
+		GitProtocol:           clctrl.GitProtocol,
 		GitHost:               clctrl.GitHost,
-		GitOwner:              clctrl.GitOwner,
-		GitUser:               clctrl.GitUser,
-		GitToken:              clctrl.GitToken,
+		GitAuth:               clctrl.GitAuth,
 		GitlabOwnerGroupID:    clctrl.GitlabOwnerGroupID,
 		AtlantisWebhookSecret: clctrl.AtlantisWebhookSecret,
 		AtlantisWebhookURL:    clctrl.AtlantisWebhookURL,
@@ -297,10 +265,58 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		CivoAuth:              clctrl.CivoAuth,
 		DigitaloceanAuth:      clctrl.DigitaloceanAuth,
 		VultrAuth:             clctrl.VultrAuth,
+		CloudflareAuth:        clctrl.CloudflareAuth,
 	}
 	err = clctrl.MdbCl.InsertCluster(cl)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// GetCurrentClusterRecord will return an active cluster's record if it exists
+func (clctrl *ClusterController) SetGitTokens(def types.ClusterDefinition) error {
+	switch def.GitProvider {
+	case "github":
+		gitHubService := services.NewGitHubService(clctrl.HttpClient)
+		gitHubHandler := handlers.NewGitHubHandler(gitHubService)
+
+		clctrl.GitHost = "github.com"
+		clctrl.ContainerRegistryHost = "ghcr.io"
+		// Verify token scopes
+		err := github.VerifyTokenPermissions(def.GitAuth.Token)
+		if err != nil {
+			return err
+		}
+		// Get authenticated user's name
+		githubUser, err := gitHubHandler.GetGitHubUser(def.GitAuth.Token)
+		if err != nil {
+			return err
+		}
+		clctrl.GitAuth.User = githubUser
+	case "gitlab":
+		clctrl.GitHost = "gitlab.com"
+		clctrl.ContainerRegistryHost = "registry.gitlab.com"
+		// Verify token scopes
+		err := gitlab.VerifyTokenPermissions(def.GitAuth.Token)
+		if err != nil {
+			return err
+		}
+		gitlabClient, err := gitlab.NewGitLabClient(def.GitAuth.Token, def.GitAuth.Owner)
+		if err != nil {
+			return err
+		}
+		clctrl.GitAuth.Owner = gitlabClient.ParentGroupPath
+		clctrl.GitlabOwnerGroupID = gitlabClient.ParentGroupID
+		// Get authenticated user's name
+		user, _, err := gitlabClient.Client.Users.CurrentUser()
+		if err != nil {
+			return fmt.Errorf("unable to get authenticated user info - please make sure GITLAB_TOKEN env var is set %s", err.Error())
+		}
+		clctrl.GitAuth.User = user.Username
+	default:
+		return fmt.Errorf("invalid git provider option")
 	}
 
 	return nil

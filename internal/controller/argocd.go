@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	argocdapi "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
@@ -226,30 +225,15 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		}
 
 		log.Info("applying the registry application to argocd")
-		var registryApplicationObject *v1alpha1.Application
 
-		switch clctrl.CloudProvider {
-		case "aws":
-			registryApplicationObject = argocd.GetArgoCDApplicationObject(
-				clctrl.ProviderConfig.DestinationGitopsRepoGitURL,
-				fmt.Sprintf("registry/%s", clctrl.ClusterName),
-			)
-		case "civo":
-			registryApplicationObject = argocd.GetArgoCDApplicationObject(
-				clctrl.ProviderConfig.DestinationGitopsRepoGitURL,
-				fmt.Sprintf("registry/%s", clctrl.ClusterName),
-			)
-		case "digitalocean":
-			registryApplicationObject = argocd.GetArgoCDApplicationObject(
-				clctrl.ProviderConfig.DestinationGitopsRepoGitURL,
-				fmt.Sprintf("registry/%s", clctrl.ClusterName),
-			)
-		case "vultr":
-			registryApplicationObject = argocd.GetArgoCDApplicationObject(
-				clctrl.ProviderConfig.DestinationGitopsRepoGitURL,
-				fmt.Sprintf("registry/%s", clctrl.ClusterName),
-			)
+		registryURL, err := clctrl.GetRepoURL()
+		if err != nil {
+			return err
 		}
+		registryApplicationObject := argocd.GetArgoCDApplicationObject(
+			registryURL,
+			fmt.Sprintf("registry/%s", clctrl.ClusterName),
+		)
 
 		_, _ = argocdClient.ArgoprojV1alpha1().Applications("argocd").Create(context.Background(), registryApplicationObject, metav1.CreateOptions{})
 

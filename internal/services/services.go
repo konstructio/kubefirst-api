@@ -17,7 +17,7 @@ import (
 	argocdapi "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned"
 	health "github.com/argoproj/gitops-engine/pkg/health"
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	githttps "github.com/go-git/go-git/v5/plumbing/transport/http"
 	vaultapi "github.com/hashicorp/vault/api"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
@@ -60,11 +60,6 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 	gitopsDir := fmt.Sprintf("%s/.k1/%s/gitops", homeDir, cl.ClusterName)
 	gitopsRepo, _ = git.PlainOpen(gitopsDir)
 	serviceFile := fmt.Sprintf("%s/registry/%s/%s.yaml", gitopsDir, cl.ClusterName, serviceName)
-
-	publicKeys, err := ssh.NewPublicKeys("git", []byte(cl.PrivateKey), "")
-	if err != nil {
-		return err
-	}
 
 	var kcfg *k8s.KubernetesClient
 
@@ -115,7 +110,15 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 	}
 
 	// Create service files in gitops dir
-	err = gitShim.PullWithAuth(gitopsRepo, cl.GitProvider, "main", publicKeys)
+	err = gitShim.PullWithAuth(
+		gitopsRepo,
+		cl.GitProvider,
+		"main",
+		&githttps.BasicAuth{
+			Username: cl.GitAuth.User,
+			Password: cl.GitAuth.Token,
+		},
+	)
 	if err != nil {
 		log.Warnf("cluster %s - error pulling gitops repo: %s", cl.ClusterName, err)
 	}
@@ -147,7 +150,10 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 	}
 	err = gitopsRepo.Push(&git.PushOptions{
 		RemoteName: cl.GitProvider,
-		Auth:       publicKeys,
+		Auth: &githttps.BasicAuth{
+			Username: cl.GitAuth.User,
+			Password: cl.GitAuth.Token,
+		},
 	})
 	if err != nil {
 		return fmt.Errorf("cluster %s - error pushing commit for service file: %s", cl.ClusterName, err)
@@ -232,13 +238,16 @@ func DeleteService(cl *types.Cluster, serviceName string) error {
 	gitopsRepo, _ = git.PlainOpen(gitopsDir)
 	serviceFile := fmt.Sprintf("%s/registry/%s/%s.yaml", gitopsDir, cl.ClusterName, serviceName)
 
-	publicKeys, err := ssh.NewPublicKeys("git", []byte(cl.PrivateKey), "")
-	if err != nil {
-		return err
-	}
-
 	// Delete service files from gitops dir
-	err = gitShim.PullWithAuth(gitopsRepo, cl.GitProvider, "main", publicKeys)
+	err = gitShim.PullWithAuth(
+		gitopsRepo,
+		cl.GitProvider,
+		"main",
+		&githttps.BasicAuth{
+			Username: cl.GitAuth.User,
+			Password: cl.GitAuth.Token,
+		},
+	)
 	if err != nil {
 		log.Warnf("cluster %s - error pulling gitops repo: %s", cl.ClusterName, err)
 	}
@@ -259,7 +268,10 @@ func DeleteService(cl *types.Cluster, serviceName string) error {
 	}
 	err = gitopsRepo.Push(&git.PushOptions{
 		RemoteName: cl.GitProvider,
-		Auth:       publicKeys,
+		Auth: &githttps.BasicAuth{
+			Username: cl.GitAuth.User,
+			Password: cl.GitAuth.Token,
+		},
 	})
 	if err != nil {
 		return fmt.Errorf("cluster %s - error pushing commit for service file: %s", cl.ClusterName, err)
@@ -289,10 +301,10 @@ func AddDefaultServices(cl *types.Cluster) error {
 		{
 			Name:        cl.GitProvider,
 			Default:     true,
-			Description: "The git repositories contain all the Infrastructure as Code and GitOps configurations.",
+			Description: "The git repositories contain all the Infrastructure as Code and Gitops configurations.",
 			Image:       fmt.Sprintf("https://assets.kubefirst.com/console/%s.svg", cl.GitProvider),
-			Links: []string{fmt.Sprintf("https://%s/%s/gitops", cl.GitHost, cl.GitOwner),
-				fmt.Sprintf("https://%s/%s/metaphor", cl.GitHost, cl.GitOwner)},
+			Links: []string{fmt.Sprintf("https://%s/%s/gitops", cl.GitHost, cl.GitAuth.Owner),
+				fmt.Sprintf("https://%s/%s/metaphor", cl.GitHost, cl.GitAuth.Owner)},
 			Status: "",
 		},
 		{
@@ -306,7 +318,7 @@ func AddDefaultServices(cl *types.Cluster) error {
 		{
 			Name:        "Argo CD",
 			Default:     true,
-			Description: "A GitOps oriented continuous delivery tool for managing all of our applications across our Kubernetes clusters.",
+			Description: "A Gitops oriented continuous delivery tool for managing all of our applications across our Kubernetes clusters.",
 			Image:       "https://assets.kubefirst.com/console/argocd.svg",
 			Links:       []string{fmt.Sprintf("https://argocd.%s", cl.DomainName)},
 			Status:      "",

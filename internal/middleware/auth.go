@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 // ValidateAPIKey determines whether or not a request is authenticated with a valid API key
@@ -23,6 +24,7 @@ func ValidateAPIKey() gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, gin.H{"status": 401, "message": "Authentication failed - no API key provided in request"})
 			c.Abort()
 
+			log.Info().Msgf(" Request Status: 401;  Authentication failed - no API key provided in request")
 			return
 		}
 
@@ -30,6 +32,7 @@ func ValidateAPIKey() gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, gin.H{"status": 401, "message": "Authentication failed - not a valid API key"})
 			c.Abort()
 
+			log.Info().Msgf(" Request Status: 401;  Authentication failed - no API key provided in request")
 			return
 		}
 	}

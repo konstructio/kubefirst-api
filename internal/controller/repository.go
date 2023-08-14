@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/go-git/go-git/v5"
-	gitssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	githttps "github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
@@ -39,6 +39,8 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 		return err
 	}
 
+	//TODO Implement an interface so we can call GetDomainApexContent on the clustercotroller
+
 	if !cl.GitopsReadyCheck {
 		log.Info("initializing the gitops repository - this may take several minutes")
 
@@ -49,16 +51,17 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.GitProvider,
 				clctrl.ClusterName,
 				clctrl.ClusterType,
-				AWSDestinationGitopsRepoGitURL,
+				clctrl.ProviderConfig.DestinationGitopsRepoURL,
 				clctrl.ProviderConfig.GitopsDir,
 				clctrl.GitopsTemplateBranch,
 				clctrl.GitopsTemplateURL,
-				AWSDestinationMetaphorRepoGitURL,
+				clctrl.ProviderConfig.DestinationMetaphorRepoURL,
 				clctrl.ProviderConfig.K1Dir,
-				clctrl.CreateTokens("gitops").(*providerConfigs.GitOpsDirectoryValues),
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), //tokens created on the fly
 				clctrl.ProviderConfig.MetaphorDir,
-				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues),
+				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), //tokens created on the fly
 				true,
+				cl.GitProtocol,
 			)
 			if err != nil {
 				return err
@@ -69,16 +72,17 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.GitProvider,
 				clctrl.ClusterName,
 				clctrl.ClusterType,
-				CivoDestinationGitopsRepoGitURL,
+				clctrl.ProviderConfig.DestinationGitopsRepoURL,
 				clctrl.ProviderConfig.GitopsDir,
 				clctrl.GitopsTemplateBranch,
 				clctrl.GitopsTemplateURL,
-				CivoDestinationMetaphorRepoGitURL,
+				clctrl.ProviderConfig.DestinationMetaphorRepoURL,
 				clctrl.ProviderConfig.K1Dir,
-				clctrl.CreateTokens("gitops").(*providerConfigs.GitOpsDirectoryValues),
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), //tokens created on the fly
 				clctrl.ProviderConfig.MetaphorDir,
-				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues),
+				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), //tokens created on the fly
 				civo.GetDomainApexContent(clctrl.DomainName),
+				cl.GitProtocol,
 			)
 			if err != nil {
 				return err
@@ -89,16 +93,17 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.GitProvider,
 				clctrl.ClusterName,
 				clctrl.ClusterType,
-				DigitaloceanDestinationGitopsRepoGitURL,
+				clctrl.ProviderConfig.DestinationGitopsRepoURL,
 				clctrl.ProviderConfig.GitopsDir,
 				clctrl.GitopsTemplateBranch,
 				clctrl.GitopsTemplateURL,
-				DigitaloceanDestinationMetaphorRepoGitURL,
+				clctrl.ProviderConfig.DestinationMetaphorRepoURL,
 				clctrl.ProviderConfig.K1Dir,
-				clctrl.CreateTokens("gitops").(*providerConfigs.GitOpsDirectoryValues),
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), //tokens created on the fly
 				clctrl.ProviderConfig.MetaphorDir,
-				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues),
+				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), //tokens created on the fly
 				digitalocean.GetDomainApexContent(clctrl.DomainName),
+				cl.GitProtocol,
 			)
 			if err != nil {
 				return err
@@ -109,16 +114,17 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.GitProvider,
 				clctrl.ClusterName,
 				clctrl.ClusterType,
-				VultrDestinationGitopsRepoGitURL,
+				clctrl.ProviderConfig.DestinationGitopsRepoURL,
 				clctrl.ProviderConfig.GitopsDir,
 				clctrl.GitopsTemplateBranch,
 				clctrl.GitopsTemplateURL,
-				VultrDestinationMetaphorRepoGitURL,
+				clctrl.ProviderConfig.DestinationMetaphorRepoURL,
 				clctrl.ProviderConfig.K1Dir,
-				clctrl.CreateTokens("gitops").(*providerConfigs.GitOpsDirectoryValues),
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), //tokens created on the fly
 				clctrl.ProviderConfig.MetaphorDir,
-				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues),
+				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), //tokens created on the fly
 				vultr.GetDomainApexContent(clctrl.DomainName),
+				cl.GitProtocol,
 			)
 			if err != nil {
 				return err
@@ -160,15 +166,9 @@ func (clctrl *ClusterController) RepositoryPush() error {
 	defer segmentClient.Client.Close()
 
 	if !cl.GitopsPushedCheck {
-		publicKeys, err := gitssh.NewPublicKeys("git", []byte(cl.PrivateKey), "")
-		if err != nil {
-			log.Infof("generate public keys failed: %s\n", err.Error())
-		}
 
 		gitopsDir := clctrl.ProviderConfig.GitopsDir
 		metaphorDir := clctrl.ProviderConfig.MetaphorDir
-		destinationGitopsRepoGitURL := clctrl.ProviderConfig.DestinationGitopsRepoGitURL
-		destinationMetaphorRepoGitURL := clctrl.ProviderConfig.DestinationMetaphorRepoGitURL
 
 		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitopsRepoPushStarted, "")
 		gitopsRepo, err := git.PlainOpen(gitopsDir)
@@ -183,7 +183,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 
 		// For GitLab, we currently need to add an ssh key to the authenticating user
 		if clctrl.GitProvider == "gitlab" {
-			gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitToken, clctrl.GitOwner)
+			gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitAuth.Token, clctrl.GitAuth.Owner)
 			if err != nil {
 				return err
 			}
@@ -197,7 +197,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			var keyFound bool = false
 			for _, key := range keys {
 				if key.Title == keyName {
-					if strings.Contains(key.Key, strings.TrimSuffix(clctrl.PublicKey, "\n")) {
+					if strings.Contains(key.Key, strings.TrimSuffix(clctrl.GitAuth.PublicKey, "\n")) {
 						log.Infof("ssh key %s already exists and key is up to date, continuing", keyName)
 						keyFound = true
 					} else {
@@ -207,22 +207,25 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			}
 			if !keyFound {
 				log.Infof("creating ssh key %s...", keyName)
-				err := gitlabClient.AddUserSSHKey(keyName, clctrl.PublicKey)
+				err := gitlabClient.AddUserSSHKey(keyName, clctrl.GitAuth.PublicKey)
 				if err != nil {
 					log.Errorf("error adding ssh key %s: %s", keyName, err.Error())
 				}
 			}
 		}
 
-		// Push gitops repo to remote
+		// push metaphor repo to remote
 		err = gitopsRepo.Push(
 			&git.PushOptions{
 				RemoteName: clctrl.GitProvider,
-				Auth:       publicKeys,
+				Auth: &githttps.BasicAuth{
+					Username: clctrl.GitAuth.User,
+					Password: clctrl.GitAuth.Token,
+				},
 			},
 		)
 		if err != nil {
-			msg := fmt.Sprintf("error pushing detokenized gitops repository to remote %s: %s", destinationGitopsRepoGitURL, err)
+			msg := fmt.Sprintf("error pushing detokenized gitops repository to remote %s: %s", clctrl.ProviderConfig.DestinationGitopsRepoURL, err)
 			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitopsRepoPushFailed, msg)
 			return fmt.Errorf(msg)
 		}
@@ -231,16 +234,19 @@ func (clctrl *ClusterController) RepositoryPush() error {
 		err = metaphorRepo.Push(
 			&git.PushOptions{
 				RemoteName: "origin",
-				Auth:       publicKeys,
+				Auth: &githttps.BasicAuth{
+					Username: clctrl.GitAuth.User,
+					Password: clctrl.GitAuth.Token,
+				},
 			},
 		)
 		if err != nil {
-			msg := fmt.Sprintf("error pushing detokenized metaphor repository to remote %s: %s", destinationMetaphorRepoGitURL, err)
+			msg := fmt.Sprintf("error pushing detokenized metaphor repository to remote %s: %s", clctrl.ProviderConfig.DestinationMetaphorRepoURL, err)
 			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitopsRepoPushFailed, msg)
 			return fmt.Errorf(msg)
 		}
 
-		log.Infof("successfully pushed gitops and metaphor repositories to git@%s/%s", clctrl.GitHost, clctrl.GitOwner)
+		log.Infof("successfully pushed gitops and metaphor repositories to git@%s/%s", clctrl.GitHost, clctrl.GitAuth.Owner)
 		// todo delete the local gitops repo and re-clone it
 		// todo that way we can stop worrying about which origin we're going to push to
 		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricGitopsRepoPushCompleted, "")

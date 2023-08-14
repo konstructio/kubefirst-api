@@ -17,3 +17,6 @@
 bin/
 
 tmp
+launch.json
+kubefirst-api
+__debug_*
