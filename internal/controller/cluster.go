@@ -279,6 +279,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				gitopsTemplateTokens.ContainerRegistryURL = fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", *iamCaller.Account, clctrl.CloudRegion)
 				log.Info("Using ECR URL %s", gitopsTemplateTokens.ContainerRegistryURL)
 			} else {
+				gitopsTemplateTokens.ContainerRegistryURL = fmt.Sprintf("%s/%s", clctrl.ContainerRegistryHost, clctrl.GitAuth.Owner)
 				log.Info("Not using ECR but instead %s", clctrl.GitProvider)
 			}
 		}
