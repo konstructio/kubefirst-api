@@ -52,3 +52,8 @@ type GitAuth struct {
 	PrivateKey string `bson:"private_key,omitempty" json:"private_key,omitempty"`
 	PublicKeys string `bson:"public_keys,omitempty" json:"public_keys,omitempty"`
 }
+
+type VaultAuth struct {
+	RootToken    string `bson:"root_token,omitempty" json:"root_token,omitempty"`
+	KbotPassword string `bson:"kbot_password,omitempty" json:"kbot_password,omitempty"`
+}

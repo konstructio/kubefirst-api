@@ -280,7 +280,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				log.Info("Using ECR URL %s", gitopsTemplateTokens.ContainerRegistryURL)
 			} else {
 				gitopsTemplateTokens.ContainerRegistryURL = fmt.Sprintf("%s/%s", clctrl.ContainerRegistryHost, clctrl.GitAuth.Owner)
-				log.Info("Not using ECR but instead %s", clctrl.GitProvider)
+				log.Info("NOT using ECR but instead %s URL %s", clctrl.GitProvider, gitopsTemplateTokens.ContainerRegistryURL)
 			}
 		}
 

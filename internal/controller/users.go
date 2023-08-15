@@ -91,6 +91,12 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		log.Info("executed users terraform successfully")
 		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricUsersTerraformApplyCompleted, "")
 
+		// Set kbot password
+		err = clctrl.GetUserPassword("kbot")
+		if err != nil {
+			log.Infof("error fetching kbot password: %s", err)
+		}
+
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "users_terraform_apply_check", true)
 		if err != nil {
 			return err

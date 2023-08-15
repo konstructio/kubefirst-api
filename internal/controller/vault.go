@@ -20,11 +20,43 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
-	"github.com/kubefirst/runtime/pkg/vault"
+	vault "github.com/kubefirst/runtime/pkg/vault"
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+// InitializeVault
+func (clctrl *ClusterController) GetUserPassword(user string) error {
+	// Logging handler
+	// Logs to stdout to maintain compatibility with event streaming
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "",
+	})
+	log.SetReportCaller(false)
+	log.SetOutput(os.Stdout)
+
+	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	if err != nil {
+		return err
+	}
+
+	// empty conf
+	vaultConf := &vault.Conf
+	//sets up vault client within function
+	clctrl.VaultAuth.KbotPassword, err = vaultConf.GetUserPassword(vault.VaultDefaultAddress, cl.VaultAuth.RootToken, "kbot", "initial-password")
+	if err != nil {
+		return err
+	}
+
+	err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "vault_auth.kbot_password", clctrl.VaultAuth.KbotPassword)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 // InitializeVault
 func (clctrl *ClusterController) InitializeVault() error {
