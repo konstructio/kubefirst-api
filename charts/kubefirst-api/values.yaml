@@ -103,3 +103,6 @@ mongodbUsername: ''
 
 initContainer:
   enabled: false
+
+global:
+  kubefirstVersion: ''
