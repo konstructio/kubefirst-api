@@ -91,7 +91,13 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		log.Info("executed users terraform successfully")
 		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricUsersTerraformApplyCompleted, "")
 
-		// Set kbot password
+		clctrl.VaultAuth.RootToken = tfEnvs["VAULT_TOKEN"]
+		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "vault_auth.root_token", clctrl.VaultAuth.RootToken)
+		if err != nil {
+			return err
+		}
+
+		// Set kbot password in object and
 		err = clctrl.GetUserPassword("kbot")
 		if err != nil {
 			log.Infof("error fetching kbot password: %s", err)
