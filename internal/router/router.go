@@ -75,7 +75,7 @@ func SetupRouter() *gin.Engine {
 		v1.GET("/health", router.GetHealth)
 
 		// Event streaming
-		v1.GET("/stream", middleware.ValidateAPIKey(), router.GetLogs)
+		v1.GET("/stream", router.GetLogs)
 
 		// Telemetry
 		v1.POST("/telemetry/:cluster_name", middleware.ValidateAPIKey(), router.PostTelemetry)
