@@ -51,6 +51,7 @@ type ClusterController struct {
 	VultrAuth          types.VultrAuth
 	CloudflareAuth     types.CloudflareAuth
 	GitAuth            types.GitAuth
+	VaultAuth          types.VaultAuth
 	AwsAccessKeyID     string
 	AwsSecretAccessKey string
 
