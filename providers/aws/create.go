@@ -243,6 +243,13 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 
 	log.Info("cluster creation complete")
 
+	//* export and import cluster
+	err = ctrl.ExportClusterRecord()
+	if err != nil {
+		log.Errorf("Error exporting cluster record: %s", err)
+		return err
+	}
+
 	// Telemetry handler
 	segmentClient, err := telemetryShim.SetupTelemetry(rec)
 	if err != nil {

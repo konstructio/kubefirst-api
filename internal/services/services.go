@@ -63,6 +63,11 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 
 	var kcfg *k8s.KubernetesClient
 
+	inCluster := false
+	if os.Getenv("IN_CLUSTER") == "true" {
+		inCluster = true
+	}
+
 	switch cl.CloudProvider {
 	case "aws":
 		awscfg := awsinternal.NewAwsV3(
@@ -72,8 +77,8 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 			cl.AWSAuth.SessionToken,
 		)
 		kcfg = awsext.CreateEKSKubeconfig(&awscfg, cl.ClusterName)
-	case "civo", "digitalocean", "vultr":
-		kcfg = k8s.CreateKubeConfig(false, fmt.Sprintf("%s/kubeconfig", clusterDir))
+	case "civo", "digitalocean", "vultr", "k3d":
+		kcfg = k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
 	}
 
 	// If there are secret values, create a vault secret
@@ -180,6 +185,10 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 
 	// Sync registry
 	argoCDHost := fmt.Sprintf("https://argocd.%s", cl.DomainName)
+	if cl.CloudProvider == "k3d" {
+		argoCDHost = "http://argocd-server.argocd.svc.cluster.local"
+	}
+
 	httpClient := http.Client{Timeout: time.Second * 10}
 	argoCDToken, err := argocd.GetArgocdTokenV2(&httpClient, argoCDHost, "admin", cl.ArgoCDPassword)
 	if err != nil {

@@ -192,13 +192,13 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 		1200,
 	)
 	if err != nil {
-		log.Errorf("Error finding console Deployment: %s", err)
+		log.Errorf("Error finding kubefirst api Deployment: %s", err)
 		ctrl.HandleError(err.Error())
 		return err
 	}
 	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, consoleDeployment, 120)
 	if err != nil {
-		log.Errorf("Error waiting for console Deployment ready state: %s", err)
+		log.Errorf("Error waiting for kubefirst api Deployment ready state: %s", err)
 
 		ctrl.HandleError(err.Error())
 		return err
@@ -215,6 +215,13 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 	}
 
 	log.Info("cluster creation complete")
+
+	//* export and import cluster
+	err = ctrl.ExportClusterRecord()
+	if err != nil {
+		log.Errorf("Error exporting cluster record: %s", err)
+		return err
+	}
 
 	// Telemetry handler
 	rec, err := ctrl.GetCurrentClusterRecord()
