@@ -184,7 +184,11 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 	}
 
 	// Sync registry
-	argoCDHost := "http://argocd-server.argocd.svc.cluster.local"
+	argoCDHost := fmt.Sprintf("https://argocd.%s", cl.DomainName)
+	if cl.CloudProvider == "k3d" {
+		argoCDHost = "http://argocd-server.argocd.svc.cluster.local"
+	}
+
 	httpClient := http.Client{Timeout: time.Second * 10}
 	argoCDToken, err := argocd.GetArgocdTokenV2(&httpClient, argoCDHost, "admin", cl.ArgoCDPassword)
 	if err != nil {
