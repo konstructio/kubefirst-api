@@ -67,6 +67,7 @@ type Cluster struct {
 	VultrAuth        VultrAuth        `bson:"vultr_auth,omitempty" json:"vultr_auth,omitempty"`
 	CloudflareAuth   CloudflareAuth   `bson:"cf_api_token,omitempty" json:"cf_api_token,omitempty"`
 	GitAuth          GitAuth          `bson:"git_auth,omitempty" json:"git_auth,omitempty"`
+	VaultAuth        VaultAuth        `bson:"vault_auth,omitempty" json:"vault_auth,omitempty"`
 
 	GitopsTemplateURL    string `bson:"gitops_template_url" json:"gitops_template_url"`
 	GitopsTemplateBranch string `bson:"gitops_template_branch" json:"gitops_template_branch"`
