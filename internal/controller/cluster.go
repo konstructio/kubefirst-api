@@ -359,7 +359,15 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 		}
 
 		//create service accounts
-		err = providerConfigs.ServiceAccounts(clientSet)
+
+		// If we extend beyond cloudflare and the cloudprovider for dns support,
+		// we should implement a new function for returning the dns provider
+
+		var cloudflareToken string
+		if clctrl.CloudflareAuth != nil {
+			cloudflareToken = clctrl.CloudflareAuth.Token
+		}
+		err = providerConfigs.ServiceAccounts(clientSet, cloudflareToken)
 		if err != nil {
 			return err
 		}
