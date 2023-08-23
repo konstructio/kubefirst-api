@@ -10,8 +10,10 @@ import (
 	"context"
 	"fmt"
 
+	cloudflare_api "github.com/cloudflare/cloudflare-go"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/runtime/pkg/civo"
+	"github.com/kubefirst/runtime/pkg/cloudflare"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/dns"
 	"github.com/kubefirst/runtime/pkg/segment"
@@ -64,24 +66,24 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 			if err != nil {
 				return err
 			}
-		// case "cloudflare":
+		case "cloudflare":
 
-		// 	client, err := cloudflare_api.NewWithAPIToken(clctrl.CloudflareAuth.Token)
-		// 	if err != nil {
-		// 		return err
-		// 	}
+			client, err := cloudflare_api.NewWithAPIToken(clctrl.CloudflareAuth.Token)
+			if err != nil {
+				return err
+			}
 
-		// 	cloudflareConf := cloudflare.CloudflareConfiguration{
-		// 		Client:  client,
-		// 		Context: context.Background(),
-		// 	}
+			cloudflareConf := cloudflare.CloudflareConfiguration{
+				Client:  client,
+				Context: context.Background(),
+			}
 
-		// 	domainLiveness := cloudflareConf.TestDomainLiveness(clctrl.DomainName)
+			domainLiveness := cloudflareConf.TestDomainLiveness(clctrl.DomainName)
 
-		// 	err = clctrl.HandleDomainLiveness(domainLiveness)
-		// 	if err != nil {
-		// 		return err
-		// 	}
+			err = clctrl.HandleDomainLiveness(domainLiveness)
+			if err != nil {
+				return err
+			}
 		case "digitalocean":
 			digitaloceanConf := digitalocean.DigitaloceanConfiguration{
 				Client:  digitalocean.NewDigitalocean(cl.DigitaloceanAuth.Token),
