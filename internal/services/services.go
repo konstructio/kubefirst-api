@@ -19,14 +19,12 @@ import (
 	"github.com/go-git/go-git/v5"
 	githttps "github.com/go-git/go-git/v5/plumbing/transport/http"
 	vaultapi "github.com/hashicorp/vault/api"
-	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/internal/gitopsCatalog"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/pkg/argocd"
-	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/gitClient"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/vault"
@@ -68,18 +66,7 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 		inCluster = true
 	}
 
-	switch cl.CloudProvider {
-	case "aws":
-		awscfg := awsinternal.NewAwsV3(
-			cl.CloudRegion,
-			cl.AWSAuth.AccessKeyID,
-			cl.AWSAuth.SecretAccessKey,
-			cl.AWSAuth.SessionToken,
-		)
-		kcfg = awsext.CreateEKSKubeconfig(&awscfg, cl.ClusterName)
-	case "civo", "digitalocean", "vultr", "k3d":
-		kcfg = k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
-	}
+	kcfg = k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
 
 	// If there are secret values, create a vault secret
 	if len(req.SecretKeys) > 0 {
