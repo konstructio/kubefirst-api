@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/objectStorage"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	log "github.com/sirupsen/logrus"
@@ -137,6 +138,8 @@ func (mdbcl *MongoDBClient) Export(clusterName string) error {
 	filter := bson.D{{Key: "cluster_name", Value: clusterName}}
 	var result types.Cluster
 	err := mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result)
+	result.Status = constants.ClusterStatusProvisioned
+	result.InProgress = false
 	if err != nil {
 		return err
 	}
