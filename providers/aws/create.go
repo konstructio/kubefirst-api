@@ -213,7 +213,7 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 	consoleDeployment, err := k8s.ReturnDeploymentObject(
 		kcfg.Clientset,
 		"app.kubernetes.io/instance",
-		"kubefirst-console",
+		"kubefirst",
 		"kubefirst",
 		1200,
 	)
@@ -231,39 +231,39 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
-	err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "status", constants.ClusterStatusProvisioned)
-	if err != nil {
-		return err
-	}
-
-	err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-	if err != nil {
-		return err
-	}
-
-	log.Info("cluster creation complete")
-
 	//* export and import cluster
 	err = ctrl.ExportClusterRecord()
 	if err != nil {
 		log.Errorf("Error exporting cluster record: %s", err)
 		return err
-	}
+	} else {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "status", constants.ClusterStatusProvisioned)
+		if err != nil {
+			return err
+		}
 
-	// Telemetry handler
-	segmentClient, err := telemetryShim.SetupTelemetry(rec)
-	if err != nil {
-		return err
-	}
-	defer segmentClient.Client.Close()
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
 
-	telemetryShim.Transmit(rec.UseTelemetry, segmentClient, segment.MetricClusterInstallCompleted, "")
+		log.Info("cluster creation complete")
 
-	// Create default service entries
-	cl, _ := db.Client.GetCluster(ctrl.ClusterName)
-	err = services.AddDefaultServices(&cl)
-	if err != nil {
-		log.Errorf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
+		// Telemetry handler
+		segmentClient, err := telemetryShim.SetupTelemetry(rec)
+		if err != nil {
+			return err
+		}
+		defer segmentClient.Client.Close()
+
+		telemetryShim.Transmit(rec.UseTelemetry, segmentClient, segment.MetricClusterInstallCompleted, "")
+
+		// Create default service entries
+		cl, _ := db.Client.GetCluster(ctrl.ClusterName)
+		err = services.AddDefaultServices(&cl)
+		if err != nil {
+			log.Errorf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
+		}
 	}
 
 	return nil
