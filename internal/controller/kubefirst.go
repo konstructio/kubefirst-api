@@ -85,7 +85,7 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 
 	if res.StatusCode != http.StatusOK {
 		log.Errorf("unable to import cluster %s", res.Status)
-		return nil
+		return err
 	}
 
 	body, err := io.ReadAll(res.Body)
