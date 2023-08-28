@@ -156,7 +156,7 @@ spec:
       labels:
         {{- include "kubefirst-api.selectorLabels" . | nindent 8 }}
     spec:
-      restartPolicy: OnFailure
+      restartPolicy: Never
       containers:
         - name: {{ include "kubefirst-api.fullname" . }}-pi-hook
           image: "{{ .Values.image.hook.repository }}:{{ .Values.image.hook.tag }}"
