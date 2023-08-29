@@ -97,7 +97,7 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 			return err
 		}
 
-		// Set kbot password in object and
+		// Set kbot password in object
 		err = clctrl.GetUserPassword("kbot")
 		if err != nil {
 			log.Infof("error fetching kbot password: %s", err)

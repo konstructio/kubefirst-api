@@ -19,6 +19,7 @@ import (
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
+	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/segment"
@@ -280,7 +281,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				log.Infof("Using ECR URL %s", gitopsTemplateTokens.ContainerRegistryURL)
 			} else {
 				gitopsTemplateTokens.ContainerRegistryURL = fmt.Sprintf("%s/%s", clctrl.ContainerRegistryHost, clctrl.GitAuth.Owner)
-				log.Infof("NOT using ECR but instead %s URL %s", clctrl.GitProvider, gitopsTemplateTokens.ContainerRegistryURL)
+				log.Info("NOT using ECR but instead %s URL %s", clctrl.GitProvider, gitopsTemplateTokens.ContainerRegistryURL)
 			}
 		}
 
@@ -359,7 +360,11 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 		}
 
 		//create service accounts
-		err = providerConfigs.ServiceAccounts(clientSet)
+		var token string
+		if (clctrl.CloudflareAuth != types.CloudflareAuth{}) {
+			token = clctrl.CloudflareAuth.Token
+		}
+		err = providerConfigs.ServiceAccounts(clientSet, token)
 		if err != nil {
 			return err
 		}
