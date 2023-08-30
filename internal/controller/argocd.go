@@ -232,7 +232,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		}
 		registryApplicationObject := argocd.GetArgoCDApplicationObject(
 			registryURL,
-			fmt.Sprintf("registry/%s", clctrl.ClusterName),
+			fmt.Sprintf("registry/clusters/%s", clctrl.ClusterName),
 		)
 
 		_, _ = argocdClient.ArgoprojV1alpha1().Applications("argocd").Create(context.Background(), registryApplicationObject, metav1.CreateOptions{})

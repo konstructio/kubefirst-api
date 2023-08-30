@@ -41,7 +41,7 @@ func (clctrl *ClusterController) DetokenizeKMSKeyID() error {
 			}
 
 			if err := pkg.ReplaceFileContent(
-				fmt.Sprintf("%s/registry/%s/components/vault/application.yaml", clctrl.ProviderConfig.GitopsDir, clctrl.ClusterName),
+				fmt.Sprintf("%s/registry/clusters/%s/components/vault/application.yaml", clctrl.ProviderConfig.GitopsDir, clctrl.ClusterName),
 				"<AWS_KMS_KEY_ID>",
 				awsKmsKeyId,
 			); err != nil {

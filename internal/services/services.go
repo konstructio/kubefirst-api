@@ -57,7 +57,7 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, cl.ClusterName)
 	gitopsDir := fmt.Sprintf("%s/.k1/%s/gitops", homeDir, cl.ClusterName)
 	gitopsRepo, _ = git.PlainOpen(gitopsDir)
-	serviceFile := fmt.Sprintf("%s/registry/%s/%s.yaml", gitopsDir, cl.ClusterName, serviceName)
+	serviceFile := fmt.Sprintf("%s/registry/clusters/%s/%s.yaml", gitopsDir, cl.ClusterName, serviceName)
 
 	var kcfg *k8s.KubernetesClient
 
@@ -232,7 +232,7 @@ func DeleteService(cl *types.Cluster, serviceName string) error {
 	}
 	gitopsDir := fmt.Sprintf("%s/.k1/%s/gitops", homeDir, cl.ClusterName)
 	gitopsRepo, _ = git.PlainOpen(gitopsDir)
-	serviceFile := fmt.Sprintf("%s/registry/%s/%s.yaml", gitopsDir, cl.ClusterName, serviceName)
+	serviceFile := fmt.Sprintf("%s/registry/clusters/%s/%s.yaml", gitopsDir, cl.ClusterName, serviceName)
 
 	// Delete service files from gitops dir
 	err = gitShim.PullWithAuth(
