@@ -240,7 +240,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	// Write cluster record if it doesn't exist
 	cl := types.Cluster{
 		ID:                    primitive.NewObjectID(),
-		CreationTimestamp:     fmt.Sprintf("%v", time.Now().UTC()),
+		CreationTimestamp:     fmt.Sprintf("%v", primitive.NewDateTimeFromTime(time.Now().UTC())),
 		UseTelemetry:          clctrl.UseTelemetry,
 		Status:                constants.ClusterStatusProvisioning,
 		AlertsEmail:           clctrl.AlertsEmail,

@@ -155,10 +155,11 @@ type WorkloadCluster struct {
 	CloudRegion       string  `bson:"cloud_region,omitempty" json:"cloud_region,omitempty"`
 	CreationTimestamp string  `bson:"creation_timestamp" json:"creation_timestamp"`
 	DomainName        string  `bson:"domain_name,omitempty" json:"domain_name,omitempty"`
+	DnsProvider       string  `bson:"dns_provider,omitempty" json:"dns_provider,omitempty"`
 	Environment       string  `bson:"environment,omitempty" json:"environment,omitempty"`
 	GitAuth           GitAuth `bson:"git_auth,omitempty" json:"git_auth,omitempty"`
 	InstanceSize      string  `bson:"instance_size,omitempty" json:"instance_size,omitempty"`
 	MachineType       string  `bson:"machine_type,omitempty" json:"machine_type,omitempty"`
-	NodeCount         string  `bson:"node_count,omitempty" json:"node_count,omitempty"`
+	NodeCount         int     `bson:"node_count,omitempty" json:"node_count,omitempty"`
 	Status            string  `bson:"status,omitempty" json:"status,omitempty"`
 }
