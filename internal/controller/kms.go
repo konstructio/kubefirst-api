@@ -40,8 +40,15 @@ func (clctrl *ClusterController) DetokenizeKMSKeyID() error {
 				return err
 			}
 
+			var registryPath string
+			if clctrl.CloudProvider == "civo" && clctrl.GitProvider == "github" {
+				registryPath = fmt.Sprintf("registry/clusters/%s", clctrl.ClusterName)
+			} else {
+				registryPath = fmt.Sprintf("registry/%s", clctrl.ClusterName)
+			}
+
 			if err := pkg.ReplaceFileContent(
-				fmt.Sprintf("%s/registry/clusters/%s/components/vault/application.yaml", clctrl.ProviderConfig.GitopsDir, clctrl.ClusterName),
+				fmt.Sprintf("%s/%s/%s/components/vault/application.yaml", clctrl.ProviderConfig.GitopsDir, registryPath, clctrl.ClusterName),
 				"<AWS_KMS_KEY_ID>",
 				awsKmsKeyId,
 			); err != nil {
