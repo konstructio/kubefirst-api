@@ -27,6 +27,8 @@ type MongoDBClient struct {
 
 var Client = Connect()
 
+// 1 Client, Mongo not ready
+
 // Connect
 func Connect() *MongoDBClient {
 	var connString string

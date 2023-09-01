@@ -230,9 +230,17 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		if err != nil {
 			return err
 		}
+
+		var registryPath string
+		if clctrl.CloudProvider == "civo" && clctrl.GitProvider == "github" {
+			registryPath = fmt.Sprintf("registry/clusters/%s", clctrl.ClusterName)
+		} else {
+			registryPath = fmt.Sprintf("registry/%s", clctrl.ClusterName)
+		}
+
 		registryApplicationObject := argocd.GetArgoCDApplicationObject(
 			registryURL,
-			fmt.Sprintf("registry/%s", clctrl.ClusterName),
+			registryPath,
 		)
 
 		_, _ = argocdClient.ArgoprojV1alpha1().Applications("argocd").Create(context.Background(), registryApplicationObject, metav1.CreateOptions{})
