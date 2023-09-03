@@ -20,7 +20,8 @@ type CivoAuth struct {
 
 // VultrAuth holds necessary auth credentials for interacting with vultr
 type CloudflareAuth struct {
-	Token string `bson:"token" json:"token"`
+	APIToken          string `bson:"api_token" json:"api_token"`
+	OriginCaIssuerKey string `bson:"origin_ca_issuer_key" json:"origin_ca_issuer_key"`
 }
 
 // DigitaloceanAuth holds necessary auth credentials for interacting with digitalocean
