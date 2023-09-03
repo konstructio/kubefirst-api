@@ -93,6 +93,8 @@ func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *types.Cluster, e
 	envs["TF_VAR_atlantis_repo_webhook_url"] = cl.AtlantisWebhookURL
 	envs["TF_VAR_kbot_ssh_private_key"] = cl.GitAuth.PrivateKey
 	envs["TF_VAR_kbot_ssh_public_key"] = cl.GitAuth.PublicKey
+	envs["TF_VAR_cloudflare_origin_ca_api_key"] = cl.CloudflareAuth.OriginCaIssuerKey
+	envs["TF_VAR_cloudflare_api_key"] = cl.CloudflareAuth.APIToken
 
 	switch cl.GitProvider {
 	case "gitlab":
