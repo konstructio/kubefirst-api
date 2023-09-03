@@ -60,7 +60,7 @@ func BootstrapVultrMgmtCluster(clientset *kubernetes.Clientset, cl *types.Cluste
 			ObjectMeta: metav1.ObjectMeta{Name: "vultr-creds", Namespace: "external-dns"},
 			Data: map[string][]byte{
 				"vultr-token":  []byte(cl.VultrAuth.Token),
-				"cf-api-token": []byte(cl.CloudflareAuth.APIToken),
+				"cf-api-token": []byte(cl.CloudflareAuth.Token),
 			},
 		},
 	}

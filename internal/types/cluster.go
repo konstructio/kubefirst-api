@@ -65,7 +65,7 @@ type Cluster struct {
 	CivoAuth         CivoAuth         `bson:"civo_auth,omitempty" json:"civo_auth,omitempty"`
 	DigitaloceanAuth DigitaloceanAuth `bson:"do_auth,omitempty" json:"do_auth,omitempty"`
 	VultrAuth        VultrAuth        `bson:"vultr_auth,omitempty" json:"vultr_auth,omitempty"`
-	CloudflareAuth   CloudflareAuth   `bson:"cf_api_token,omitempty" json:"cf_api_token,omitempty"`
+	CloudflareAuth   CloudflareAuth   `bson:"cloudflare_auth,omitempty" json:"cloudflare_auth,omitempty"`
 	GitAuth          GitAuth          `bson:"git_auth,omitempty" json:"git_auth,omitempty"`
 	VaultAuth        VaultAuth        `bson:"vault_auth,omitempty" json:"vault_auth,omitempty"`
 
