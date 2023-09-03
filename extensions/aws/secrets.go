@@ -66,7 +66,7 @@ func BootstrapAWSMgmtCluster(
 			ObjectMeta: metav1.ObjectMeta{Name: "aws-creds", Namespace: "external-dns"},
 			Data: map[string][]byte{
 				"aws-token":    []byte("VALUE IGNORED, DOES NOT USE TOKEN, USES SERVICE ACCOUNT"),
-				"cf-api-token": []byte(cl.CloudflareAuth.APIToken),
+				"cf-api-token": []byte(cl.CloudflareAuth.Token),
 			},
 		},
 	}

@@ -362,7 +362,7 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 		//create service accounts
 		var token string
 		if (clctrl.CloudflareAuth != types.CloudflareAuth{}) {
-			token = clctrl.CloudflareAuth.APIToken
+			token = clctrl.CloudflareAuth.Token
 		}
 		err = providerConfigs.ServiceAccounts(clientSet, token)
 		if err != nil {

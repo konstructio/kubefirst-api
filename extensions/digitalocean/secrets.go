@@ -60,7 +60,7 @@ func BootstrapDigitaloceanMgmtCluster(clientset *kubernetes.Clientset, cl *types
 			ObjectMeta: metav1.ObjectMeta{Name: "digitalocean-creds", Namespace: "external-dns"},
 			Data: map[string][]byte{
 				"digitalocean-token": []byte(cl.DigitaloceanAuth.Token),
-				"cf-api-token":       []byte(cl.CloudflareAuth.APIToken),
+				"cf-api-token":       []byte(cl.CloudflareAuth.Token),
 			},
 		},
 	}
