@@ -9,7 +9,6 @@ package api
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/kubefirst/kubefirst-api/internal/middleware"
 	router "github.com/kubefirst/kubefirst-api/internal/router/api/v1"
 	log "github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
@@ -45,31 +44,31 @@ func SetupRouter() *gin.Engine {
 	v1 := r.Group("api/v1")
 	{
 		// Cluster
-		v1.GET("/cluster", middleware.ValidateAPIKey(), router.GetClusters)
-		v1.POST("/cluster/import", middleware.ValidateAPIKey(), router.PostImportCluster)
+		v1.GET("/cluster", router.GetClusters)
+		v1.POST("/cluster/import", router.PostImportCluster)
 
-		v1.GET("/cluster/:cluster_name", middleware.ValidateAPIKey(), router.GetCluster)
-		v1.DELETE("/cluster/:cluster_name", middleware.ValidateAPIKey(), router.DeleteCluster)
-		v1.POST("/cluster/:cluster_name", middleware.ValidateAPIKey(), router.PostCreateCluster)
-		v1.POST("/cluster/:cluster_name/export", middleware.ValidateAPIKey(), router.PostExportCluster)
-		v1.POST("/cluster/:cluster_name/reset_progress", middleware.ValidateAPIKey(), router.PostResetClusterProgress)
+		v1.GET("/cluster/:cluster_name", router.GetCluster)
+		v1.DELETE("/cluster/:cluster_name", router.DeleteCluster)
+		v1.POST("/cluster/:cluster_name", router.PostCreateCluster)
+		v1.POST("/cluster/:cluster_name/export", router.PostExportCluster)
+		v1.POST("/cluster/:cluster_name/reset_progress", router.PostResetClusterProgress)
 
 		// Gitops Catalog
-		v1.GET("/gitops-catalog/apps", middleware.ValidateAPIKey(), router.GetGitopsCatalogApps)
-		v1.GET("/gitops-catalog/apps/update", middleware.ValidateAPIKey(), router.UpdateGitopsCatalogApps)
+		v1.GET("/gitops-catalog/apps", router.GetGitopsCatalogApps)
+		v1.GET("/gitops-catalog/apps/update", router.UpdateGitopsCatalogApps)
 
 		// Services
-		v1.GET("/services/:cluster_name", middleware.ValidateAPIKey(), router.GetServices)
-		v1.POST("/services/:cluster_name/:service_name", middleware.ValidateAPIKey(), router.PostAddServiceToCluster)
-		v1.DELETE("/services/:cluster_name/:service_name", middleware.ValidateAPIKey(), router.DeleteServiceFromCluster)
+		v1.GET("/services/:cluster_name", router.GetServices)
+		v1.POST("/services/:cluster_name/:service_name", router.PostAddServiceToCluster)
+		v1.DELETE("/services/:cluster_name/:service_name", router.DeleteServiceFromCluster)
 
 		// Domains
-		v1.POST("/domain/:dns_provider", middleware.ValidateAPIKey(), router.PostDomains)
-		v1.GET("/domain/validate/aws/:domain", middleware.ValidateAPIKey(), router.GetValidateAWSDomain)
-		v1.GET("/domain/validate/civo/:domain", middleware.ValidateAPIKey(), router.GetValidateCivoDomain)
+		v1.POST("/domain/:dns_provider", router.PostDomains)
+		v1.GET("/domain/validate/aws/:domain", router.GetValidateAWSDomain)
+		v1.GET("/domain/validate/civo/:domain", router.GetValidateCivoDomain)
 
 		// Regions
-		v1.POST("/region/:cloud_provider", middleware.ValidateAPIKey(), router.PostRegions)
+		v1.POST("/region/:cloud_provider", router.PostRegions)
 
 		// Utilities
 		v1.GET("/health", router.GetHealth)
@@ -78,7 +77,7 @@ func SetupRouter() *gin.Engine {
 		v1.GET("/stream", router.GetLogs)
 
 		// Telemetry
-		v1.POST("/telemetry/:cluster_name", middleware.ValidateAPIKey(), router.PostTelemetry)
+		v1.POST("/telemetry/:cluster_name", router.PostTelemetry)
 	}
 
 	// swagger-ui

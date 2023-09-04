@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -85,7 +86,7 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 
 	if res.StatusCode != http.StatusOK {
 		log.Errorf("unable to import cluster %s", res.Status)
-		return err
+		return errors.New(fmt.Sprintf("unable to import cluster %s", res.Status))
 	}
 
 	body, err := io.ReadAll(res.Body)
