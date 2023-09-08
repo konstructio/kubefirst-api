@@ -64,7 +64,7 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 	} else {
 		registryPath = fmt.Sprintf("registry/%s", cl.ClusterName)
 	}
-	serviceFile := fmt.Sprintf("%s/%s/%s/%s.yaml", gitopsDir, registryPath, cl.ClusterName, serviceName)
+	serviceFile := fmt.Sprintf("%s/%s/%s.yaml", gitopsDir, registryPath, serviceName)
 
 	var kcfg *k8s.KubernetesClient
 
