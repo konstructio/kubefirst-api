@@ -238,6 +238,16 @@ func PostCreateCluster(c *gin.Context) {
 		}
 	}
 
+	//Retry mechanism
+	if cluster.ClusterName != "" {
+		//Assign cloud and git credentials
+		clusterDefinition.AWSAuth = cluster.AWSAuth
+		clusterDefinition.CivoAuth = cluster.CivoAuth
+		clusterDefinition.VultrAuth = cluster.VultrAuth
+		clusterDefinition.DigitaloceanAuth = cluster.DigitaloceanAuth
+		clusterDefinition.GitAuth = cluster.GitAuth
+	}
+
 	// Determine authentication type
 	inCluster := false
 	useSecretForAuth := false
