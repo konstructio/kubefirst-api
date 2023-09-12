@@ -18,8 +18,10 @@ import (
 // Heartbeat
 func Heartbeat(segmentClient *segment.SegmentClient) {
 	TransmitClusterZero(true, segmentClient, segment.MetricKubefirstHeartbeat, "")
+	HeartbeatWorkloadClusters()
 	for range time.Tick(time.Minute * 20) {
 		TransmitClusterZero(true, segmentClient, segment.MetricKubefirstHeartbeat, "")
+		HeartbeatWorkloadClusters()
 	}
 }
 
