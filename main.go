@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/kubefirst/kubefirst-api/docs"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	api "github.com/kubefirst/kubefirst-api/internal/router"
@@ -31,6 +32,13 @@ const (
 )
 
 func main() {
+
+	envError := godotenv.Load(".env");
+	
+	if envError != nil {
+		log.Info("error loading .env file, using local environment variables")
+	}
+
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp:   true,
 		TimestampFormat: "",
