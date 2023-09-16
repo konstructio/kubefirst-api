@@ -61,6 +61,8 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 	var registryPath string
 	if cl.CloudProvider == "civo" && cl.GitProvider == "github" {
 		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
+	} else if cl.CloudProvider == "civo" && cl.GitProvider == "gitlab" {
+		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
 	} else {
 		registryPath = fmt.Sprintf("registry/%s", cl.ClusterName)
 	}
@@ -242,6 +244,8 @@ func DeleteService(cl *types.Cluster, serviceName string) error {
 
 	var registryPath string
 	if cl.CloudProvider == "civo" && cl.GitProvider == "github" {
+		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
+	} else if cl.CloudProvider == "civo" && cl.GitProvider == "gitlab" {
 		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
 	} else {
 		registryPath = fmt.Sprintf("registry/%s", cl.ClusterName)
