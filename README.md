@@ -26,6 +26,8 @@ Kubefirst API runtime implementation.
     - [Leverage `air` for Live Reloading Locally](#leverage-air-for-live-reloading-locally)
   - [Prerequisites](#prerequisites)
     - [Environment Variables](#environment-variables)
+    - [To run locally:](#to-run-locally)
+  - [local environment variables](#local-environment-variables)
   - [Provider Support](#provider-support)
   - [Creating a Cluster](#creating-a-cluster)
       - [Kubernetes Secret](#kubernetes-secret)
@@ -36,8 +38,6 @@ Kubefirst API runtime implementation.
     - [Vultr](#vultr)
     - [Deleting a Cluster](#deleting-a-cluster)
   - [Authentication](#authentication)
-    - [Creating a User](#creating-a-user)
-    - [Authenticating](#authenticating)
   - [Swagger UI](#swagger-ui)
   - [Updating Swagger Docs](#updating-swagger-docs)
 
@@ -87,18 +87,19 @@ Some variables are required, others are optional depending on deployment type.
 | `INSTALL_METHOD`    | Description of the method through which the API was deployed. Example: `helm`                                                                    | Yes            |
 | `K1_ACCESS_TOKEN`    | Access token in authorization header to prevent unsolicited in-cluster access | Yes            |
 
-To run locally: 
+### To run locally: 
 
 ```bash
-export MONGODB_USERNAME=
-export MONGODB_PASSWORD=
-export MONGODB_HOST_TYPE=atlas / local
-export MONGODB_HOST=
-export CLUSTER_TYPE=
-export CLUSTER_ID=
-export INSTALL_METHOD=
-export K1_ACCESS_TOKEN=localexample
+# optional local mongodb for kubefirst-api
+docker run -d --name k1-api-mongodb \
+  -e MONGO_INITDB_ROOT_USERNAME=root \
+  -e MONGO_INITDB_ROOT_PASSWORD=some-password \
+  -p 27017:27017 \
+  mongo
 ```
+
+## local environment variables
+see [this .env example](./.env.example) for the necessary values
 
 ## Provider Support
 
