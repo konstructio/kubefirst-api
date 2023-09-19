@@ -41,6 +41,7 @@ type ClusterController struct {
 	ClusterID     string
 	ClusterType   string
 	DomainName    string
+	SubdomainName string
 	DnsProvider   string
 	AlertsEmail   string
 
@@ -152,6 +153,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	clctrl.ClusterName = def.ClusterName
 	clctrl.ClusterID = clusterID
 	clctrl.DomainName = def.DomainName
+	clctrl.SubdomainName = def.SubdomainName
 	clctrl.DnsProvider = def.DnsProvider
 	clctrl.ClusterType = def.Type
 	clctrl.HttpClient = http.DefaultClient
