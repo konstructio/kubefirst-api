@@ -186,6 +186,14 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 		kubefirstVersion = "development"
 	}
 
+	var fullDomainName string
+
+	if clctrl.SubdomainName != "" {
+		fullDomainName = fmt.Sprintf("%s.%s", clctrl.SubdomainName, clctrl.DomainName)
+	} else {
+		fullDomainName = clctrl.DomainName
+	}
+
 	//handle set gitops tokens/values
 	switch kind {
 	case "gitops": //repo name
@@ -221,16 +229,16 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			Kubeconfig:                clctrl.ProviderConfig.Kubeconfig, //AWS
 			KubeconfigPath:            clctrl.ProviderConfig.Kubeconfig, //Not AWS
 
-			ArgoCDIngressURL:               fmt.Sprintf("https://argocd.%s", clctrl.DomainName),
-			ArgoCDIngressNoHTTPSURL:        fmt.Sprintf("argocd.%s", clctrl.DomainName),
-			ArgoWorkflowsIngressURL:        fmt.Sprintf("https://argo.%s", clctrl.DomainName),
-			ArgoWorkflowsIngressNoHTTPSURL: fmt.Sprintf("argo.%s", clctrl.DomainName),
-			AtlantisIngressURL:             fmt.Sprintf("https://atlantis.%s", clctrl.DomainName),
-			AtlantisIngressNoHTTPSURL:      fmt.Sprintf("atlantis.%s", clctrl.DomainName),
-			ChartMuseumIngressURL:          fmt.Sprintf("https://chartmuseum.%s", clctrl.DomainName),
-			VaultIngressURL:                fmt.Sprintf("https://vault.%s", clctrl.DomainName),
-			VaultIngressNoHTTPSURL:         fmt.Sprintf("vault.%s", clctrl.DomainName),
-			VouchIngressURL:                fmt.Sprintf("https://vouch.%s", clctrl.DomainName),
+			ArgoCDIngressURL:               fmt.Sprintf("https://argocd.%s", fullDomainName),
+			ArgoCDIngressNoHTTPSURL:        fmt.Sprintf("argocd.%s", fullDomainName),
+			ArgoWorkflowsIngressURL:        fmt.Sprintf("https://argo.%s", fullDomainName),
+			ArgoWorkflowsIngressNoHTTPSURL: fmt.Sprintf("argo.%s", fullDomainName),
+			AtlantisIngressURL:             fmt.Sprintf("https://atlantis.%s", fullDomainName),
+			AtlantisIngressNoHTTPSURL:      fmt.Sprintf("atlantis.%s", fullDomainName),
+			ChartMuseumIngressURL:          fmt.Sprintf("https://chartmuseum.%s", fullDomainName),
+			VaultIngressURL:                fmt.Sprintf("https://vault.%s", fullDomainName),
+			VaultIngressNoHTTPSURL:         fmt.Sprintf("vault.%s", fullDomainName),
+			VouchIngressURL:                fmt.Sprintf("https://vouch.%s", fullDomainName),
 
 			GitDescription:       fmt.Sprintf("%s hosted git", clctrl.GitProvider),
 			GitNamespace:         "N/A",
@@ -292,10 +300,10 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			ClusterName:                   clctrl.ClusterName,
 			CloudRegion:                   clctrl.CloudRegion,
 			ContainerRegistryURL:          fmt.Sprintf("%s/%s/metaphor", clctrl.ContainerRegistryHost, clctrl.GitAuth.Owner),
-			DomainName:                    clctrl.DomainName,
-			MetaphorDevelopmentIngressURL: fmt.Sprintf("metaphor-development.%s", clctrl.DomainName),
-			MetaphorStagingIngressURL:     fmt.Sprintf("metaphor-staging.%s", clctrl.DomainName),
-			MetaphorProductionIngressURL:  fmt.Sprintf("metaphor-production.%s", clctrl.DomainName),
+			DomainName:                    fullDomainName,
+			MetaphorDevelopmentIngressURL: fmt.Sprintf("metaphor-development.%s", fullDomainName),
+			MetaphorStagingIngressURL:     fmt.Sprintf("metaphor-staging.%s", fullDomainName),
+			MetaphorProductionIngressURL:  fmt.Sprintf("metaphor-production.%s", fullDomainName),
 		}
 		return metaphorTemplateTokens
 	}
