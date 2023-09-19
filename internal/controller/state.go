@@ -21,8 +21,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var DigitaloceanStateStoreBucketName, VultrStateStoreBucketHostname string
-
 // StateStoreCredentials
 func (clctrl *ClusterController) StateStoreCredentials() error {
 	// Logging handler
@@ -123,7 +121,18 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				return err
 			}
 
-			DigitaloceanStateStoreBucketName = creds.Endpoint
+		case "google":
+			// State is stored in a non s3 compliant gcs backend and thus the ADC provided will be used.
+
+			// state store bucket created
+			_, err := clctrl.GoogleClient.CreateBucket(clctrl.KubefirstStateStoreBucketName, []byte(clctrl.GoogleAuth.KeyFile))
+			if err != nil {
+				msg := fmt.Sprintf("error creating google bucket %s: %s", clctrl.KubefirstStateStoreBucketName, err)
+				log.Error(msg)
+				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricStateStoreCreateFailed, msg)
+				return fmt.Errorf(msg)
+			}
+
 		case "vultr":
 			vultrConf := vultr.VultrConfiguration{
 				Client:  vultr.NewVultr(cl.VultrAuth.Token),
@@ -163,8 +172,6 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			if err != nil {
 				return err
 			}
-
-			VultrStateStoreBucketHostname = objst.S3Hostname
 		}
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_credentials", stateStoreData)

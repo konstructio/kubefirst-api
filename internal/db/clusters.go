@@ -203,6 +203,7 @@ func (mdbcl *MongoDBClient) Restore(req *types.ImportClusterRequest) error {
 		bucketHostname = "s3.amazonaws.com"
 	case "civo":
 		bucketHostname = fmt.Sprintf("objectstore.%s.civo.com", req.CloudRegion)
+	// case "google" doesn't use the endpoint/hostname and isn't s3 compatible
 	case "digitalocean":
 		bucketHostname = fmt.Sprintf("%s.digitaloceanspaces.com", req.CloudRegion)
 	case "vultr":

@@ -12,6 +12,7 @@ import (
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
+	google "github.com/kubefirst/runtime/pkg/google"
 	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
@@ -51,6 +52,19 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 			}
 		case "civo":
 			err := civo.DownloadTools(
+				clctrl.ProviderConfig.KubectlClient,
+				providerConfigs.KubectlClientVersion,
+				providerConfigs.LocalhostOS,
+				providerConfigs.LocalhostArch,
+				providerConfigs.TerraformClientVersion,
+				toolsDir,
+			)
+			if err != nil {
+				log.Errorf("error downloading dependencies: %s", err)
+				return err
+			}
+		case "google":
+			err := google.DownloadTools(
 				clctrl.ProviderConfig.KubectlClient,
 				providerConfigs.KubectlClientVersion,
 				providerConfigs.LocalhostOS,

@@ -16,6 +16,7 @@ import (
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
+	"github.com/kubefirst/runtime/pkg/google"
 	"github.com/kubefirst/runtime/pkg/vultr"
 )
 
@@ -132,6 +133,25 @@ func PostRegions(c *gin.Context) {
 		}
 
 		regions, err := vultrConf.GetRegions()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+		regionListResponse.Regions = regions
+	case "google":
+		if regionListRequest.GoogleAuth.KeyFile == "" {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: "missing authentication credentials in request, please check and try again",
+			})
+			return
+		}
+		googleConf := google.GoogleConfiguration{
+			Context: context.Background(),
+		}
+
+		regions, err := googleConf.GetRegions()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: err.Error(),

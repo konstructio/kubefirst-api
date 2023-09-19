@@ -19,6 +19,7 @@ import (
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
+	authv1 "k8s.io/api/authorization/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -51,49 +52,25 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 		switch clctrl.CloudProvider {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-			argoCDInstallPath := fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
-			log.Infof("installing argocd")
-
-			err = argocd.ApplyArgoCDKustomize(kcfg.Clientset, argoCDInstallPath)
-			if err != nil {
-				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricArgoCDInstallFailed, err.Error())
-				return err
-			}
-			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricArgoCDInstallCompleted, "")
-		case "civo":
+		case "civo", "digitalocean", "vultr":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
-			argoCDInstallPath := fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
-			log.Infof("installing argocd")
-
-			err = argocd.ApplyArgoCDKustomize(kcfg.Clientset, argoCDInstallPath)
+		case "google":
+			var err error
+			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
 			if err != nil {
-				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricArgoCDInstallFailed, err.Error())
 				return err
 			}
-			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricArgoCDInstallCompleted, "")
-		case "digitalocean":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
-			argoCDInstallPath := fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
-			log.Infof("installing argocd")
-
-			err = argocd.ApplyArgoCDKustomize(kcfg.Clientset, argoCDInstallPath)
-			if err != nil {
-				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricArgoCDInstallFailed, err.Error())
-				return err
-			}
-			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricArgoCDInstallCompleted, "")
-		case "vultr":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
-			argoCDInstallPath := fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
-			log.Infof("installing argocd")
-
-			err = argocd.ApplyArgoCDKustomize(kcfg.Clientset, argoCDInstallPath)
-			if err != nil {
-				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricArgoCDInstallFailed, err.Error())
-				return err
-			}
-			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricArgoCDInstallCompleted, "")
 		}
+
+		argoCDInstallPath := fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
+		log.Infof("installing argocd")
+
+		err = argocd.ApplyArgoCDKustomize(kcfg.Clientset, argoCDInstallPath)
+		if err != nil {
+			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricArgoCDInstallFailed, err.Error())
+			return err
+		}
+		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricArgoCDInstallCompleted, "")
 
 		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricArgoCDInstallStarted, "")
 		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricArgoCDInstallCompleted, "")
@@ -138,6 +115,12 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 		case "civo", "digitalocean", "vultr":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		case "google":
+			var err error
+			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
+			if err != nil {
+				return err
+			}
 		}
 
 		log.Info("Setting argocd username and password credentials")
@@ -155,7 +138,28 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 		var argoCDToken string
 
 		switch clctrl.CloudProvider {
-		case "aws", "civo", "digitalocean", "vultr":
+		case "aws", "civo", "google", "digitalocean", "vultr":
+			action := authv1.ResourceAttributes{
+				Namespace: "argocd",
+				Verb:      "port-forward",
+				Resource:  "pods",
+			}
+
+			selfCheck := authv1.SelfSubjectAccessReview{
+				Spec: authv1.SelfSubjectAccessReviewSpec{
+					ResourceAttributes: &action,
+				},
+			}
+
+			resp, err := kcfg.Clientset.AuthorizationV1().
+				SelfSubjectAccessReviews().
+				Create(context.TODO(), &selfCheck, metav1.CreateOptions{})
+			log.Info(resp.Status.Allowed)
+			if err != nil {
+				panic(err.Error())
+			}
+
+			// kcfg.Clientset.RbacV1().
 			argoCDStopChannel := make(chan struct{}, 1)
 			defer func() {
 				close(argoCDStopChannel)
@@ -216,6 +220,12 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 		case "civo", "digitalocean", "vultr":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		case "google":
+			var err error
+			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
+			if err != nil {
+				return err
+			}
 		}
 
 		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCreateRegistryStarted, "")

@@ -12,6 +12,7 @@ import (
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
+	googleext "github.com/kubefirst/kubefirst-api/extensions/google"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
@@ -51,6 +52,12 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 		case "civo", "digitalocean", "vultr":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		case "google":
+			var err error
+			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
+			if err != nil {
+				return err
+			}
 		}
 
 		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricUsersTerraformApplyStarted, "")
@@ -63,25 +70,21 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		case "aws":
 			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, &cl)
 			tfEnvs = awsext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
-			tfEntrypoint = clctrl.ProviderConfig.GitopsDir + "/terraform/users"
-			terraformClient = clctrl.ProviderConfig.TerraformClient
 		case "civo":
 			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, &cl)
 			tfEnvs = civoext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
-			tfEntrypoint = clctrl.ProviderConfig.GitopsDir + "/terraform/users"
-			terraformClient = clctrl.ProviderConfig.TerraformClient
+		case "google":
+			tfEnvs = googleext.GetGoogleTerraformEnvs(tfEnvs, &cl)
+			tfEnvs = googleext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 		case "digitalocean":
 			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, &cl)
 			tfEnvs = digitaloceanext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
-			tfEntrypoint = clctrl.ProviderConfig.GitopsDir + "/terraform/users"
-			terraformClient = clctrl.ProviderConfig.TerraformClient
 		case "vultr":
 			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
 			tfEnvs = vultrext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
-			tfEntrypoint = clctrl.ProviderConfig.GitopsDir + "/terraform/users"
-			terraformClient = clctrl.ProviderConfig.TerraformClient
 		}
-
+		tfEntrypoint = clctrl.ProviderConfig.GitopsDir + "/terraform/users"
+		terraformClient = clctrl.ProviderConfig.TerraformClient
 		err = terraformext.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Errorf("error applying users terraform: %s", err)

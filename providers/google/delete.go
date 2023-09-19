@@ -4,9 +4,10 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package civo
+package google
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net/http"
@@ -14,8 +15,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/civo/civogo"
-	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
+	googleext "github.com/kubefirst/kubefirst-api/extensions/google"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
@@ -25,14 +25,15 @@ import (
 	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
+	"github.com/kubefirst/runtime/pkg/google"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 )
 
-// DeleteCivoCluster
-func DeleteCivoCluster(cl *types.Cluster) error {
+// DeleteAWSCluster
+func DeleteGoogleCluster(cl *types.Cluster) error {
 	// Logging handler
 	// Logs to stdout to maintain compatibility with event streaming
 	log.SetFormatter(&log.TextFormatter{
@@ -51,26 +52,39 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 
 	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricClusterDeleteStarted, "")
 
-	// Instantiate civo config
-	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.APIToken, cl.CloudflareAuth.OriginCaIssuerKey)
+	// Instantiate aws config
+	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.Token, "")
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleting)
 	if err != nil {
 		return err
 	}
 
-	tfEnvs := map[string]string{}
-	var tfEntrypoint string
+	switch cl.GitProvider {
+	case "github":
+		if cl.GitTerraformApplyCheck {
+			log.Info("destroying github resources with terraform")
 
-	if cl.GitTerraformApplyCheck {
-		log.Info("destroying %s resources with terraform", cl.GitProvider)
-		switch cl.GitProvider {
-		case "github":
-			tfEntrypoint = config.GitopsDir + "/terraform/github"
-			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, cl)
-			tfEnvs = civoext.GetGithubTerraformEnvs(tfEnvs, cl)
+			tfEntrypoint := config.GitopsDir + "/terraform/github"
+			tfEnvs := map[string]string{}
+			tfEnvs = googleext.GetGoogleTerraformEnvs(tfEnvs, cl)
+			tfEnvs = googleext.GetGithubTerraformEnvs(tfEnvs, cl)
+			err := terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
+			if err != nil {
+				log.Errorf("error executing terraform destroy %s", tfEntrypoint)
+				errors.HandleClusterError(cl, err.Error())
+				return err
+			}
+			log.Info("github resources terraform destroyed")
 
-		case "gitlab":
+			err = db.Client.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
+			if err != nil {
+				return err
+			}
+		}
+	case "gitlab":
+		if cl.GitTerraformApplyCheck {
+			log.Info("destroying gitlab resources with terraform")
 			gitlabClient, err := gitlab.NewGitLabClient(cl.GitAuth.Token, cl.GitAuth.Owner)
 			if err != nil {
 				return err
@@ -104,50 +118,46 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 					log.Infof("project %s does not exist, skipping", project)
 				}
 			}
-			tfEntrypoint = config.GitopsDir + "/terraform/gitlab"
-			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, cl)
-			tfEnvs = civoext.GetGitlabTerraformEnvs(tfEnvs, gitlabClient.ParentGroupID, cl)
-		}
 
-		err = terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
-		if err != nil {
-			log.Infof("error executing terraform destroy %s", tfEntrypoint)
-			errors.HandleClusterError(cl, err.Error())
-			return err
-		}
+			tfEntrypoint := config.GitopsDir + "/terraform/gitlab"
+			tfEnvs := map[string]string{}
+			tfEnvs = googleext.GetGoogleTerraformEnvs(tfEnvs, cl)
+			tfEnvs = googleext.GetGitlabTerraformEnvs(tfEnvs, gitlabClient.ParentGroupID, cl)
+			err = terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
+			if err != nil {
+				log.Errorf("error executing terraform destroy %s", tfEntrypoint)
+				errors.HandleClusterError(cl, err.Error())
+				return err
+			}
 
-		log.Info("%s resources terraform destroyed", cl.GitProvider)
+			log.Info("gitlab resources terraform destroyed")
 
-		err = db.Client.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
-		if err != nil {
-			return err
+			err = db.Client.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	if cl.CloudTerraformApplyCheck || cl.CloudTerraformApplyFailedCheck {
 		if !cl.ArgoCDDeleteRegistryCheck {
-			kcfg := k8s.CreateKubeConfig(false, config.Kubeconfig)
-
-			log.Info("destroying civo resources with terraform")
-
-			client, err := civogo.NewClient(cl.CivoAuth.Token, cl.CloudRegion)
-			if err != nil {
-				return fmt.Errorf(err.Error())
+			googleConf := google.GoogleConfiguration{
+				Context: context.Background(),
+				Project: cl.GoogleAuth.ProjectId,
+				Region:  cl.CloudRegion,
 			}
+			kcfg, err := googleConf.GetContainerClusterAuth(cl.ClusterName, []byte(cl.GoogleAuth.KeyFile))
 
-			cluster, err := client.FindKubernetesCluster(cl.ClusterName)
-			if err != nil {
-				return err
-			}
-			log.Info("cluster name: " + cluster.ID)
-
-			clusterVolumes, err := client.ListVolumesForCluster(cluster.ID)
-			if err != nil {
-				return err
-			}
+			log.Info("destroying google resources with terraform")
 
 			// Only port-forward to ArgoCD and delete registry if ArgoCD was installed
 			if cl.ArgoCDInstallCheck {
+				removeArgoCDApps := []string{"ingress-nginx-components", "ingress-nginx"}
+				err = argocd.ArgoCDApplicationCleanup(kcfg.Clientset, removeArgoCDApps)
+				if err != nil {
+					log.Errorf("encountered error during argocd application cleanup: %s", err)
+				}
+
 				log.Info("opening argocd port forward")
 				//* ArgoCD port-forward
 				argoCDStopChannel := make(chan struct{}, 1)
@@ -191,17 +201,8 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 				log.Infof("http status code %d", httpCode)
 			}
 
-			for _, vol := range clusterVolumes {
-				log.Info("removing volume with name: " + vol.Name)
-				_, err := client.DeleteVolume(vol.ID)
-				if err != nil {
-					return err
-				}
-				log.Info("volume " + vol.ID + " deleted")
-			}
-
 			// Pause before cluster destroy to prevent a race condition
-			log.Info("waiting for Civo Kubernetes cluster resource removal to finish...")
+			log.Info("waiting for aws Kubernetes cluster resource removal to finish...")
 			time.Sleep(time.Second * 10)
 
 			err = db.Client.UpdateCluster(cl.ClusterName, "argocd_delete_registry_check", true)
@@ -210,28 +211,29 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 			}
 		}
 
-		log.Info("destroying civo cloud resources")
+		log.Info("destroying google cloud resources")
 		tfEntrypoint := config.GitopsDir + fmt.Sprintf("/terraform/%s", cl.CloudProvider)
 		tfEnvs := map[string]string{}
-		tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, cl)
+		tfEnvs = googleext.GetGoogleTerraformEnvs(tfEnvs, cl)
+		tfEnvs["TF_VAR_project"] = cl.GoogleAuth.ProjectId
 
 		switch cl.GitProvider {
 		case "github":
-			tfEnvs = civoext.GetGithubTerraformEnvs(tfEnvs, cl)
+			tfEnvs = googleext.GetGithubTerraformEnvs(tfEnvs, cl)
 		case "gitlab":
 			gid, err := strconv.Atoi(fmt.Sprint(cl.GitlabOwnerGroupID))
 			if err != nil {
 				return fmt.Errorf("couldn't convert gitlab group id to int: %s", err)
 			}
-			tfEnvs = civoext.GetGitlabTerraformEnvs(tfEnvs, gid, cl)
+			tfEnvs = googleext.GetGitlabTerraformEnvs(tfEnvs, gid, cl)
 		}
 		err = terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
-			log.Printf("error executing terraform destroy %s", tfEntrypoint)
+			log.Errorf("error executing terraform destroy %s", tfEntrypoint)
 			errors.HandleClusterError(cl, err.Error())
 			return err
 		}
-		log.Info("civo resources terraform destroyed")
+		log.Info("gcp resources terraform destroyed")
 
 		err = db.Client.UpdateCluster(cl.ClusterName, "cloud_terraform_apply_check", false)
 		if err != nil {

@@ -14,6 +14,7 @@ type DomainListRequest struct {
 	DigitaloceanAuth DigitaloceanAuth `json:"do_auth,omitempty"`
 	VultrAuth        VultrAuth        `json:"vultr_auth,omitempty"`
 	CloudflareAuth   CloudflareAuth   `json:"cloudflare_auth,omitempty"`
+	GoogleAuth       GoogleAuth       `bson:"google_auth,omitempty" json:"google_auth,omitempty"`
 }
 
 // DomainListResponse
