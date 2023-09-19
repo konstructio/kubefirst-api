@@ -234,6 +234,8 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		var registryPath string
 		if clctrl.CloudProvider == "civo" && clctrl.GitProvider == "github" {
 			registryPath = fmt.Sprintf("registry/clusters/%s", clctrl.ClusterName)
+		} else if clctrl.CloudProvider == "civo" && clctrl.GitProvider == "gitlab" {
+			registryPath = fmt.Sprintf("registry/clusters/%s", clctrl.ClusterName)
 		} else {
 			registryPath = fmt.Sprintf("registry/%s", clctrl.ClusterName)
 		}

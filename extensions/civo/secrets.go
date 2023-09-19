@@ -60,8 +60,38 @@ func BootstrapCivoMgmtCluster(clientset *kubernetes.Clientset, cl *types.Cluster
 			ObjectMeta: metav1.ObjectMeta{Name: "civo-creds", Namespace: "external-dns"},
 			Data: map[string][]byte{
 				"civo-token":       []byte(cl.CivoAuth.Token),
-				"cf-api-token":     []byte(cl.CloudflareAuth.Token),
-				"cloudflare-token": []byte(cl.CloudflareAuth.Token),
+				"cf-api-token":     []byte(cl.CloudflareAuth.APIToken),
+				"cloudflare-token": []byte(cl.CloudflareAuth.APIToken),
+			},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{Name: "cloudflare-creds", Namespace: "argo"},
+			Data: map[string][]byte{
+				"origin-ca-api-key": []byte(cl.CloudflareAuth.OriginCaIssuerKey),
+			},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{Name: "cloudflare-creds", Namespace: "atlantis"},
+			Data: map[string][]byte{
+				"origin-ca-api-key": []byte(cl.CloudflareAuth.OriginCaIssuerKey),
+			},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{Name: "cloudflare-creds", Namespace: "chartmuseum"},
+			Data: map[string][]byte{
+				"origin-ca-api-key": []byte(cl.CloudflareAuth.OriginCaIssuerKey),
+			},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{Name: "cloudflare-creds", Namespace: "kubefirst"},
+			Data: map[string][]byte{
+				"origin-ca-api-key": []byte(cl.CloudflareAuth.OriginCaIssuerKey),
+			},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{Name: "cloudflare-creds", Namespace: "vault"},
+			Data: map[string][]byte{
+				"origin-ca-api-key": []byte(cl.CloudflareAuth.OriginCaIssuerKey),
 			},
 		},
 	}

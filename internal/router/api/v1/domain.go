@@ -83,14 +83,14 @@ func PostDomains(c *gin.Context) {
 		domainListResponse.Domains = domains
 	case "cloudflare":
 		//check for token, make sure it aint blank
-		if domainListRequest.CloudflareAuth.Token == "" {
+		if domainListRequest.CloudflareAuth.APIToken == "" {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: "missing authentication credentials in request, please check and try again",
 			})
 			return
 		}
 
-		client, err := cloudflare_api.NewWithAPIToken(domainListRequest.CloudflareAuth.Token)
+		client, err := cloudflare_api.NewWithAPIToken(domainListRequest.CloudflareAuth.APIToken)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: fmt.Sprintf("Could not create cloudflare client, %v", err),

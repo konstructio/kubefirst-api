@@ -19,6 +19,7 @@ type ClusterDefinition struct {
 	CloudRegion   string `json:"cloud_region" binding:"required"`
 	ClusterName   string `json:"cluster_name,omitempty"`
 	DomainName    string `json:"domain_name" binding:"required"`
+	SubdomainName string `json:"subdomain_name,omitempty"`
 	DnsProvider   string `json:"dns_provider,omitempty" binding:"required"`
 	Type          string `json:"type" binding:"required,oneof=mgmt workload"`
 
@@ -58,6 +59,7 @@ type Cluster struct {
 	ClusterID     string `bson:"cluster_id" json:"cluster_id"`
 	ClusterType   string `bson:"cluster_type" json:"cluster_type"`
 	DomainName    string `bson:"domain_name" json:"domain_name"`
+	SubdomainName string `json:"subdomain_name,omitempty"`
 	DnsProvider   string `bson:"dns_provider" json:"dns_provider"`
 
 	// Auth
