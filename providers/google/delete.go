@@ -32,7 +32,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// DeleteAWSCluster
+// DeleteGoogleCluster
 func DeleteGoogleCluster(cl *types.Cluster) error {
 	// Logging handler
 	// Logs to stdout to maintain compatibility with event streaming
@@ -52,7 +52,7 @@ func DeleteGoogleCluster(cl *types.Cluster) error {
 
 	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricClusterDeleteStarted, "")
 
-	// Instantiate aws config
+	// Instantiate google config
 	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.Token, "")
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleting)
@@ -202,7 +202,7 @@ func DeleteGoogleCluster(cl *types.Cluster) error {
 			}
 
 			// Pause before cluster destroy to prevent a race condition
-			log.Info("waiting for aws Kubernetes cluster resource removal to finish...")
+			log.Info("waiting for google Kubernetes cluster resource removal to finish...")
 			time.Sleep(time.Second * 10)
 
 			err = db.Client.UpdateCluster(cl.ClusterName, "argocd_delete_registry_check", true)

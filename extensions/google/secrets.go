@@ -31,7 +31,7 @@ func BootstrapGoogleMgmtCluster(
 		config.DestinationGitopsRepoURL,
 		cl.GitProtocol,
 		cl.CloudflareAuth.Token,
-		cl.GoogleAuth.KeyFile, //AWS has no authentication method because we use roles
+		cl.GoogleAuth.KeyFile, //Google has no authentication method because we use roles
 		cl.DnsProvider,
 		cl.CloudProvider,
 	)
