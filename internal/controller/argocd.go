@@ -19,7 +19,6 @@ import (
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
-	authv1 "k8s.io/api/authorization/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -139,25 +138,6 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 
 		switch clctrl.CloudProvider {
 		case "aws", "civo", "google", "digitalocean", "vultr":
-			action := authv1.ResourceAttributes{
-				Namespace: "argocd",
-				Verb:      "port-forward",
-				Resource:  "pods",
-			}
-
-			selfCheck := authv1.SelfSubjectAccessReview{
-				Spec: authv1.SelfSubjectAccessReviewSpec{
-					ResourceAttributes: &action,
-				},
-			}
-
-			resp, err := kcfg.Clientset.AuthorizationV1().
-				SelfSubjectAccessReviews().
-				Create(context.TODO(), &selfCheck, metav1.CreateOptions{})
-			log.Info(resp.Status.Allowed)
-			if err != nil {
-				panic(err.Error())
-			}
 
 			// kcfg.Clientset.RbacV1().
 			argoCDStopChannel := make(chan struct{}, 1)
