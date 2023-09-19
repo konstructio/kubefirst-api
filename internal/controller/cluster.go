@@ -214,6 +214,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			ClusterName:               clctrl.ClusterName,
 			ClusterType:               clctrl.ClusterType,
 			DomainName:                clctrl.DomainName,
+			SubdomainName:             clctrl.SubdomainName,
 			KubefirstStateStoreBucket: clctrl.KubefirstStateStoreBucketName,
 			KubefirstTeam:             clctrl.KubefirstTeam,
 			KubefirstVersion:          kubefirstVersion,

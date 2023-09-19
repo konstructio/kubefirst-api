@@ -250,6 +250,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		CloudProvider:         clctrl.CloudProvider,
 		CloudRegion:           clctrl.CloudRegion,
 		DomainName:            clctrl.DomainName,
+		SubdomainName:         clctrl.SubdomainName,
 		DnsProvider:           clctrl.DnsProvider,
 		ClusterID:             clctrl.ClusterID,
 		ECR:                   clctrl.ECR,
