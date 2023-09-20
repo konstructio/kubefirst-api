@@ -17,7 +17,7 @@ require (
 	github.com/google/go-github/v52 v52.0.0
 	github.com/hashicorp/vault/api v1.9.0
 	github.com/joho/godotenv v1.5.1
-	github.com/kubefirst/runtime v0.3.17
+	github.com/kubefirst/runtime v0.3.19
 	github.com/minio/minio-go/v7 v7.0.49
 	github.com/rs/zerolog v1.29.0
 	github.com/sirupsen/logrus v1.9.0
@@ -45,6 +45,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/container v1.24.0 // indirect
 	cloud.google.com/go/iam v0.13.0 // indirect
+	cloud.google.com/go/secretmanager v1.10.0 // indirect
 	cloud.google.com/go/storage v1.29.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
