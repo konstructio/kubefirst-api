@@ -13,6 +13,7 @@ type RegionListRequest struct {
 	CivoAuth         CivoAuth         `json:"civo_auth,omitempty"`
 	DigitaloceanAuth DigitaloceanAuth `json:"do_auth,omitempty"`
 	VultrAuth        VultrAuth        `json:"vultr_auth,omitempty"`
+	GoogleAuth       GoogleAuth       `bson:"google_auth,omitempty" json:"google_auth,omitempty"`
 }
 
 // RegionListResponse

@@ -233,7 +233,7 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 		}
 
 		log.Info("destroying vultr cloud resources")
-		tfEntrypoint := config.GitopsDir + "/terraform/vultr"
+		tfEntrypoint := config.GitopsDir + fmt.Sprintf("/terraform/%s", cl.CloudProvider)
 		tfEnvs := map[string]string{}
 		tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, cl)
 

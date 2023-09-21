@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package controller
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -21,6 +22,7 @@ import (
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/github"
 	"github.com/kubefirst/runtime/pkg/gitlab"
+	google "github.com/kubefirst/runtime/pkg/google"
 	"github.com/kubefirst/runtime/pkg/handlers"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/providerConfigs"
@@ -53,6 +55,7 @@ type ClusterController struct {
 	CloudflareAuth     types.CloudflareAuth
 	GitAuth            types.GitAuth
 	VaultAuth          types.VaultAuth
+	GoogleAuth         types.GoogleAuth
 	AwsAccessKeyID     string
 	AwsSecretAccessKey string
 
@@ -101,8 +104,9 @@ type ClusterController struct {
 	MdbCl *db.MongoDBClient
 
 	// Provider clients
-	AwsClient *awsinternal.AWSConfiguration
-	Kcfg      *k8s.KubernetesClient
+	AwsClient    *awsinternal.AWSConfiguration
+	GoogleClient google.GoogleConfiguration
+	Kcfg         *k8s.KubernetesClient
 }
 
 // InitController
@@ -162,6 +166,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	clctrl.CivoAuth = def.CivoAuth
 	clctrl.DigitaloceanAuth = def.DigitaloceanAuth
 	clctrl.VultrAuth = def.VultrAuth
+	clctrl.GoogleAuth = def.GoogleAuth
 	clctrl.CloudflareAuth = def.CloudflareAuth
 
 	clctrl.Repositories = []string{"gitops", "metaphor"}
@@ -212,6 +217,10 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	case "civo":
 		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.APIToken, clctrl.CloudflareAuth.OriginCaIssuerKey)
 		clctrl.ProviderConfig.CivoToken = clctrl.CivoAuth.Token
+	case "google":
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		clctrl.ProviderConfig.GoogleAuth = clctrl.GoogleAuth.KeyFile
+		clctrl.ProviderConfig.GoogleProject = clctrl.GoogleAuth.ProjectId
 	case "digitalocean":
 		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
 		clctrl.ProviderConfig.DigitaloceanToken = clctrl.DigitaloceanAuth.Token
@@ -231,6 +240,13 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 				clctrl.AWSAuth.SessionToken,
 			),
 		}
+	case "google":
+		clctrl.GoogleClient = google.GoogleConfiguration{
+			Context: context.Background(),
+			Project: def.GoogleAuth.ProjectId,
+			Region:  clctrl.CloudRegion,
+		}
+
 	}
 
 	if os.Getenv("USE_TELEMETRY") == "false" {
@@ -267,6 +283,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		KubefirstTeam:         clctrl.KubefirstTeam,
 		AWSAuth:               clctrl.AWSAuth,
 		CivoAuth:              clctrl.CivoAuth,
+		GoogleAuth:            clctrl.GoogleAuth,
 		DigitaloceanAuth:      clctrl.DigitaloceanAuth,
 		VultrAuth:             clctrl.VultrAuth,
 		CloudflareAuth:        clctrl.CloudflareAuth,

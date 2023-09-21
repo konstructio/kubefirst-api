@@ -214,7 +214,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 		}
 
 		log.Info("destroying aws cloud resources")
-		tfEntrypoint := config.GitopsDir + "/terraform/aws"
+		tfEntrypoint := config.GitopsDir + fmt.Sprintf("/terraform/%s", cl.CloudProvider)
 		tfEnvs := map[string]string{}
 		tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, cl)
 		tfEnvs["TF_VAR_aws_account_id"] = cl.AWSAccountId

@@ -22,6 +22,7 @@ import (
 	"github.com/kubefirst/kubefirst-api/providers/aws"
 	"github.com/kubefirst/kubefirst-api/providers/civo"
 	"github.com/kubefirst/kubefirst-api/providers/digitalocean"
+	"github.com/kubefirst/kubefirst-api/providers/google"
 	"github.com/kubefirst/kubefirst-api/providers/vultr"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/sirupsen/logrus"
@@ -115,6 +116,17 @@ func DeleteCluster(c *gin.Context) {
 		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
 			Message: "cluster delete enqueued",
 		})
+	case "google":
+		go func() {
+			err := google.DeleteGoogleCluster(&rec)
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+		}()
+
+		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
+			Message: "cluster delete enqueued",
+		})
 	}
 }
 
@@ -193,7 +205,7 @@ func PostCreateCluster(c *gin.Context) {
 	// jsonData, err := io.ReadAll(c.Request.Body)
 	// fmt.Spintf(string(jsonData))
 	clusterName, param := c.Params.Get("cluster_name")
-	if !param {
+	if !param || string(clusterName) == ":cluster_name" {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: ":cluster_name not provided",
 		})
@@ -245,6 +257,7 @@ func PostCreateCluster(c *gin.Context) {
 		clusterDefinition.CivoAuth = cluster.CivoAuth
 		clusterDefinition.VultrAuth = cluster.VultrAuth
 		clusterDefinition.DigitaloceanAuth = cluster.DigitaloceanAuth
+		clusterDefinition.GoogleAuth = cluster.GoogleAuth
 		clusterDefinition.GitAuth = cluster.GitAuth
 	}
 
@@ -394,6 +407,37 @@ func PostCreateCluster(c *gin.Context) {
 		}
 		go func() {
 			err = vultr.CreateVultrCluster(&clusterDefinition)
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+		}()
+
+		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
+			Message: "cluster create enqueued",
+		})
+	case "google":
+		if useSecretForAuth {
+			err := utils.ValidateAuthenticationFields(k1AuthSecret)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: fmt.Sprintf("error checking google auth: %s", err),
+				})
+				return
+			}
+			clusterDefinition.GoogleAuth = types.GoogleAuth{
+				KeyFile:   k1AuthSecret["KeyFile"],
+				ProjectId: k1AuthSecret["ProjectId"],
+			}
+		} else {
+			if clusterDefinition.GoogleAuth.KeyFile == "" {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: "missing authentication credentials in request, please check and try again",
+				})
+				return
+			}
+		}
+		go func() {
+			err = google.CreateGoogleCluster(&clusterDefinition)
 			if err != nil {
 				log.Errorf(err.Error())
 			}

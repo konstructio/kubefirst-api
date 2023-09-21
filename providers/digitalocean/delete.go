@@ -235,7 +235,7 @@ func DeleteDigitaloceanCluster(cl *types.Cluster) error {
 		}
 
 		log.Info("destroying digitalocean cloud resources")
-		tfEntrypoint := config.GitopsDir + "/terraform/digitalocean"
+		tfEntrypoint := config.GitopsDir + fmt.Sprintf("/terraform/%s", cl.CloudProvider)
 		tfEnvs := map[string]string{}
 		tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, cl)
 

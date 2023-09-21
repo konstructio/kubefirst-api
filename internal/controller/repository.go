@@ -17,6 +17,7 @@ import (
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/gitlab"
+	google "github.com/kubefirst/runtime/pkg/google"
 	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/vultr"
@@ -82,6 +83,27 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.ProviderConfig.MetaphorDir,
 				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), //tokens created on the fly
 				civo.GetDomainApexContent(clctrl.DomainName),
+				cl.GitProtocol,
+			)
+			if err != nil {
+				return err
+			}
+		case "google":
+			err := providerConfigs.PrepareGitRepositories(
+				clctrl.CloudProvider,
+				clctrl.GitProvider,
+				clctrl.ClusterName,
+				clctrl.ClusterType,
+				clctrl.ProviderConfig.DestinationGitopsRepoURL,
+				clctrl.ProviderConfig.GitopsDir,
+				clctrl.GitopsTemplateBranch,
+				clctrl.GitopsTemplateURL,
+				clctrl.ProviderConfig.DestinationMetaphorRepoURL,
+				clctrl.ProviderConfig.K1Dir,
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), //tokens created on the fly
+				clctrl.ProviderConfig.MetaphorDir,
+				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), //tokens created on the fly
+				google.GetDomainApexContent(clctrl.DomainName),
 				cl.GitProtocol,
 			)
 			if err != nil {

@@ -24,6 +24,7 @@ require (
 	github.com/swaggo/files v1.0.0
 	github.com/swaggo/gin-swagger v1.5.3
 	github.com/swaggo/swag v1.16.1
+	github.com/thanhpk/randstr v1.0.6
 	go.mongodb.org/mongo-driver v1.10.3
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.26.0
@@ -322,3 +323,5 @@ replace (
 	k8s.io/pod-security-admission => k8s.io/pod-security-admission v0.24.2
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.24.2
 )
+
+replace github.com/kubefirst/runtime => /Users/claywd/projects/kubefirst/runtime
