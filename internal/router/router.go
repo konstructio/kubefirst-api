@@ -51,7 +51,7 @@ func SetupRouter() *gin.Engine {
 		v1.GET("/cluster/:cluster_name", middleware.ValidateAPIKey(), router.GetCluster)
 		v1.DELETE("/cluster/:cluster_name", middleware.ValidateAPIKey(), router.DeleteCluster)
 		v1.POST("/cluster/:cluster_name", middleware.ValidateAPIKey(), router.PostCreateCluster)
-		v1.POST("/cluster/:cluster_name/export", middleware.ValidateAPIKey(), router.PostExportCluster)
+		v1.GET("/cluster/:cluster_name/export", middleware.ValidateAPIKey(), router.GetExportCluster)
 		v1.POST("/cluster/:cluster_name/reset_progress", middleware.ValidateAPIKey(), router.PostResetClusterProgress)
 
 		// Gitops Catalog
