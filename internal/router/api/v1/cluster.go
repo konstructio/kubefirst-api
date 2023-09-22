@@ -461,7 +461,7 @@ func PostCreateCluster(c *gin.Context) {
 // @Router /cluster/:cluster_name/export [post]
 // @Param Authorization header string true "API key" default(Bearer <API key>)
 // PostExportCluster handles a request to export a cluster
-func PostExportCluster(c *gin.Context) {
+func GetExportCluster(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
 	if !param {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -470,18 +470,19 @@ func PostExportCluster(c *gin.Context) {
 		return
 	}
 
-	// Export
-	err := db.Client.Export(clusterName)
+	// get cluster object
+	cluster, err := db.Client.GetCluster(clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: fmt.Sprintf("error exporting cluster %s: %s", clusterName, err),
+			Message: err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, types.JSONSuccessResponse{
-		Message: "cluster exported",
-	})
+	// return json of cluster
+	c.IndentedJSON(http.StatusOK, cluster)
+	return
+
 }
 
 // PostImportCluster godoc
@@ -498,8 +499,8 @@ func PostExportCluster(c *gin.Context) {
 // PostImportCluster handles a request to import a cluster
 func PostImportCluster(c *gin.Context) {
 	// Bind to variable as application/json, handle error
-	var req types.ImportClusterRequest
-	err := c.Bind(&req)
+	var cluster types.Cluster
+	err := c.Bind(&cluster)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -507,26 +508,30 @@ func PostImportCluster(c *gin.Context) {
 		return
 	}
 
-	log.Info("Restoring database")
-	// Restores database record
-	err = db.Client.Restore(&req)
+	// Insert the cluster into the target database
+	err = db.Client.InsertCluster(cluster)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
+		})
+		return
+	}
 
 	// Create default service entries
 	log.Info("Adding default services")
-	cl, _ := db.Client.GetCluster(req.ClusterName)
-	err = services.AddDefaultServices(&cl)
+	err = services.AddDefaultServices(&cluster)
 	if err != nil {
-		log.Errorf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
+		log.Errorf("error adding default service entries for cluster %s: %s", cluster.ClusterName, err)
 	}
 
-	err = gitShim.PrepareMgmtCluster(cl)
+	err = gitShim.PrepareMgmtCluster(cluster)
 	if err != nil {
 		log.Fatalf("error cloning repository: %s", err)
 	}
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: fmt.Sprintf("error importing cluster %s: %s", req.ClusterName, err),
+			Message: fmt.Sprintf("error importing cluster %s: %s", cluster.ClusterName, err),
 		})
 		return
 	}

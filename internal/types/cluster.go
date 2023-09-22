@@ -143,11 +143,7 @@ type PushBucketObject struct {
 
 // ImportClusterRequest
 type ImportClusterRequest struct {
-	ClusterName           string                `bson:"cluster_name" json:"cluster_name"`
-	CloudRegion           string                `bson:"cloud_region" json:"cloud_region"`
-	CloudProvider         string                `bson:"cloud_provider" json:"cloud_provider"`
-	StateStoreCredentials StateStoreCredentials `bson:"state_store_credentials" json:"state_store_credentials"`
-	StateStoreDetails     StateStoreDetails     `bson:"state_store_details" json:"state_store_details"`
+	ClusterName string `bson:"cluster_name" json:"cluster_name"`
 }
 
 type WorkloadCluster struct {

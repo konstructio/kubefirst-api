@@ -7,12 +7,8 @@ See the LICENSE file for more details.
 package db
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 
-	"github.com/kubefirst/kubefirst-api/internal/constants"
-	"github.com/kubefirst/kubefirst-api/internal/objectStorage"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
@@ -122,136 +118,6 @@ func (mdbcl *MongoDBClient) UpdateCluster(clusterName string, field string, valu
 	_, err = mdbcl.ClustersCollection.UpdateOne(mdbcl.Context, filter, update)
 	if err != nil {
 		return fmt.Errorf("error updating cluster %s: %s", clusterName, err)
-	}
-
-	return nil
-}
-
-// Backups
-
-// Export parses the contents of a single cluster to a local file
-func (mdbcl *MongoDBClient) Export(clusterName string) error {
-	var localFilePath = fmt.Sprintf("%s/%s.json", clusterExportsPath, clusterName)
-	var remoteFilePath = fmt.Sprintf("%s.json", clusterName)
-
-	// Find
-	filter := bson.D{{Key: "cluster_name", Value: clusterName}}
-	var result types.Cluster
-	err := mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result)
-	result.Status = constants.ClusterStatusProvisioned
-	result.InProgress = false
-	if err != nil {
-		return err
-	}
-
-	// Format file for cluster dump
-	// Verify export directory exists
-	if _, err := os.Stat(clusterExportsPath); os.IsNotExist(err) {
-		log.Info("cluster exports directory does not exist, creating")
-		err := os.MkdirAll(clusterExportsPath, 0777)
-		if err != nil {
-			return err
-		}
-	}
-
-	file, _ := json.MarshalIndent(result, "", " ")
-	_ = os.WriteFile(localFilePath, file, 0644)
-
-	// Put file containing cluster dump in object storage
-	err = objectStorage.PutClusterObject(
-		&result.StateStoreCredentials,
-		&result.StateStoreDetails,
-		&types.PushBucketObject{
-			LocalFilePath:  localFilePath,
-			RemoteFilePath: remoteFilePath,
-			ContentType:    "application/json",
-		},
-	)
-	if err != nil {
-		return err
-	}
-
-	log.Infof("successfully exported cluster %s to object storage bucket", clusterName)
-
-	err = os.Remove(localFilePath)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Restore retrieves a target cluster's database export from a state storage bucket and
-// attempts to insert the parsed cluster object into the database
-func (mdbcl *MongoDBClient) Restore(req *types.ImportClusterRequest) error {
-	var cluster *types.Cluster
-	var localFilePath = fmt.Sprintf("%s/%s.json", clusterImportsPath, req.ClusterName)
-	var remoteFilePath = fmt.Sprintf("%s.json", req.ClusterName)
-
-	// Verify import directory exists
-	if _, err := os.Stat(clusterImportsPath); os.IsNotExist(err) {
-		log.Info("cluster imports directory does not exist, creating")
-		err := os.MkdirAll(clusterImportsPath, 0777)
-		if err != nil {
-			return err
-		}
-	}
-
-	var bucketHostname string
-	switch req.CloudProvider {
-	case "aws":
-		bucketHostname = "s3.amazonaws.com"
-	case "civo":
-		bucketHostname = fmt.Sprintf("objectstore.%s.civo.com", req.CloudRegion)
-	// case "google" doesn't use the endpoint/hostname and isn't s3 compatible
-	case "digitalocean":
-		bucketHostname = fmt.Sprintf("%s.digitaloceanspaces.com", req.CloudRegion)
-	case "vultr":
-		bucketHostname = fmt.Sprintf("%s.vultrobjects.com", req.CloudRegion)
-	case "k3d":
-		bucketHostname = "minio.minio.svc.cluster.local:9000"
-	}
-
-	// Retrieve the object from state storage bucket
-	err := objectStorage.GetClusterObject(
-		&types.StateStoreCredentials{
-			AccessKeyID:     req.StateStoreCredentials.AccessKeyID,
-			SecretAccessKey: req.StateStoreCredentials.SecretAccessKey,
-			SessionToken:    req.StateStoreCredentials.SessionToken,
-		},
-		&types.StateStoreDetails{
-			Name:     req.StateStoreDetails.Name,
-			Hostname: bucketHostname,
-		},
-		localFilePath,
-		remoteFilePath,
-		req.CloudProvider != "k3d",
-	)
-	if err != nil {
-		return err
-	}
-
-	// Marshal file contents into cluster struct
-	fileContents, err := os.ReadFile(localFilePath)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(fileContents, &cluster)
-	if err != nil {
-		return fmt.Errorf("target file %s does not appear to be valid json: %s", localFilePath, err)
-	}
-
-	// Insert the cluster into the target database
-	err = mdbcl.InsertCluster(*cluster)
-	if err != nil {
-		return err
-	}
-
-	log.Infof("successfully restored cluster %s to database", req.ClusterName)
-
-	err = os.Remove(localFilePath)
-	if err != nil {
-		return err
 	}
 
 	return nil
