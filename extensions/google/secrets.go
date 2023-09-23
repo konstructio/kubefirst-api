@@ -34,6 +34,8 @@ func BootstrapGoogleMgmtCluster(
 		cl.GoogleAuth.KeyFile, //Google has no authentication method because we use roles
 		cl.DnsProvider,
 		cl.CloudProvider,
+		cl.GitAuth.Token,
+		cl.GitAuth.PrivateKey,
 	)
 	if err != nil {
 		log.Fatal().Msgf("error in central function to create secrets: %s", err)
