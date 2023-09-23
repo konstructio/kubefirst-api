@@ -31,6 +31,8 @@ func BootstrapDigitaloceanMgmtCluster(clientset *kubernetes.Clientset, cl *types
 		cl.DigitaloceanAuth.Token,
 		cl.DnsProvider,
 		cl.CloudProvider,
+		cl.GitAuth.Token,
+		cl.GitAuth.PrivateKey,
 	)
 	if err != nil {
 		log.Fatal().Msgf("error in central function to create secrets: %s", err)
