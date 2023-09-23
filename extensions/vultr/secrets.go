@@ -8,11 +8,10 @@ package vultr
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/kubefirst/kubefirst-api/internal/types"
-	config "github.com/kubefirst/runtime/pkg/providerConfigs"
+	providerConfig "github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/rs/zerolog/log"
 
 	v1 "k8s.io/api/core/v1"
@@ -20,57 +19,24 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func BootstrapVultrMgmtCluster(clientset *kubernetes.Clientset, cl *types.Cluster, config *config.ProviderConfig) error {
+func BootstrapVultrMgmtCluster(clientset *kubernetes.Clientset, cl *types.Cluster, config *providerConfig.ProviderConfig) error {
 
-	secretData := map[string][]byte{}
-
-	// Switch auth method and url based on GitProtocol
-	if cl.GitProtocol == "https" {
-		// http basic auth
-		secretData = map[string][]byte{
-			"type":     []byte("git"),
-			"name":     []byte(fmt.Sprintf("%s-gitops", cl.GitAuth.User)),
-			"url":      []byte(config.DestinationGitopsRepoURL),
-			"username": []byte(cl.GitAuth.User),
-			"password": []byte([]byte(fmt.Sprintf(cl.GitAuth.Token))),
-		}
-	} else {
-		// ssh
-		secretData = map[string][]byte{
-			"type":          []byte("git"),
-			"name":          []byte(fmt.Sprintf("%s-gitops", cl.GitAuth.User)),
-			"url":           []byte(config.DestinationGitopsRepoGitURL),
-			"sshPrivateKey": []byte(cl.GitAuth.PrivateKey),
-		}
+	err := providerConfig.BootstrapMgmtCluster(
+		clientset,
+		cl.GitProvider,
+		cl.GitAuth.User,
+		config.DestinationGitopsRepoURL,
+		cl.GitProtocol,
+		cl.CloudflareAuth.Token,
+		cl.VultrAuth.Token,
+		cl.DnsProvider,
+		cl.CloudProvider,
+	)
+	if err != nil {
+		log.Fatal().Msgf("error in central function to create secrets: %s", err)
 	}
-
 	// Create secrets
-	createSecrets := []*v1.Secret{
-		// argocd
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:        "repo-credentials-template",
-				Namespace:   "argocd",
-				Annotations: map[string]string{"managed-by": "argocd.argoproj.io"},
-				Labels:      map[string]string{"argocd.argoproj.io/secret-type": "repository"},
-			},
-			Data: secretData,
-		},
-		{
-			ObjectMeta: metav1.ObjectMeta{Name: "vultr-creds", Namespace: "external-dns"},
-			Data: map[string][]byte{
-				"vultr-token":  []byte(cl.VultrAuth.Token),
-				"cf-api-token": []byte(cl.CloudflareAuth.Token),
-			},
-		},
-		{
-			ObjectMeta: metav1.ObjectMeta{Name: "vultr-auth", Namespace: "external-dns"},
-			Data: map[string][]byte{
-				"vultr-auth":   []byte(cl.VultrAuth.Token),
-				"cf-api-token": []byte(cl.CloudflareAuth.Token),
-			},
-		},
-	}
+	createSecrets := []*v1.Secret{}
 	for _, secret := range createSecrets {
 		_, err := clientset.CoreV1().Secrets(secret.ObjectMeta.Namespace).Get(context.TODO(), secret.ObjectMeta.Name, metav1.GetOptions{})
 		if err == nil {

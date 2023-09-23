@@ -13,7 +13,7 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/runtime/pkg/aws"
-	config "github.com/kubefirst/runtime/pkg/providerConfigs"
+	providerConfig "github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,62 +23,27 @@ import (
 func BootstrapAWSMgmtCluster(
 	clientset *kubernetes.Clientset,
 	cl *types.Cluster,
-	config *config.ProviderConfig,
+	config *providerConfig.ProviderConfig,
 	awsClient *aws.AWSConfiguration,
 ) error {
 
-	secretData := map[string][]byte{}
+	err := providerConfig.BootstrapMgmtCluster(
+		clientset,
+		cl.GitProvider,
+		cl.GitAuth.User,
+		config.DestinationGitopsRepoURL,
+		cl.GitProtocol,
+		cl.CloudflareAuth.Token,
+		"",
+		cl.DnsProvider,
+		cl.CloudProvider,
+	)
+	if err != nil {
+		log.Fatal().Msgf("error in central function to create secrets: %s", err)
+	}
 
-	// Switch auth method and url based on GitProtocol
-	if cl.GitProtocol == "https" {
-		// http basic auth
-		secretData = map[string][]byte{
-			"type":     []byte("git"),
-			"name":     []byte(fmt.Sprintf("%s-gitops", cl.GitAuth.User)),
-			"url":      []byte(config.DestinationGitopsRepoURL),
-			"username": []byte(cl.GitAuth.User),
-			"password": []byte([]byte(fmt.Sprintf(cl.GitAuth.Token))),
-		}
-	} else {
-		// ssh
-		secretData = map[string][]byte{
-			"type":          []byte("git"),
-			"name":          []byte(fmt.Sprintf("%s-gitops", cl.GitAuth.User)),
-			"url":           []byte(config.DestinationGitopsRepoGitURL),
-			"sshPrivateKey": []byte(cl.GitAuth.PrivateKey),
-		}
-	}
 	// Create secrets
-	createSecrets := []*v1.Secret{
-		// argocd
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:        "repo-credentials-template",
-				Namespace:   "argocd",
-				Annotations: map[string]string{"managed-by": "argocd.argoproj.io"},
-				Labels:      map[string]string{"argocd.argoproj.io/secret-type": "repository"},
-			},
-			Data: secretData,
-		},
-		{
-			// the aws-token isn't actually used for aws,
-			//we just provide it so we can tokenize generically for cloudflare across all the providers
-			ObjectMeta: metav1.ObjectMeta{Name: "aws-creds", Namespace: "external-dns"},
-			Data: map[string][]byte{
-				"aws-token":    []byte("VALUE IGNORED, DOES NOT USE TOKEN, USES SERVICE ACCOUNT"),
-				"cf-api-token": []byte(cl.CloudflareAuth.Token),
-			},
-		},
-		{
-			// the aws-token isn't actually used for aws,
-			//we just provide it so we can tokenize generically for cloudflare across all the providers
-			ObjectMeta: metav1.ObjectMeta{Name: "aws-auth", Namespace: "external-dns"},
-			Data: map[string][]byte{
-				"aws_auth":        []byte("VALUE IGNORED, DOES NOT USE TOKEN, USES SERVICE ACCOUNT"),
-				"cloudflare_auth": []byte(cl.CloudflareAuth.Token),
-			},
-		},
-	}
+	createSecrets := []*v1.Secret{}
 	for _, secret := range createSecrets {
 		_, err := clientset.CoreV1().Secrets(secret.ObjectMeta.Namespace).Get(context.TODO(), secret.ObjectMeta.Name, metav1.GetOptions{})
 		if err == nil {
