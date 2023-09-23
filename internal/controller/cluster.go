@@ -146,8 +146,15 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			externalDNSProviderSecretKey = "cf-api-token"
 		} else {
 			switch clctrl.CloudProvider {
-			case "google", "aws", "vultr", "civo":
-				externalDNSProviderTokenEnvName = fmt.Sprintf("%s_AUTH", strings.ToUpper(clctrl.CloudProvider))
+			// provider auth secret gets mapped to these values
+			case "aws":
+				externalDNSProviderTokenEnvName = "not-used-uses-service-account"
+			case "google":
+				externalDNSProviderTokenEnvName = fmt.Sprintf("%s_APPLICATION_CREDENTIALS", strings.ToUpper(clctrl.CloudProvider))
+			case "civo":
+				externalDNSProviderTokenEnvName = fmt.Sprintf("%s_TOKEN", strings.ToUpper(clctrl.CloudProvider))
+			case "vultr":
+				externalDNSProviderTokenEnvName = fmt.Sprintf("%s_API_KEY", strings.ToUpper(clctrl.CloudProvider))
 			case "digitalocean":
 				externalDNSProviderTokenEnvName = "DO_TOKEN"
 			}
@@ -294,6 +301,12 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 		return err
 	}
 
+	destinationGitopsRepoGitURL, err := clctrl.GetRepoURL()
+	if err != nil {
+		return err
+	}
+
+
 	//TODO Remove specific ext bootstrap functions.
 	if !cl.ClusterSecretsCreatedCheck {
 		switch clctrl.CloudProvider {
@@ -301,7 +314,7 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 			err := awsext.BootstrapAWSMgmtCluster(
 				clientSet,
 				&cl,
-				&clctrl.ProviderConfig,
+				destinationGitopsRepoGitURL,
 				clctrl.AwsClient,
 			)
 			if err != nil {
@@ -309,25 +322,25 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 				return err
 			}
 		case "civo":
-			err := civoext.BootstrapCivoMgmtCluster(clientSet, &cl, &clctrl.ProviderConfig)
+			err := civoext.BootstrapCivoMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
 			if err != nil {
 				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
 		case "google":
-			err := googleext.BootstrapGoogleMgmtCluster(clientSet, &cl, &clctrl.ProviderConfig)
+			err := googleext.BootstrapGoogleMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
 			if err != nil {
 				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
 		case "digitalocean":
-			err := digitaloceanext.BootstrapDigitaloceanMgmtCluster(clientSet, &cl, &clctrl.ProviderConfig)
+			err := digitaloceanext.BootstrapDigitaloceanMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
 			if err != nil {
 				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
 		case "vultr":
-			err := vultrext.BootstrapVultrMgmtCluster(clientSet, &cl, &clctrl.ProviderConfig)
+			err := vultrext.BootstrapVultrMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
 			if err != nil {
 				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
