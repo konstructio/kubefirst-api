@@ -19,13 +19,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func BootstrapDigitaloceanMgmtCluster(clientset *kubernetes.Clientset, cl *types.Cluster, config *providerConfig.ProviderConfig) error {
+func BootstrapDigitaloceanMgmtCluster(clientset *kubernetes.Clientset, cl *types.Cluster, destinationGitopsRepoURL string) error {
+	
 
 	err := providerConfig.BootstrapMgmtCluster(
 		clientset,
 		cl.GitProvider,
 		cl.GitAuth.User,
-		config.DestinationGitopsRepoURL,
+		destinationGitopsRepoURL,
 		cl.GitProtocol,
 		cl.CloudflareAuth.Token,
 		cl.DigitaloceanAuth.Token,
@@ -36,6 +37,7 @@ func BootstrapDigitaloceanMgmtCluster(clientset *kubernetes.Clientset, cl *types
 	)
 	if err != nil {
 		log.Fatal().Msgf("error in central function to create secrets: %s", err)
+		return err
 	}
 
 	// Create secrets

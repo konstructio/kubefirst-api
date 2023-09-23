@@ -19,13 +19,13 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func BootstrapCivoMgmtCluster(clientset *kubernetes.Clientset, cl *types.Cluster, config *providerConfig.ProviderConfig) error {
+func BootstrapCivoMgmtCluster(clientset *kubernetes.Clientset, cl *types.Cluster, destinationGitopsRepoURL string) error {
 
 	err := providerConfig.BootstrapMgmtCluster(
 		clientset,
 		cl.GitProvider,
 		cl.GitAuth.User,
-		config.DestinationGitopsRepoURL,
+		destinationGitopsRepoURL,
 		cl.GitProtocol,
 		cl.CloudflareAuth.Token,
 		cl.CivoAuth.Token,
@@ -36,6 +36,7 @@ func BootstrapCivoMgmtCluster(clientset *kubernetes.Clientset, cl *types.Cluster
 	)
 	if err != nil {
 		log.Fatal().Msgf("error in central function to create secrets: %s", err)
+		return err
 	}
 
 	// Create secrets

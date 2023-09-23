@@ -23,15 +23,16 @@ import (
 func BootstrapAWSMgmtCluster(
 	clientset *kubernetes.Clientset,
 	cl *types.Cluster,
-	config *providerConfig.ProviderConfig,
+	destinationGitopsRepoURL string,
 	awsClient *aws.AWSConfiguration,
 ) error {
+	
 
 	err := providerConfig.BootstrapMgmtCluster(
 		clientset,
 		cl.GitProvider,
 		cl.GitAuth.User,
-		config.DestinationGitopsRepoURL,
+		destinationGitopsRepoURL,
 		cl.GitProtocol,
 		cl.CloudflareAuth.Token,
 		"",
@@ -42,6 +43,7 @@ func BootstrapAWSMgmtCluster(
 	)
 	if err != nil {
 		log.Fatal().Msgf("error in central function to create secrets: %s", err)
+		return err
 	}
 
 	// Create secrets
