@@ -65,6 +65,14 @@ func BootstrapCivoMgmtCluster(clientset *kubernetes.Clientset, cl *types.Cluster
 			},
 		},
 		{
+			ObjectMeta: metav1.ObjectMeta{Name: "civo-auth", Namespace: "external-dns"},
+			Data: map[string][]byte{
+				"civo-auth":        []byte(cl.CivoAuth.Token),
+				"cf-api-token":     []byte(cl.CloudflareAuth.APIToken),
+				"cloudflare-token": []byte(cl.CloudflareAuth.APIToken),
+			},
+		},
+		{
 			ObjectMeta: metav1.ObjectMeta{Name: "cloudflare-creds", Namespace: "argo"},
 			Data: map[string][]byte{
 				"origin-ca-api-key": []byte(cl.CloudflareAuth.OriginCaIssuerKey),

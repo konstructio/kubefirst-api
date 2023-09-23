@@ -69,6 +69,15 @@ func BootstrapAWSMgmtCluster(
 				"cf-api-token": []byte(cl.CloudflareAuth.Token),
 			},
 		},
+		{
+			// the aws-token isn't actually used for aws,
+			//we just provide it so we can tokenize generically for cloudflare across all the providers
+			ObjectMeta: metav1.ObjectMeta{Name: "aws-auth", Namespace: "external-dns"},
+			Data: map[string][]byte{
+				"aws_auth":        []byte("VALUE IGNORED, DOES NOT USE TOKEN, USES SERVICE ACCOUNT"),
+				"cloudflare_auth": []byte(cl.CloudflareAuth.Token),
+			},
+		},
 	}
 	for _, secret := range createSecrets {
 		_, err := clientset.CoreV1().Secrets(secret.ObjectMeta.Namespace).Get(context.TODO(), secret.ObjectMeta.Name, metav1.GetOptions{})
