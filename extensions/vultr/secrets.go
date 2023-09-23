@@ -63,6 +63,13 @@ func BootstrapVultrMgmtCluster(clientset *kubernetes.Clientset, cl *types.Cluste
 				"cf-api-token": []byte(cl.CloudflareAuth.Token),
 			},
 		},
+		{
+			ObjectMeta: metav1.ObjectMeta{Name: "vultr-auth", Namespace: "external-dns"},
+			Data: map[string][]byte{
+				"vultr-auth":   []byte(cl.VultrAuth.Token),
+				"cf-api-token": []byte(cl.CloudflareAuth.Token),
+			},
+		},
 	}
 	for _, secret := range createSecrets {
 		_, err := clientset.CoreV1().Secrets(secret.ObjectMeta.Namespace).Get(context.TODO(), secret.ObjectMeta.Name, metav1.GetOptions{})
