@@ -537,6 +537,15 @@ func PostImportCluster(c *gin.Context) {
 		return
 	}
 
+	// Update cluster status in database
+	err = db.Client.UpdateCluster(cluster.ClusterName, "in_progress", false)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, types.JSONSuccessResponse{
 		Message: "cluster imported",
 	})
