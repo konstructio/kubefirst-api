@@ -208,6 +208,7 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 	err = ctrl.ExportClusterRecord()
 	if err != nil {
 		log.Errorf("Error exporting cluster record: %s", err)
+		ctrl.HandleError(err.Error())
 		return err
 	} else {
 		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "status", constants.ClusterStatusProvisioned)
