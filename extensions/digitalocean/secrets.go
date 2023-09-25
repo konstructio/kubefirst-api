@@ -10,8 +10,8 @@ import (
 	"context"
 	"strings"
 
-	"github.com/kubefirst/kubefirst-api/internal/types"
-	providerConfig "github.com/kubefirst/runtime/pkg/providerConfigs"
+	providerConfig "github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/rs/zerolog/log"
 
 	v1 "k8s.io/api/core/v1"
@@ -19,7 +19,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func BootstrapDigitaloceanMgmtCluster(clientset *kubernetes.Clientset, cl *types.Cluster, destinationGitopsRepoURL string) error {
+func BootstrapDigitaloceanMgmtCluster(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster, destinationGitopsRepoURL string) error {
 	
 
 	err := providerConfig.BootstrapMgmtCluster(

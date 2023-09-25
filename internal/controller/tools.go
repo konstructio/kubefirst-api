@@ -9,11 +9,11 @@ package controller
 import (
 	"os"
 
+	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	google "github.com/kubefirst/runtime/pkg/google"
-	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 )

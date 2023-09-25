@@ -13,14 +13,14 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	"github.com/kubefirst/kubefirst-api/internal/types"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 )
 
-func CreateAWSCluster(definition *types.ClusterDefinition) error {
+func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 	ctrl := controller.ClusterController{}
 	err := ctrl.InitController(definition)
 	if err != nil {

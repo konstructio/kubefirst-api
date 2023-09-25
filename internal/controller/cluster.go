@@ -20,9 +20,9 @@ import (
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/k8s"
-	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 	"github.com/thanhpk/randstr"
@@ -349,7 +349,7 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 
 		//create service accounts
 		var token string
-		if (clctrl.CloudflareAuth != types.CloudflareAuth{}) {
+		if (clctrl.CloudflareAuth != pkgtypes.CloudflareAuth{}) {
 			token = clctrl.CloudflareAuth.APIToken
 		}
 		err = providerConfigs.ServiceAccounts(clientSet, token)

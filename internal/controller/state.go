@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	"github.com/kubefirst/kubefirst-api/internal/types"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/segment"
@@ -44,7 +44,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 	}
 	defer segmentClient.Client.Close()
 
-	var stateStoreData types.StateStoreCredentials
+	var stateStoreData pkgtypes.StateStoreCredentials
 
 	if !cl.StateStoreCredsCheck {
 		switch clctrl.CloudProvider {
@@ -59,12 +59,12 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				return err
 			}
 
-			stateStoreData = types.StateStoreCredentials{
+			stateStoreData = pkgtypes.StateStoreCredentials{
 				AccessKeyID:     clctrl.AWSAuth.AccessKeyID,
 				SecretAccessKey: clctrl.AWSAuth.SecretAccessKey,
 			}
 
-			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_details", types.StateStoreDetails{
+			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_details", pkgtypes.StateStoreDetails{
 				AWSStateStoreBucket: strings.ReplaceAll(*kubefirstStateStoreBucket.Location, "/", ""),
 				AWSArtifactsBucket:  strings.ReplaceAll(*kubefirstArtifactsBucket.Location, "/", ""),
 			})
@@ -82,7 +82,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				log.Error(err.Error())
 			}
 
-			stateStoreData = types.StateStoreCredentials{
+			stateStoreData = pkgtypes.StateStoreCredentials{
 				AccessKeyID:     creds.AccessKeyID,
 				SecretAccessKey: creds.SecretAccessKeyID,
 				Name:            creds.Name,
@@ -107,13 +107,13 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				return fmt.Errorf(msg)
 			}
 
-			stateStoreData = types.StateStoreCredentials{
+			stateStoreData = pkgtypes.StateStoreCredentials{
 				AccessKeyID:     creds.AccessKey,
 				SecretAccessKey: creds.SecretAccessKey,
 				Name:            clctrl.KubefirstStateStoreBucketName,
 			}
 
-			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_details", types.StateStoreDetails{
+			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_details", pkgtypes.StateStoreDetails{
 				Name:     clctrl.KubefirstStateStoreBucketName,
 				Hostname: creds.Endpoint,
 			})
@@ -157,14 +157,14 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				return fmt.Errorf("error creating vultr state storage bucket: %s", err)
 			}
 
-			stateStoreData = types.StateStoreCredentials{
+			stateStoreData = pkgtypes.StateStoreCredentials{
 				AccessKeyID:     objst.S3AccessKey,
 				SecretAccessKey: objst.S3SecretKey,
 				Name:            objst.Label,
 				ID:              objst.ID,
 			}
 
-			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_details", types.StateStoreDetails{
+			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_details", pkgtypes.StateStoreDetails{
 				Name:     objst.Label,
 				ID:       objst.ID,
 				Hostname: objst.S3Hostname,
@@ -224,7 +224,7 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 				return err
 			}
 
-			stateStoreData := types.StateStoreDetails{
+			stateStoreData := pkgtypes.StateStoreDetails{
 				Name:     bucket.Name,
 				ID:       bucket.ID,
 				Hostname: bucket.BucketURL,

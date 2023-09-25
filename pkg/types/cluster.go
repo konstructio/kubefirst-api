@@ -141,9 +141,9 @@ type PushBucketObject struct {
 	ContentType    string `json:"content_type"`
 }
 
-// ImportClusterRequest
-type ImportClusterRequest struct {
-	ClusterName string `bson:"cluster_name" json:"cluster_name"`
+type ProxyImportRequest struct {
+	Body Cluster `bson:"body" json:"body"`
+	Url  string  `bson:"url" json:"url"`
 }
 
 type WorkloadCluster struct {
