@@ -9,8 +9,8 @@ package controller
 import (
 	"os"
 
+	awsinternal "github.com/kubefirst/kubefirst-api/pkg/aws"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
-	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	google "github.com/kubefirst/runtime/pkg/google"
