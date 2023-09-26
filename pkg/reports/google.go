@@ -12,8 +12,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/kubefirst/kubefirst-api/pkg/google"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
-	"github.com/kubefirst/runtime/pkg/google"
 )
 
 // googleHandoffScreen prints the handoff screen
