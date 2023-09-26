@@ -13,9 +13,12 @@ import (
 	"strings"
 	"time"
 
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"github.com/kubefirst/runtime/pkg/dns"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/oauth2/google"
 	googleDNS "google.golang.org/api/dns/v1"
+	"google.golang.org/api/option"
 )
 
 // TestHostedZoneLiveness checks DNS for the liveness test record
@@ -118,7 +121,12 @@ func (conf *GoogleConfiguration) TestHostedZoneLiveness(hostedZoneName string) b
 func (conf *GoogleConfiguration) GetDNSDomains() ([]string, error) {
 	var zoneNames []string
 
-	dnsService, err := googleDNS.NewService(conf.Context)
+	creds, err := google.CredentialsFromJSON(conf.Context, []byte(conf.KeyFile), secretmanager.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, fmt.Errorf("could not create google storage client credentials: %s", err)
+	}
+
+	dnsService, err := googleDNS.NewService(conf.Context, option.WithCredentials(creds))
 	
 	if err != nil {
 		return zoneNames, err
