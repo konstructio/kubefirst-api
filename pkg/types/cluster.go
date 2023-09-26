@@ -22,6 +22,8 @@ type ClusterDefinition struct {
 	SubdomainName string `json:"subdomain_name,omitempty"`
 	DnsProvider   string `json:"dns_provider,omitempty" binding:"required"`
 	Type          string `json:"type" binding:"required,oneof=mgmt workload"`
+	ForceDestroy  bool   `bson:"force_destroy,omitempty" json:"force_destroy,omitempty"`
+
 
 	//Git
 	GitopsTemplateURL    string `json:"gitops_template_url"`
