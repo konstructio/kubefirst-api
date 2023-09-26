@@ -15,7 +15,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/kubefirst/runtime/pkg"
+	runtime "github.com/kubefirst/runtime/pkg"
+
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -32,15 +34,20 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 
 	consoleCloudUrl := fmt.Sprintf("https://kubefirst.%s", cluster.DomainName)
 
-	err = pkg.IsAppAvailable(fmt.Sprintf("%s/api/proxyHealth", consoleCloudUrl), "kubefirst api")
+	err = runtime.IsAppAvailable(fmt.Sprintf("%s/api/proxyHealth", consoleCloudUrl), "kubefirst api")
 	if err != nil {
 		log.Error("unable to start kubefirst api")
+	}
+
+	requestObject := pkgtypes.ProxyImportRequest{
+		Body: cluster,
+		Url:  "/cluster/import",
 	}
 
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
 	httpClient := http.Client{Transport: customTransport}
 
-	payload, err := json.Marshal(cluster)
+	payload, err := json.Marshal(requestObject)
 	if err != nil {
 		return err
 	}

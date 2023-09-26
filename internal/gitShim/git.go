@@ -14,7 +14,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport"
-	"github.com/kubefirst/kubefirst-api/internal/types"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/gitClient"
 )
 
@@ -34,7 +34,7 @@ func PullWithAuth(repo *git.Repository, remote string, branch string, auth trans
 	return nil
 }
 
-func PrepareMgmtCluster(cluster types.Cluster) error {
+func PrepareMgmtCluster(cluster pkgtypes.Cluster) error {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatalf("error getting home path: %s", err)

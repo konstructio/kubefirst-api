@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/kubefirst/kubefirst-api/internal/types"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 )
@@ -26,7 +26,7 @@ func Heartbeat(segmentClient *segment.SegmentClient) {
 }
 
 // SetupTelemetry
-func SetupTelemetry(cl types.Cluster) (*segment.SegmentClient, error) {
+func SetupTelemetry(cl pkgtypes.Cluster) (*segment.SegmentClient, error) {
 	kubefirstVersion := os.Getenv("KUBEFIRST_VERSION")
 	if kubefirstVersion == "" {
 		kubefirstVersion = "development"

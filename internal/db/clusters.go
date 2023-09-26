@@ -9,7 +9,7 @@ package db
 import (
 	"fmt"
 
-	"github.com/kubefirst/kubefirst-api/internal/types"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -37,42 +37,42 @@ func (mdbcl *MongoDBClient) DeleteCluster(clusterName string) error {
 }
 
 // GetCluster
-func (mdbcl *MongoDBClient) GetCluster(clusterName string) (types.Cluster, error) {
+func (mdbcl *MongoDBClient) GetCluster(clusterName string) (pkgtypes.Cluster, error) {
 	// Find
 	filter := bson.D{{Key: "cluster_name", Value: clusterName}}
-	var result types.Cluster
+	var result pkgtypes.Cluster
 	err := mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return types.Cluster{}, fmt.Errorf("cluster not found")
+			return pkgtypes.Cluster{}, fmt.Errorf("cluster not found")
 		}
-		return types.Cluster{}, fmt.Errorf("error getting cluster %s: %s", clusterName, err)
+		return pkgtypes.Cluster{}, fmt.Errorf("error getting cluster %s: %s", clusterName, err)
 	}
 
 	return result, nil
 }
 
 // GetClusters
-func (mdbcl *MongoDBClient) GetClusters() ([]types.Cluster, error) {
+func (mdbcl *MongoDBClient) GetClusters() ([]pkgtypes.Cluster, error) {
 	// Find all
-	var results []types.Cluster
+	var results []pkgtypes.Cluster
 	cursor, err := mdbcl.ClustersCollection.Find(mdbcl.Context, bson.D{})
 	if err != nil {
-		return []types.Cluster{}, fmt.Errorf("error getting clusters: %s", err)
+		return []pkgtypes.Cluster{}, fmt.Errorf("error getting clusters: %s", err)
 	}
 
 	for cursor.Next(mdbcl.Context) {
 		//Create a value into which the single document can be decoded
-		var cl types.Cluster
+		var cl pkgtypes.Cluster
 		err := cursor.Decode(&cl)
 		if err != nil {
-			return []types.Cluster{}, err
+			return []pkgtypes.Cluster{}, err
 		}
 		results = append(results, cl)
 
 	}
 	if err := cursor.Err(); err != nil {
-		return []types.Cluster{}, err
+		return []pkgtypes.Cluster{}, err
 	}
 
 	cursor.Close(mdbcl.Context)
@@ -81,9 +81,9 @@ func (mdbcl *MongoDBClient) GetClusters() ([]types.Cluster, error) {
 }
 
 // InsertCluster
-func (mdbcl *MongoDBClient) InsertCluster(cl types.Cluster) error {
+func (mdbcl *MongoDBClient) InsertCluster(cl pkgtypes.Cluster) error {
 	filter := bson.D{{Key: "cluster_name", Value: cl.ClusterName}}
-	var result types.Cluster
+	var result pkgtypes.Cluster
 	err := mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {
 		// This error means your query did not match any documents.
@@ -106,7 +106,7 @@ func (mdbcl *MongoDBClient) InsertCluster(cl types.Cluster) error {
 func (mdbcl *MongoDBClient) UpdateCluster(clusterName string, field string, value interface{}) error {
 	// Find
 	filter := bson.D{{Key: "cluster_name", Value: clusterName}}
-	var result types.Cluster
+	var result pkgtypes.Cluster
 	err := mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {
 		return fmt.Errorf("error finding cluster %s: %s", clusterName, err)

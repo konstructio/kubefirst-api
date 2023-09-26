@@ -13,10 +13,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/pkg/google"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
-	"github.com/kubefirst/runtime/pkg/google"
 	"github.com/kubefirst/runtime/pkg/vultr"
 )
 
@@ -149,6 +149,9 @@ func PostRegions(c *gin.Context) {
 		}
 		googleConf := google.GoogleConfiguration{
 			Context: context.Background(),
+			Project: regionListRequest.GoogleAuth.ProjectId,
+			Region:  regionListRequest.CloudRegion,
+			KeyFile: regionListRequest.GoogleAuth.KeyFile,
 		}
 
 		regions, err := googleConf.GetRegions()

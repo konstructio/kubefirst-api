@@ -12,14 +12,14 @@ import (
 	"io"
 	"os"
 
-	"github.com/kubefirst/kubefirst-api/internal/types"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	log "github.com/sirupsen/logrus"
 )
 
 // PutBucketObject
-func PutBucketObject(cr *types.StateStoreCredentials, d *types.StateStoreDetails, obj *types.PushBucketObject) error {
+func PutBucketObject(cr *pkgtypes.StateStoreCredentials, d *pkgtypes.StateStoreDetails, obj *pkgtypes.PushBucketObject) error {
 	ctx := context.Background()
 
 	// Initialize minio client object.
@@ -52,7 +52,7 @@ func PutBucketObject(cr *types.StateStoreCredentials, d *types.StateStoreDetails
 }
 
 // PutClusterObject exports a cluster definition as json and places it in the target object storage bucket
-func PutClusterObject(cr *types.StateStoreCredentials, d *types.StateStoreDetails, obj *types.PushBucketObject) error {
+func PutClusterObject(cr *pkgtypes.StateStoreCredentials, d *pkgtypes.StateStoreDetails, obj *pkgtypes.PushBucketObject) error {
 	ctx := context.Background()
 
 	// Initialize minio client
@@ -94,7 +94,7 @@ func PutClusterObject(cr *types.StateStoreCredentials, d *types.StateStoreDetail
 }
 
 // GetClusterObject imports a cluster definition as json
-func GetClusterObject(cr *types.StateStoreCredentials, d *types.StateStoreDetails, localFilePath string, remoteFilePath string, secure bool) error {
+func GetClusterObject(cr *pkgtypes.StateStoreCredentials, d *pkgtypes.StateStoreDetails, localFilePath string, remoteFilePath string, secure bool) error {
 	ctx := context.Background()
 
 	// Initialize minio client

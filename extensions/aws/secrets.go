@@ -11,9 +11,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kubefirst/kubefirst-api/internal/types"
+	providerConfig "github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/aws"
-	providerConfig "github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,7 +22,7 @@ import (
 
 func BootstrapAWSMgmtCluster(
 	clientset *kubernetes.Clientset,
-	cl *types.Cluster,
+	cl *pkgtypes.Cluster,
 	destinationGitopsRepoURL string,
 	awsClient *aws.AWSConfiguration,
 ) error {

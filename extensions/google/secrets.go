@@ -10,8 +10,8 @@ import (
 	"context"
 	"strings"
 
-	"github.com/kubefirst/kubefirst-api/internal/types"
-	providerConfig "github.com/kubefirst/runtime/pkg/providerConfigs"
+	providerConfig "github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,7 +20,7 @@ import (
 
 func BootstrapGoogleMgmtCluster(
 	clientset *kubernetes.Clientset,
-	cl *types.Cluster,
+	cl *pkgtypes.Cluster,
 	destinationGitopsRepoURL string,
 ) error {
 

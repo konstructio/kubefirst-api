@@ -9,11 +9,11 @@ package errors
 import (
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
-	"github.com/kubefirst/kubefirst-api/internal/types"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 )
 
 // HandleClusterError implements an error handler for standalone cluster objects
-func HandleClusterError(cl *types.Cluster, condition string) error {
+func HandleClusterError(cl *pkgtypes.Cluster, condition string) error {
 	err := db.Client.UpdateCluster(cl.ClusterName, "in_progress", false)
 	if err != nil {
 		return err
