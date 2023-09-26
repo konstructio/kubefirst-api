@@ -30,6 +30,9 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 		return err
 	}
 
+	cluster.Status = "provisioned"
+	cluster.InProgress = false
+
 	time.Sleep(time.Second * 10)
 
 	consoleCloudUrl := fmt.Sprintf("https://kubefirst.%s", cluster.DomainName)
