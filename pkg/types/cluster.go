@@ -146,20 +146,26 @@ type ProxyImportRequest struct {
 	Url  string  `bson:"url" json:"url"`
 }
 
+type Environment struct {
+	Name        string `bson:"name" json:"name"`
+	Color       string `bson:"color" json:"color"`
+	Description string `bson:"description,omitempty" json:"description,omitempty"`
+}
+
 type WorkloadCluster struct {
-	AdminEmail        string  `bson:"admin_email,omitempty" json:"admin_email,omitempty"`
-	CloudProvider     string  `bson:"cloud_provider,omitempty" json:"cloud_provider,omitempty"`
-	ClusterID         string  `bson:"cluster_id,omitempty" json:"cluster_id,omitempty"`
-	ClusterName       string  `bson:"cluster_name,omitempty" json:"cluster_name,omitempty"`
-	ClusterType       string  `bson:"cluster_type,omitempty" json:"cluster_type,omitempty"`
-	CloudRegion       string  `bson:"cloud_region,omitempty" json:"cloud_region,omitempty"`
-	CreationTimestamp string  `bson:"creation_timestamp" json:"creation_timestamp"`
-	DomainName        string  `bson:"domain_name,omitempty" json:"domain_name,omitempty"`
-	DnsProvider       string  `bson:"dns_provider,omitempty" json:"dns_provider,omitempty"`
-	Environment       string  `bson:"environment,omitempty" json:"environment,omitempty"`
-	GitAuth           GitAuth `bson:"git_auth,omitempty" json:"git_auth,omitempty"`
-	InstanceSize      string  `bson:"instance_size,omitempty" json:"instance_size,omitempty"`
-	MachineType       string  `bson:"machine_type,omitempty" json:"machine_type,omitempty"`
-	NodeCount         int     `bson:"node_count,omitempty" json:"node_count,omitempty"`
-	Status            string  `bson:"status,omitempty" json:"status,omitempty"`
+	AdminEmail        string      `bson:"admin_email,omitempty" json:"admin_email,omitempty"`
+	CloudProvider     string      `bson:"cloud_provider,omitempty" json:"cloud_provider,omitempty"`
+	ClusterID         string      `bson:"cluster_id,omitempty" json:"cluster_id,omitempty"`
+	ClusterName       string      `bson:"cluster_name,omitempty" json:"cluster_name,omitempty"`
+	ClusterType       string      `bson:"cluster_type,omitempty" json:"cluster_type,omitempty"`
+	CloudRegion       string      `bson:"cloud_region,omitempty" json:"cloud_region,omitempty"`
+	CreationTimestamp string      `bson:"creation_timestamp" json:"creation_timestamp"`
+	DomainName        string      `bson:"domain_name,omitempty" json:"domain_name,omitempty"`
+	DnsProvider       string      `bson:"dns_provider,omitempty" json:"dns_provider,omitempty"`
+	Environment       Environment `bson:"environment,omitempty" json:"environment,omitempty"`
+	GitAuth           GitAuth     `bson:"git_auth,omitempty" json:"git_auth,omitempty"`
+	InstanceSize      string      `bson:"instance_size,omitempty" json:"instance_size,omitempty"`
+	MachineType       string      `bson:"machine_type,omitempty" json:"machine_type,omitempty"`
+	NodeCount         int         `bson:"node_count,omitempty" json:"node_count,omitempty"`
+	Status            string      `bson:"status,omitempty" json:"status,omitempty"`
 }
