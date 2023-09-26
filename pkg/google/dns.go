@@ -114,3 +114,25 @@ func (conf *GoogleConfiguration) TestHostedZoneLiveness(hostedZoneName string) b
 	}
 	return true
 }
+
+func (conf *GoogleConfiguration) GetDNSDomains() ([]string, error) {
+	var zoneNames []string
+
+	dnsService, err := googleDNS.NewService(conf.Context)
+	
+	if err != nil {
+		return zoneNames, err
+	}
+
+	zones, err := dnsService.ManagedZones.List(conf.Project).Do()
+
+	if err != nil {
+		return zoneNames, err
+	}
+
+	for _, zone := range zones.ManagedZones {
+		zoneNames = append(zoneNames, zone.Name)
+	}
+	
+	return zoneNames, nil
+}
