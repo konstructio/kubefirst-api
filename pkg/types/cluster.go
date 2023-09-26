@@ -146,6 +146,15 @@ type ProxyImportRequest struct {
 	Url  string  `bson:"url" json:"url"`
 }
 
+type ProxyCreateClusterRequest struct {
+	Body ClusterDefinition `bson:"body" json:"body"`
+	Url  string            `bson:"url" json:"url"`
+}
+
+type ProxyResetClusterRequest struct {
+	Url string `bson:"url" json:"url"`
+}
+
 type Environment struct {
 	Name        string `bson:"name" json:"name"`
 	Color       string `bson:"color" json:"color"`
