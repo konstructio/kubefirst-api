@@ -62,11 +62,15 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			stateStoreData = pkgtypes.StateStoreCredentials{
 				AccessKeyID:     clctrl.AWSAuth.AccessKeyID,
 				SecretAccessKey: clctrl.AWSAuth.SecretAccessKey,
+				SessionToken:    clctrl.AWSAuth.SessionToken,
+				Name:            clctrl.KubefirstStateStoreBucketName,
 			}
 
 			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_details", pkgtypes.StateStoreDetails{
 				AWSStateStoreBucket: strings.ReplaceAll(*kubefirstStateStoreBucket.Location, "/", ""),
 				AWSArtifactsBucket:  strings.ReplaceAll(*kubefirstArtifactsBucket.Location, "/", ""),
+				Hostname:            "s3.amazonaws.com",
+				Name:                clctrl.KubefirstStateStoreBucketName,
 			})
 			if err != nil {
 				return err

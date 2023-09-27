@@ -27,6 +27,7 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 	cluster, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		log.Errorf("Error exporting cluster record: %s", err)
+		clctrl.HandleError(err.Error())
 		return err
 	}
 
@@ -40,6 +41,9 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 	err = runtime.IsAppAvailable(fmt.Sprintf("%s/api/proxyHealth", consoleCloudUrl), "kubefirst api")
 	if err != nil {
 		log.Error("unable to start kubefirst api")
+
+		clctrl.HandleError(err.Error())
+		return err
 	}
 
 	requestObject := pkgtypes.ProxyImportRequest{
@@ -52,12 +56,14 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 
 	payload, err := json.Marshal(requestObject)
 	if err != nil {
+		clctrl.HandleError(err.Error())
 		return err
 	}
 
 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/proxy", consoleCloudUrl), bytes.NewReader(payload))
 	if err != nil {
 		log.Errorf("error %s", err)
+		clctrl.HandleError(err.Error())
 		return err
 	}
 	req.Header.Add("Content-Type", "application/json")
@@ -71,15 +77,14 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 
 	if res.StatusCode != http.StatusOK {
 		log.Errorf("unable to import cluster %s", res.Status)
+		clctrl.HandleError(err.Error())
 		return errors.New(fmt.Sprintf("unable to import cluster %s", res.Status))
 	}
 
-	body, err := io.ReadAll(res.Body)
+	_, err = io.ReadAll(res.Body)
 	if err != nil {
 		return err
 	}
-
-	log.Infof("Import: %s", string(body))
 
 	return nil
 }
