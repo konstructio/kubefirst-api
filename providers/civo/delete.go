@@ -63,7 +63,7 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster) error {
 	var tfEntrypoint string
 
 	if cl.GitTerraformApplyCheck {
-		log.Info("destroying %s resources with terraform", cl.GitProvider)
+		log.Infof("destroying %s resources with terraform", cl.GitProvider)
 		switch cl.GitProvider {
 		case "github":
 			tfEntrypoint = config.GitopsDir + "/terraform/github"
@@ -116,7 +116,7 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster) error {
 			return err
 		}
 
-		log.Info("%s resources terraform destroyed", cl.GitProvider)
+		log.Infof("%s resources terraform destroyed", cl.GitProvider)
 
 		err = db.Client.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
 		if err != nil {

@@ -99,7 +99,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 			return fmt.Errorf(msg)
 		}
 
-		log.Info("created %s cloud resources", clctrl.CloudProvider)
+		log.Infof("created %s cloud resources", clctrl.CloudProvider)
 
 		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
 
