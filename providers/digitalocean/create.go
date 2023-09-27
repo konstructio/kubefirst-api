@@ -205,13 +205,6 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 
 	log.Info("cluster creation complete")
 
-	// Create default service entries
-	cl, _ := db.Client.GetCluster(ctrl.ClusterName)
-	err = services.AddDefaultServices(&cl)
-	if err != nil {
-		log.Errorf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
-	}
-
 	//* export and import cluster
 	err = ctrl.ExportClusterRecord()
 	if err != nil {

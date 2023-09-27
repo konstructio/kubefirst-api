@@ -201,13 +201,6 @@ func CreateVultrCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	// Create default service entries
-	cl, _ := db.Client.GetCluster(ctrl.ClusterName)
-	err = services.AddDefaultServices(&cl)
-	if err != nil {
-		log.Errorf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
-	}
-
 		//* export and import cluster
 	err = ctrl.ExportClusterRecord()
 	if err != nil {
