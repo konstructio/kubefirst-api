@@ -11,7 +11,7 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
-	"github.com/kubefirst/kubefirst-api/internal/types"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 )
@@ -35,7 +35,7 @@ func HeartbeatWorkloadClusters() error {
 				if workloadCluster.Status == constants.ClusterStatusProvisioned {
 
 					// Reusing telemetry function
-					cluster = types.Cluster{}
+					cluster = pkgtypes.Cluster{}
 					cluster.CloudProvider = workloadCluster.CloudProvider
 					cluster.ClusterID = workloadCluster.ClusterID
 					cluster.ClusterType = workloadCluster.ClusterType

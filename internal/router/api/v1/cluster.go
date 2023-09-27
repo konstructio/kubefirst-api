@@ -19,9 +19,11 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/kubefirst-api/providers/aws"
 	"github.com/kubefirst/kubefirst-api/providers/civo"
 	"github.com/kubefirst/kubefirst-api/providers/digitalocean"
+	"github.com/kubefirst/kubefirst-api/providers/google"
 	"github.com/kubefirst/kubefirst-api/providers/vultr"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/sirupsen/logrus"
@@ -115,6 +117,17 @@ func DeleteCluster(c *gin.Context) {
 		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
 			Message: "cluster delete enqueued",
 		})
+	case "google":
+		go func() {
+			err := google.DeleteGoogleCluster(&rec)
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+		}()
+
+		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
+			Message: "cluster delete enqueued",
+		})
 	}
 }
 
@@ -125,7 +138,7 @@ func DeleteCluster(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param	cluster_name	path	string	true	"Cluster name"
-// @Success 200 {object} types.Cluster
+// @Success 200 {object} pkgtypes.Cluster
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /cluster/:cluster_name [get]
 // @Param Authorization header string true "API key" default(Bearer <API key>)
@@ -157,7 +170,7 @@ func GetCluster(c *gin.Context) {
 // @Tags cluster
 // @Accept json
 // @Produce json
-// @Success 200 {object} []types.Cluster
+// @Success 200 {object} []pkgtypes.Cluster
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /cluster [get]
 // @Param Authorization header string true "API key" default(Bearer <API key>)
@@ -193,7 +206,7 @@ func PostCreateCluster(c *gin.Context) {
 	// jsonData, err := io.ReadAll(c.Request.Body)
 	// fmt.Spintf(string(jsonData))
 	clusterName, param := c.Params.Get("cluster_name")
-	if !param {
+	if !param || string(clusterName) == ":cluster_name" {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: ":cluster_name not provided",
 		})
@@ -201,7 +214,7 @@ func PostCreateCluster(c *gin.Context) {
 	}
 
 	// Bind to variable as application/json, handle error
-	var clusterDefinition types.ClusterDefinition
+	var clusterDefinition pkgtypes.ClusterDefinition
 	err := c.Bind(&clusterDefinition)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -245,6 +258,7 @@ func PostCreateCluster(c *gin.Context) {
 		clusterDefinition.CivoAuth = cluster.CivoAuth
 		clusterDefinition.VultrAuth = cluster.VultrAuth
 		clusterDefinition.DigitaloceanAuth = cluster.DigitaloceanAuth
+		clusterDefinition.GoogleAuth = cluster.GoogleAuth
 		clusterDefinition.GitAuth = cluster.GitAuth
 	}
 
@@ -283,7 +297,7 @@ func PostCreateCluster(c *gin.Context) {
 				})
 				return
 			}
-			clusterDefinition.AWSAuth = types.AWSAuth{
+			clusterDefinition.AWSAuth = pkgtypes.AWSAuth{
 				AccessKeyID:     k1AuthSecret["aws-access-key-id"],
 				SecretAccessKey: k1AuthSecret["aws-secret-access-key"],
 				SessionToken:    k1AuthSecret["aws-session-token"],
@@ -317,7 +331,7 @@ func PostCreateCluster(c *gin.Context) {
 				})
 				return
 			}
-			clusterDefinition.CivoAuth = types.CivoAuth{
+			clusterDefinition.CivoAuth = pkgtypes.CivoAuth{
 				Token: k1AuthSecret["civo-token"],
 			}
 		} else {
@@ -347,7 +361,7 @@ func PostCreateCluster(c *gin.Context) {
 				})
 				return
 			}
-			clusterDefinition.DigitaloceanAuth = types.DigitaloceanAuth{
+			clusterDefinition.DigitaloceanAuth = pkgtypes.DigitaloceanAuth{
 				Token:        k1AuthSecret["do-token"],
 				SpacesKey:    k1AuthSecret["do-spaces-key"],
 				SpacesSecret: k1AuthSecret["do-spaces-token"],
@@ -381,7 +395,7 @@ func PostCreateCluster(c *gin.Context) {
 				})
 				return
 			}
-			clusterDefinition.VultrAuth = types.VultrAuth{
+			clusterDefinition.VultrAuth = pkgtypes.VultrAuth{
 				Token: k1AuthSecret["vultr-api-key"],
 			}
 		} else {
@@ -394,6 +408,37 @@ func PostCreateCluster(c *gin.Context) {
 		}
 		go func() {
 			err = vultr.CreateVultrCluster(&clusterDefinition)
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+		}()
+
+		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
+			Message: "cluster create enqueued",
+		})
+	case "google":
+		if useSecretForAuth {
+			err := utils.ValidateAuthenticationFields(k1AuthSecret)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: fmt.Sprintf("error checking google auth: %s", err),
+				})
+				return
+			}
+			clusterDefinition.GoogleAuth = pkgtypes.GoogleAuth{
+				KeyFile:   k1AuthSecret["KeyFile"],
+				ProjectId: k1AuthSecret["ProjectId"],
+			}
+		} else {
+			if clusterDefinition.GoogleAuth.KeyFile == "" {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: "missing authentication credentials in request, please check and try again",
+				})
+				return
+			}
+		}
+		go func() {
+			err = google.CreateGoogleCluster(&clusterDefinition)
 			if err != nil {
 				log.Errorf(err.Error())
 			}
@@ -417,7 +462,7 @@ func PostCreateCluster(c *gin.Context) {
 // @Router /cluster/:cluster_name/export [post]
 // @Param Authorization header string true "API key" default(Bearer <API key>)
 // PostExportCluster handles a request to export a cluster
-func PostExportCluster(c *gin.Context) {
+func GetExportCluster(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
 	if !param {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -426,18 +471,19 @@ func PostExportCluster(c *gin.Context) {
 		return
 	}
 
-	// Export
-	err := db.Client.Export(clusterName)
+	// get cluster object
+	cluster, err := db.Client.GetCluster(clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: fmt.Sprintf("error exporting cluster %s: %s", clusterName, err),
+			Message: err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, types.JSONSuccessResponse{
-		Message: "cluster exported",
-	})
+	// return json of cluster
+	c.IndentedJSON(http.StatusOK, cluster)
+	return
+
 }
 
 // PostImportCluster godoc
@@ -454,8 +500,8 @@ func PostExportCluster(c *gin.Context) {
 // PostImportCluster handles a request to import a cluster
 func PostImportCluster(c *gin.Context) {
 	// Bind to variable as application/json, handle error
-	var req types.ImportClusterRequest
-	err := c.Bind(&req)
+	var cluster pkgtypes.Cluster
+	err := c.Bind(&cluster)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -463,26 +509,39 @@ func PostImportCluster(c *gin.Context) {
 		return
 	}
 
-	log.Info("Restoring database")
-	// Restores database record
-	err = db.Client.Restore(&req)
+	// Insert the cluster into the target database
+	err = db.Client.InsertCluster(cluster)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
+		})
+		return
+	}
 
 	// Create default service entries
 	log.Info("Adding default services")
-	cl, _ := db.Client.GetCluster(req.ClusterName)
-	err = services.AddDefaultServices(&cl)
+	err = services.AddDefaultServices(&cluster)
 	if err != nil {
-		log.Errorf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
+		log.Errorf("error adding default service entries for cluster %s: %s", cluster.ClusterName, err)
 	}
 
-	err = gitShim.PrepareMgmtCluster(cl)
+	err = gitShim.PrepareMgmtCluster(cluster)
 	if err != nil {
 		log.Fatalf("error cloning repository: %s", err)
 	}
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: fmt.Sprintf("error importing cluster %s: %s", req.ClusterName, err),
+			Message: fmt.Sprintf("error importing cluster %s: %s", cluster.ClusterName, err),
+		})
+		return
+	}
+
+	// Update cluster status in database
+	err = db.Client.UpdateCluster(cluster.ClusterName, "in_progress", false)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
 		})
 		return
 	}

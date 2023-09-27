@@ -8,7 +8,6 @@ package controller
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,28 +15,30 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/kubefirst/kubefirst-api/internal/db"
-	"github.com/kubefirst/runtime/pkg"
-	runtimetypes "github.com/kubefirst/runtime/pkg/types"
+	runtime "github.com/kubefirst/runtime/pkg"
+
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	log "github.com/sirupsen/logrus"
 )
 
 // ExportClusterRecord will export cluster record to mgmt cluster
+// To be intiated by cluster 0
 func (clctrl *ClusterController) ExportClusterRecord() error {
 	cluster, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
-
-	err = db.Client.Export(clctrl.ClusterName)
 	if err != nil {
 		log.Errorf("Error exporting cluster record: %s", err)
 		clctrl.HandleError(err.Error())
 		return err
 	}
 
+	cluster.Status = "provisioned"
+	cluster.InProgress = false
+
 	time.Sleep(time.Second * 10)
 
 	consoleCloudUrl := fmt.Sprintf("https://kubefirst.%s", cluster.DomainName)
 
-	err = pkg.IsAppAvailable(fmt.Sprintf("%s/api/proxyHealth", consoleCloudUrl), "kubefirst api")
+	err = runtime.IsAppAvailable(fmt.Sprintf("%s/api/proxyHealth", consoleCloudUrl), "kubefirst api")
 	if err != nil {
 		log.Error("unable to start kubefirst api")
 
@@ -45,28 +46,12 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 		return err
 	}
 
-	importObject := runtimetypes.ImportClusterRequest{
-		ClusterName:   cluster.ClusterName,
-		CloudRegion:   cluster.CloudRegion,
-		CloudProvider: cluster.CloudProvider,
-	}
-	importObject.StateStoreCredentials.AccessKeyID = cluster.StateStoreCredentials.AccessKeyID
-	importObject.StateStoreCredentials.ID = cluster.StateStoreCredentials.ID
-	importObject.StateStoreCredentials.Name = cluster.StateStoreCredentials.Name
-	importObject.StateStoreCredentials.SecretAccessKey = cluster.StateStoreCredentials.SecretAccessKey
-	importObject.StateStoreCredentials.SessionToken = cluster.StateStoreCredentials.SessionToken
-
-	importObject.StateStoreDetails.Hostname = cluster.StateStoreDetails.Hostname
-	importObject.StateStoreDetails.ID = cluster.StateStoreDetails.ID
-	importObject.StateStoreDetails.Name = cluster.StateStoreDetails.Name
-
-	requestObject := runtimetypes.ProxyImportRequest{
-		Body: importObject,
+	requestObject := pkgtypes.ProxyImportRequest{
+		Body: cluster,
 		Url:  "/cluster/import",
 	}
 
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
-	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	httpClient := http.Client{Transport: customTransport}
 
 	payload, err := json.Marshal(requestObject)
