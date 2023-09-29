@@ -210,7 +210,7 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 	defer func() {
 		close(cluster1KubefirstApiStopChannel)
 	}()
-	if strings.ToLower(os.Getenv("K1_LOCAL")) != "true" { //allow using local kubefirst api running on port 8082
+	if strings.ToLower(os.Getenv("K1_LOCAL_DEBUG")) != "true" { //allow using local kubefirst api running on port 8082
 		k8s.OpenPortForwardPodWrapper(
 			kcfg.Clientset,
 			kcfg.RestConfig,

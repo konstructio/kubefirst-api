@@ -49,7 +49,7 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 	time.Sleep(time.Second * 10)
 
 	
-	apiURL := "http://localhost:8082/" //referencing local port forwarded to api pod in kubernetes cluster
+	apiURL := "http://localhost:8082" //referencing local port forwarded to api pod in kubernetes cluster
 
 	var kubefirstSecret string
 	if strings.Contains(apiURL, "localhost") {
@@ -71,7 +71,7 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 	} else {
 		kubefirstSecret = "feedkray"
 	}
-	err = runtime.IsAppAvailable(fmt.Sprintf("%s/api/proxyHealth", apiURL), "kubefirst api")
+	err = runtime.IsAppAvailable(fmt.Sprintf("%s/api/v1/health", apiURL), "kubefirst api")
 	if err != nil {
 		log.Error("unable to start kubefirst api")
 
@@ -88,14 +88,14 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/proxy", apiURL), bytes.NewReader(payload))
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/v1/cluster/import", apiURL), bytes.NewReader(payload))
 	if err != nil {
 		log.Errorf("error %s", err)
 		clctrl.HandleError(err.Error())
 		return err
 	}
 	req.Header.Add("Content-Type", pkg.JSONContentType)
-	req.Header.Add("Accept", "application/vnd.github+json")
+	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", kubefirstSecret))
 
 	res, err := httpClient.Do(req)
