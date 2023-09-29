@@ -9,7 +9,6 @@ package digitalocean
 import (
 	"os"
 	"strings"
-	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
@@ -90,8 +89,11 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	// Needs wait after cluster create
-	time.Sleep(time.Second * 30)
+	err = ctrl.WaitForClusterReady()
+	if err != nil {
+		ctrl.HandleError(err.Error())
+		return err
+	}
 
 	err = ctrl.ClusterSecretsBootstrap()
 	if err != nil {
