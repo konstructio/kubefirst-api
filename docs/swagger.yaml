@@ -207,6 +207,8 @@ definitions:
       ecr:
         description: AWS
         type: boolean
+      force_destroy:
+        type: boolean
       git_auth:
         $ref: '#/definitions/types.GitAuth'
       git_protocol:
@@ -287,6 +289,15 @@ definitions:
           type: string
         type: array
     type: object
+  types.Environment:
+    properties:
+      color:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+    type: object
   types.GitAuth:
     properties:
       git_owner:
@@ -351,11 +362,6 @@ definitions:
       key_file:
         type: string
       project_id:
-        type: string
-    type: object
-  types.ImportClusterRequest:
-    properties:
-      cluster_name:
         type: string
     type: object
   types.JSONFailureResponse:
@@ -479,7 +485,7 @@ definitions:
       domain_name:
         type: string
       environment:
-        type: string
+        $ref: '#/definitions/types.Environment'
       git_auth:
         $ref: '#/definitions/types.GitAuth'
       instance_size:
@@ -770,7 +776,7 @@ paths:
         name: request_body
         required: true
         schema:
-          $ref: '#/definitions/types.ImportClusterRequest'
+          $ref: '#/definitions/types.Cluster'
       - default: Bearer <API key>
         description: API key
         in: header

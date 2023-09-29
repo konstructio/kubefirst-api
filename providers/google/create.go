@@ -213,7 +213,6 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	log.Info("cluster creation complete")
 	cluster1KubefirstApiStopChannel := make(chan struct{}, 1)
 	defer func() {
 		close(cluster1KubefirstApiStopChannel)
@@ -222,12 +221,13 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 		k8s.OpenPortForwardPodWrapper(
 			kcfg.Clientset,
 			kcfg.RestConfig,
-			"kubefirst-api",
+			"kubefirst-kubefirst-api",
 			"kubefirst",
 			8081,
 			8082,
 			cluster1KubefirstApiStopChannel,
 		)
+		log.Info("Port forward opened to mgmt cluster kubefirst api")
 	}
 
 	//* export and import cluster

@@ -492,7 +492,7 @@ func GetExportCluster(c *gin.Context) {
 // @Tags cluster
 // @Accept json
 // @Produce json
-// @Param	request_body	body	types.ImportClusterRequest	true	"Cluster import request in JSON format"
+// @Param	request_body	body	types.Cluster	true	"Cluster import request in JSON format"
 // @Success 202 {object} types.JSONSuccessResponse
 // @Failure 400 {object} types.JSONFailureResponse
 // @Router /cluster/import [post]

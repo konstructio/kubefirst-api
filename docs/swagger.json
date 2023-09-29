@@ -410,7 +410,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/types.ImportClusterRequest"
+                            "$ref": "#/definitions/types.Cluster"
                         }
                     },
                     {
@@ -1191,6 +1191,9 @@
                     "description": "AWS",
                     "type": "boolean"
                 },
+                "force_destroy": {
+                    "type": "boolean"
+                },
                 "git_auth": {
                     "$ref": "#/definitions/types.GitAuth"
                 },
@@ -1298,6 +1301,20 @@
                 }
             }
         },
+        "types.Environment": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "types.GitAuth": {
             "type": "object",
             "properties": {
@@ -1396,14 +1413,6 @@
                     "type": "string"
                 },
                 "project_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "types.ImportClusterRequest": {
-            "type": "object",
-            "properties": {
-                "cluster_name": {
                     "type": "string"
                 }
             }
@@ -1593,7 +1602,7 @@
                     "type": "string"
                 },
                 "environment": {
-                    "type": "string"
+                    "$ref": "#/definitions/types.Environment"
                 },
                 "git_auth": {
                     "$ref": "#/definitions/types.GitAuth"
