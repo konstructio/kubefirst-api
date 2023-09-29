@@ -174,6 +174,15 @@ This would require the following parameters added to the API call depending on w
 
 ```json
 {
+	"do_auth": {
+		"key_file": "my-google-credentials-json-keyfile-stringified-no-newline-characters",
+		"project_id": "google cloud project id"
+	}
+}
+```
+
+```json
+{
 	"vultr_auth": {
 		"token": "my-vultr-api-key"
 	}
