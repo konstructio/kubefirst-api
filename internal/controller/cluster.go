@@ -128,6 +128,11 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 		kubefirstVersion = "development"
 	}
 
+	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	if err != nil {
+		return err
+	}
+
 	var fullDomainName string
 
 	if clctrl.SubdomainName != "" {
@@ -225,6 +230,8 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 
 		//Handle provider specific tokens
 		switch clctrl.CloudProvider {
+		case "vultr":
+			gitopsTemplateTokens.StateStoreBucketHostname = cl.StateStoreDetails.Hostname
 		case "google":
 			gitopsTemplateTokens.GoogleAuth = clctrl.GoogleAuth.KeyFile
 			gitopsTemplateTokens.GoogleProject = clctrl.GoogleAuth.ProjectId
