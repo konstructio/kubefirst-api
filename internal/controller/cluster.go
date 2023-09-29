@@ -128,6 +128,11 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 		kubefirstVersion = "development"
 	}
 
+	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	if err != nil {
+		return err
+	}
+
 	var fullDomainName string
 
 	if clctrl.SubdomainName != "" {
@@ -150,7 +155,10 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			case "aws":
 				externalDNSProviderTokenEnvName = "not-used-uses-service-account"
 			case "google":
-				externalDNSProviderTokenEnvName = fmt.Sprintf("%s_APPLICATION_CREDENTIALS", strings.ToUpper(clctrl.CloudProvider))
+				// Normally this would be GOOGLE_APPLICATION_CREDENTIALS but we are using a service account instead and
+				// if you set externalDNSProviderTokenEnvName to GOOGLE_APPLICATION_CREDENTIALS then externaldns will overlook the service account
+				// if you want to use the provided keyfile instead of a service account then set the var accordingly
+				externalDNSProviderTokenEnvName = fmt.Sprintf("%s_auth", strings.ToUpper(clctrl.CloudProvider))
 			case "civo":
 				externalDNSProviderTokenEnvName = fmt.Sprintf("%s_TOKEN", strings.ToUpper(clctrl.CloudProvider))
 			case "vultr":
@@ -225,6 +233,8 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 
 		//Handle provider specific tokens
 		switch clctrl.CloudProvider {
+		case "vultr":
+			gitopsTemplateTokens.StateStoreBucketHostname = cl.StateStoreDetails.Hostname
 		case "google":
 			gitopsTemplateTokens.GoogleAuth = clctrl.GoogleAuth.KeyFile
 			gitopsTemplateTokens.GoogleProject = clctrl.GoogleAuth.ProjectId

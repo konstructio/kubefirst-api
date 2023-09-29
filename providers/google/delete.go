@@ -233,7 +233,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster) error {
 			errors.HandleClusterError(cl, err.Error())
 			return err
 		}
-		log.Info("gcp resources terraform destroyed")
+		log.Info("google resources terraform destroyed")
 
 		err = db.Client.UpdateCluster(cl.ClusterName, "cloud_terraform_apply_check", false)
 		if err != nil {

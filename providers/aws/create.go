@@ -7,6 +7,9 @@ See the LICENSE file for more details.
 package aws
 
 import (
+	"os"
+	"strings"
+
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
@@ -230,6 +233,24 @@ func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 		ctrl.HandleError(err.Error())
 		return err
 	}
+
+	log.Info("cluster creation complete")
+	cluster1KubefirstApiStopChannel := make(chan struct{}, 1)
+	defer func() {
+		close(cluster1KubefirstApiStopChannel)
+	}()
+	if strings.ToLower(os.Getenv("K1_LOCAL_DEBUG")) != "true" { //allow using local kubefirst api running on port 8082
+		k8s.OpenPortForwardPodWrapper(
+			kcfg.Clientset,
+			kcfg.RestConfig,
+			"kubefirst-api",
+			"kubefirst",
+			8081,
+			8082,
+			cluster1KubefirstApiStopChannel,
+		)
+	}
+
 
 	//* export and import cluster
 	err = ctrl.ExportClusterRecord()

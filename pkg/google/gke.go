@@ -64,11 +64,6 @@ func (conf *GoogleConfiguration) GetContainerClusterAuth(clusterName string, key
 		return nil, fmt.Errorf("could not create google storage client credentials: %s", err)
 	}
 
-	// creds, err := google.CredentialsFromJSON(ctx, data, option.WithHTTPClient(oauth2.NewClient(conf.Context, creds.TokenSource)) )
-	// if err != nil {
-	//     log.Fatalf("Failed to load GCP service account credentials: %s", err)
-	// }
-
 	client, err := container.NewClusterManagerClient(conf.Context, option.WithCredentials(creds))
 	if err != nil {
 		return nil, fmt.Errorf("could not create google container client: %s", err)
@@ -119,7 +114,7 @@ func (conf *GoogleConfiguration) GetContainerClusterAuth(clusterName string, key
 	// }
 	// config.AuthInfos[name] = &api.AuthInfo{
 	// 	AuthProvider: &api.AuthProviderConfig{
-	// 		Name: "gcp",
+	// 		Name: "google",
 	// 		Config: map[string]string{
 	// 			"scopes": "https://www.googleapis.com/auth/cloud-platform",
 	// 		},
