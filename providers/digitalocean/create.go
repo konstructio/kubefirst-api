@@ -214,12 +214,14 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 		k8s.OpenPortForwardPodWrapper(
 			kcfg.Clientset,
 			kcfg.RestConfig,
-			"kubefirst-api",
+			"kubefirst-kubefirst-api",
 			"kubefirst",
 			8081,
 			8082,
 			cluster1KubefirstApiStopChannel,
 		)
+		log.Info("Port forward opened to mgmt cluster kubefirst api")
+
 	}
 
 	//* export and import cluster
