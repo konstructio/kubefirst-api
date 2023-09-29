@@ -155,7 +155,10 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			case "aws":
 				externalDNSProviderTokenEnvName = "not-used-uses-service-account"
 			case "google":
-				externalDNSProviderTokenEnvName = fmt.Sprintf("%s_APPLICATION_CREDENTIALS", strings.ToUpper(clctrl.CloudProvider))
+				// Normally this would be GOOGLE_APPLICATION_CREDENTIALS but we are using a service account instead and
+				// if you set externalDNSProviderTokenEnvName to GOOGLE_APPLICATION_CREDENTIALS then externaldns will overlook the service account
+				// if you want to use the provided keyfile instead of a service account then set the var accordingly
+				externalDNSProviderTokenEnvName = fmt.Sprintf("%s_auth", strings.ToUpper(clctrl.CloudProvider))
 			case "civo":
 				externalDNSProviderTokenEnvName = fmt.Sprintf("%s_TOKEN", strings.ToUpper(clctrl.CloudProvider))
 			case "vultr":
