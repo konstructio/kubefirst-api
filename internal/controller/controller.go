@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package controller
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -15,15 +16,17 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
+	google "github.com/kubefirst/kubefirst-api/pkg/google"
+	"github.com/kubefirst/kubefirst-api/pkg/handlers"
+	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg"
+	runtime "github.com/kubefirst/runtime/pkg"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/github"
 	"github.com/kubefirst/runtime/pkg/gitlab"
-	"github.com/kubefirst/runtime/pkg/handlers"
 	"github.com/kubefirst/runtime/pkg/k8s"
-	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/services"
 	log "github.com/sirupsen/logrus"
@@ -46,13 +49,14 @@ type ClusterController struct {
 	AlertsEmail   string
 
 	// auth
-	AWSAuth            types.AWSAuth
-	CivoAuth           types.CivoAuth
-	DigitaloceanAuth   types.DigitaloceanAuth
-	VultrAuth          types.VultrAuth
-	CloudflareAuth     types.CloudflareAuth
-	GitAuth            types.GitAuth
-	VaultAuth          types.VaultAuth
+	AWSAuth            pkgtypes.AWSAuth
+	CivoAuth           pkgtypes.CivoAuth
+	DigitaloceanAuth   pkgtypes.DigitaloceanAuth
+	VultrAuth          pkgtypes.VultrAuth
+	CloudflareAuth     pkgtypes.CloudflareAuth
+	GitAuth            pkgtypes.GitAuth
+	VaultAuth          pkgtypes.VaultAuth
+	GoogleAuth         pkgtypes.GoogleAuth
 	AwsAccessKeyID     string
 	AwsSecretAccessKey string
 
@@ -101,12 +105,13 @@ type ClusterController struct {
 	MdbCl *db.MongoDBClient
 
 	// Provider clients
-	AwsClient *awsinternal.AWSConfiguration
-	Kcfg      *k8s.KubernetesClient
+	AwsClient    *awsinternal.AWSConfiguration
+	GoogleClient google.GoogleConfiguration
+	Kcfg         *k8s.KubernetesClient
 }
 
 // InitController
-func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) error {
+func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition) error {
 	// Create k1 dir if it doesn't exist
 	utils.CreateK1Directory(def.ClusterName)
 
@@ -134,7 +139,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	if recordExists {
 		clusterID = rec.ClusterID
 	} else {
-		clusterID = pkg.GenerateClusterID()
+		clusterID = runtime.GenerateClusterID()
 	}
 
 	// Telemetry handler
@@ -162,6 +167,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	clctrl.CivoAuth = def.CivoAuth
 	clctrl.DigitaloceanAuth = def.DigitaloceanAuth
 	clctrl.VultrAuth = def.VultrAuth
+	clctrl.GoogleAuth = def.GoogleAuth
 	clctrl.CloudflareAuth = def.CloudflareAuth
 
 	clctrl.Repositories = []string{"gitops", "metaphor"}
@@ -212,6 +218,10 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	case "civo":
 		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.APIToken, clctrl.CloudflareAuth.OriginCaIssuerKey)
 		clctrl.ProviderConfig.CivoToken = clctrl.CivoAuth.Token
+	case "google":
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		clctrl.ProviderConfig.GoogleAuth = clctrl.GoogleAuth.KeyFile
+		clctrl.ProviderConfig.GoogleProject = clctrl.GoogleAuth.ProjectId
 	case "digitalocean":
 		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
 		clctrl.ProviderConfig.DigitaloceanToken = clctrl.DigitaloceanAuth.Token
@@ -231,6 +241,13 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 				clctrl.AWSAuth.SessionToken,
 			),
 		}
+	case "google":
+		clctrl.GoogleClient = google.GoogleConfiguration{
+			Context: context.Background(),
+			Project: def.GoogleAuth.ProjectId,
+			Region:  clctrl.CloudRegion,
+		}
+
 	}
 
 	if os.Getenv("USE_TELEMETRY") == "false" {
@@ -240,7 +257,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	}
 
 	// Write cluster record if it doesn't exist
-	cl := types.Cluster{
+	cl := pkgtypes.Cluster{
 		ID:                    primitive.NewObjectID(),
 		CreationTimestamp:     fmt.Sprintf("%v", primitive.NewDateTimeFromTime(time.Now().UTC())),
 		UseTelemetry:          clctrl.UseTelemetry,
@@ -267,6 +284,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		KubefirstTeam:         clctrl.KubefirstTeam,
 		AWSAuth:               clctrl.AWSAuth,
 		CivoAuth:              clctrl.CivoAuth,
+		GoogleAuth:            clctrl.GoogleAuth,
 		DigitaloceanAuth:      clctrl.DigitaloceanAuth,
 		VultrAuth:             clctrl.VultrAuth,
 		CloudflareAuth:        clctrl.CloudflareAuth,
@@ -280,7 +298,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 }
 
 // GetCurrentClusterRecord will return an active cluster's record if it exists
-func (clctrl *ClusterController) SetGitTokens(def types.ClusterDefinition) error {
+func (clctrl *ClusterController) SetGitTokens(def pkgtypes.ClusterDefinition) error {
 	switch def.GitProvider {
 	case "github":
 		gitHubService := services.NewGitHubService(clctrl.HttpClient)
@@ -327,10 +345,10 @@ func (clctrl *ClusterController) SetGitTokens(def types.ClusterDefinition) error
 }
 
 // GetCurrentClusterRecord will return an active cluster's record if it exists
-func (clctrl *ClusterController) GetCurrentClusterRecord() (types.Cluster, error) {
+func (clctrl *ClusterController) GetCurrentClusterRecord() (pkgtypes.Cluster, error) {
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
-		return types.Cluster{}, err
+		return pkgtypes.Cluster{}, err
 	}
 
 	return cl, nil

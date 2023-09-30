@@ -6,13 +6,18 @@ See the LICENSE file for more details.
 */
 package types
 
+import (
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+)
+
 // RegionListRequest
 type RegionListRequest struct {
 	CloudRegion      string           `json:"cloud_region,omitempty"`
-	AWSAuth          AWSAuth          `json:"aws_auth,omitempty"`
-	CivoAuth         CivoAuth         `json:"civo_auth,omitempty"`
-	DigitaloceanAuth DigitaloceanAuth `json:"do_auth,omitempty"`
-	VultrAuth        VultrAuth        `json:"vultr_auth,omitempty"`
+	AWSAuth          pkgtypes.AWSAuth          `json:"aws_auth,omitempty"`
+	CivoAuth         pkgtypes.CivoAuth         `json:"civo_auth,omitempty"`
+	DigitaloceanAuth pkgtypes.DigitaloceanAuth `json:"do_auth,omitempty"`
+	VultrAuth        pkgtypes.VultrAuth        `json:"vultr_auth,omitempty"`
+	GoogleAuth       pkgtypes.GoogleAuth       `bson:"google_auth,omitempty" json:"google_auth,omitempty"`
 }
 
 // RegionListResponse

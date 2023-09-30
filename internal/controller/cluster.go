@@ -15,15 +15,18 @@ import (
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
+	googleext "github.com/kubefirst/kubefirst-api/extensions/google"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/k8s"
-	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
+	"github.com/thanhpk/randstr"
+	v1 "k8s.io/api/apps/v1"
 )
 
 // CreateCluster
@@ -50,18 +53,18 @@ func (clctrl *ClusterController) CreateCluster() error {
 	defer segmentClient.Client.Close()
 
 	if !cl.CloudTerraformApplyCheck || cl.CloudTerraformApplyFailedCheck {
+
+		telemetryShim.Transmit(true, segmentClient, segment.MetricCloudTerraformApplyStarted, "")
+
+		log.Info("creating aws cloud resources with terraform")
+		tfEntrypoint := clctrl.ProviderConfig.GitopsDir + fmt.Sprintf("/terraform/%s", clctrl.CloudProvider)
+		tfEnvs := map[string]string{}
 		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyStarted, "")
 
 		log.Infof("creating %s cluster", clctrl.CloudProvider)
 
 		switch clctrl.CloudProvider {
 		case "aws":
-			telemetryShim.Transmit(true, segmentClient, segment.MetricCloudTerraformApplyStarted, "")
-
-			log.Info("creating aws cloud resources with terraform")
-
-			tfEntrypoint := clctrl.ProviderConfig.GitopsDir + "/terraform/aws"
-			tfEnvs := map[string]string{}
 			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, &cl)
 			iamCaller, err := clctrl.AwsClient.GetCallerIdentity()
 			if err != nil {
@@ -74,92 +77,31 @@ func (clctrl *ClusterController) CreateCluster() error {
 			if err != nil {
 				return err
 			}
-
-			err = terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.TerraformClient, tfEntrypoint, tfEnvs)
-			if err != nil {
-				msg := fmt.Sprintf("error creating aws resources with terraform %s: %s", tfEntrypoint, err)
-				log.Error(msg)
-				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
-				if err != nil {
-					return err
-				}
-				telemetryShim.Transmit(true, segmentClient, segment.MetricCloudTerraformApplyFailed, msg)
-				return fmt.Errorf(msg)
-			}
-
-			log.Info("created aws cloud resources")
-
-			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
 		case "civo":
-			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyStarted, "")
-
-			log.Info("creating civo cloud resources with terraform")
-
-			tfEntrypoint := clctrl.ProviderConfig.GitopsDir + "/terraform/civo"
-			tfEnvs := map[string]string{}
 			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, &cl)
-			err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.TerraformClient, tfEntrypoint, tfEnvs)
-			if err != nil {
-				msg := fmt.Sprintf("error creating civo resources with terraform %s: %s", tfEntrypoint, err)
-				log.Error(msg)
-				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
-				if err != nil {
-					return err
-				}
-				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyFailed, msg)
-				return fmt.Errorf(msg)
-			}
-
-			log.Info("created civo cloud resources")
-
-			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
 		case "digitalocean":
-			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyStarted, "")
-
-			log.Info("creating digital ocean cloud resources with terraform")
-
-			tfEntrypoint := clctrl.ProviderConfig.GitopsDir + "/terraform/digitalocean"
-			tfEnvs := map[string]string{}
 			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, &cl)
-			err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.TerraformClient, tfEntrypoint, tfEnvs)
-			if err != nil {
-				msg := fmt.Sprintf("error creating digital ocean resources with terraform %s: %s", tfEntrypoint, err)
-				log.Error(msg)
-				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
-				if err != nil {
-					return err
-				}
-				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyFailed, msg)
-				return fmt.Errorf(msg)
-			}
-
-			log.Info("created digital ocean cloud resources")
-
-			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
+		case "google":
+			tfEnvs = googleext.GetGoogleTerraformEnvs(tfEnvs, &cl)
 		case "vultr":
-			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyStarted, "")
-
-			log.Info("creating vultr cloud resources with terraform")
-
-			tfEntrypoint := clctrl.ProviderConfig.GitopsDir + "/terraform/vultr"
-			tfEnvs := map[string]string{}
 			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
-			err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.TerraformClient, tfEntrypoint, tfEnvs)
-			if err != nil {
-				msg := fmt.Sprintf("error creating vultr resources with terraform %s: %s", tfEntrypoint, err)
-				log.Error(msg)
-				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
-				if err != nil {
-					return err
-				}
-				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyFailed, msg)
-				return fmt.Errorf(msg)
-			}
-
-			log.Info("created vultr cloud resources")
-
-			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
 		}
+
+		err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.TerraformClient, tfEntrypoint, tfEnvs)
+		if err != nil {
+			msg := fmt.Sprintf("error creating %s resources with terraform %s: %s", clctrl.CloudProvider, tfEntrypoint, err)
+			log.Error(msg)
+			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
+			if err != nil {
+				return err
+			}
+			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyFailed, msg)
+			return fmt.Errorf(msg)
+		}
+
+		log.Info("created %s cloud resources", clctrl.CloudProvider)
+
+		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
 
 		log.Infof("successfully created %s cluster", clctrl.CloudProvider)
 
@@ -186,6 +128,11 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 		kubefirstVersion = "development"
 	}
 
+	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	if err != nil {
+		return err
+	}
+
 	var fullDomainName string
 
 	if clctrl.SubdomainName != "" {
@@ -203,8 +150,23 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			externalDNSProviderTokenEnvName = "CF_API_TOKEN"
 			externalDNSProviderSecretKey = "cf-api-token"
 		} else {
-			externalDNSProviderTokenEnvName = fmt.Sprintf("%s_TOKEN", strings.ToUpper(clctrl.CloudProvider))
-			externalDNSProviderSecretKey = fmt.Sprintf("%s-token", clctrl.CloudProvider)
+			switch clctrl.CloudProvider {
+			// provider auth secret gets mapped to these values
+			case "aws":
+				externalDNSProviderTokenEnvName = "not-used-uses-service-account"
+			case "google":
+				// Normally this would be GOOGLE_APPLICATION_CREDENTIALS but we are using a service account instead and
+				// if you set externalDNSProviderTokenEnvName to GOOGLE_APPLICATION_CREDENTIALS then externaldns will overlook the service account
+				// if you want to use the provided keyfile instead of a service account then set the var accordingly
+				externalDNSProviderTokenEnvName = fmt.Sprintf("%s_auth", strings.ToUpper(clctrl.CloudProvider))
+			case "civo":
+				externalDNSProviderTokenEnvName = fmt.Sprintf("%s_TOKEN", strings.ToUpper(clctrl.CloudProvider))
+			case "vultr":
+				externalDNSProviderTokenEnvName = fmt.Sprintf("%s_API_KEY", strings.ToUpper(clctrl.CloudProvider))
+			case "digitalocean":
+				externalDNSProviderTokenEnvName = "DO_TOKEN"
+			}
+			externalDNSProviderSecretKey = fmt.Sprintf("%s-auth", clctrl.CloudProvider)
 		}
 
 		// switch repo url based on gitProtocol and gitlab group parents.
@@ -265,12 +227,21 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			// external-dns optionality to provide cloudflare support regardless of cloud provider
 			ExternalDNSProviderName:         clctrl.DnsProvider,
 			ExternalDNSProviderTokenEnvName: externalDNSProviderTokenEnvName,
-			ExternalDNSProviderSecretName:   fmt.Sprintf("%s-creds", clctrl.CloudProvider),
+			ExternalDNSProviderSecretName:   fmt.Sprintf("%s-auth", clctrl.CloudProvider),
 			ExternalDNSProviderSecretKey:    externalDNSProviderSecretKey,
 		}
 
 		//Handle provider specific tokens
 		switch clctrl.CloudProvider {
+		case "vultr":
+			gitopsTemplateTokens.StateStoreBucketHostname = cl.StateStoreDetails.Hostname
+		case "google":
+			gitopsTemplateTokens.GoogleAuth = clctrl.GoogleAuth.KeyFile
+			gitopsTemplateTokens.GoogleProject = clctrl.GoogleAuth.ProjectId
+			gitopsTemplateTokens.GoogleUniqueness = strings.ToLower(randstr.String(5))
+			gitopsTemplateTokens.ForceDestroy = strconv.FormatBool(true) //TODO make this optional
+			gitopsTemplateTokens.KubefirstArtifactsBucket = clctrl.KubefirstStateStoreBucketName
+			gitopsTemplateTokens.VaultDataBucketName = fmt.Sprintf("%s-vault-data-%s", clctrl.GoogleAuth.ProjectId, clctrl.ClusterName)
 		case "aws":
 			iamCaller, err := clctrl.AwsClient.GetCallerIdentity()
 			if err != nil {
@@ -325,8 +296,13 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 	case "civo", "digitalocean", "vultr":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+	case "google":
+		var err error
+		kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
+		if err != nil {
+			return err
+		}
 	}
-
 	clientSet := kcfg.Clientset
 
 	//create namespaces
@@ -335,13 +311,19 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 		return err
 	}
 
+	destinationGitopsRepoGitURL, err := clctrl.GetRepoURL()
+	if err != nil {
+		return err
+	}
+
+	//TODO Remove specific ext bootstrap functions.
 	if !cl.ClusterSecretsCreatedCheck {
 		switch clctrl.CloudProvider {
 		case "aws":
 			err := awsext.BootstrapAWSMgmtCluster(
 				clientSet,
 				&cl,
-				&clctrl.ProviderConfig,
+				destinationGitopsRepoGitURL,
 				clctrl.AwsClient,
 			)
 			if err != nil {
@@ -349,19 +331,25 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 				return err
 			}
 		case "civo":
-			err := civoext.BootstrapCivoMgmtCluster(clientSet, &cl, &clctrl.ProviderConfig)
+			err := civoext.BootstrapCivoMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
+			if err != nil {
+				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
+				return err
+			}
+		case "google":
+			err := googleext.BootstrapGoogleMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
 			if err != nil {
 				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
 		case "digitalocean":
-			err := digitaloceanext.BootstrapDigitaloceanMgmtCluster(clientSet, &cl, &clctrl.ProviderConfig)
+			err := digitaloceanext.BootstrapDigitaloceanMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
 			if err != nil {
 				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
 		case "vultr":
-			err := vultrext.BootstrapVultrMgmtCluster(clientSet, &cl, &clctrl.ProviderConfig)
+			err := vultrext.BootstrapVultrMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
 			if err != nil {
 				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
@@ -370,7 +358,7 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 
 		//create service accounts
 		var token string
-		if (clctrl.CloudflareAuth != types.CloudflareAuth{}) {
+		if (clctrl.CloudflareAuth != pkgtypes.CloudflareAuth{}) {
 			token = clctrl.CloudflareAuth.APIToken
 		}
 		err = providerConfigs.ServiceAccounts(clientSet, token)
@@ -417,6 +405,12 @@ func (clctrl *ClusterController) ContainerRegistryAuth() (string, error) {
 		return containerRegistryAuthToken, nil
 	case "civo", "digitalocean", "vultr":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+	case "google":
+		var err error
+		kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
+		if err != nil {
+			return "", err
+		}
 	}
 
 	// Container registry authentication creation
@@ -453,23 +447,47 @@ func (clctrl *ClusterController) WaitForClusterReady() error {
 
 	switch clctrl.CloudProvider {
 	case "aws":
-		kcfg = clctrl.Kcfg //awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 	case "civo", "digitalocean", "vultr":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+	case "google":
+		var err error
+		kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
+		if err != nil {
+			return err
+		}
 	}
 
-	coreDNSDeployment, err := k8s.ReturnDeploymentObject(
-		kcfg.Clientset,
-		"kubernetes.io/name",
-		"CoreDNS",
-		"kube-system",
-		120,
-	)
-	if err != nil {
-		log.Errorf("error finding CoreDNS deployment: %s", err)
-		return err
+	var dnsDeployment *v1.Deployment
+	var err error
+	switch clctrl.CloudProvider {
+	case "aws", "civo", "digitalocean", "vultr":
+		dnsDeployment, err = k8s.ReturnDeploymentObject(
+			kcfg.Clientset,
+			"kubernetes.io/name",
+			"CoreDNS",
+			"kube-system",
+			120,
+		)
+		if err != nil {
+			log.Errorf("error finding CoreDNS deployment: %s", err)
+			return err
+		}
+	case "google":
+		dnsDeployment, err = k8s.ReturnDeploymentObject(
+			kcfg.Clientset,
+			"k8s-app",
+			"kube-dns",
+			"kube-system",
+			120,
+		)
+		if err != nil {
+			log.Errorf("error finding CoreDNS deployment: %s", err)
+			return err
+		}
 	}
-	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, coreDNSDeployment, 120)
+
+	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, dnsDeployment, 120)
 	if err != nil {
 		log.Errorf("error waiting for CoreDNS deployment ready state: %s", err)
 		return err

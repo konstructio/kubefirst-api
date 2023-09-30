@@ -410,7 +410,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/types.ImportClusterRequest"
+                            "$ref": "#/definitions/types.Cluster"
                         }
                     },
                     {
@@ -918,6 +918,12 @@
         "types.CloudflareAuth": {
             "type": "object",
             "properties": {
+                "api_token": {
+                    "type": "string"
+                },
+                "origin_ca_issuer_key": {
+                    "type": "string"
+                },
                 "token": {
                     "type": "string"
                 }
@@ -978,9 +984,6 @@
                 "aws_kms_key_id": {
                     "type": "string"
                 },
-                "cf_api_token": {
-                    "$ref": "#/definitions/types.CloudflareAuth"
-                },
                 "civo_auth": {
                     "$ref": "#/definitions/types.CivoAuth"
                 },
@@ -995,6 +998,9 @@
                 },
                 "cloud_terraform_apply_failed_check": {
                     "type": "boolean"
+                },
+                "cloudflare_auth": {
+                    "$ref": "#/definitions/types.CloudflareAuth"
                 },
                 "cluster_id": {
                     "type": "string"
@@ -1060,6 +1066,9 @@
                 "gitops_template_url": {
                     "type": "string"
                 },
+                "google_auth": {
+                    "$ref": "#/definitions/types.GoogleAuth"
+                },
                 "in_progress": {
                     "type": "boolean"
                 },
@@ -1092,12 +1101,18 @@
                     "description": "Status",
                     "type": "string"
                 },
+                "subdomain_name": {
+                    "type": "string"
+                },
                 "useTelemetry": {
                     "description": "Telemetry",
                     "type": "boolean"
                 },
                 "users_terraform_apply_check": {
                     "type": "boolean"
+                },
+                "vault_auth": {
+                    "$ref": "#/definitions/types.VaultAuth"
                 },
                 "vault_initialized_check": {
                     "type": "boolean"
@@ -1107,6 +1122,12 @@
                 },
                 "vultr_auth": {
                     "$ref": "#/definitions/types.VultrAuth"
+                },
+                "workload_clusters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.WorkloadCluster"
+                    }
                 }
             }
         },
@@ -1144,7 +1165,8 @@
                         "aws",
                         "civo",
                         "digitalocean",
-                        "vultr"
+                        "vultr",
+                        "google"
                     ]
                 },
                 "cloud_region": {
@@ -1169,6 +1191,9 @@
                     "description": "AWS",
                     "type": "boolean"
                 },
+                "force_destroy": {
+                    "type": "boolean"
+                },
                 "git_auth": {
                     "$ref": "#/definitions/types.GitAuth"
                 },
@@ -1191,6 +1216,12 @@
                 },
                 "gitops_template_url": {
                     "description": "Git",
+                    "type": "string"
+                },
+                "google_auth": {
+                    "$ref": "#/definitions/types.GoogleAuth"
+                },
+                "subdomain_name": {
                     "type": "string"
                 },
                 "type": {
@@ -1251,6 +1282,9 @@
                 "do_auth": {
                     "$ref": "#/definitions/types.DigitaloceanAuth"
                 },
+                "google_auth": {
+                    "$ref": "#/definitions/types.GoogleAuth"
+                },
                 "vultr_auth": {
                     "$ref": "#/definitions/types.VultrAuth"
                 }
@@ -1264,6 +1298,20 @@
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "types.Environment": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -1358,23 +1406,14 @@
                 }
             }
         },
-        "types.ImportClusterRequest": {
+        "types.GoogleAuth": {
             "type": "object",
             "properties": {
-                "cloud_provider": {
+                "key_file": {
                     "type": "string"
                 },
-                "cloud_region": {
+                "project_id": {
                     "type": "string"
-                },
-                "cluster_name": {
-                    "type": "string"
-                },
-                "state_store_credentials": {
-                    "$ref": "#/definitions/types.StateStoreCredentials"
-                },
-                "state_store_details": {
-                    "$ref": "#/definitions/types.StateStoreDetails"
                 }
             }
         },
@@ -1419,6 +1458,9 @@
                 },
                 "do_auth": {
                     "$ref": "#/definitions/types.DigitaloceanAuth"
+                },
+                "google_auth": {
+                    "$ref": "#/definitions/types.GoogleAuth"
                 },
                 "vultr_auth": {
                     "$ref": "#/definitions/types.VultrAuth"
@@ -1476,6 +1518,9 @@
                 },
                 "secret_access_key": {
                     "type": "string"
+                },
+                "session_token": {
+                    "type": "string"
                 }
             }
         },
@@ -1507,10 +1552,71 @@
                 }
             }
         },
+        "types.VaultAuth": {
+            "type": "object",
+            "properties": {
+                "kbot_password": {
+                    "type": "string"
+                },
+                "root_token": {
+                    "type": "string"
+                }
+            }
+        },
         "types.VultrAuth": {
             "type": "object",
             "properties": {
                 "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.WorkloadCluster": {
+            "type": "object",
+            "properties": {
+                "admin_email": {
+                    "type": "string"
+                },
+                "cloud_provider": {
+                    "type": "string"
+                },
+                "cloud_region": {
+                    "type": "string"
+                },
+                "cluster_id": {
+                    "type": "string"
+                },
+                "cluster_name": {
+                    "type": "string"
+                },
+                "cluster_type": {
+                    "type": "string"
+                },
+                "creation_timestamp": {
+                    "type": "string"
+                },
+                "dns_provider": {
+                    "type": "string"
+                },
+                "domain_name": {
+                    "type": "string"
+                },
+                "environment": {
+                    "$ref": "#/definitions/types.Environment"
+                },
+                "git_auth": {
+                    "$ref": "#/definitions/types.GitAuth"
+                },
+                "instance_size": {
+                    "type": "string"
+                },
+                "machine_type": {
+                    "type": "string"
+                },
+                "node_count": {
+                    "type": "integer"
+                },
+                "status": {
                     "type": "string"
                 }
             }

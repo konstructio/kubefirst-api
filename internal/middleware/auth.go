@@ -27,8 +27,8 @@ func ValidateAPIKey() gin.HandlerFunc {
 			log.Info().Msgf(" Request Status: 401;  Authentication failed - no API key provided in request")
 			return
 		}
-
-		if APIKey != os.Getenv("K1_ACCESS_TOKEN") {
+		apiToken := os.Getenv("K1_ACCESS_TOKEN")
+		if APIKey != apiToken {
 			c.JSON(http.StatusUnauthorized, gin.H{"status": 401, "message": "Authentication failed - not a valid API key"})
 			c.Abort()
 

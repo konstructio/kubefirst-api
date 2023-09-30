@@ -21,19 +21,19 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/errors"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	"github.com/kubefirst/kubefirst-api/internal/types"
-	"github.com/kubefirst/runtime/pkg"
+	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	runtime "github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
-	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 )
 
 // DeleteVultrCluster
-func DeleteVultrCluster(cl *types.Cluster) error {
+func DeleteVultrCluster(cl *pkgtypes.Cluster) error {
 	// Logging handler
 	// Logs to stdout to maintain compatibility with event streaming
 	log.SetFormatter(&log.TextFormatter{
@@ -233,7 +233,7 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 		}
 
 		log.Info("destroying vultr cloud resources")
-		tfEntrypoint := config.GitopsDir + "/terraform/vultr"
+		tfEntrypoint := config.GitopsDir + fmt.Sprintf("/terraform/%s", cl.CloudProvider)
 		tfEnvs := map[string]string{}
 		tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, cl)
 
@@ -294,7 +294,7 @@ func DeleteVultrCluster(cl *types.Cluster) error {
 		return err
 	}
 
-	err = pkg.ResetK1Dir(config.K1Dir)
+	err = runtime.ResetK1Dir(config.K1Dir)
 	if err != nil {
 		return err
 	}
