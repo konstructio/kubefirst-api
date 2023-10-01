@@ -26,7 +26,6 @@ func BootstrapAWSMgmtCluster(
 	destinationGitopsRepoURL string,
 	awsClient *aws.AWSConfiguration,
 ) error {
-	
 
 	err := providerConfig.BootstrapMgmtCluster(
 		clientset,
@@ -34,7 +33,7 @@ func BootstrapAWSMgmtCluster(
 		cl.GitAuth.User,
 		destinationGitopsRepoURL,
 		cl.GitProtocol,
-		cl.CloudflareAuth.Token,
+		cl.CloudflareAuth.APIToken,
 		"",
 		cl.DnsProvider,
 		cl.CloudProvider,
