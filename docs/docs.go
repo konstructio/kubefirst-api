@@ -416,7 +416,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/types.ImportClusterRequest"
+                            "$ref": "#/definitions/types.Cluster"
                         }
                     },
                     {
@@ -1197,6 +1197,9 @@ const docTemplate = `{
                     "description": "AWS",
                     "type": "boolean"
                 },
+                "force_destroy": {
+                    "type": "boolean"
+                },
                 "git_auth": {
                     "$ref": "#/definitions/types.GitAuth"
                 },
@@ -1304,6 +1307,20 @@ const docTemplate = `{
                 }
             }
         },
+        "types.Environment": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "types.GitAuth": {
             "type": "object",
             "properties": {
@@ -1402,14 +1419,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "project_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "types.ImportClusterRequest": {
-            "type": "object",
-            "properties": {
-                "cluster_name": {
                     "type": "string"
                 }
             }
@@ -1599,7 +1608,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "environment": {
-                    "type": "string"
+                    "$ref": "#/definitions/types.Environment"
                 },
                 "git_auth": {
                     "$ref": "#/definitions/types.GitAuth"

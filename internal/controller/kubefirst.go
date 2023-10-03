@@ -13,13 +13,25 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
+	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
+	"github.com/kubefirst/runtime/pkg"
 	runtime "github.com/kubefirst/runtime/pkg"
-
-	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/sirupsen/logrus"
+	"k8s.io/client-go/kubernetes"
 )
+
+func readKubefirstAPITokenFromSecret(clientset *kubernetes.Clientset) string {
+	existingKubernetesSecret, err := k8s.ReadSecretV2(clientset, "kubefirst", "kubefirst-initial-secrets")
+	if err != nil || existingKubernetesSecret == nil {
+		log.Printf("Error reading existing Secret data: %s", err)
+		return ""
+	}
+	return existingKubernetesSecret["K1_ACCESS_TOKEN"]
+}
 
 // ExportClusterRecord will export cluster record to mgmt cluster
 // To be intiated by cluster 0
@@ -36,9 +48,30 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 
 	time.Sleep(time.Second * 10)
 
-	consoleCloudUrl := fmt.Sprintf("https://kubefirst.%s", cluster.DomainName)
+	
+	apiURL := "http://localhost:8082" //referencing local port forwarded to api pod in kubernetes cluster
 
-	err = runtime.IsAppAvailable(fmt.Sprintf("%s/api/proxyHealth", consoleCloudUrl), "kubefirst api")
+	var kubefirstSecret string
+	if strings.Contains(apiURL, "localhost") {
+		var kcfg *k8s.KubernetesClient
+
+		switch clctrl.CloudProvider {
+		case "aws":
+			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+		case "civo", "digitalocean", "vultr":
+			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		case "google":
+			var err error
+			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
+			if err != nil {
+				return err
+			}
+		}
+		kubefirstSecret = readKubefirstAPITokenFromSecret(kcfg.Clientset)
+	} else {
+		kubefirstSecret = "feedkray"
+	}
+	err = runtime.IsAppAvailable(fmt.Sprintf("%s/api/v1/health", apiURL), "kubefirst api")
 	if err != nil {
 		log.Error("unable to start kubefirst api")
 
@@ -46,28 +79,24 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 		return err
 	}
 
-	requestObject := pkgtypes.ProxyImportRequest{
-		Body: cluster,
-		Url:  "/cluster/import",
-	}
-
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
 	httpClient := http.Client{Transport: customTransport}
 
-	payload, err := json.Marshal(requestObject)
+	payload, err := json.Marshal(cluster)
 	if err != nil {
 		clctrl.HandleError(err.Error())
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/proxy", consoleCloudUrl), bytes.NewReader(payload))
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/v1/cluster/import", apiURL), bytes.NewReader(payload))
 	if err != nil {
 		log.Errorf("error %s", err)
 		clctrl.HandleError(err.Error())
 		return err
 	}
-	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Content-Type", pkg.JSONContentType)
 	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", kubefirstSecret))
 
 	res, err := httpClient.Do(req)
 	if err != nil {
