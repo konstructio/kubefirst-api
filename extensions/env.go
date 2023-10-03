@@ -93,7 +93,24 @@ func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster
 	envs["TF_VAR_kbot_ssh_private_key"] = cl.GitAuth.PrivateKey
 	envs["TF_VAR_kbot_ssh_public_key"] = cl.GitAuth.PublicKey
 	envs["TF_VAR_cloudflare_origin_ca_api_key"] = cl.CloudflareAuth.OriginCaIssuerKey
-	envs["TF_VAR_cloudflare_api_key"] = cl.CloudflareAuth.Token
+
+	switch cl.DnsProvider {
+	case "cloudflare":
+		envs["TF_VAR_external_dns_token"] = cl.CloudflareAuth.APIToken
+	default:
+		switch cl.CloudProvider {
+		case "civo":
+			envs["TF_VAR_external_dns_token"] = cl.CivoAuth.Token
+		case "aws":
+			envs["TF_VAR_external_dns_token"] = "unused on aws"
+		case "googlecloud":
+			envs["TF_VAR_external_dns_token"] = "unused on googlecloud"
+		case "digitalocean":
+			envs["TF_VAR_external_dns_token"] = cl.DigitaloceanAuth.Token
+		case "vultr":
+			envs["TF_VAR_external_dns_token"] = cl.VultrAuth.Token
+		}
+	}
 
 	switch cl.GitProvider {
 	case "gitlab":

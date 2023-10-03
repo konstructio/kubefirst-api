@@ -26,7 +26,7 @@ func BootstrapCivoMgmtCluster(clientset *kubernetes.Clientset, cl *pkgtypes.Clus
 		cl.GitAuth.User,
 		destinationGitopsRepoURL,
 		cl.GitProtocol,
-		cl.CloudflareAuth.Token,
+		cl.CloudflareAuth.APIToken,
 		cl.CivoAuth.Token,
 		cl.DnsProvider,
 		cl.CloudProvider,
