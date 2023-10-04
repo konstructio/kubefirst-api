@@ -38,6 +38,22 @@ func BootstrapCivoMgmtCluster(clientset *kubernetes.Clientset, cl *pkgtypes.Clus
 		return err
 	}
 
+	var externalDnsToken string
+	switch cl.DnsProvider {
+	case "civo":
+		externalDnsToken = cl.CivoAuth.Token
+	case "vultr":
+		externalDnsToken = cl.VultrAuth.Token
+	case "digitalocean":
+		externalDnsToken = cl.DigitaloceanAuth.Token
+	case "aws":
+		externalDnsToken = "implement with cluster management"
+	case "googlecloud":
+		externalDnsToken = "implement with cluster management"
+	case "cloudflare":
+		externalDnsToken = cl.CloudflareAuth.APIToken
+	}
+
 	// Create secrets
 	createSecrets := []*v1.Secret{
 		{
@@ -56,6 +72,12 @@ func BootstrapCivoMgmtCluster(clientset *kubernetes.Clientset, cl *pkgtypes.Clus
 			ObjectMeta: metav1.ObjectMeta{Name: "cloudflare-creds", Namespace: "chartmuseum"},
 			Data: map[string][]byte{
 				"origin-ca-api-key": []byte(cl.CloudflareAuth.OriginCaIssuerKey),
+			},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{Name: "external-dns-secrets", Namespace: "external-dns"},
+			Data: map[string][]byte{
+				"token": []byte(externalDnsToken),
 			},
 		},
 		{

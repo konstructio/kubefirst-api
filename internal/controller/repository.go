@@ -40,6 +40,11 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 		return err
 	}
 
+	var useCloudflareOriginIssuer = false
+	if cl.CloudflareAuth.OriginCaIssuerKey != "" {
+		useCloudflareOriginIssuer = true
+	}
+
 	//TODO Implement an interface so we can call GetDomainApexContent on the clustercotroller
 
 	if !cl.GitopsReadyCheck {
@@ -63,6 +68,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), //tokens created on the fly
 				true,
 				cl.GitProtocol,
+				useCloudflareOriginIssuer,
 			)
 			if err != nil {
 				return err
@@ -84,6 +90,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), //tokens created on the fly
 				civo.GetDomainApexContent(clctrl.DomainName),
 				cl.GitProtocol,
+				useCloudflareOriginIssuer,
 			)
 			if err != nil {
 				return err
@@ -105,6 +112,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), //tokens created on the fly
 				google.GetDomainApexContent(clctrl.DomainName),
 				cl.GitProtocol,
+				useCloudflareOriginIssuer,
 			)
 			if err != nil {
 				return err
@@ -126,6 +134,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), //tokens created on the fly
 				digitalocean.GetDomainApexContent(clctrl.DomainName),
 				cl.GitProtocol,
+				useCloudflareOriginIssuer,
 			)
 			if err != nil {
 				return err
@@ -147,6 +156,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), //tokens created on the fly
 				vultr.GetDomainApexContent(clctrl.DomainName),
 				cl.GitProtocol,
+				useCloudflareOriginIssuer,
 			)
 			if err != nil {
 				return err

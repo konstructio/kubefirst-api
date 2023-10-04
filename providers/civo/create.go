@@ -76,6 +76,8 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
+	// os.Exit(1) //TODO: DO NOT MERGE WITH THIS LINE
+
 	err = ctrl.RunGitTerraform()
 	if err != nil {
 		ctrl.HandleError(err.Error())
@@ -223,7 +225,7 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		log.Info("Port forward opened to mgmt cluster kubefirst api")
 
 	}
-	
+
 	//* export and import cluster
 	err = ctrl.ExportClusterRecord()
 	if err != nil {

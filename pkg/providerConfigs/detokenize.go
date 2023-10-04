@@ -16,8 +16,8 @@ import (
 )
 
 // DetokenizeGitGitops - Translate tokens by values on a given path
-func DetokenizeGitGitops(path string, tokens *GitopsDirectoryValues, gitProtocol string) error {
-	err := filepath.Walk(path, detokenizeGitops(path, tokens, gitProtocol))
+func DetokenizeGitGitops(path string, tokens *GitopsDirectoryValues, gitProtocol string, useCloudflareOriginIssuer bool) error {
+	err := filepath.Walk(path, detokenizeGitops(path, tokens, gitProtocol, useCloudflareOriginIssuer))
 	if err != nil {
 		return err
 	}
@@ -25,7 +25,7 @@ func DetokenizeGitGitops(path string, tokens *GitopsDirectoryValues, gitProtocol
 	return nil
 }
 
-func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol string) filepath.WalkFunc {
+func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol string, useCloudflareOriginIssuer bool) filepath.WalkFunc {
 	return filepath.WalkFunc(func(path string, fi os.FileInfo, err error) error {
 
 		if fi.IsDir() && fi.Name() == ".git" {
@@ -137,6 +137,19 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				newContents = strings.Replace(newContents, "<EXTERNAL_DNS_PROVIDER_SECRET_NAME>", tokens.ExternalDNSProviderSecretName, -1)
 				newContents = strings.Replace(newContents, "<EXTERNAL_DNS_PROVIDER_SECRET_KEY>", tokens.ExternalDNSProviderSecretKey, -1)
 				newContents = strings.Replace(newContents, "<EXTERNAL_DNS_DOMAIN_NAME>", tokens.DomainName, -1)
+
+				//origin issuer defines which annotations should be on ingresses
+				if useCloudflareOriginIssuer {
+					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_1>", "cert-manager.io/issuer: cloudflare-origin-issuer", -1)
+					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_2>", "cert-manager.io/issuer-kind: OriginIssuer", -1)
+					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_3>", "cert-manager.io/issuer-group: cert-manager.k8s.cloudflare.com", -1)
+					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_4>", "external-dns.alpha.kubernetes.io/cloudflare-proxied: \"true\"", -1)
+				} else {
+					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_1>", "cert-manager.io/cluster-issuer: \"letsencrypt-prod\"", -1)
+					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_2>", "", -1)
+					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_3>", "", -1)
+					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_4>", "", -1)
+				}
 
 				newContents = strings.Replace(newContents, "<USE_TELEMETRY>", tokens.UseTelemetry, -1)
 
