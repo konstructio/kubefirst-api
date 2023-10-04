@@ -12,6 +12,7 @@ require (
 	github.com/atotto/clipboard v0.1.4
 	github.com/aws/aws-sdk-go-v2 v1.17.8
 	github.com/aws/aws-sdk-go-v2/config v1.18.19
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.91.0
 	github.com/aws/aws-sdk-go-v2/service/eks v1.27.10
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.27.5
 	github.com/charmbracelet/bubbles v0.15.0
@@ -19,13 +20,14 @@ require (
 	github.com/charmbracelet/lipgloss v0.7.1
 	github.com/civo/civogo v0.3.28
 	github.com/cloudflare/cloudflare-go v0.73.0
+	github.com/digitalocean/godo v1.98.0
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.8.2
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/google/go-github/v52 v52.0.0
 	github.com/hashicorp/vault/api v1.9.0
 	github.com/joho/godotenv v1.5.1
-	github.com/kubefirst/runtime v0.3.24
+	github.com/kubefirst/runtime v0.3.25
 	github.com/minio/minio-go/v7 v7.0.49
 	github.com/otiai10/copy v1.7.0
 	github.com/rs/zerolog v1.29.0
@@ -34,6 +36,7 @@ require (
 	github.com/swaggo/gin-swagger v1.5.3
 	github.com/swaggo/swag v1.16.1
 	github.com/thanhpk/randstr v1.0.6
+	github.com/vultr/govultr/v3 v3.0.2
 	go.mongodb.org/mongo-driver v1.10.3
 	golang.org/x/oauth2 v0.8.0
 	golang.org/x/text v0.12.0
@@ -72,7 +75,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.26 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.32 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.0.23 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.91.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.18.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.15.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.19.8 // indirect
@@ -101,7 +103,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/denisbrodbeck/machineid v1.0.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/digitalocean/godo v1.98.0 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.10.0 // indirect
@@ -226,7 +227,6 @@ require (
 	github.com/vmihailenco/go-tinylfu v0.2.1 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.4 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
-	github.com/vultr/govultr/v3 v3.0.2 // indirect
 	github.com/xanzy/go-gitlab v0.81.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
