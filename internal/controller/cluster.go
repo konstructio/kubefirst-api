@@ -229,8 +229,8 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			ExternalDNSProviderTokenEnvName: externalDNSProviderTokenEnvName,
 			ExternalDNSProviderSecretName:   fmt.Sprintf("%s-auth", clctrl.CloudProvider),
 			ExternalDNSProviderSecretKey:    externalDNSProviderSecretKey,
-			
-			ContainerRegistryURL:           fmt.Sprintf("%s/%s", clctrl.ContainerRegistryHost, clctrl.GitAuth.Owner),
+
+			ContainerRegistryURL: fmt.Sprintf("%s/%s", clctrl.ContainerRegistryHost, clctrl.GitAuth.Owner),
 		}
 
 		//Handle provider specific tokens
@@ -318,7 +318,6 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 	if err != nil {
 		return err
 	}
-
 
 	//TODO Remove specific ext bootstrap functions.
 	if !cl.ClusterSecretsCreatedCheck {
