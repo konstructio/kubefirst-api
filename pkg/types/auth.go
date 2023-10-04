@@ -60,3 +60,8 @@ type VaultAuth struct {
 	RootToken    string `bson:"root_token,omitempty" json:"root_token,omitempty"`
 	KbotPassword string `bson:"kbot_password,omitempty" json:"kbot_password,omitempty"`
 }
+
+type GoogleAuth struct {
+	KeyFile   string `bson:"key_file,omitempty" json:"key_file,omitempty"`
+	ProjectId string `bson:"project_id,omitempty" json:"project_id,omitempty"`
+}

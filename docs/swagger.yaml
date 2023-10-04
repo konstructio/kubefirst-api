@@ -31,6 +31,10 @@ definitions:
     type: object
   types.CloudflareAuth:
     properties:
+      api_token:
+        type: string
+      origin_ca_issuer_key:
+        type: string
       token:
         type: string
     type: object
@@ -70,8 +74,6 @@ definitions:
         type: boolean
       aws_kms_key_id:
         type: string
-      cf_api_token:
-        $ref: '#/definitions/types.CloudflareAuth'
       civo_auth:
         $ref: '#/definitions/types.CivoAuth'
       cloud_provider:
@@ -82,6 +84,8 @@ definitions:
         type: boolean
       cloud_terraform_apply_failed_check:
         type: boolean
+      cloudflare_auth:
+        $ref: '#/definitions/types.CloudflareAuth'
       cluster_id:
         type: string
       cluster_name:
@@ -125,6 +129,8 @@ definitions:
         type: string
       gitops_template_url:
         type: string
+      google_auth:
+        $ref: '#/definitions/types.GoogleAuth'
       in_progress:
         type: boolean
       install_tools_check:
@@ -147,17 +153,25 @@ definitions:
       status:
         description: Status
         type: string
+      subdomain_name:
+        type: string
       useTelemetry:
         description: Telemetry
         type: boolean
       users_terraform_apply_check:
         type: boolean
+      vault_auth:
+        $ref: '#/definitions/types.VaultAuth'
       vault_initialized_check:
         type: boolean
       vault_terraform_apply_check:
         type: boolean
       vultr_auth:
         $ref: '#/definitions/types.VultrAuth'
+      workload_clusters:
+        items:
+          $ref: '#/definitions/types.WorkloadCluster'
+        type: array
     type: object
   types.ClusterDefinition:
     properties:
@@ -176,6 +190,7 @@ definitions:
         - civo
         - digitalocean
         - vultr
+        - google
         type: string
       cloud_region:
         type: string
@@ -191,6 +206,8 @@ definitions:
         type: string
       ecr:
         description: AWS
+        type: boolean
+      force_destroy:
         type: boolean
       git_auth:
         $ref: '#/definitions/types.GitAuth'
@@ -208,6 +225,10 @@ definitions:
         type: string
       gitops_template_url:
         description: Git
+        type: string
+      google_auth:
+        $ref: '#/definitions/types.GoogleAuth'
+      subdomain_name:
         type: string
       type:
         enum:
@@ -256,6 +277,8 @@ definitions:
         $ref: '#/definitions/types.CloudflareAuth'
       do_auth:
         $ref: '#/definitions/types.DigitaloceanAuth'
+      google_auth:
+        $ref: '#/definitions/types.GoogleAuth'
       vultr_auth:
         $ref: '#/definitions/types.VultrAuth'
     type: object
@@ -265,6 +288,15 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  types.Environment:
+    properties:
+      color:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
     type: object
   types.GitAuth:
     properties:
@@ -325,18 +357,12 @@ definitions:
       name:
         type: string
     type: object
-  types.ImportClusterRequest:
+  types.GoogleAuth:
     properties:
-      cloud_provider:
+      key_file:
         type: string
-      cloud_region:
+      project_id:
         type: string
-      cluster_name:
-        type: string
-      state_store_credentials:
-        $ref: '#/definitions/types.StateStoreCredentials'
-      state_store_details:
-        $ref: '#/definitions/types.StateStoreDetails'
     type: object
   types.JSONFailureResponse:
     properties:
@@ -366,6 +392,8 @@ definitions:
         type: string
       do_auth:
         $ref: '#/definitions/types.DigitaloceanAuth'
+      google_auth:
+        $ref: '#/definitions/types.GoogleAuth'
       vultr_auth:
         $ref: '#/definitions/types.VultrAuth'
     type: object
@@ -403,6 +431,8 @@ definitions:
         type: string
       secret_access_key:
         type: string
+      session_token:
+        type: string
     type: object
   types.StateStoreDetails:
     properties:
@@ -422,9 +452,49 @@ definitions:
       event:
         type: string
     type: object
+  types.VaultAuth:
+    properties:
+      kbot_password:
+        type: string
+      root_token:
+        type: string
+    type: object
   types.VultrAuth:
     properties:
       token:
+        type: string
+    type: object
+  types.WorkloadCluster:
+    properties:
+      admin_email:
+        type: string
+      cloud_provider:
+        type: string
+      cloud_region:
+        type: string
+      cluster_id:
+        type: string
+      cluster_name:
+        type: string
+      cluster_type:
+        type: string
+      creation_timestamp:
+        type: string
+      dns_provider:
+        type: string
+      domain_name:
+        type: string
+      environment:
+        $ref: '#/definitions/types.Environment'
+      git_auth:
+        $ref: '#/definitions/types.GitAuth'
+      instance_size:
+        type: string
+      machine_type:
+        type: string
+      node_count:
+        type: integer
+      status:
         type: string
     type: object
 host: localhost:port
@@ -706,7 +776,7 @@ paths:
         name: request_body
         required: true
         schema:
-          $ref: '#/definitions/types.ImportClusterRequest'
+          $ref: '#/definitions/types.Cluster'
       - default: Bearer <API key>
         description: API key
         in: header

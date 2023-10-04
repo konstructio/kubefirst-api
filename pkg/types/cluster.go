@@ -15,13 +15,15 @@ type ClusterDefinition struct {
 
 	//Cluster
 	AdminEmail    string `json:"admin_email" binding:"required"`
-	CloudProvider string `json:"cloud_provider" binding:"required,oneof=aws civo digitalocean vultr"`
+	CloudProvider string `json:"cloud_provider" binding:"required,oneof=aws civo digitalocean vultr google"`
 	CloudRegion   string `json:"cloud_region" binding:"required"`
 	ClusterName   string `json:"cluster_name,omitempty"`
 	DomainName    string `json:"domain_name" binding:"required"`
 	SubdomainName string `json:"subdomain_name,omitempty"`
 	DnsProvider   string `json:"dns_provider,omitempty" binding:"required"`
 	Type          string `json:"type" binding:"required,oneof=mgmt workload"`
+	ForceDestroy  bool   `bson:"force_destroy,omitempty" json:"force_destroy,omitempty"`
+
 
 	//Git
 	GitopsTemplateURL    string `json:"gitops_template_url"`
@@ -38,6 +40,7 @@ type ClusterDefinition struct {
 	DigitaloceanAuth DigitaloceanAuth `json:"do_auth,omitempty"`
 	VultrAuth        VultrAuth        `json:"vultr_auth,omitempty"`
 	CloudflareAuth   CloudflareAuth   `json:"cloudflare_auth,omitempty"`
+	GoogleAuth       GoogleAuth       `json:"google_auth,omitempty"`
 	GitAuth          GitAuth          `json:"git_auth,omitempty"`
 }
 
@@ -70,6 +73,7 @@ type Cluster struct {
 	CloudflareAuth   CloudflareAuth   `bson:"cloudflare_auth,omitempty" json:"cloudflare_auth,omitempty"`
 	GitAuth          GitAuth          `bson:"git_auth,omitempty" json:"git_auth,omitempty"`
 	VaultAuth        VaultAuth        `bson:"vault_auth,omitempty" json:"vault_auth,omitempty"`
+	GoogleAuth       GoogleAuth       `bson:"google_auth,omitempty" json:"google_auth,omitempty"`
 
 	GitopsTemplateURL    string `bson:"gitops_template_url" json:"gitops_template_url"`
 	GitopsTemplateBranch string `bson:"gitops_template_branch" json:"gitops_template_branch"`
@@ -139,29 +143,33 @@ type PushBucketObject struct {
 	ContentType    string `json:"content_type"`
 }
 
-// ImportClusterRequest
-type ImportClusterRequest struct {
-	ClusterName           string                `bson:"cluster_name" json:"cluster_name"`
-	CloudRegion           string                `bson:"cloud_region" json:"cloud_region"`
-	CloudProvider         string                `bson:"cloud_provider" json:"cloud_provider"`
-	StateStoreCredentials StateStoreCredentials `bson:"state_store_credentials" json:"state_store_credentials"`
-	StateStoreDetails     StateStoreDetails     `bson:"state_store_details" json:"state_store_details"`
+type ProxyImportRequest struct {
+	Body Cluster `bson:"body" json:"body"`
+	Url  string  `bson:"url" json:"url"`
+}
+
+type Environment struct {
+	ID                primitive.ObjectID `bson:"_id" json:"_id"`
+	Name        			string             `bson:"name" json:"name"`
+	Color       			string 						 `bson:"color" json:"color"`
+	Description       string 						 `bson:"description,omitempty" json:"description,omitempty"`
+	CreationTimestamp string 						 `bson:"creation_timestamp" json:"creation_timestamp"`
 }
 
 type WorkloadCluster struct {
-	AdminEmail        string  `bson:"admin_email,omitempty" json:"admin_email,omitempty"`
-	CloudProvider     string  `bson:"cloud_provider,omitempty" json:"cloud_provider,omitempty"`
-	ClusterID         string  `bson:"cluster_id,omitempty" json:"cluster_id,omitempty"`
-	ClusterName       string  `bson:"cluster_name,omitempty" json:"cluster_name,omitempty"`
-	ClusterType       string  `bson:"cluster_type,omitempty" json:"cluster_type,omitempty"`
-	CloudRegion       string  `bson:"cloud_region,omitempty" json:"cloud_region,omitempty"`
-	CreationTimestamp string  `bson:"creation_timestamp" json:"creation_timestamp"`
-	DomainName        string  `bson:"domain_name,omitempty" json:"domain_name,omitempty"`
-	DnsProvider       string  `bson:"dns_provider,omitempty" json:"dns_provider,omitempty"`
-	Environment       string  `bson:"environment,omitempty" json:"environment,omitempty"`
-	GitAuth           GitAuth `bson:"git_auth,omitempty" json:"git_auth,omitempty"`
-	InstanceSize      string  `bson:"instance_size,omitempty" json:"instance_size,omitempty"`
-	MachineType       string  `bson:"machine_type,omitempty" json:"machine_type,omitempty"`
-	NodeCount         int     `bson:"node_count,omitempty" json:"node_count,omitempty"`
-	Status            string  `bson:"status,omitempty" json:"status,omitempty"`
+	AdminEmail        string      `bson:"admin_email,omitempty" json:"admin_email,omitempty"`
+	CloudProvider     string      `bson:"cloud_provider,omitempty" json:"cloud_provider,omitempty"`
+	ClusterID         string      `bson:"cluster_id,omitempty" json:"cluster_id,omitempty"`
+	ClusterName       string      `bson:"cluster_name,omitempty" json:"cluster_name,omitempty"`
+	ClusterType       string      `bson:"cluster_type,omitempty" json:"cluster_type,omitempty"`
+	CloudRegion       string      `bson:"cloud_region,omitempty" json:"cloud_region,omitempty"`
+	CreationTimestamp string      `bson:"creation_timestamp" json:"creation_timestamp"`
+	DomainName        string      `bson:"domain_name,omitempty" json:"domain_name,omitempty"`
+	DnsProvider       string      `bson:"dns_provider,omitempty" json:"dns_provider,omitempty"`
+	Environment       Environment `bson:"environment,omitempty" json:"environment,omitempty"`
+	GitAuth           GitAuth     `bson:"git_auth,omitempty" json:"git_auth,omitempty"`
+	InstanceSize      string      `bson:"instance_size,omitempty" json:"instance_size,omitempty"`
+	MachineType       string      `bson:"machine_type,omitempty" json:"machine_type,omitempty"`
+	NodeCount         int         `bson:"node_count,omitempty" json:"node_count,omitempty"`
+	Status            string      `bson:"status,omitempty" json:"status,omitempty"`
 }

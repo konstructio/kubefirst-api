@@ -7,20 +7,23 @@ See the LICENSE file for more details.
 package aws
 
 import (
+	"os"
+	"strings"
+
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	"github.com/kubefirst/kubefirst-api/internal/types"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 )
 
-func CreateAWSCluster(definition *types.ClusterDefinition) error {
+func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 	ctrl := controller.ClusterController{}
 	err := ctrl.InitController(definition)
 	if err != nil {
@@ -230,6 +233,26 @@ func CreateAWSCluster(definition *types.ClusterDefinition) error {
 		ctrl.HandleError(err.Error())
 		return err
 	}
+
+	log.Info("cluster creation complete")
+	cluster1KubefirstApiStopChannel := make(chan struct{}, 1)
+	defer func() {
+		close(cluster1KubefirstApiStopChannel)
+	}()
+	if strings.ToLower(os.Getenv("K1_LOCAL_DEBUG")) != "true" { //allow using local kubefirst api running on port 8082
+		k8s.OpenPortForwardPodWrapper(
+			kcfg.Clientset,
+			kcfg.RestConfig,
+			"kubefirst-kubefirst-api",
+			"kubefirst",
+			8081,
+			8082,
+			cluster1KubefirstApiStopChannel,
+		)
+		log.Info("Port forward opened to mgmt cluster kubefirst api")
+
+	}
+
 
 	//* export and import cluster
 	err = ctrl.ExportClusterRecord()

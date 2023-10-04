@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/k8s"
-	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/vault"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
@@ -29,7 +29,7 @@ func readVaultTokenFromSecret(clientset *kubernetes.Clientset) string {
 	return existingKubernetesSecret["root-token"]
 }
 
-func GetAwsTerraformEnvs(envs map[string]string, cl *types.Cluster) map[string]string {
+func GetAwsTerraformEnvs(envs map[string]string, cl *pkgtypes.Cluster) map[string]string {
 	// needed for s3 api connectivity to object storage
 	envs["AWS_ACCESS_KEY_ID"] = cl.StateStoreCredentials.AccessKeyID
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
@@ -44,7 +44,7 @@ func GetAwsTerraformEnvs(envs map[string]string, cl *types.Cluster) map[string]s
 	return envs
 }
 
-func GetGithubTerraformEnvs(envs map[string]string, cl *types.Cluster) map[string]string {
+func GetGithubTerraformEnvs(envs map[string]string, cl *pkgtypes.Cluster) map[string]string {
 	envs["GITHUB_TOKEN"] = cl.GitAuth.Token
 	envs["GITHUB_OWNER"] = cl.GitAuth.Owner
 	envs["TF_VAR_atlantis_repo_webhook_secret"] = cl.AtlantisWebhookSecret
@@ -60,7 +60,7 @@ func GetGithubTerraformEnvs(envs map[string]string, cl *types.Cluster) map[strin
 	return envs
 }
 
-func GetGitlabTerraformEnvs(envs map[string]string, gid int, cl *types.Cluster) map[string]string {
+func GetGitlabTerraformEnvs(envs map[string]string, gid int, cl *pkgtypes.Cluster) map[string]string {
 	envs["GITLAB_TOKEN"] = cl.GitAuth.Token
 	envs["GITLAB_OWNER"] = cl.GitAuth.Owner
 	envs["TF_VAR_atlantis_repo_webhook_secret"] = cl.AtlantisWebhookSecret
@@ -78,7 +78,7 @@ func GetGitlabTerraformEnvs(envs map[string]string, gid int, cl *types.Cluster) 
 	return envs
 }
 
-func GetUsersTerraformEnvs(clientset *kubernetes.Clientset, cl *types.Cluster, envs map[string]string) map[string]string {
+func GetUsersTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster, envs map[string]string) map[string]string {
 	envs["VAULT_TOKEN"] = readVaultTokenFromSecret(clientset)
 	envs["VAULT_ADDR"] = providerConfigs.VaultPortForwardURL
 	envs[fmt.Sprintf("%s_TOKEN", strings.ToUpper(cl.GitProvider))] = cl.GitAuth.Token
@@ -87,7 +87,7 @@ func GetUsersTerraformEnvs(clientset *kubernetes.Clientset, cl *types.Cluster, e
 	return envs
 }
 
-func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *types.Cluster, envs map[string]string) map[string]string {
+func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster, envs map[string]string) map[string]string {
 	envs[fmt.Sprintf("%s_TOKEN", strings.ToUpper(cl.GitProvider))] = cl.GitAuth.Token
 	envs[fmt.Sprintf("%s_OWNER", strings.ToUpper(cl.GitProvider))] = cl.GitAuth.Owner
 	envs["TF_VAR_email_address"] = cl.AlertsEmail

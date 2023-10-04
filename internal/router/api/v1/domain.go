@@ -14,6 +14,7 @@ import (
 	cloudflare_api "github.com/cloudflare/cloudflare-go"
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/pkg/google"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
 	cloudflare "github.com/kubefirst/runtime/pkg/cloudflare"
@@ -173,6 +174,31 @@ func PostDomains(c *gin.Context) {
 			return
 		}
 		domainListResponse.Domains = domains
+	case "google":
+		if domainListRequest.GoogleAuth.ProjectId == "" {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: "missing authentication credentials in request, please check and try again",
+			})
+			return
+		}
+
+		googleConf := google.GoogleConfiguration{
+			Context: context.Background(),
+			Project: domainListRequest.GoogleAuth.ProjectId,
+			Region:  domainListRequest.CloudRegion,
+			KeyFile: domainListRequest.GoogleAuth.KeyFile,
+		}
+
+		domains, err := googleConf.GetDNSDomains()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+
+		domainListResponse.Domains = domains
+
 	default:
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: fmt.Sprintf("unsupported provider: %s", dnsProvider),
