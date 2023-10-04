@@ -6,6 +6,7 @@ import (
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -57,14 +58,20 @@ func (mdbcl *MongoDBClient) GetEnvironment(name string) (pkgtypes.Environment, e
 func (mdbcl *MongoDBClient) InsertEnvironment(env pkgtypes.Environment) (pkgtypes.Environment ,error) {
 	filter := bson.D{{ Key: "name", Value: env.Name }}
 
-	var result pkgtypes.Environment
+	result := pkgtypes.Environment {
+		ID: primitive.NewObjectID(),
+		Name: env.Name,
+		Color: env.Color,
+		Description: env.Description,
+		CreationTimestamp: env.CreationTimestamp,
+	}
+
 	err := mdbcl.EnvironmentsCollection.FindOne(mdbcl.Context, filter).Decode(&result)
-	fmt.Println("the result =>", result);
 	if err != nil {
 		// This error means your query did not match any documents.
 		if err == mongo.ErrNoDocuments {
 			// Create if entry does not exist
-			insert, err := mdbcl.EnvironmentsCollection.InsertOne(mdbcl.Context, env)
+			insert, err := mdbcl.EnvironmentsCollection.InsertOne(mdbcl.Context, result)
 			if err != nil {
 				return pkgtypes.Environment{}, fmt.Errorf("error inserting environment %v: %s", env.Name, err)
 			}
@@ -74,7 +81,7 @@ func (mdbcl *MongoDBClient) InsertEnvironment(env pkgtypes.Environment) (pkgtype
 	} else {
 		return pkgtypes.Environment{}, fmt.Errorf("environment %v already exists", env.Name)
 	}
-	return pkgtypes.Environment{}, nil
+	return result, nil
 }
 
 func (mdbcl *MongoDBClient) DeleteEnvironment(envName string) error {
