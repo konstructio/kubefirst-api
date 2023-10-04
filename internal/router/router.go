@@ -76,6 +76,11 @@ func SetupRouter() *gin.Engine {
 		// Instance Sizes
 		v1.POST("/instance-sizes/:dns_provider", middleware.ValidateAPIKey(), router.ListInstanceSizesForRegion)
 
+		// Environments
+		v1.GET("/environment", middleware.ValidateAPIKey(), router.GetEnvironments)
+		v1.POST("/environment", middleware.ValidateAPIKey(), router.CreateEnvironment)
+		v1.DELETE("/environment/:environment_name", middleware.ValidateAPIKey(), router.DeleteEnvironment)
+
 		// Utilities
 		v1.GET("/health", router.GetHealth)
 

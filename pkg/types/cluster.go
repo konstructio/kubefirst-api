@@ -149,9 +149,11 @@ type ProxyImportRequest struct {
 }
 
 type Environment struct {
-	Name        string `bson:"name" json:"name"`
-	Color       string `bson:"color" json:"color"`
-	Description string `bson:"description,omitempty" json:"description,omitempty"`
+	ID                primitive.ObjectID `bson:"_id" json:"_id"`
+	Name        			string             `bson:"name" json:"name"`
+	Color       			string 						 `bson:"color" json:"color"`
+	Description       string 						 `bson:"description,omitempty" json:"description,omitempty"`
+	CreationTimestamp string 						 `bson:"creation_timestamp" json:"creation_timestamp"`
 }
 
 type WorkloadCluster struct {
