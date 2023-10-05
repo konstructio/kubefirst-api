@@ -179,6 +179,12 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
+	err = ctrl.WriteVaultSecrets()
+	if err != nil {
+		ctrl.HandleError(err.Error())
+		return err
+	}
+
 	err = ctrl.RunUsersTerraform()
 	if err != nil {
 		ctrl.HandleError(err.Error())

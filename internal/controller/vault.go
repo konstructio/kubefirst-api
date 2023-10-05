@@ -7,11 +7,13 @@ See the LICENSE file for more details.
 package controller
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"os"
 	"strconv"
 
+	vaultapi "github.com/hashicorp/vault/api"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
@@ -276,6 +278,60 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		}
 	}
 
+	return nil
+}
+
+func (clctrl *ClusterController) WriteVaultSecrets() error {
+	// Logging handler
+	// Logs to stdout to maintain compatibility with event streaming
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "",
+	})
+	log.SetReportCaller(false)
+	log.SetOutput(os.Stdout)
+
+	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	if err != nil {
+		return err
+	}
+
+	vaultAddr := "http://localhost:8200"
+
+	vaultClient, err := vaultapi.NewClient(&vaultapi.Config{
+		Address: vaultAddr,
+	})
+	if err != nil {
+		log.Errorf("error creating vault client: %s", err)
+		return err
+	}
+
+	var externalDnsToken string
+	switch cl.DnsProvider {
+	case "civo":
+		externalDnsToken = cl.CivoAuth.Token
+	case "vultr":
+		externalDnsToken = cl.VultrAuth.Token
+	case "digitalocean":
+		externalDnsToken = cl.DigitaloceanAuth.Token
+	case "aws":
+		externalDnsToken = "implement with cluster management"
+	case "googlecloud":
+		externalDnsToken = "implement with cluster management"
+	case "cloudflare":
+		externalDnsToken = cl.CloudflareAuth.APIToken
+	}
+
+	_, err = vaultClient.KVv2("secret").Put(context.Background(), "external-dns", map[string]interface{}{
+		"token": externalDnsToken,
+	})
+
+	if err != nil {
+		log.Errorf("error writing secret to vault: %s", err)
+		return err
+	}
+
+	log.Info("successfully wrote platform secrets to vault secret store")
 	return nil
 }
 
