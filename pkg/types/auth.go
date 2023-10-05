@@ -20,7 +20,7 @@ type CivoAuth struct {
 
 // CloudflareAuth holds necessary auth credentials for interacting with vultr
 type CloudflareAuth struct {
-	Token             string `bson:"token" json:"token"`
+	Token             string `bson:"token" json:"token"` // DEPRECATED: please transition to APIToken
 	APIToken          string `bson:"api_token" json:"api_token"`
 	OriginCaIssuerKey string `bson:"origin_ca_issuer_key" json:"origin_ca_issuer_key"`
 }

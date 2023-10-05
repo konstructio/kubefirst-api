@@ -38,15 +38,16 @@ const (
 )
 
 type ClusterController struct {
-	CloudProvider string
-	CloudRegion   string
-	ClusterName   string
-	ClusterID     string
-	ClusterType   string
-	DomainName    string
-	SubdomainName string
-	DnsProvider   string
-	AlertsEmail   string
+	CloudProvider             string
+	CloudRegion               string
+	ClusterName               string
+	ClusterID                 string
+	ClusterType               string
+	DomainName                string
+	SubdomainName             string
+	DnsProvider               string
+	UseCloudflareOriginIssuer bool
+	AlertsEmail               string
 
 	// auth
 	AWSAuth            pkgtypes.AWSAuth

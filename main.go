@@ -71,6 +71,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	// Import if needed
+	err = db.Client.ImportClusterIfEmpty(false, os.Getenv("CLOUD_PROVIDER"))
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer db.Client.Client.Disconnect(db.Client.Context)
 
 	// Programmatically set swagger info

@@ -8,7 +8,6 @@ package civo
 
 import (
 	"os"
-	"strings"
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
@@ -75,6 +74,8 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		ctrl.HandleError(err.Error())
 		return err
 	}
+
+	// os.Exit(1) //TODO: DO NOT MERGE WITH THIS LINE
 
 	err = ctrl.RunGitTerraform()
 	if err != nil {
@@ -177,6 +178,12 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
+	err = ctrl.WriteVaultSecrets()
+	if err != nil {
+		ctrl.HandleError(err.Error())
+		return err
+	}
+
 	err = ctrl.RunUsersTerraform()
 	if err != nil {
 		ctrl.HandleError(err.Error())
@@ -210,20 +217,20 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 	defer func() {
 		close(cluster1KubefirstApiStopChannel)
 	}()
-	if strings.ToLower(os.Getenv("K1_LOCAL_DEBUG")) != "true" { //allow using local kubefirst api running on port 8082
-		k8s.OpenPortForwardPodWrapper(
-			kcfg.Clientset,
-			kcfg.RestConfig,
-			"kubefirst-kubefirst-api",
-			"kubefirst",
-			8081,
-			8082,
-			cluster1KubefirstApiStopChannel,
-		)
-		log.Info("Port forward opened to mgmt cluster kubefirst api")
+	// if strings.ToLower(os.Getenv("K1_LOCAL_DEBUG")) != "" { //allow using local kubefirst api running on port 8082
+	// 	k8s.OpenPortForwardPodWrapper(
+	// 		kcfg.Clientset,
+	// 		kcfg.RestConfig,
+	// 		"kubefirst-kubefirst-api",
+	// 		"kubefirst",
+	// 		8081,
+	// 		8082,
+	// 		cluster1KubefirstApiStopChannel,
+	// 	)
+	// 	log.Info("Port forward opened to mgmt cluster kubefirst api")
 
-	}
-	
+	// }
+
 	//* export and import cluster
 	err = ctrl.ExportClusterRecord()
 	if err != nil {

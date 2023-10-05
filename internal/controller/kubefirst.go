@@ -7,20 +7,16 @@ See the LICENSE file for more details.
 package controller
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
-	"strings"
 	"time"
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
-	"github.com/kubefirst/runtime/pkg"
-	runtime "github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/sirupsen/logrus"
+	v1secret "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -48,39 +44,20 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 
 	time.Sleep(time.Second * 10)
 
-	
-	apiURL := "http://localhost:8082" //referencing local port forwarded to api pod in kubernetes cluster
+	var kcfg *k8s.KubernetesClient
 
-	var kubefirstSecret string
-	if strings.Contains(apiURL, "localhost") {
-		var kcfg *k8s.KubernetesClient
-
-		switch clctrl.CloudProvider {
-		case "aws":
-			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-		case "civo", "digitalocean", "vultr":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
-		case "google":
-			var err error
-			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
-			if err != nil {
-				return err
-			}
+	switch clctrl.CloudProvider {
+	case "aws":
+		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+	case "civo", "digitalocean", "vultr":
+		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+	case "google":
+		var err error
+		kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
+		if err != nil {
+			return err
 		}
-		kubefirstSecret = readKubefirstAPITokenFromSecret(kcfg.Clientset)
-	} else {
-		kubefirstSecret = "feedkray"
 	}
-	err = runtime.IsAppAvailable(fmt.Sprintf("%s/api/v1/health", apiURL), "kubefirst api")
-	if err != nil {
-		log.Error("unable to start kubefirst api")
-
-		clctrl.HandleError(err.Error())
-		return err
-	}
-
-	customTransport := http.DefaultTransport.(*http.Transport).Clone()
-	httpClient := http.Client{Transport: customTransport}
 
 	payload, err := json.Marshal(cluster)
 	if err != nil {
@@ -88,31 +65,19 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/v1/cluster/import", apiURL), bytes.NewReader(payload))
+	secret := &v1secret.Secret{
+		ObjectMeta: metav1.ObjectMeta{Name: "mongodb-state", Namespace: "kubefirst"},
+		Data: map[string][]byte{
+			"cluster-0":    []byte(payload),
+			"cluster-name": []byte(clctrl.ClusterName),
+		},
+	}
+
+	err = k8s.CreateSecretV2(kcfg.Clientset, secret)
+
 	if err != nil {
-		log.Errorf("error %s", err)
 		clctrl.HandleError(err.Error())
-		return err
-	}
-	req.Header.Add("Content-Type", pkg.JSONContentType)
-	req.Header.Add("Accept", "application/json")
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", kubefirstSecret))
-
-	res, err := httpClient.Do(req)
-	if err != nil {
-		log.Errorf("error %s", err)
-		return err
-	}
-
-	if res.StatusCode != http.StatusOK {
-		log.Errorf("unable to import cluster %s", res.Status)
-		clctrl.HandleError(err.Error())
-		return errors.New(fmt.Sprintf("unable to import cluster %s", res.Status))
-	}
-
-	_, err = io.ReadAll(res.Body)
-	if err != nil {
-		return err
+		return errors.New(fmt.Sprintf("unable to save secret to management cluster. %s", err))
 	}
 
 	return nil
