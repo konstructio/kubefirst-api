@@ -10,8 +10,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"time"
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
@@ -19,7 +17,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	v1secret "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1 "k8s.io/client-go/applyconfigurations/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -71,7 +68,8 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 	secret := &v1secret.Secret{
 		ObjectMeta: metav1.ObjectMeta{Name: "mongodb-state", Namespace: "kubefirst"},
 		Data: map[string][]byte{
-			"cluster0":          []byte(payload),
+			"cluster-0":    []byte(payload),
+			"cluster-name": []byte(clctrl.ClusterName),
 		},
 	}
 

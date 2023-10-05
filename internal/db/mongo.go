@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"os"
 
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -78,6 +80,60 @@ func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
 	}
 	if !silent {
 		log.Infof("connected to mongodb host %s", os.Getenv("MONGODB_HOST"))
+	}
+
+	return nil
+}
+
+// ImportClusterIfEmpty
+func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool, cloudProvider string) error {
+
+	// find the secret in mgmt cluster's kubefirst namespace and read import payload and clustername
+	var kcfg *k8s.KubernetesClient
+
+	switch cloudProvider {
+	case "aws":
+		// kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+	case "civo", "digitalocean", "vultr":
+		kcfg = k8s.CreateKubeConfig(true, "")
+	case "google":
+		// var err error
+		// kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
+		// if err != nil {
+		// 	return err
+		// }
+	}
+
+	secData, err := k8s.ReadSecretV2(kcfg.Clientset, "kubefirst", "mongodb-state")
+	if err != nil {
+		return err
+	}
+	clusterName := secData["cluster-name"]
+	importPayload := secData["cluster-0"]
+
+	// if you find a record bail
+	// otherwise read the payload, import to db, bail
+
+	filter := bson.D{{Key: "cluster_name", Value: clusterName}}
+	var result pkgtypes.Cluster
+	err = mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result)
+	if err != nil {
+		filter := bson.D{{Key: "cluster_name", Value: clusterName}}
+		var result pkgtypes.Cluster
+		err := mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result)
+		if err != nil {
+			// This error means your query did not match any documents.
+			if err == mongo.ErrNoDocuments {
+				// Create if entry does not exist
+				insert, err := mdbcl.ClustersCollection.InsertOne(mdbcl.Context, importPayload)
+				if err != nil {
+					return fmt.Errorf("error inserting cluster %s: %s", clusterName, err)
+				}
+				log.Info(insert)
+			}
+		} else {
+			log.Infof("cluster record for %s already exists - skipping", clusterName)
+		}
 	}
 
 	return nil

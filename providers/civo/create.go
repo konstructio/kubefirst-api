@@ -8,7 +8,6 @@ package civo
 
 import (
 	"os"
-	"strings"
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
