@@ -321,7 +321,33 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 	case "cloudflare":
 		externalDnsToken = cl.CloudflareAuth.APIToken
 	}
+//
+	var kcfg *k8s.KubernetesClient
+	switch clctrl.CloudProvider {
+	case "aws":
+		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+	case "civo", "digitalocean", "vultr":
+		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+	case "google":
+		var err error
+		kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
+		if err != nil {
+			return err
+		}
+	}
+	
+	clientset := kcfg.Clientset
 
+    var vaultRootToken string
+	vaultUnsealSecretData, err := k8s.ReadSecretV2(clientset, "vault", "vault-unseal-secret")
+	if err != nil {
+		log.Errorf("error reading vault-unseal-secret: %s", err)
+	}
+	if len(vaultUnsealSecretData) != 0 {
+		vaultRootToken = vaultUnsealSecretData["root-token"]
+	}
+	vaultClient.SetToken(vaultRootToken)
+	//
 	_, err = vaultClient.KVv2("secret").Put(context.Background(), "external-dns", map[string]interface{}{
 		"token": externalDnsToken,
 	})

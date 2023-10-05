@@ -49,7 +49,7 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 	time.Sleep(time.Second * 10)
 
 	
-	apiURL := "http://localhost:8082" //referencing local port forwarded to api pod in kubernetes cluster
+	apiURL := "http://localhost:8081" //referencing local port forwarded to api pod in kubernetes cluster
 
 	var kubefirstSecret string
 	if strings.Contains(apiURL, "localhost") {
