@@ -212,12 +212,11 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	log.Info("cluster creation complete")
 	cluster1KubefirstApiStopChannel := make(chan struct{}, 1)
 	defer func() {
 		close(cluster1KubefirstApiStopChannel)
 	}()
-	
+
 
 	//* export and import cluster
 	err = ctrl.ExportClusterRecord()
