@@ -106,6 +106,7 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool, cloudProvider stri
 		// }
 	}
 
+	log.Infof("reading secret mongo-state to determine if import is needed")
 	secData, err := k8s.ReadSecretV2(kcfg.Clientset, "kubefirst", "mongodb-state")
 	if err != nil {
 		return err
