@@ -196,7 +196,7 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		kcfg.Clientset,
 		"app.kubernetes.io/instance",
 		"crossplane",
-		"crossplane",
+		"crossplane-system",
 		1200,
 	)
 	if err != nil {
