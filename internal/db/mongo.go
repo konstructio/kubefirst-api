@@ -140,3 +140,30 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool, cloudProvider stri
 
 	return nil
 }
+
+type EstablishConnectArgs struct {
+	Tries int
+	Silent bool
+}
+
+func (mdbcl *MongoDBClient) EstablishMongoConnection(args EstablishConnectArgs) error {
+	var pingError error
+
+	for tries := 0; tries < args.Tries; tries +=1 {
+		err := mdbcl.Client.Database("admin").RunCommand(mdbcl.Context, bson.D{{Key: "ping", Value: 1}}).Err()
+
+		if err != nil {
+			pingError = err
+			fmt.Println("awaiting mongo db connectivity...")
+			continue
+		} 
+
+		if !args.Silent {
+			log.Infof("connected to mongodb host %s", os.Getenv("MONGODB_HOST"))
+		}
+
+		return nil
+	}
+
+	return fmt.Errorf("unable to establish connection to mongo db: %s", pingError )
+}
