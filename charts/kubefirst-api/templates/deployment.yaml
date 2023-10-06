@@ -109,7 +109,7 @@ spec:
           livenessProbe:
             tcpSocket:
               port: 8081
-            initialDelaySeconds: 10
+            initialDelaySeconds: 40
             periodSeconds: 5
             successThreshold: 1
             failureThreshold: 1
