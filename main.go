@@ -67,7 +67,11 @@ func main() {
 	}
 
 	// Verify database connectivity
-	err := db.Client.TestDatabaseConnection(false)
+	err := db.Client.EstablishMongoConnection(db.EstablishConnectArgs{
+		Tries: 20,
+		Silent: false,
+	})
+
 	if err != nil {
 		log.Fatal(err)
 	}
