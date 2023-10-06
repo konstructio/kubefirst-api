@@ -8,62 +8,54 @@ package civo
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
-	"github.com/kubefirst/kubefirst-api/internal/types"
-	config "github.com/kubefirst/runtime/pkg/providerConfigs"
+	providerConfig "github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/rs/zerolog/log"
-
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-func BootstrapCivoMgmtCluster(clientset *kubernetes.Clientset, cl *types.Cluster, config *config.ProviderConfig) error {
+func BootstrapCivoMgmtCluster(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster, destinationGitopsRepoURL string) error {
 
-	secretData := map[string][]byte{}
+	err := providerConfig.BootstrapMgmtCluster(
+		clientset,
+		cl.GitProvider,
+		cl.GitAuth.User,
+		destinationGitopsRepoURL,
+		cl.GitProtocol,
+		cl.CloudflareAuth.APIToken,
+		cl.CivoAuth.Token,
+		cl.DnsProvider,
+		cl.CloudProvider,
+		cl.GitAuth.Token,
+		cl.GitAuth.PrivateKey,
+	)
+	if err != nil {
+		log.Fatal().Msgf("error in central function to create secrets: %s", err)
+		return err
+	}
 
-	// Switch auth method and url based on GitProtocol
-	if cl.GitProtocol == "https" {
-		// http basic auth
-		secretData = map[string][]byte{
-			"type":     []byte("git"),
-			"name":     []byte(fmt.Sprintf("%s-gitops", cl.GitAuth.User)),
-			"url":      []byte(config.DestinationGitopsRepoURL),
-			"username": []byte(cl.GitAuth.User),
-			"password": []byte([]byte(fmt.Sprintf(cl.GitAuth.Token))),
-		}
-	} else {
-		// ssh
-		secretData = map[string][]byte{
-			"type":          []byte("git"),
-			"name":          []byte(fmt.Sprintf("%s-gitops", cl.GitAuth.User)),
-			"url":           []byte(config.DestinationGitopsRepoGitURL),
-			"sshPrivateKey": []byte(cl.GitAuth.PrivateKey),
-		}
+	var externalDnsToken string
+	switch cl.DnsProvider {
+	case "civo":
+		externalDnsToken = cl.CivoAuth.Token
+	case "vultr":
+		externalDnsToken = cl.VultrAuth.Token
+	case "digitalocean":
+		externalDnsToken = cl.DigitaloceanAuth.Token
+	case "aws":
+		externalDnsToken = "implement with cluster management"
+	case "googlecloud":
+		externalDnsToken = "implement with cluster management"
+	case "cloudflare":
+		externalDnsToken = cl.CloudflareAuth.APIToken
 	}
 
 	// Create secrets
 	createSecrets := []*v1.Secret{
-		// argocd
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:        "repo-credentials-template",
-				Namespace:   "argocd",
-				Annotations: map[string]string{"managed-by": "argocd.argoproj.io"},
-				Labels:      map[string]string{"argocd.argoproj.io/secret-type": "repository"},
-			},
-			Data: secretData,
-		},
-		{
-			ObjectMeta: metav1.ObjectMeta{Name: "civo-creds", Namespace: "external-dns"},
-			Data: map[string][]byte{
-				"civo-token":       []byte(cl.CivoAuth.Token),
-				"cf-api-token":     []byte(cl.CloudflareAuth.APIToken),
-				"cloudflare-token": []byte(cl.CloudflareAuth.APIToken),
-			},
-		},
 		{
 			ObjectMeta: metav1.ObjectMeta{Name: "cloudflare-creds", Namespace: "argo"},
 			Data: map[string][]byte{
@@ -80,6 +72,12 @@ func BootstrapCivoMgmtCluster(clientset *kubernetes.Clientset, cl *types.Cluster
 			ObjectMeta: metav1.ObjectMeta{Name: "cloudflare-creds", Namespace: "chartmuseum"},
 			Data: map[string][]byte{
 				"origin-ca-api-key": []byte(cl.CloudflareAuth.OriginCaIssuerKey),
+			},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{Name: "external-dns-secrets", Namespace: "external-dns"},
+			Data: map[string][]byte{
+				"token": []byte(externalDnsToken),
 			},
 		},
 		{

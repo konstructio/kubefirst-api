@@ -8,14 +8,14 @@ package digitalocean
 
 import (
 	"os"
-	"time"
+	"strings"
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	"github.com/kubefirst/kubefirst-api/internal/types"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/ssl"
@@ -23,7 +23,7 @@ import (
 )
 
 // CreateDigitaloceanCluster
-func CreateDigitaloceanCluster(definition *types.ClusterDefinition) error {
+func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 	ctrl := controller.ClusterController{}
 	err := ctrl.InitController(definition)
 	if err != nil {
@@ -89,8 +89,11 @@ func CreateDigitaloceanCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
-	// Needs wait after cluster create
-	time.Sleep(time.Second * 30)
+	err = ctrl.WaitForClusterReady()
+	if err != nil {
+		ctrl.HandleError(err.Error())
+		return err
+	}
 
 	err = ctrl.ClusterSecretsBootstrap()
 	if err != nil {
@@ -202,38 +205,65 @@ func CreateDigitaloceanCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
-	err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "status", constants.ClusterStatusProvisioned)
-	if err != nil {
-		return err
-	}
-
-	err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
-	if err != nil {
-		return err
-	}
-
 	log.Info("cluster creation complete")
+	cluster1KubefirstApiStopChannel := make(chan struct{}, 1)
+	defer func() {
+		close(cluster1KubefirstApiStopChannel)
+	}()
+	if strings.ToLower(os.Getenv("K1_LOCAL_DEBUG")) != "" { //allow using local kubefirst api running on port 8082
+		k8s.OpenPortForwardPodWrapper(
+			kcfg.Clientset,
+			kcfg.RestConfig,
+			"kubefirst-kubefirst-api",
+			"kubefirst",
+			8081,
+			8082,
+			cluster1KubefirstApiStopChannel,
+		)
+		log.Info("Port forward opened to mgmt cluster kubefirst api")
 
-	// Telemetry handler
-	rec, err := ctrl.GetCurrentClusterRecord()
+	}
+
+	//* export and import cluster
+	err = ctrl.ExportClusterRecord()
 	if err != nil {
+		log.Errorf("Error exporting cluster record: %s", err)
 		return err
+	} else {
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "status", constants.ClusterStatusProvisioned)
+		if err != nil {
+			return err
+		}
+
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		if err != nil {
+			return err
+		}
+
+		log.Info("cluster creation complete")
+
+		// Telemetry handler
+		rec, err := ctrl.GetCurrentClusterRecord()
+		if err != nil {
+			return err
+		}
+
+		// Telemetry handler
+		segmentClient, err := telemetryShim.SetupTelemetry(rec)
+		if err != nil {
+			return err
+		}
+		defer segmentClient.Client.Close()
+
+		telemetryShim.Transmit(rec.UseTelemetry, segmentClient, segment.MetricClusterInstallCompleted, "")
+
+		// Create default service entries
+		cl, _ := db.Client.GetCluster(ctrl.ClusterName)
+		err = services.AddDefaultServices(&cl)
+		if err != nil {
+			log.Errorf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
+		}
 	}
-
-	segmentClient, err := telemetryShim.SetupTelemetry(rec)
-	if err != nil {
-		return err
-	}
-	defer segmentClient.Client.Close()
-
-	telemetryShim.Transmit(rec.UseTelemetry, segmentClient, segment.MetricClusterInstallCompleted, "")
-
-	// Create default service entries
-	cl, _ := db.Client.GetCluster(ctrl.ClusterName)
-	err = services.AddDefaultServices(&cl)
-	if err != nil {
-		log.Errorf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
-	}
-
+	
 	return nil
 }

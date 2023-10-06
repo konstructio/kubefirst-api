@@ -20,19 +20,19 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/errors"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
-	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 )
 
 // DeleteAWSCluster
-func DeleteAWSCluster(cl *types.Cluster) error {
+func DeleteAWSCluster(cl *pkgtypes.Cluster) error {
 	// Logging handler
 	// Logs to stdout to maintain compatibility with event streaming
 	log.SetFormatter(&log.TextFormatter{
@@ -52,7 +52,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricClusterDeleteStarted, "")
 
 	// Instantiate aws config
-	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.Token, "")
+	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.APIToken, cl.CloudflareAuth.OriginCaIssuerKey)
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleting)
 	if err != nil {
@@ -214,7 +214,7 @@ func DeleteAWSCluster(cl *types.Cluster) error {
 		}
 
 		log.Info("destroying aws cloud resources")
-		tfEntrypoint := config.GitopsDir + "/terraform/aws"
+		tfEntrypoint := config.GitopsDir + fmt.Sprintf("/terraform/%s", cl.CloudProvider)
 		tfEnvs := map[string]string{}
 		tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, cl)
 		tfEnvs["TF_VAR_aws_account_id"] = cl.AWSAccountId

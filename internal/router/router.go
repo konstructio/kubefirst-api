@@ -51,7 +51,7 @@ func SetupRouter() *gin.Engine {
 		v1.GET("/cluster/:cluster_name", middleware.ValidateAPIKey(), router.GetCluster)
 		v1.DELETE("/cluster/:cluster_name", middleware.ValidateAPIKey(), router.DeleteCluster)
 		v1.POST("/cluster/:cluster_name", middleware.ValidateAPIKey(), router.PostCreateCluster)
-		v1.POST("/cluster/:cluster_name/export", middleware.ValidateAPIKey(), router.PostExportCluster)
+		v1.GET("/cluster/:cluster_name/export", middleware.ValidateAPIKey(), router.GetExportCluster)
 		v1.POST("/cluster/:cluster_name/reset_progress", middleware.ValidateAPIKey(), router.PostResetClusterProgress)
 
 		// Gitops Catalog
@@ -67,9 +67,19 @@ func SetupRouter() *gin.Engine {
 		v1.POST("/domain/:dns_provider", middleware.ValidateAPIKey(), router.PostDomains)
 		v1.GET("/domain/validate/aws/:domain", middleware.ValidateAPIKey(), router.GetValidateAWSDomain)
 		v1.GET("/domain/validate/civo/:domain", middleware.ValidateAPIKey(), router.GetValidateCivoDomain)
-
+		// v1.GET("/domain/validate/digi1a`talocean/:domain", middleware.ValidateAPIKey(), router.GetValidateDigitalOceanDomain)
+		// v1.GET("/domain/validate/vultr/:domain", middleware.ValidateAPIKey(), router.GetValidateVultrDomain)
+		// v1.GET("/domain/validate/google/:domain", middleware.ValidateAPIKey(), router.GetValidateGoogleDomain)
 		// Regions
 		v1.POST("/region/:cloud_provider", middleware.ValidateAPIKey(), router.PostRegions)
+		
+		// Instance Sizes
+		v1.POST("/instance-sizes/:dns_provider", middleware.ValidateAPIKey(), router.ListInstanceSizesForRegion)
+
+		// Environments
+		v1.GET("/environment", middleware.ValidateAPIKey(), router.GetEnvironments)
+		v1.POST("/environment", middleware.ValidateAPIKey(), router.CreateEnvironment)
+		v1.DELETE("/environment/:environment_name", middleware.ValidateAPIKey(), router.DeleteEnvironment)
 
 		// Utilities
 		v1.GET("/health", router.GetHealth)

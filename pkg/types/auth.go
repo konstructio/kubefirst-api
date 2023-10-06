@@ -20,7 +20,7 @@ type CivoAuth struct {
 
 // CloudflareAuth holds necessary auth credentials for interacting with vultr
 type CloudflareAuth struct {
-	Token             string `bson:"token" json:"token"`
+	Token             string `bson:"token" json:"token"` // DEPRECATED: please transition to APIToken
 	APIToken          string `bson:"api_token" json:"api_token"`
 	OriginCaIssuerKey string `bson:"origin_ca_issuer_key" json:"origin_ca_issuer_key"`
 }
@@ -59,4 +59,9 @@ type GitAuth struct {
 type VaultAuth struct {
 	RootToken    string `bson:"root_token,omitempty" json:"root_token,omitempty"`
 	KbotPassword string `bson:"kbot_password,omitempty" json:"kbot_password,omitempty"`
+}
+
+type GoogleAuth struct {
+	KeyFile   string `bson:"key_file,omitempty" json:"key_file,omitempty"`
+	ProjectId string `bson:"project_id,omitempty" json:"project_id,omitempty"`
 }

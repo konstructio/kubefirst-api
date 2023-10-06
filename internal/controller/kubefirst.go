@@ -7,94 +7,78 @@ See the LICENSE file for more details.
 package controller
 
 import (
-	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"time"
 
-	"github.com/kubefirst/kubefirst-api/internal/db"
-	"github.com/kubefirst/runtime/pkg"
-	runtimetypes "github.com/kubefirst/runtime/pkg/types"
+	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
+	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/sirupsen/logrus"
+	v1secret "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
+func readKubefirstAPITokenFromSecret(clientset *kubernetes.Clientset) string {
+	existingKubernetesSecret, err := k8s.ReadSecretV2(clientset, "kubefirst", "kubefirst-initial-secrets")
+	if err != nil || existingKubernetesSecret == nil {
+		log.Printf("Error reading existing Secret data: %s", err)
+		return ""
+	}
+	return existingKubernetesSecret["K1_ACCESS_TOKEN"]
+}
+
 // ExportClusterRecord will export cluster record to mgmt cluster
+// To be intiated by cluster 0
 func (clctrl *ClusterController) ExportClusterRecord() error {
 	cluster, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
-
-	err = db.Client.Export(clctrl.ClusterName)
 	if err != nil {
 		log.Errorf("Error exporting cluster record: %s", err)
+		clctrl.HandleError(err.Error())
 		return err
 	}
+
+	cluster.Status = "provisioned"
+	cluster.InProgress = false
 
 	time.Sleep(time.Second * 10)
 
-	consoleCloudUrl := fmt.Sprintf("https://kubefirst.%s", cluster.DomainName)
+	var kcfg *k8s.KubernetesClient
 
-	err = pkg.IsAppAvailable(fmt.Sprintf("%s/api/proxyHealth", consoleCloudUrl), "kubefirst api")
+	switch clctrl.CloudProvider {
+	case "aws":
+		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+	case "civo", "digitalocean", "vultr":
+		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+	case "google":
+		var err error
+		kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
+		if err != nil {
+			return err
+		}
+	}
+
+	payload, err := json.Marshal(cluster)
 	if err != nil {
-		log.Error("unable to start kubefirst api")
-	}
-
-	importObject := runtimetypes.ImportClusterRequest{
-		ClusterName:   cluster.ClusterName,
-		CloudRegion:   cluster.CloudRegion,
-		CloudProvider: cluster.CloudProvider,
-	}
-	importObject.StateStoreCredentials.AccessKeyID = cluster.StateStoreCredentials.AccessKeyID
-	importObject.StateStoreCredentials.ID = cluster.StateStoreCredentials.ID
-	importObject.StateStoreCredentials.Name = cluster.StateStoreCredentials.Name
-	importObject.StateStoreCredentials.SecretAccessKey = cluster.StateStoreCredentials.SecretAccessKey
-	importObject.StateStoreCredentials.SessionToken = cluster.StateStoreCredentials.SessionToken
-
-	importObject.StateStoreDetails.Hostname = cluster.StateStoreDetails.Hostname
-	importObject.StateStoreDetails.ID = cluster.StateStoreDetails.ID
-	importObject.StateStoreDetails.Name = cluster.StateStoreDetails.Name
-
-	requestObject := runtimetypes.ProxyImportRequest{
-		Body: importObject,
-		Url:  "/cluster/import",
-	}
-
-	customTransport := http.DefaultTransport.(*http.Transport).Clone()
-	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	httpClient := http.Client{Transport: customTransport}
-
-	payload, err := json.Marshal(requestObject)
-	if err != nil {
+		clctrl.HandleError(err.Error())
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/proxy", consoleCloudUrl), bytes.NewReader(payload))
+	secret := &v1secret.Secret{
+		ObjectMeta: metav1.ObjectMeta{Name: "mongodb-state", Namespace: "kubefirst"},
+		Data: map[string][]byte{
+			"cluster-0":    []byte(payload),
+			"cluster-name": []byte(clctrl.ClusterName),
+		},
+	}
+
+	err = k8s.CreateSecretV2(kcfg.Clientset, secret)
+
 	if err != nil {
-		log.Errorf("error %s", err)
-		return err
+		clctrl.HandleError(err.Error())
+		return errors.New(fmt.Sprintf("unable to save secret to management cluster. %s", err))
 	}
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Accept", "application/json")
-
-	res, err := httpClient.Do(req)
-	if err != nil {
-		log.Errorf("error %s", err)
-		return err
-	}
-
-	if res.StatusCode != http.StatusOK {
-		log.Errorf("unable to import cluster %s", res.Status)
-		return errors.New(fmt.Sprintf("unable to import cluster %s", res.Status))
-	}
-
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		return err
-	}
-
-	log.Infof("Import: %s", string(body))
 
 	return nil
 }

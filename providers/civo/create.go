@@ -14,14 +14,14 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	"github.com/kubefirst/kubefirst-api/internal/types"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/ssl"
 	log "github.com/sirupsen/logrus"
 )
 
-func CreateCivoCluster(definition *types.ClusterDefinition) error {
+func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 	ctrl := controller.ClusterController{}
 	err := ctrl.InitController(definition)
 	if err != nil {
@@ -74,6 +74,8 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 		ctrl.HandleError(err.Error())
 		return err
 	}
+
+	// os.Exit(1) //TODO: DO NOT MERGE WITH THIS LINE
 
 	err = ctrl.RunGitTerraform()
 	if err != nil {
@@ -176,6 +178,12 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
+	err = ctrl.WriteVaultSecrets()
+	if err != nil {
+		ctrl.HandleError(err.Error())
+		return err
+	}
+
 	err = ctrl.RunUsersTerraform()
 	if err != nil {
 		ctrl.HandleError(err.Error())
@@ -204,10 +212,30 @@ func CreateCivoCluster(definition *types.ClusterDefinition) error {
 		return err
 	}
 
+	log.Info("cluster creation complete")
+	cluster1KubefirstApiStopChannel := make(chan struct{}, 1)
+	defer func() {
+		close(cluster1KubefirstApiStopChannel)
+	}()
+	// if strings.ToLower(os.Getenv("K1_LOCAL_DEBUG")) != "" { //allow using local kubefirst api running on port 8082
+	// 	k8s.OpenPortForwardPodWrapper(
+	// 		kcfg.Clientset,
+	// 		kcfg.RestConfig,
+	// 		"kubefirst-kubefirst-api",
+	// 		"kubefirst",
+	// 		8081,
+	// 		8082,
+	// 		cluster1KubefirstApiStopChannel,
+	// 	)
+	// 	log.Info("Port forward opened to mgmt cluster kubefirst api")
+
+	// }
+
 	//* export and import cluster
 	err = ctrl.ExportClusterRecord()
 	if err != nil {
 		log.Errorf("Error exporting cluster record: %s", err)
+		ctrl.HandleError(err.Error())
 		return err
 	} else {
 		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "status", constants.ClusterStatusProvisioned)

@@ -21,18 +21,18 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/errors"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
-	"github.com/kubefirst/runtime/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 )
 
 // DeleteCivoCluster
-func DeleteCivoCluster(cl *types.Cluster) error {
+func DeleteCivoCluster(cl *pkgtypes.Cluster) error {
 	// Logging handler
 	// Logs to stdout to maintain compatibility with event streaming
 	log.SetFormatter(&log.TextFormatter{
@@ -63,7 +63,7 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 	var tfEntrypoint string
 
 	if cl.GitTerraformApplyCheck {
-		log.Info("destroying %s resources with terraform", cl.GitProvider)
+		log.Infof("destroying %s resources with terraform", cl.GitProvider)
 		switch cl.GitProvider {
 		case "github":
 			tfEntrypoint = config.GitopsDir + "/terraform/github"
@@ -116,7 +116,7 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 			return err
 		}
 
-		log.Info("%s resources terraform destroyed", cl.GitProvider)
+		log.Infof("%s resources terraform destroyed", cl.GitProvider)
 
 		err = db.Client.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
 		if err != nil {
@@ -211,7 +211,7 @@ func DeleteCivoCluster(cl *types.Cluster) error {
 		}
 
 		log.Info("destroying civo cloud resources")
-		tfEntrypoint := config.GitopsDir + "/terraform/civo"
+		tfEntrypoint := config.GitopsDir + fmt.Sprintf("/terraform/%s", cl.CloudProvider)
 		tfEnvs := map[string]string{}
 		tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, cl)
 

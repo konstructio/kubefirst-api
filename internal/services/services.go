@@ -24,6 +24,7 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/internal/gitopsCatalog"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/argocd"
 	"github.com/kubefirst/runtime/pkg/gitClient"
 	"github.com/kubefirst/runtime/pkg/k8s"
@@ -33,7 +34,7 @@ import (
 )
 
 // CreateService
-func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCatalogApp, req *types.GitopsCatalogAppCreateRequest) error {
+func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.GitopsCatalogApp, req *types.GitopsCatalogAppCreateRequest) error {
 	// Logging handler
 	// Logs to stdout to maintain compatibility with event streaming
 	log.SetFormatter(&log.TextFormatter{
@@ -232,7 +233,7 @@ func CreateService(cl *types.Cluster, serviceName string, appDef *types.GitopsCa
 }
 
 // DeleteService
-func DeleteService(cl *types.Cluster, serviceName string) error {
+func DeleteService(cl *pkgtypes.Cluster, serviceName string) error {
 	var gitopsRepo *git.Repository
 
 	homeDir, err := os.UserHomeDir()
@@ -306,7 +307,7 @@ func DeleteService(cl *types.Cluster, serviceName string) error {
 }
 
 // AddDefaultServices
-func AddDefaultServices(cl *types.Cluster) error {
+func AddDefaultServices(cl *pkgtypes.Cluster) error {
 	err := db.Client.CreateClusterServiceList(cl)
 	if err != nil {
 		return err
