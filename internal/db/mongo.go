@@ -106,12 +106,15 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool, cloudProvider stri
 		// }
 	}
 
+	log.Infof("reading secret mongo-state to determine if import is needed")
 	secData, err := k8s.ReadSecretV2(kcfg.Clientset, "kubefirst", "mongodb-state")
 	if err != nil {
 		return err
 	}
 	clusterName := secData["cluster-name"]
 	importPayload := secData["cluster-0"]
+
+	log.Infof("import secret discovered for cluster %s", clusterName)
 
 	// if you find a record bail
 	// otherwise read the payload, import to db, bail
@@ -120,43 +123,40 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool, cloudProvider stri
 	var result pkgtypes.Cluster
 	err = mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {
-		filter := bson.D{{Key: "cluster_name", Value: clusterName}}
-		var result pkgtypes.Cluster
-		err := mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result)
-		if err != nil {
-			// This error means your query did not match any documents.
-			if err == mongo.ErrNoDocuments {
-				// Create if entry does not exist
-				insert, err := mdbcl.ClustersCollection.InsertOne(mdbcl.Context, importPayload)
-				if err != nil {
-					return fmt.Errorf("error inserting cluster %s: %s", clusterName, err)
-				}
-				log.Info(insert)
+		// This error means your query did not match any documents.
+		if err == mongo.ErrNoDocuments {
+			// Create if entry does not exist
+			insert, err := mdbcl.ClustersCollection.InsertOne(mdbcl.Context, importPayload)
+			if err != nil {
+				return fmt.Errorf("error inserting cluster %s: %s", clusterName, err)
 			}
+			log.Info(insert)
 		} else {
-			log.Infof("cluster record for %s already exists - skipping", clusterName)
+			return fmt.Errorf("error inserting record: %s", err)
 		}
+	} else {
+		log.Infof("cluster record for %s already exists - skipping", clusterName)
 	}
 
 	return nil
 }
 
 type EstablishConnectArgs struct {
-	Tries int
+	Tries  int
 	Silent bool
 }
 
 func (mdbcl *MongoDBClient) EstablishMongoConnection(args EstablishConnectArgs) error {
 	var pingError error
 
-	for tries := 0; tries < args.Tries; tries +=1 {
+	for tries := 0; tries < args.Tries; tries += 1 {
 		err := mdbcl.Client.Database("admin").RunCommand(mdbcl.Context, bson.D{{Key: "ping", Value: 1}}).Err()
 
 		if err != nil {
 			pingError = err
 			fmt.Println("awaiting mongo db connectivity...")
 			continue
-		} 
+		}
 
 		if !args.Silent {
 			log.Infof("connected to mongodb host %s", os.Getenv("MONGODB_HOST"))
@@ -165,5 +165,5 @@ func (mdbcl *MongoDBClient) EstablishMongoConnection(args EstablishConnectArgs) 
 		return nil
 	}
 
-	return fmt.Errorf("unable to establish connection to mongo db: %s", pingError )
+	return fmt.Errorf("unable to establish connection to mongo db: %s", pingError)
 }
