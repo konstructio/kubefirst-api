@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/kubefirst/kubefirst-api/internal/services"
+
 	"github.com/joho/godotenv"
 	"github.com/kubefirst/kubefirst-api/docs"
 	"github.com/kubefirst/kubefirst-api/internal/db"
@@ -33,8 +35,8 @@ const (
 
 func main() {
 
-	envError := godotenv.Load(".env");
-	
+	envError := godotenv.Load(".env")
+
 	if envError != nil {
 		log.Info("error loading .env file, using local environment variables")
 	}
@@ -49,7 +51,7 @@ func main() {
 	if os.Getenv("MONGODB_HOST_TYPE") == "" {
 		log.Fatalf("the MONGODB_HOST_TYPE environment variable must be set to either: atlas, local")
 	}
-	for _, v := range []string{"MONGODB_HOST", "MONGODB_USERNAME", "MONGODB_PASSWORD"} {
+	for _, v := range []string{"MONGODB_HOST", "MONGODB_USERNAME", "MONGODB_PASSWORD", "CLOUD_PROVIDER"} {
 		if os.Getenv(v) == "" {
 			log.Fatalf("the %s environment variable must be set", v)
 		}
@@ -68,18 +70,22 @@ func main() {
 
 	// Verify database connectivity
 	err := db.Client.EstablishMongoConnection(db.EstablishConnectArgs{
-		Tries: 20,
+		Tries:  20,
 		Silent: false,
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	log.Infof("checking for cluster import secret for %s management cluster", os.Getenv("CLOUD_PROVIDER"))
 	// Import if needed
-	err = db.Client.ImportClusterIfEmpty(false, os.Getenv("CLOUD_PROVIDER"))
+	importedCluster, err := db.Client.ImportClusterIfEmpty(false, os.Getenv("CLOUD_PROVIDER"))
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if importedCluster.ClusterName != "" {
+		services.AddDefaultServices(&importedCluster)
 	}
 	defer db.Client.Client.Disconnect(db.Client.Context)
 

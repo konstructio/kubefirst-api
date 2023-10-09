@@ -88,8 +88,7 @@ func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
 }
 
 // ImportClusterIfEmpty
-func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool, cloudProvider string) error {
-
+func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool, cloudProvider string) (pkgtypes.Cluster, error) {
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp:   true,
 		TimestampFormat: "",
@@ -99,24 +98,29 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool, cloudProvider stri
 	// find the secret in mgmt cluster's kubefirst namespace and read import payload and clustername
 	var kcfg *k8s.KubernetesClient
 
-	switch cloudProvider {
-	case "aws":
-		// kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-	case "civo", "digitalocean", "vultr":
-		kcfg = k8s.CreateKubeConfig(true, "")
-	case "google":
-		// var err error
-		// kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
-		// if err != nil {
-		// 	return err
-		// }
+	// homeDir, err := os.UserHomeDir()
+	// if err != nil {
+	// 	log.Fatalf("error getting home path: %s", err)
+	// }
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("error getting home path: %s", err)
 	}
+	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, "")
+
+	inCluster := false
+	if os.Getenv("IN_CLUSTER") == "true" {
+		inCluster = true
+	}
+
+	kcfg = k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
 
 	log.Infof("reading secret mongo-state to determine if import is needed")
 	secData, err := k8s.ReadSecretV2(kcfg.Clientset, "kubefirst", "mongodb-state")
 	if err != nil {
 		log.Infof("error reading secret mongodb-state. %s", err)
-		return err
+		return pkgtypes.Cluster{}, err
 	}
 	clusterName := secData["cluster-name"]
 	importPayload := secData["cluster-0"]
@@ -126,25 +130,36 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool, cloudProvider stri
 	// otherwise read the payload, import to db, bail
 
 	filter := bson.D{{Key: "cluster_name", Value: clusterName}}
-	var result pkgtypes.Cluster
-	err = mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result)
+	// var result1 pkgtypes.Cluster
+	var clusterFromSecret pkgtypes.Cluster
+	//err = mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result1)
+	err = mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&clusterFromSecret)
 	if err != nil {
 		// This error means your query did not match any documents.
+		log.Infof("did not find preexisting record for cluster %s. importing record.", clusterName)
+		// clusterFromSecret := pkgtypes.Cluster{}
+		unmarshalErr := bson.UnmarshalExtJSON([]byte(importPayload), true, &clusterFromSecret)
+		if unmarshalErr != nil {
+			log.Info("error encountered unmarshaling secret data")
+			log.Error(unmarshalErr)
+		}
 		if err == mongo.ErrNoDocuments {
 			// Create if entry does not exist
-			insert, err := mdbcl.ClustersCollection.InsertOne(mdbcl.Context, importPayload)
+			_, err := mdbcl.ClustersCollection.InsertOne(mdbcl.Context, clusterFromSecret)
 			if err != nil {
-				return fmt.Errorf("error inserting cluster %s: %s", clusterName, err)
+				return pkgtypes.Cluster{}, fmt.Errorf("error inserting cluster %s: %s", clusterName, err)
 			}
-			log.Info(insert)
+			log.Info("inserted cluster record to db. adding default services.")
+
+			return clusterFromSecret, nil
 		} else {
-			return fmt.Errorf("error inserting record: %s", err)
+			return pkgtypes.Cluster{}, fmt.Errorf("error inserting record: %s", err)
 		}
 	} else {
 		log.Infof("cluster record for %s already exists - skipping", clusterName)
 	}
 
-	return nil
+	return pkgtypes.Cluster{}, nil
 }
 
 type EstablishConnectArgs struct {
