@@ -8,6 +8,7 @@ package db
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -89,7 +90,6 @@ func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
 
 // ImportClusterIfEmpty
 func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool, cloudProvider string) error {
-
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp:   true,
 		TimestampFormat: "",
@@ -99,11 +99,17 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool, cloudProvider stri
 	// find the secret in mgmt cluster's kubefirst namespace and read import payload and clustername
 	var kcfg *k8s.KubernetesClient
 
+	// homeDir, err := os.UserHomeDir()
+	// if err != nil {
+	// 	log.Fatalf("error getting home path: %s", err)
+	// }
+
 	switch cloudProvider {
 	case "aws":
 		// kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 	case "civo", "digitalocean", "vultr":
 		kcfg = k8s.CreateKubeConfig(true, "")
+		//kcfg = k8s.CreateKubeConfig(false, fmt.Sprintf("%s/basura/kubeconfig", homeDir)) // TODO! dont merge to main with this line
 	case "google":
 		// var err error
 		// kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
@@ -130,6 +136,9 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool, cloudProvider stri
 	err = mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {
 		// This error means your query did not match any documents.
+
+		err := json.Unmarshal([]byte(importPayload), &result)
+
 		if err == mongo.ErrNoDocuments {
 			// Create if entry does not exist
 			insert, err := mdbcl.ClustersCollection.InsertOne(mdbcl.Context, importPayload)
