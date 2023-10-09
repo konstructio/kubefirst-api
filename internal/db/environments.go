@@ -84,21 +84,26 @@ func (mdbcl *MongoDBClient) InsertEnvironment(env pkgtypes.Environment) (pkgtype
 	return result, nil
 }
 
-func (mdbcl *MongoDBClient) DeleteEnvironment(envName string) error {
-	filter := bson.D{{Key: "name", Value: envName }}
+func (mdbcl *MongoDBClient) DeleteEnvironment(envId string) error {
+	objectId, idErr := primitive.ObjectIDFromHex(envId)
+	if idErr != nil{
+		return fmt.Errorf("invalid id %v", envId)
+	}
+
+	filter := bson.D{{Key: "_id", Value: objectId }}
 
 	findError := mdbcl.EnvironmentsCollection.FindOne(mdbcl.Context, filter).Err()
 
 	if findError != nil {
-		return fmt.Errorf("no environment by the name %v", envName)
+		return fmt.Errorf("no environment with id %v", envId)
 	}
 
 	_,err := mdbcl.EnvironmentsCollection.DeleteOne(mdbcl.Context, filter)
 	if err != nil {
-		return fmt.Errorf("error deleting environment %s: %s", envName, err)
+		return fmt.Errorf("error deleting environment with provided id %v: %s", envId, err)
 	}
 
-	log.Infof("%v environment deleted", envName)
+	log.Info("environment deleted")
 
 	return nil
 }
