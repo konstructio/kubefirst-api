@@ -90,6 +90,12 @@ func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
 // ImportClusterIfEmpty
 func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool, cloudProvider string) error {
 
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "",
+	})
+	log.SetReportCaller(false)
+
 	// find the secret in mgmt cluster's kubefirst namespace and read import payload and clustername
 	var kcfg *k8s.KubernetesClient
 
@@ -109,12 +115,12 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool, cloudProvider stri
 	log.Infof("reading secret mongo-state to determine if import is needed")
 	secData, err := k8s.ReadSecretV2(kcfg.Clientset, "kubefirst", "mongodb-state")
 	if err != nil {
+		log.Infof("error reading secret mongodb-state. %s", err)
 		return err
 	}
 	clusterName := secData["cluster-name"]
 	importPayload := secData["cluster-0"]
-
-	log.Infof("import secret discovered for cluster %s", clusterName)
+	log.Infof("import cluster secret discovered for cluster %s", clusterName)
 
 	// if you find a record bail
 	// otherwise read the payload, import to db, bail
