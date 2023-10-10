@@ -88,7 +88,7 @@ func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
 }
 
 // ImportClusterIfEmpty
-func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool, cloudProvider string) (pkgtypes.Cluster, error) {
+func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster, error) {
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp:   true,
 		TimestampFormat: "",
@@ -102,6 +102,11 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool, cloudProvider stri
 	// if err != nil {
 	// 	log.Fatalf("error getting home path: %s", err)
 	// }
+
+    if os.Getenv("IS_CLUSTER_ZERO") == "true" {
+		log.Info("IS_CLUSTER_ZERO is set to true, skipping import cluster logic.")
+		return pkgtypes.Cluster{}, nil
+	} 
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
