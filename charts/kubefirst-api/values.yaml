@@ -8,7 +8,6 @@ image:
   api:
     repository: public.ecr.aws/kubefirst/kubefirst-api
     pullPolicy: IfNotPresent
-    tag: b95b577
   hook:
     repository: public.ecr.aws/kubefirst/metrics-client
     pullPolicy: Always
