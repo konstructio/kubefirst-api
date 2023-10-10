@@ -151,6 +151,13 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	defer segmentClient.Client.Close()
 
 	telemetryShim.Transmit(rec.UseTelemetry, segmentClient, segment.MetricClusterInstallStarted, "")
+	
+	var fullDomainName string
+    if clctrl.SubdomainName != "" {
+		fullDomainName = fmt.Sprintf("%s.%s", clctrl.SubdomainName, clctrl.DomainName)
+	} else {
+		fullDomainName = clctrl.DomainName
+	}
 
 	//Copy Cluster Definiion to Cluster Controller
 	clctrl.AlertsEmail = def.AdminEmail
@@ -200,7 +207,8 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		clctrl.KubefirstTeam = "undefined"
 	}
 	clctrl.AtlantisWebhookSecret = pkg.Random(20)
-	clctrl.AtlantisWebhookURL = fmt.Sprintf("https://atlantis.%s/events", clctrl.DomainName)
+	
+	clctrl.AtlantisWebhookURL = fmt.Sprintf("https://atlantis.%s/events", fullDomainName)
 
 	// Initialize git parameters
 	clctrl.GitProvider = def.GitProvider
