@@ -51,7 +51,7 @@ func main() {
 	if os.Getenv("MONGODB_HOST_TYPE") == "" {
 		log.Fatalf("the MONGODB_HOST_TYPE environment variable must be set to either: atlas, local")
 	}
-	for _, v := range []string{"MONGODB_HOST", "MONGODB_USERNAME", "MONGODB_PASSWORD", "CLOUD_PROVIDER"} {
+	for _, v := range []string{"MONGODB_HOST", "MONGODB_USERNAME", "MONGODB_PASSWORD"} {
 		if os.Getenv(v) == "" {
 			log.Fatalf("the %s environment variable must be set", v)
 		}
