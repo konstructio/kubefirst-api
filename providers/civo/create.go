@@ -192,11 +192,11 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 
 	// Wait for console Deployment Pods to transition to Running
 	log.Info("deploying kubefirst console and verifying cluster installation is complete")
-	consoleDeployment, err := k8s.ReturnDeploymentObject(
+	crossplaneDeployment, err := k8s.ReturnDeploymentObject(
 		kcfg.Clientset,
 		"app.kubernetes.io/instance",
-		"kubefirst",
-		"kubefirst",
+		"crossplane",
+		"crossplane-system",
 		1200,
 	)
 	if err != nil {
@@ -204,9 +204,9 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		ctrl.HandleError(err.Error())
 		return err
 	}
-	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, consoleDeployment, 120)
+	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, crossplaneDeployment, 120)
 	if err != nil {
-		log.Errorf("Error waiting for kubefirst api Deployment ready state: %s", err)
+		log.Errorf("Error waiting for all Apps to sync ready state: %s", err)
 
 		ctrl.HandleError(err.Error())
 		return err
@@ -217,19 +217,6 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 	defer func() {
 		close(cluster1KubefirstApiStopChannel)
 	}()
-	// if strings.ToLower(os.Getenv("K1_LOCAL_DEBUG")) != "" { //allow using local kubefirst api running on port 8082
-	// 	k8s.OpenPortForwardPodWrapper(
-	// 		kcfg.Clientset,
-	// 		kcfg.RestConfig,
-	// 		"kubefirst-kubefirst-api",
-	// 		"kubefirst",
-	// 		8081,
-	// 		8082,
-	// 		cluster1KubefirstApiStopChannel,
-	// 	)
-	// 	log.Info("Port forward opened to mgmt cluster kubefirst api")
-
-	// }
 
 	//* export and import cluster
 	err = ctrl.ExportClusterRecord()
