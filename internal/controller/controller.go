@@ -200,9 +200,9 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		clctrl.KubefirstTeam = "undefined"
 	}
 	clctrl.AtlantisWebhookSecret = pkg.Random(20)
-	
+
 	var fullDomainName string
-    if clctrl.SubdomainName != "" {
+	if clctrl.SubdomainName != "" {
 		fullDomainName = fmt.Sprintf("%s.%s", clctrl.SubdomainName, clctrl.DomainName)
 	} else {
 		fullDomainName = clctrl.DomainName
