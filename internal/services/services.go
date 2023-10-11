@@ -313,6 +313,13 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 		return err
 	}
 
+	var fullDomainName string
+    if cl.SubdomainName != "" {
+		fullDomainName = fmt.Sprintf("%s.%s", cl.SubdomainName, cl.DomainName)
+	} else {
+		fullDomainName = cl.DomainName
+	}
+
 	defaults := []types.Service{
 		{
 			Name:        cl.GitProvider,
@@ -328,7 +335,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Default:     true,
 			Description: "Kubefirst's secrets manager and identity provider.",
 			Image:       "https://assets.kubefirst.com/console/vault.svg",
-			Links:       []string{fmt.Sprintf("https://vault.%s", cl.DomainName)},
+			Links:       []string{fmt.Sprintf("https://vault.%s", fullDomainName)},
 			Status:      "",
 		},
 		{
@@ -336,7 +343,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Default:     true,
 			Description: "A Gitops oriented continuous delivery tool for managing all of our applications across our Kubernetes clusters.",
 			Image:       "https://assets.kubefirst.com/console/argocd.svg",
-			Links:       []string{fmt.Sprintf("https://argocd.%s", cl.DomainName)},
+			Links:       []string{fmt.Sprintf("https://argocd.%s", fullDomainName)},
 			Status:      "",
 		},
 		{
@@ -344,7 +351,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Default:     true,
 			Description: "The workflow engine for orchestrating parallel jobs on Kubernetes.",
 			Image:       "https://assets.kubefirst.com/console/argocd.svg",
-			Links:       []string{fmt.Sprintf("https://argo.%s/workflows", cl.DomainName)},
+			Links:       []string{fmt.Sprintf("https://argo.%s/workflows", fullDomainName)},
 			Status:      "",
 		},
 		{
@@ -352,7 +359,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Default:     true,
 			Description: "Kubefirst manages Terraform workflows with Atlantis automation.",
 			Image:       "https://assets.kubefirst.com/console/atlantis.svg",
-			Links:       []string{fmt.Sprintf("https://atlantis.%s", cl.DomainName)},
+			Links:       []string{fmt.Sprintf("https://atlantis.%s", fullDomainName)},
 			Status:      "",
 		},
 		{
@@ -360,9 +367,9 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Default:     true,
 			Description: "A multi-environment demonstration space for frontend application best practices that's easy to apply to other projects.",
 			Image:       "https://assets.kubefirst.com/console/metaphor.svg",
-			Links: []string{fmt.Sprintf("https://metaphor-development.%s", cl.DomainName),
-				fmt.Sprintf("https://metaphor-staging.%s", cl.DomainName),
-				fmt.Sprintf("https://metaphor-production.%s", cl.DomainName)},
+			Links: []string{fmt.Sprintf("https://metaphor-development.%s", fullDomainName),
+				fmt.Sprintf("https://metaphor-staging.%s", fullDomainName),
+				fmt.Sprintf("https://metaphor-production.%s", fullDomainName)},
 			Status: "",
 		},
 	}
