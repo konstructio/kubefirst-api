@@ -18,7 +18,6 @@ import (
 	health "github.com/argoproj/gitops-engine/pkg/health"
 	"github.com/go-git/go-git/v5"
 	githttps "github.com/go-git/go-git/v5/plumbing/transport/http"
-	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/gitShim"
@@ -49,15 +48,22 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 		return fmt.Errorf("cluster %s - unable to deploy service %s to cluster: cannot deploy services to a cluster in %s state", cl.ClusterName, serviceName, cl.Status)
 	}
 
-	var gitopsRepo *git.Repository
-
 	homeDir, err := os.UserHomeDir()
+	tmpGitopsDir := fmt.Sprintf("%s/.k1/%s/%s/gitops", homeDir, cl.ClusterName, serviceName)
+
+	// Remove gitops dir
+	err = os.RemoveAll(tmpGitopsDir)
 	if err != nil {
-		log.Fatalf("error getting home path: %s", err)
+		log.Fatalf("error removing gitops dir %s: %s", tmpGitopsDir, err)
+		return err
 	}
-	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, cl.ClusterName)
-	gitopsDir := fmt.Sprintf("%s/.k1/%s/gitops", homeDir, cl.ClusterName)
-	gitopsRepo, _ = git.PlainOpen(gitopsDir)
+
+	err = gitShim.PrepareGitEnvironment(cl, tmpGitopsDir)
+	if err != nil {
+		log.Fatalf("an error ocurred preparing git environment %s %s", tmpGitopsDir, err)
+	}
+
+	gitopsRepo, _ := git.PlainOpen(tmpGitopsDir)
 
 	var registryPath string
 	if cl.CloudProvider == "civo" && cl.GitProvider == "github" {
@@ -67,7 +73,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 	} else {
 		registryPath = fmt.Sprintf("registry/%s", cl.ClusterName)
 	}
-	serviceFile := fmt.Sprintf("%s/%s/%s.yaml", gitopsDir, registryPath, serviceName)
+	serviceFile := fmt.Sprintf("%s/%s/%s.yaml", tmpGitopsDir, registryPath, serviceName)
 
 	var kcfg *k8s.KubernetesClient
 
@@ -76,7 +82,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 		inCluster = true
 	}
 
-	kcfg = k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
+	kcfg = k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", tmpGitopsDir))
 
 	// If there are secret values, create a vault secret
 	if len(req.SecretKeys) > 0 {
@@ -114,7 +120,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 	// Create service files in gitops dir
 	err = gitShim.PullWithAuth(
 		gitopsRepo,
-		cl.GitProvider,
+		"origin",
 		"main",
 		&githttps.BasicAuth{
 			Username: cl.GitAuth.User,
@@ -151,7 +157,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 		return fmt.Errorf("cluster %s - error committing service file: %s", cl.ClusterName, err)
 	}
 	err = gitopsRepo.Push(&git.PushOptions{
-		RemoteName: cl.GitProvider,
+		RemoteName: "origin",
 		Auth: &githttps.BasicAuth{
 			Username: cl.GitAuth.User,
 			Password: cl.GitAuth.Token,
@@ -314,7 +320,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 	}
 
 	var fullDomainName string
-    if cl.SubdomainName != "" {
+	if cl.SubdomainName != "" {
 		fullDomainName = fmt.Sprintf("%s.%s", cl.SubdomainName, cl.DomainName)
 	} else {
 		fullDomainName = cl.DomainName
