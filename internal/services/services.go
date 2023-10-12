@@ -85,6 +85,13 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 
 	kcfg = k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", tmpGitopsDir))
 
+	var fullDomainName string
+	if cl.SubdomainName != "" {
+		fullDomainName = fmt.Sprintf("%s.%s", cl.SubdomainName, cl.DomainName)
+	} else {
+		fullDomainName = cl.DomainName
+	}
+
 	// If there are secret values, create a vault secret
 	if len(req.SecretKeys) > 0 {
 		log.Infof("cluster %s - application %s has secrets, creating vault values", cl.ClusterName, appDef.Name)
@@ -102,7 +109,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 		}
 
 		vaultClient, err := vaultapi.NewClient(&vaultapi.Config{
-			Address: fmt.Sprintf("https://vault.%s", cl.DomainName),
+			Address: fmt.Sprintf("https://vault.%s", fullDomainName),
 		})
 		if err != nil {
 			return fmt.Errorf("cluster %s - error initializing vault client: %s", cl.ClusterName, err)
@@ -188,7 +195,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 	}
 
 	// Sync registry
-	argoCDHost := fmt.Sprintf("https://argocd.%s", cl.DomainName)
+	argoCDHost := fmt.Sprintf("https://argocd.%s", fullDomainName)
 	if cl.CloudProvider == "k3d" {
 		argoCDHost = "http://argocd-server.argocd.svc.cluster.local"
 	}
