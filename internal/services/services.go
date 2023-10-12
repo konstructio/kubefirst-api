@@ -18,6 +18,7 @@ import (
 	health "github.com/argoproj/gitops-engine/pkg/health"
 	"github.com/go-git/go-git/v5"
 	githttps "github.com/go-git/go-git/v5/plumbing/transport/http"
+	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/gitShim"
