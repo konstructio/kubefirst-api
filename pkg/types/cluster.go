@@ -173,3 +173,7 @@ type WorkloadCluster struct {
 	NodeCount         int         `bson:"node_count,omitempty" json:"node_count,omitempty"`
 	Status            string      `bson:"status,omitempty" json:"status,omitempty"`
 }
+
+type WorkloadClusterSet struct {
+	Clusters []WorkloadCluster `json:"clusters"`
+}
