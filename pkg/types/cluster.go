@@ -124,7 +124,7 @@ type Cluster struct {
 	VaultInitializedCheck          bool              `bson:"vault_initialized_check" json:"vault_initialized_check"`
 	VaultTerraformApplyCheck       bool              `bson:"vault_terraform_apply_check" json:"vault_terraform_apply_check"`
 	UsersTerraformApplyCheck       bool              `bson:"users_terraform_apply_check" json:"users_terraform_apply_check"`
-	WorkloadClusters               map[string]WorkloadCluster `bson:"workload_clusters,omitempty" json:"workload_clusters,omitempty"`
+	WorkloadClusters               []WorkloadCluster `bson:"workload_clusters,omitempty" json:"workload_clusters,omitempty"`
 }
 
 // StateStoreDetails
