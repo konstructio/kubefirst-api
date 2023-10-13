@@ -54,6 +54,39 @@ func (conf *GoogleConfiguration) GetRegions() ([]string, error) {
 	return regionList, nil
 }
 
+func (conf *GoogleConfiguration) GetZones() ([]string, error) {
+	var zoneList []string
+
+	creds, err := google.CredentialsFromJSON(conf.Context, []byte(conf.KeyFile), secretmanager.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, fmt.Errorf("could not create google storage client credentials: %s", err)
+	}
+
+	client, err := compute.NewZonesRESTClient(conf.Context, option.WithCredentials(creds))
+	if err != nil {
+		return nil, fmt.Errorf("could not create google compute client: %s", err)
+	}
+	defer client.Close()
+
+	req := &computepb.ListZonesRequest{
+		Project: conf.Project,
+	}
+
+	it := client.List(conf.Context, req)
+	for {
+		pair, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return []string{}, err
+		}
+		zoneList = append(zoneList, *pair.Name)
+	}
+
+	return zoneList, nil
+}
+
 // GetDomainApexContent determines whether or not a target domain features
 // a host responding at zone apex
 func GetDomainApexContent(domainName string) bool {
