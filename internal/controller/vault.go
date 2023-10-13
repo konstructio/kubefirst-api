@@ -321,7 +321,7 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 	case "cloudflare":
 		externalDnsToken = cl.CloudflareAuth.APIToken
 	}
-//
+	//
 	var kcfg *k8s.KubernetesClient
 	switch clctrl.CloudProvider {
 	case "aws":
@@ -335,10 +335,10 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 			return err
 		}
 	}
-	
+
 	clientset := kcfg.Clientset
 
-    var vaultRootToken string
+	var vaultRootToken string
 	vaultUnsealSecretData, err := k8s.ReadSecretV2(clientset, "vault", "vault-unseal-secret")
 	if err != nil {
 		log.Errorf("error reading vault-unseal-secret: %s", err)
@@ -350,6 +350,10 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 	//
 	_, err = vaultClient.KVv2("secret").Put(context.Background(), "external-dns", map[string]interface{}{
 		"token": externalDnsToken,
+	})
+
+	_, err = vaultClient.KVv2("secret").Put(context.Background(), "cloudflare", map[string]interface{}{
+		"origin-ca-api-key": cl.CloudflareAuth.OriginCaIssuerKey,
 	})
 
 	if err != nil {
