@@ -72,9 +72,12 @@ func SetupRouter() *gin.Engine {
 		// v1.GET("/domain/validate/google/:domain", middleware.ValidateAPIKey(), router.GetValidateGoogleDomain)
 		// Regions
 		v1.POST("/region/:cloud_provider", middleware.ValidateAPIKey(), router.PostRegions)
+
+		// Zones *** Only supports google ***
+		v1.POST("/zones", middleware.ValidateAPIKey(), router.ListZonesForRegion)
 		
 		// Instance Sizes
-		v1.POST("/instance-sizes/:dns_provider", middleware.ValidateAPIKey(), router.ListInstanceSizesForRegion)
+		v1.POST("/instance-sizes/:cloud_provider", middleware.ValidateAPIKey(), router.ListInstanceSizesForRegion)
 
 		// Environments
 		v1.GET("/environment", middleware.ValidateAPIKey(), router.GetEnvironments)
