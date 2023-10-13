@@ -99,7 +99,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 			return fmt.Errorf(msg)
 		}
 
-		log.Info("created %s cloud resources", clctrl.CloudProvider)
+		log.Infof("created %s cloud resources", clctrl.CloudProvider)
 
 		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
 
@@ -229,6 +229,8 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			ExternalDNSProviderTokenEnvName: externalDNSProviderTokenEnvName,
 			ExternalDNSProviderSecretName:   fmt.Sprintf("%s-auth", clctrl.CloudProvider),
 			ExternalDNSProviderSecretKey:    externalDNSProviderSecretKey,
+
+			ContainerRegistryURL: fmt.Sprintf("%s/%s", clctrl.ContainerRegistryHost, clctrl.GitAuth.Owner),
 		}
 
 		//Handle provider specific tokens
@@ -260,7 +262,8 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				gitopsTemplateTokens.ContainerRegistryURL = fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", *iamCaller.Account, clctrl.CloudRegion)
 				log.Infof("Using ECR URL %s", gitopsTemplateTokens.ContainerRegistryURL)
 			} else {
-				gitopsTemplateTokens.ContainerRegistryURL = fmt.Sprintf("%s/%s", clctrl.ContainerRegistryHost, clctrl.GitAuth.Owner)
+				// moving commented line below to default behavior
+				// gitopsTemplateTokens.ContainerRegistryURL = fmt.Sprintf("%s/%s", clctrl.ContainerRegistryHost, clctrl.GitAuth.Owner)
 				log.Info("NOT using ECR but instead %s URL %s", clctrl.GitProvider, gitopsTemplateTokens.ContainerRegistryURL)
 			}
 		}

@@ -49,15 +49,22 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 		return fmt.Errorf("cluster %s - unable to deploy service %s to cluster: cannot deploy services to a cluster in %s state", cl.ClusterName, serviceName, cl.Status)
 	}
 
-	var gitopsRepo *git.Repository
-
 	homeDir, err := os.UserHomeDir()
+	tmpGitopsDir := fmt.Sprintf("%s/.k1/%s/%s/gitops", homeDir, cl.ClusterName, serviceName)
+
+	// Remove gitops dir
+	err = os.RemoveAll(tmpGitopsDir)
 	if err != nil {
-		log.Fatalf("error getting home path: %s", err)
+		log.Fatalf("error removing gitops dir %s: %s", tmpGitopsDir, err)
+		return err
 	}
-	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, cl.ClusterName)
-	gitopsDir := fmt.Sprintf("%s/.k1/%s/gitops", homeDir, cl.ClusterName)
-	gitopsRepo, _ = git.PlainOpen(gitopsDir)
+
+	err = gitShim.PrepareGitEnvironment(cl, tmpGitopsDir)
+	if err != nil {
+		log.Fatalf("an error ocurred preparing git environment %s %s", tmpGitopsDir, err)
+	}
+
+	gitopsRepo, _ := git.PlainOpen(tmpGitopsDir)
 
 	var registryPath string
 	if cl.CloudProvider == "civo" && cl.GitProvider == "github" {
@@ -69,7 +76,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 	} else {
 		registryPath = fmt.Sprintf("registry/%s", cl.ClusterName)
 	}
-	serviceFile := fmt.Sprintf("%s/%s/%s.yaml", gitopsDir, registryPath, serviceName)
+	serviceFile := fmt.Sprintf("%s/%s/%s.yaml", tmpGitopsDir, registryPath, serviceName)
 
 	var kcfg *k8s.KubernetesClient
 
@@ -78,7 +85,14 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 		inCluster = true
 	}
 
-	kcfg = k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
+	kcfg = k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", tmpGitopsDir))
+
+	var fullDomainName string
+	if cl.SubdomainName != "" {
+		fullDomainName = fmt.Sprintf("%s.%s", cl.SubdomainName, cl.DomainName)
+	} else {
+		fullDomainName = cl.DomainName
+	}
 
 	// If there are secret values, create a vault secret
 	if len(req.SecretKeys) > 0 {
@@ -97,7 +111,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 		}
 
 		vaultClient, err := vaultapi.NewClient(&vaultapi.Config{
-			Address: fmt.Sprintf("https://vault.%s", cl.DomainName),
+			Address: fmt.Sprintf("https://vault.%s", fullDomainName),
 		})
 		if err != nil {
 			return fmt.Errorf("cluster %s - error initializing vault client: %s", cl.ClusterName, err)
@@ -116,7 +130,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 	// Create service files in gitops dir
 	err = gitShim.PullWithAuth(
 		gitopsRepo,
-		cl.GitProvider,
+		"origin",
 		"main",
 		&githttps.BasicAuth{
 			Username: cl.GitAuth.User,
@@ -153,7 +167,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 		return fmt.Errorf("cluster %s - error committing service file: %s", cl.ClusterName, err)
 	}
 	err = gitopsRepo.Push(&git.PushOptions{
-		RemoteName: cl.GitProvider,
+		RemoteName: "origin",
 		Auth: &githttps.BasicAuth{
 			Username: cl.GitAuth.User,
 			Password: cl.GitAuth.Token,
@@ -183,7 +197,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 	}
 
 	// Sync registry
-	argoCDHost := fmt.Sprintf("https://argocd.%s", cl.DomainName)
+	argoCDHost := fmt.Sprintf("https://argocd.%s", fullDomainName)
 	if cl.CloudProvider == "k3d" {
 		argoCDHost = "http://argocd-server.argocd.svc.cluster.local"
 	}
@@ -317,6 +331,13 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 		return err
 	}
 
+	var fullDomainName string
+	if cl.SubdomainName != "" {
+		fullDomainName = fmt.Sprintf("%s.%s", cl.SubdomainName, cl.DomainName)
+	} else {
+		fullDomainName = cl.DomainName
+	}
+
 	defaults := []types.Service{
 		{
 			Name:        cl.GitProvider,
@@ -332,7 +353,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Default:     true,
 			Description: "Kubefirst's secrets manager and identity provider.",
 			Image:       "https://assets.kubefirst.com/console/vault.svg",
-			Links:       []string{fmt.Sprintf("https://vault.%s", cl.DomainName)},
+			Links:       []string{fmt.Sprintf("https://vault.%s", fullDomainName)},
 			Status:      "",
 		},
 		{
@@ -340,7 +361,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Default:     true,
 			Description: "A Gitops oriented continuous delivery tool for managing all of our applications across our Kubernetes clusters.",
 			Image:       "https://assets.kubefirst.com/console/argocd.svg",
-			Links:       []string{fmt.Sprintf("https://argocd.%s", cl.DomainName)},
+			Links:       []string{fmt.Sprintf("https://argocd.%s", fullDomainName)},
 			Status:      "",
 		},
 		{
@@ -348,7 +369,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Default:     true,
 			Description: "The workflow engine for orchestrating parallel jobs on Kubernetes.",
 			Image:       "https://assets.kubefirst.com/console/argocd.svg",
-			Links:       []string{fmt.Sprintf("https://argo.%s/workflows", cl.DomainName)},
+			Links:       []string{fmt.Sprintf("https://argo.%s/workflows", fullDomainName)},
 			Status:      "",
 		},
 		{
@@ -356,7 +377,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Default:     true,
 			Description: "Kubefirst manages Terraform workflows with Atlantis automation.",
 			Image:       "https://assets.kubefirst.com/console/atlantis.svg",
-			Links:       []string{fmt.Sprintf("https://atlantis.%s", cl.DomainName)},
+			Links:       []string{fmt.Sprintf("https://atlantis.%s", fullDomainName)},
 			Status:      "",
 		},
 		{
@@ -364,9 +385,9 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Default:     true,
 			Description: "A multi-environment demonstration space for frontend application best practices that's easy to apply to other projects.",
 			Image:       "https://assets.kubefirst.com/console/metaphor.svg",
-			Links: []string{fmt.Sprintf("https://metaphor-development.%s", cl.DomainName),
-				fmt.Sprintf("https://metaphor-staging.%s", cl.DomainName),
-				fmt.Sprintf("https://metaphor-production.%s", cl.DomainName)},
+			Links: []string{fmt.Sprintf("https://metaphor-development.%s", fullDomainName),
+				fmt.Sprintf("https://metaphor-staging.%s", fullDomainName),
+				fmt.Sprintf("https://metaphor-production.%s", fullDomainName)},
 			Status: "",
 		},
 	}

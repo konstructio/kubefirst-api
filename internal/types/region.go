@@ -12,7 +12,7 @@ import (
 
 // RegionListRequest
 type RegionListRequest struct {
-	CloudRegion      string           `json:"cloud_region,omitempty"`
+	CloudRegion      string           				 `json:"cloud_region,omitempty"`
 	AWSAuth          pkgtypes.AWSAuth          `json:"aws_auth,omitempty"`
 	CivoAuth         pkgtypes.CivoAuth         `json:"civo_auth,omitempty"`
 	DigitaloceanAuth pkgtypes.DigitaloceanAuth `json:"do_auth,omitempty"`

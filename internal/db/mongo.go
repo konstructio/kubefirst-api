@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"os"
 
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -23,6 +25,7 @@ type MongoDBClient struct {
 	ClustersCollection      *mongo.Collection
 	GitopsCatalogCollection *mongo.Collection
 	ServicesCollection      *mongo.Collection
+	EnvironmentsCollection  *mongo.Collection
 }
 
 var Client = Connect()
@@ -65,6 +68,7 @@ func Connect() *MongoDBClient {
 		ClustersCollection:      client.Database("api").Collection("clusters"),
 		GitopsCatalogCollection: client.Database("api").Collection("gitops-catalog"),
 		ServicesCollection:      client.Database("api").Collection("services"),
+		EnvironmentsCollection:  client.Database("api").Collection("environments"),
 	}
 
 	return &cl
@@ -81,4 +85,111 @@ func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
 	}
 
 	return nil
+}
+
+// ImportClusterIfEmpty
+func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster, error) {
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "",
+	})
+	log.SetReportCaller(false)
+
+	// find the secret in mgmt cluster's kubefirst namespace and read import payload and clustername
+	var kcfg *k8s.KubernetesClient
+
+	// homeDir, err := os.UserHomeDir()
+	// if err != nil {
+	// 	log.Fatalf("error getting home path: %s", err)
+	// }
+
+    if os.Getenv("IS_CLUSTER_ZERO") == "true" {
+		log.Info("IS_CLUSTER_ZERO is set to true, skipping import cluster logic.")
+		return pkgtypes.Cluster{}, nil
+	} 
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("error getting home path: %s", err)
+	}
+	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, "")
+
+	inCluster := false
+	if os.Getenv("IN_CLUSTER") == "true" {
+		inCluster = true
+	}
+
+	kcfg = k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
+
+	log.Infof("reading secret mongo-state to determine if import is needed")
+	secData, err := k8s.ReadSecretV2(kcfg.Clientset, "kubefirst", "mongodb-state")
+	if err != nil {
+		log.Infof("error reading secret mongodb-state. %s", err)
+		return pkgtypes.Cluster{}, err
+	}
+	clusterName := secData["cluster-name"]
+	importPayload := secData["cluster-0"]
+	log.Infof("import cluster secret discovered for cluster %s", clusterName)
+
+	// if you find a record bail
+	// otherwise read the payload, import to db, bail
+
+	filter := bson.D{{Key: "cluster_name", Value: clusterName}}
+	// var result1 pkgtypes.Cluster
+	var clusterFromSecret pkgtypes.Cluster
+	//err = mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&result1)
+	err = mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&clusterFromSecret)
+	if err != nil {
+		// This error means your query did not match any documents.
+		log.Infof("did not find preexisting record for cluster %s. importing record.", clusterName)
+		// clusterFromSecret := pkgtypes.Cluster{}
+		unmarshalErr := bson.UnmarshalExtJSON([]byte(importPayload), true, &clusterFromSecret)
+		if unmarshalErr != nil {
+			log.Info("error encountered unmarshaling secret data")
+			log.Error(unmarshalErr)
+		}
+		if err == mongo.ErrNoDocuments {
+			// Create if entry does not exist
+			_, err := mdbcl.ClustersCollection.InsertOne(mdbcl.Context, clusterFromSecret)
+			if err != nil {
+				return pkgtypes.Cluster{}, fmt.Errorf("error inserting cluster %s: %s", clusterName, err)
+			}
+			log.Info("inserted cluster record to db. adding default services.")
+
+			return clusterFromSecret, nil
+		} else {
+			return pkgtypes.Cluster{}, fmt.Errorf("error inserting record: %s", err)
+		}
+	} else {
+		log.Infof("cluster record for %s already exists - skipping", clusterName)
+	}
+
+	return pkgtypes.Cluster{}, nil
+}
+
+type EstablishConnectArgs struct {
+	Tries  int
+	Silent bool
+}
+
+func (mdbcl *MongoDBClient) EstablishMongoConnection(args EstablishConnectArgs) error {
+	var pingError error
+
+	for tries := 0; tries < args.Tries; tries += 1 {
+		err := mdbcl.Client.Database("admin").RunCommand(mdbcl.Context, bson.D{{Key: "ping", Value: 1}}).Err()
+
+		if err != nil {
+			pingError = err
+			fmt.Println("awaiting mongo db connectivity...")
+			continue
+		}
+
+		if !args.Silent {
+			log.Infof("connected to mongodb host %s", os.Getenv("MONGODB_HOST"))
+		}
+
+		return nil
+	}
+
+	return fmt.Errorf("unable to establish connection to mongo db: %s", pingError)
 }

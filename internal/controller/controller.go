@@ -38,15 +38,16 @@ const (
 )
 
 type ClusterController struct {
-	CloudProvider string
-	CloudRegion   string
-	ClusterName   string
-	ClusterID     string
-	ClusterType   string
-	DomainName    string
-	SubdomainName string
-	DnsProvider   string
-	AlertsEmail   string
+	CloudProvider             string
+	CloudRegion               string
+	ClusterName               string
+	ClusterID                 string
+	ClusterType               string
+	DomainName                string
+	SubdomainName             string
+	DnsProvider               string
+	UseCloudflareOriginIssuer bool
+	AlertsEmail               string
 
 	// auth
 	AWSAuth            pkgtypes.AWSAuth
@@ -199,7 +200,14 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		clctrl.KubefirstTeam = "undefined"
 	}
 	clctrl.AtlantisWebhookSecret = pkg.Random(20)
-	clctrl.AtlantisWebhookURL = fmt.Sprintf("https://atlantis.%s/events", clctrl.DomainName)
+
+	var fullDomainName string
+	if clctrl.SubdomainName != "" {
+		fullDomainName = fmt.Sprintf("%s.%s", clctrl.SubdomainName, clctrl.DomainName)
+	} else {
+		fullDomainName = clctrl.DomainName
+	}
+	clctrl.AtlantisWebhookURL = fmt.Sprintf("https://atlantis.%s/events", fullDomainName)
 
 	// Initialize git parameters
 	clctrl.GitProvider = def.GitProvider

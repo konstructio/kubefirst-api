@@ -149,9 +149,11 @@ type ProxyImportRequest struct {
 }
 
 type Environment struct {
-	Name        string `bson:"name" json:"name"`
-	Color       string `bson:"color" json:"color"`
-	Description string `bson:"description,omitempty" json:"description,omitempty"`
+	ID                primitive.ObjectID `bson:"_id" json:"_id"`
+	Name        			string             `bson:"name" json:"name"`
+	Color       			string 						 `bson:"color" json:"color"`
+	Description       string 						 `bson:"description,omitempty" json:"description,omitempty"`
+	CreationTimestamp string 						 `bson:"creation_timestamp" json:"creation_timestamp"`
 }
 
 type WorkloadCluster struct {
@@ -170,4 +172,8 @@ type WorkloadCluster struct {
 	MachineType       string      `bson:"machine_type,omitempty" json:"machine_type,omitempty"`
 	NodeCount         int         `bson:"node_count,omitempty" json:"node_count,omitempty"`
 	Status            string      `bson:"status,omitempty" json:"status,omitempty"`
+}
+
+type WorkloadClusterSet struct {
+	Clusters []WorkloadCluster `json:"clusters"`
 }

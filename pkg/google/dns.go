@@ -13,11 +13,14 @@ import (
 	"strings"
 	"time"
 
+	compute "cloud.google.com/go/compute/apiv1"
+	"cloud.google.com/go/compute/apiv1/computepb"
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"github.com/kubefirst/runtime/pkg/dns"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/oauth2/google"
 	googleDNS "google.golang.org/api/dns/v1"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
@@ -143,4 +146,43 @@ func (conf *GoogleConfiguration) GetDNSDomains() ([]string, error) {
 	}
 	
 	return zoneNames, nil
+}
+
+func (conf *GoogleConfiguration) ListInstances() ([]string, error){
+	fmt.Println("hello world")
+	creds, err := google.CredentialsFromJSON(conf.Context, []byte(conf.KeyFile), secretmanager.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, fmt.Errorf("could not create google storage client credentials: %s", err)
+	}
+
+	instancesClient, err := compute.NewInstancesRESTClient(context.Background(), option.WithCredentials(creds));
+	if err != nil {
+		return nil, err
+	}
+
+	req := &computepb.ListInstancesRequest{
+		Project: conf.Project,
+		Zone: conf.Region,
+	}
+
+	it := instancesClient.List(context.Background(), req)
+
+
+	var stuff []string
+	for {
+		instance, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		value := fmt.Sprintf("%v : %v", instance.GetName(), instance.GetMachineType())
+		fmt.Println(value)
+		stuff = append(stuff, value)
+	}
+
+	defer instancesClient.Close()
+	return stuff, nil
 }

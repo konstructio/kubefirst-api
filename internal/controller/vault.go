@@ -7,11 +7,13 @@ See the LICENSE file for more details.
 package controller
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"os"
 	"strconv"
 
+	vaultapi "github.com/hashicorp/vault/api"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
@@ -276,6 +278,90 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		}
 	}
 
+	return nil
+}
+
+func (clctrl *ClusterController) WriteVaultSecrets() error {
+	// Logging handler
+	// Logs to stdout to maintain compatibility with event streaming
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "",
+	})
+	log.SetReportCaller(false)
+	log.SetOutput(os.Stdout)
+
+	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	if err != nil {
+		return err
+	}
+
+	vaultAddr := "http://localhost:8200"
+
+	vaultClient, err := vaultapi.NewClient(&vaultapi.Config{
+		Address: vaultAddr,
+	})
+	if err != nil {
+		log.Errorf("error creating vault client: %s", err)
+		return err
+	}
+
+	var externalDnsToken string
+	switch cl.DnsProvider {
+	case "civo":
+		externalDnsToken = cl.CivoAuth.Token
+	case "vultr":
+		externalDnsToken = cl.VultrAuth.Token
+	case "digitalocean":
+		externalDnsToken = cl.DigitaloceanAuth.Token
+	case "aws":
+		externalDnsToken = "implement with cluster management"
+	case "googlecloud":
+		externalDnsToken = "implement with cluster management"
+	case "cloudflare":
+		externalDnsToken = cl.CloudflareAuth.APIToken
+	}
+	//
+	var kcfg *k8s.KubernetesClient
+	switch clctrl.CloudProvider {
+	case "aws":
+		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+	case "civo", "digitalocean", "vultr":
+		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+	case "google":
+		var err error
+		kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
+		if err != nil {
+			return err
+		}
+	}
+
+	clientset := kcfg.Clientset
+
+	var vaultRootToken string
+	vaultUnsealSecretData, err := k8s.ReadSecretV2(clientset, "vault", "vault-unseal-secret")
+	if err != nil {
+		log.Errorf("error reading vault-unseal-secret: %s", err)
+	}
+	if len(vaultUnsealSecretData) != 0 {
+		vaultRootToken = vaultUnsealSecretData["root-token"]
+	}
+	vaultClient.SetToken(vaultRootToken)
+	//
+	_, err = vaultClient.KVv2("secret").Put(context.Background(), "external-dns", map[string]interface{}{
+		"token": externalDnsToken,
+	})
+
+	_, err = vaultClient.KVv2("secret").Put(context.Background(), "cloudflare", map[string]interface{}{
+		"origin-ca-api-key": cl.CloudflareAuth.OriginCaIssuerKey,
+	})
+
+	if err != nil {
+		log.Errorf("error writing secret to vault: %s", err)
+		return err
+	}
+
+	log.Info("successfully wrote platform secrets to vault secret store")
 	return nil
 }
 

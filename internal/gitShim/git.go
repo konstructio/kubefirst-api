@@ -71,3 +71,16 @@ func PrepareMgmtCluster(cluster pkgtypes.Cluster) error {
 
 	return nil
 }
+
+func PrepareGitEnvironment(cluster *pkgtypes.Cluster, gitopsDir string) error {
+
+	repoUrl := fmt.Sprintf("https://%s/%s/gitops", cluster.GitHost, cluster.GitAuth.Owner)
+	_, err := gitClient.ClonePrivateRepo("main", gitopsDir, repoUrl, cluster.GitAuth.User, cluster.GitAuth.Token)
+	if err != nil {
+		log.Fatalf("error cloning repository: %s", err)
+
+		return err
+	}
+
+	return nil
+}

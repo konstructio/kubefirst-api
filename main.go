@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/kubefirst/kubefirst-api/internal/services"
+
 	"github.com/joho/godotenv"
 	"github.com/kubefirst/kubefirst-api/docs"
 	"github.com/kubefirst/kubefirst-api/internal/db"
@@ -33,8 +35,8 @@ const (
 
 func main() {
 
-	envError := godotenv.Load(".env");
-	
+	envError := godotenv.Load(".env")
+
 	if envError != nil {
 		log.Info("error loading .env file, using local environment variables")
 	}
@@ -67,9 +69,23 @@ func main() {
 	}
 
 	// Verify database connectivity
-	err := db.Client.TestDatabaseConnection(false)
+	err := db.Client.EstablishMongoConnection(db.EstablishConnectArgs{
+		Tries:  20,
+		Silent: false,
+	})
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	log.Infof("checking for cluster import secret for %s management cluster", os.Getenv("CLOUD_PROVIDER"))
+	// Import if needed
+	importedCluster, err := db.Client.ImportClusterIfEmpty(false)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if importedCluster.ClusterName != "" {
+		services.AddDefaultServices(&importedCluster)
 	}
 	defer db.Client.Client.Disconnect(db.Client.Context)
 

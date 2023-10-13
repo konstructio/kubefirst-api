@@ -477,6 +477,7 @@ func PrepareGitRepositories(
 	metaphorTokens *MetaphorTokenValues,
 	apexContentExists bool,
 	gitProtocol string,
+	useCloudflareOriginIssuer bool,
 ) error {
 	//* clone the gitops-template repo
 	gitopsRepo, err := gitClient.CloneRefSetMain(gitopsTemplateBranch, gitopsDir, gitopsTemplateURL)
@@ -495,7 +496,7 @@ func PrepareGitRepositories(
 
 	// DETOKENIZE
 	//* detokenize the gitops repo
-	DetokenizeGitGitops(gitopsDir, gitopsTokens, gitProtocol)
+	DetokenizeGitGitops(gitopsDir, gitopsTokens, gitProtocol, useCloudflareOriginIssuer)
 	if err != nil {
 		return err
 	}
