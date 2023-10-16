@@ -17,7 +17,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.27.5
 	github.com/charmbracelet/bubbles v0.15.0
 	github.com/charmbracelet/bubbletea v0.23.2
-	github.com/charmbracelet/lipgloss v0.7.1
+	github.com/charmbracelet/lipgloss v0.8.0
 	github.com/civo/civogo v0.3.28
 	github.com/cloudflare/cloudflare-go v0.73.0
 	github.com/digitalocean/godo v1.98.0
@@ -176,7 +176,7 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.17 // indirect
+	github.com/mattn/go-isatty v0.0.18 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
@@ -195,7 +195,7 @@ require (
 	github.com/muesli/ansi v0.0.0-20211018074035-2e021307bc4b // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
-	github.com/muesli/termenv v0.15.1 // indirect
+	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
