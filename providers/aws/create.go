@@ -205,6 +205,12 @@ func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
+	err = ctrl.WriteVaultSecrets()
+	if err != nil {
+		ctrl.HandleError(err.Error())
+		return err
+	}
+
 	err = ctrl.RunUsersTerraform()
 	if err != nil {
 		ctrl.HandleError(err.Error())
@@ -252,7 +258,6 @@ func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 		log.Info("Port forward opened to mgmt cluster kubefirst api")
 
 	}
-
 
 	//* export and import cluster
 	err = ctrl.ExportClusterRecord()

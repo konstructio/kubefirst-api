@@ -45,6 +45,10 @@ func (clctrl *ClusterController) DetokenizeKMSKeyID() error {
 				registryPath = fmt.Sprintf("registry/clusters/%s", clctrl.ClusterName)
 			} else if clctrl.CloudProvider == "civo" && clctrl.GitProvider == "gitlab" {
 				registryPath = fmt.Sprintf("registry/clusters/%s", clctrl.ClusterName)
+			} else if clctrl.CloudProvider == "aws" && clctrl.GitProvider == "github" {
+				registryPath = fmt.Sprintf("registry/clusters/%s", clctrl.ClusterName)
+			} else if clctrl.CloudProvider == "aws" && clctrl.GitProvider == "gitlab" {
+				registryPath = fmt.Sprintf("registry/clusters/%s", clctrl.ClusterName)
 			} else {
 				registryPath = fmt.Sprintf("registry/%s", clctrl.ClusterName)
 			}
