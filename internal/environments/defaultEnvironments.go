@@ -76,7 +76,7 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 
 
 	// in cluster url
-	KubefirstApiEe := os.Getenv("KUBEFIRST_API_EE")
+	KubefirstApiEe := os.Getenv("ENTERPRISE_API_URL")
 
 
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()

@@ -96,7 +96,7 @@ func main() {
 			log.Infof("adding default environments for cluster %s", importedCluster.ClusterName)
 			err := environments.CreateDefaultEnvironments(importedCluster)
 			if err != nil {
-				log.Fatalf("Error creating default environments %s", err.Error())
+				log.Infof("Error creating default environments %s", err.Error())
 			}
 		}()
 	}
