@@ -67,12 +67,12 @@ func SetupRouter() *gin.Engine {
 		v1.POST("/domain/:dns_provider", middleware.ValidateAPIKey(), router.PostDomains)
 		v1.GET("/domain/validate/aws/:domain", middleware.ValidateAPIKey(), router.GetValidateAWSDomain)
 		v1.GET("/domain/validate/civo/:domain", middleware.ValidateAPIKey(), router.GetValidateCivoDomain)
-		// v1.GET("/domain/validate/digi1a`talocean/:domain", middleware.ValidateAPIKey(), router.GetValidateDigitalOceanDomain)
+		// v1.GET("/domain/validate/digitalocean/:domain", middleware.ValidateAPIKey(), router.GetValidateDigitalOceanDomain)
 		// v1.GET("/domain/validate/vultr/:domain", middleware.ValidateAPIKey(), router.GetValidateVultrDomain)
 		// v1.GET("/domain/validate/google/:domain", middleware.ValidateAPIKey(), router.GetValidateGoogleDomain)
 		// Regions
 		v1.POST("/region/:cloud_provider", middleware.ValidateAPIKey(), router.PostRegions)
-		
+
 		// Instance Sizes
 		v1.POST("/instance-sizes/:dns_provider", middleware.ValidateAPIKey(), router.ListInstanceSizesForRegion)
 

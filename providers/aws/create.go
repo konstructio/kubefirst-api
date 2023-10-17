@@ -221,8 +221,8 @@ func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 	log.Info("deploying kubefirst console and verifying cluster installation is complete")
 	consoleDeployment, err := k8s.ReturnDeploymentObject(
 		kcfg.Clientset,
-		"app.kubernetes.io/instance",
-		"kubefirst",
+		"app.kubernetes.io/name",
+		"console",
 		"kubefirst",
 		1200,
 	)

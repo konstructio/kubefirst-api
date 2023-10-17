@@ -7,9 +7,6 @@ See the LICENSE file for more details.
 package google
 
 import (
-	"os"
-	"strings"
-
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
 	"github.com/kubefirst/kubefirst-api/internal/db"
@@ -195,8 +192,8 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 	log.Info("deploying kubefirst console and verifying cluster installation is complete")
 	consoleDeployment, err := k8s.ReturnDeploymentObject(
 		kcfg.Clientset,
-		"app.kubernetes.io/instance",
-		"kubefirst",
+		"app.kubernetes.io/name",
+		"console",
 		"kubefirst",
 		1200,
 	)
@@ -217,18 +214,6 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 	defer func() {
 		close(cluster1KubefirstApiStopChannel)
 	}()
-	if strings.ToLower(os.Getenv("K1_LOCAL_DEBUG")) != "" { //allow using local kubefirst api running on port 8082
-		k8s.OpenPortForwardPodWrapper(
-			kcfg.Clientset,
-			kcfg.RestConfig,
-			"kubefirst-kubefirst-api",
-			"kubefirst",
-			8081,
-			8082,
-			cluster1KubefirstApiStopChannel,
-		)
-		log.Info("Port forward opened to mgmt cluster kubefirst api")
-	}
 
 	//* export and import cluster
 	err = ctrl.ExportClusterRecord()
