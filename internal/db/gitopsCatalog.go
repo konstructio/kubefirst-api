@@ -28,6 +28,17 @@ func (mdbcl *MongoDBClient) GetGitopsCatalogApps() (types.GitopsCatalogApps, err
 	return result, nil
 }
 
+func k3dCatalogApps(apps []types.GitopsCatalogApp) []types.GitopsCatalogApp {
+	var k3dApps []types.GitopsCatalogApp
+	for _, app := range apps {
+		worksOnK3D := app.K3D == nil
+		if worksOnK3D {
+			k3dApps = append(k3dApps, app)
+		}
+	}
+	return k3dApps
+}
+
 // UpdateGitopsCatalogApps
 func (mdbcl *MongoDBClient) UpdateGitopsCatalogApps() error {
 	mpapps, err := gitopsCatalog.ReadActiveApplications()
@@ -36,7 +47,7 @@ func (mdbcl *MongoDBClient) UpdateGitopsCatalogApps() error {
 	}
 
 	filter := bson.D{{Key: "name", Value: "gitops_catalog_application_list"}}
-	update := bson.D{{Key: "$set", Value: bson.D{{Key: "apps", Value: mpapps.Apps}}}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "apps", Value: k3dCatalogApps(mpapps.Apps)}}}}
 	opts := options.Update().SetUpsert(true)
 
 	_, err = mdbcl.GitopsCatalogCollection.UpdateOne(mdbcl.Context, filter, update, opts)

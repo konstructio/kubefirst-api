@@ -20,6 +20,7 @@ type GitopsCatalogApp struct {
 	ImageURL    string                      `bson:"image_url" json:"image_url" yaml:"imageUrl"`
 	Description string                      `bson:"description" json:"description" yaml:"description"`
 	Categories  []string                    `bson:"categories" json:"categories" yaml:"categories"`
+	K3D         *bool                       `bson:"k3d" json:"k3d" yaml:"k3d"`
 }
 
 // GitopsCatalogAppSecretKey describes a required secret value when creating a
