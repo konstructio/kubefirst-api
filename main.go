@@ -87,11 +87,13 @@ func main() {
 
 
 	if importedCluster.ClusterName != "" {
+		log.Infof("adding default services for cluster %s", importedCluster.ClusterName)
 		services.AddDefaultServices(&importedCluster)
 			
 		// Call default environment create code if we imported  a cluster
 		// execute default environment creation concurrently 
 		go func() {
+			log.Infof("adding default environments for cluster %s", importedCluster.ClusterName)
 			err := environments.CreateDefaultEnvironments(importedCluster)
 			if err != nil {
 				log.Fatalf("Error creating default environments %s", err.Error())
