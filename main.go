@@ -94,7 +94,7 @@ func main() {
 		go func() {
 			err := environments.CreateDefaultEnvironments(importedCluster)
 			if err != nil {
-				log.Fatal(err)
+				log.Fatalf("Error creating default environments %s", err.Error())
 			}
 		}()
 	}

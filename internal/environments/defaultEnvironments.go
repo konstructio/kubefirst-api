@@ -90,7 +90,7 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 
 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/v1", KubefirstApiEe), bytes.NewReader(payload))
 	if err != nil {
-		log.Errorf("error %s", err)
+		log.Errorf("error  creating request %s", err)
 		return err
 	}
 	req.Header.Add("Content-Type", "application/json")
@@ -98,7 +98,7 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 
 	res, err := httpClient.Do(req)
 	if err != nil {
-		log.Errorf("error %s", err)
+		log.Errorf("error calling api ee %s", err)
 		return err
 	}
 
