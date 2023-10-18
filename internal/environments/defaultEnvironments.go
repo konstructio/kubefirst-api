@@ -30,7 +30,7 @@ func CreateDefaultEnvironments( mgmtCluster types.Cluster) error {
 	log.SetReportCaller(false)
 	log.SetOutput(os.Stdout)
 	
-	defaultClusterNames := []string{"dev", "staging", "prod"}
+	defaultClusterNames := []string{"development", "staging", "production"}
 
 	defaultVclusterTemplate :=  types.WorkloadCluster{
 				AdminEmail: mgmtCluster.AlertsEmail,
