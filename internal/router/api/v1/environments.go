@@ -76,3 +76,45 @@ func DeleteEnvironment(c *gin.Context) {
 	})
 
 }
+
+func UpdateEnvironment(c *gin.Context) {
+	envId, param := c.Params.Get("environment_id")
+
+	if !param {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: ":environment_id not provided",
+		})
+		return
+	}
+	
+	var environmentUpdate types.EnvironmentUpdateRequest
+	err := c.Bind(&environmentUpdate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+	
+	if environmentUpdate.Color == "" && environmentUpdate.Description == "" {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: "please provide a description and or color to update",
+		})
+		return
+	}
+
+
+	updateErr := db.Client.UpdateEnvironment(envId, environmentUpdate)
+
+	if updateErr != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: updateErr.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, types.JSONSuccessResponse{
+		Message: fmt.Sprintf("successfully updated environment with id: %v", envId),
+	})
+
+}

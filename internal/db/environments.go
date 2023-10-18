@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 
+	"github.com/kubefirst/kubefirst-api/internal/types"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
@@ -104,6 +105,23 @@ func (mdbcl *MongoDBClient) DeleteEnvironment(envId string) error {
 	}
 
 	log.Info("environment deleted")
+
+	return nil
+}
+
+func (mdbcl *MongoDBClient) UpdateEnvironment(id string, env types.EnvironmentUpdateRequest) error {
+	objectId, idErr := primitive.ObjectIDFromHex(id)
+	if idErr != nil{
+		return fmt.Errorf("invalid id %v", id)
+	}
+
+	filter := bson.D{{ Key: "_id", Value: objectId }}
+	update := bson.D{{ "$set", env }}
+
+	_, err := mdbcl.EnvironmentsCollection.UpdateOne(mdbcl.Context, filter, update)
+	if err != nil {
+		return fmt.Errorf("error updating environment %v: %s", id, err)
+	}
 
 	return nil
 }
