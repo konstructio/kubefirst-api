@@ -81,7 +81,7 @@ func main() {
 	// Import if needed
 	importedCluster, err := db.Client.ImportClusterIfEmpty(false, os.Getenv("CLOUD_PROVIDER"))
 	if err != nil {
-		log.Error("error encountered while trying to importing cluster", err)
+		log.Fatal(err)
 	}
 
 	if importedCluster.ClusterName != "" {
