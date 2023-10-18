@@ -77,11 +77,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Infof("checking for cluster import secret for %s management cluster", os.Getenv("CLOUD_PROVIDER"))
+	log.Infof("checking for cluster import secret for management cluster")
 	// Import if needed
 	importedCluster, err := db.Client.ImportClusterIfEmpty(false)
 	if err != nil {
-		log.Fatal(err)
+		log.Info("error encountered while trying to import cluster, allowing api to continue booting without import")
 	}
 
 	if importedCluster.ClusterName != "" {
