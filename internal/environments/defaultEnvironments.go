@@ -14,6 +14,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/kubefirst/kubefirst-api/pkg/types"
 	log "github.com/sirupsen/logrus"
@@ -97,9 +98,15 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 	req.Header.Add("Accept", "application/json")
 
 	res, err := httpClient.Do(req)
-	if err != nil {
-		log.Errorf("error in http call to api ee %s", err)
-		return err
+	timer := 0
+	for err != nil {
+		if timer > 12 {
+			log.Errorf("error in http call to api ee: api url (%s) did not come up within 2 minutes %s", req.URL, err.Error())
+		} else{
+			res, err = httpClient.Do(req)
+		}
+		timer++
+		time.Sleep(10 * time.Second)
 	}
 
 	if res.StatusCode != http.StatusOK {
