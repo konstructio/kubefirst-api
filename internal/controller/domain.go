@@ -67,7 +67,6 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 			}
 		case "cloudflare":
 
-			//! jared will brb to fix this
 			_, err := cloudflare_api.NewWithAPIToken(clctrl.CloudflareAuth.APIToken)
 			if err != nil {
 				return err

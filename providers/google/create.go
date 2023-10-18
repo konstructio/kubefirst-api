@@ -7,11 +7,15 @@ See the LICENSE file for more details.
 package google
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
+	"github.com/kubefirst/kubefirst-api/pkg/google"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
@@ -32,6 +36,17 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 	}
 
 	// TODO Validate Google region
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("error getting home path: %s", err)
+	}
+
+	err = google.WriteGoogleApplicationCredentialsFile(definition.GoogleAuth.KeyFile, homeDir)
+	if err != nil {
+		log.Fatalf("error writing google application credentials file: %s", err)
+	}
+
+	os.Setenv("GOOGLE_APPLICATIONS_CREDENTIALS", fmt.Sprintf("%s/.k1/application_default_credentials.json", homeDir))
 
 	err = ctrl.DownloadTools(ctrl.ProviderConfig.ToolsDir)
 	if err != nil {
@@ -177,6 +192,12 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 	}
 
 	err = ctrl.RunVaultTerraform()
+	if err != nil {
+		ctrl.HandleError(err.Error())
+		return err
+	}
+
+	err = ctrl.WriteVaultSecrets()
 	if err != nil {
 		ctrl.HandleError(err.Error())
 		return err
