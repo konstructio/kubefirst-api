@@ -53,16 +53,16 @@ func CreateEnvironment(c *gin.Context) {
 }
 
 func DeleteEnvironment(c *gin.Context) {
-	envName, param := c.Params.Get("environment_name")
+	envId, param := c.Params.Get("environment_id")
 
 	if !param {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: ":environment_name not provided",
+			Message: ":environment_id not provided",
 		})
 		return
 	}
 
-	err := db.Client.DeleteEnvironment(envName)
+	err := db.Client.DeleteEnvironment(envId)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -72,7 +72,7 @@ func DeleteEnvironment(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, types.JSONSuccessResponse{
-		Message: fmt.Sprintf("successfully deleted %v environment", envName),
+		Message: fmt.Sprintf("successfully deleted environment with id: %v", envId),
 	})
 
 }
