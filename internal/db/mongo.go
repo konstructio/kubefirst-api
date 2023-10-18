@@ -88,7 +88,7 @@ func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
 }
 
 // ImportClusterIfEmpty
-func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster, error) {
+func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool, cloudProvider string) (pkgtypes.Cluster, error) {
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp:   true,
 		TimestampFormat: "",
@@ -105,6 +105,10 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster,
 
     if os.Getenv("IS_CLUSTER_ZERO") == "true" {
 		log.Info("IS_CLUSTER_ZERO is set to true, skipping import cluster logic.")
+		return pkgtypes.Cluster{}, nil
+	}
+	if os.Getenv("CLOUD_PROVIDER") == "k3d" {
+		log.Info("CLOUD_PROVIDER is set to k3d, skipping import cluster logic.")
 		return pkgtypes.Cluster{}, nil
 	} 
 
