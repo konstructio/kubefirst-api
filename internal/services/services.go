@@ -79,6 +79,10 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
 	} else if cl.CloudProvider == "google" && cl.GitProvider == "gitlab" {
 		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
+	} else if cl.CloudProvider == "digitalocean" && cl.GitProvider == "github" {
+		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
+	} else if cl.CloudProvider == "digitalocean" && cl.GitProvider == "gitlab" {
+		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
 	} else {
 		registryPath = fmt.Sprintf("registry/%s", cl.ClusterName)
 	}
