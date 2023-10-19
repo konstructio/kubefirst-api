@@ -130,7 +130,7 @@ func (conf *GoogleConfiguration) GetDNSDomains() ([]string, error) {
 	}
 
 	dnsService, err := googleDNS.NewService(conf.Context, option.WithCredentials(creds))
-	
+
 	if err != nil {
 		return zoneNames, err
 	}
@@ -142,35 +142,33 @@ func (conf *GoogleConfiguration) GetDNSDomains() ([]string, error) {
 	}
 
 	for _, zone := range zones.ManagedZones {
-		zoneNames = append(zoneNames, zone.Name)
+		zoneNames = append(zoneNames, strings.TrimRight(zone.DnsName, "."))
 	}
-	
+
 	return zoneNames, nil
 }
 
-func (conf *GoogleConfiguration) ListInstances() ([]string, error){
-	fmt.Println("hello world")
+func (conf *GoogleConfiguration) ListInstances(zone string) ([]string, error) {
 	creds, err := google.CredentialsFromJSON(conf.Context, []byte(conf.KeyFile), secretmanager.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, fmt.Errorf("could not create google storage client credentials: %s", err)
 	}
 
-	instancesClient, err := compute.NewInstancesRESTClient(context.Background(), option.WithCredentials(creds));
+	machineTypeClient, err := compute.NewMachineTypesRESTClient(context.Background(), option.WithCredentials(creds))
 	if err != nil {
 		return nil, err
 	}
 
-	req := &computepb.ListInstancesRequest{
+	defer machineTypeClient.Close()
+
+	machines := machineTypeClient.List(context.Background(), &computepb.ListMachineTypesRequest{
 		Project: conf.Project,
-		Zone: conf.Region,
-	}
+		Zone:    zone,
+	})
 
-	it := instancesClient.List(context.Background(), req)
-
-
-	var stuff []string
+	var machineTypes []string
 	for {
-		instance, err := it.Next()
+		m, err := machines.Next()
 		if err == iterator.Done {
 			break
 		}
@@ -178,11 +176,8 @@ func (conf *GoogleConfiguration) ListInstances() ([]string, error){
 			return nil, err
 		}
 
-		value := fmt.Sprintf("%v : %v", instance.GetName(), instance.GetMachineType())
-		fmt.Println(value)
-		stuff = append(stuff, value)
+		machineTypes = append(machineTypes, m.GetName())
 	}
 
-	defer instancesClient.Close()
-	return stuff, nil
+	return machineTypes, nil
 }

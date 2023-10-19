@@ -98,19 +98,14 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool, cloudProvider stri
 	// find the secret in mgmt cluster's kubefirst namespace and read import payload and clustername
 	var kcfg *k8s.KubernetesClient
 
-	// homeDir, err := os.UserHomeDir()
-	// if err != nil {
-	// 	log.Fatalf("error getting home path: %s", err)
-	// }
-
-    if os.Getenv("IS_CLUSTER_ZERO") == "true" {
+	if os.Getenv("IS_CLUSTER_ZERO") == "true" {
 		log.Info("IS_CLUSTER_ZERO is set to true, skipping import cluster logic.")
 		return pkgtypes.Cluster{}, nil
 	}
 	if os.Getenv("CLOUD_PROVIDER") == "k3d" {
 		log.Info("CLOUD_PROVIDER is set to k3d, skipping import cluster logic.")
 		return pkgtypes.Cluster{}, nil
-	} 
+	}
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {

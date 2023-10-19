@@ -8,6 +8,7 @@ package google
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -30,11 +31,12 @@ func readVaultTokenFromSecret(clientset *kubernetes.Clientset) string {
 }
 
 func GetGoogleTerraformEnvs(envs map[string]string, cl *pkgtypes.Cluster) map[string]string {
-	envs["GOOGLE_CLOUD_KEYFILE_JSON"] = cl.GoogleAuth.KeyFile
-	envs["GOOGLE_CREDENTIALS "] = cl.GoogleAuth.KeyFile
 	envs["TF_VAR_project"] = cl.GoogleAuth.ProjectId
-	envs["GOOGLE_APPLICATION_CREDENTIALS"] = "" //allows for local debugging
-	//envs["TF_LOG"] = "debug"
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("error getting home path: %s", err)
+	}
+	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir)
 
 	return envs
 }
@@ -44,9 +46,11 @@ func GetGithubTerraformEnvs(envs map[string]string, cl *pkgtypes.Cluster) map[st
 	envs["GITHUB_OWNER"] = cl.GitAuth.Owner
 	envs["TF_VAR_atlantis_repo_webhook_secret"] = cl.AtlantisWebhookSecret
 	envs["TF_VAR_kbot_ssh_public_key"] = cl.GitAuth.PublicKey
-	envs["GOOGLE_CREDENTIALS "] = cl.GoogleAuth.KeyFile
-	envs["GOOGLE_APPLICATION_CREDENTIALS"] = "" //allows for local debugging
-
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("error getting home path: %s", err)
+	}
+	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir)
 
 	return envs
 }
@@ -59,8 +63,11 @@ func GetGitlabTerraformEnvs(envs map[string]string, gid int, cl *pkgtypes.Cluste
 	envs["TF_VAR_kbot_ssh_public_key"] = cl.GitAuth.PublicKey
 	envs["TF_VAR_owner_group_id"] = strconv.Itoa(gid)
 	envs["TF_VAR_gitlab_owner"] = cl.GitAuth.Owner
-	envs["GOOGLE_CREDENTIALS "] = cl.GoogleAuth.KeyFile
-	envs["GOOGLE_APPLICATION_CREDENTIALS"] = "" //allows for local debugging
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("error getting home path: %s", err)
+	}
+	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir)
 
 	return envs
 }
@@ -70,8 +77,11 @@ func GetUsersTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster
 	envs["VAULT_ADDR"] = providerConfigs.VaultPortForwardURL
 	envs[fmt.Sprintf("%s_TOKEN", strings.ToUpper(cl.GitProvider))] = cl.GitAuth.Token
 	envs[fmt.Sprintf("%s_OWNER", strings.ToUpper(cl.GitProvider))] = cl.GitAuth.Owner
-	envs["GOOGLE_CREDENTIALS "] = cl.GoogleAuth.KeyFile
-	envs["GOOGLE_APPLICATION_CREDENTIALS"] = "" //allows for local debugging
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("error getting home path: %s", err)
+	}
+	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir)
 
 	return envs
 }
@@ -92,8 +102,11 @@ func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster
 	envs["TF_VAR_kbot_ssh_public_key"] = cl.GitAuth.PublicKey
 	envs["TF_VAR_cloudflare_origin_ca_api_key"] = cl.CloudflareAuth.OriginCaIssuerKey
 	envs["TF_VAR_cloudflare_api_key"] = cl.CloudflareAuth.Token
-	envs["GOOGLE_CREDENTIALS "] = cl.GoogleAuth.KeyFile
-	envs["GOOGLE_APPLICATION_CREDENTIALS"] = "" //allows for local debugging
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("error getting home path: %s", err)
+	}
+	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir)
 
 	switch cl.GitProvider {
 	case "gitlab":

@@ -48,7 +48,7 @@ func BootstrapCivoMgmtCluster(clientset *kubernetes.Clientset, cl *pkgtypes.Clus
 		externalDnsToken = cl.DigitaloceanAuth.Token
 	case "aws":
 		externalDnsToken = "implement with cluster management"
-	case "googlecloud":
+	case "google":
 		externalDnsToken = "implement with cluster management"
 	case "cloudflare":
 		externalDnsToken = cl.CloudflareAuth.APIToken

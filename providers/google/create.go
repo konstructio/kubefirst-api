@@ -7,14 +7,15 @@ See the LICENSE file for more details.
 package google
 
 import (
+	"fmt"
 	"os"
-	"strings"
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
+	"github.com/kubefirst/kubefirst-api/pkg/google"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/segment"
@@ -35,6 +36,17 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 	}
 
 	// TODO Validate Google region
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("error getting home path: %s", err)
+	}
+
+	err = google.WriteGoogleApplicationCredentialsFile(definition.GoogleAuth.KeyFile, homeDir)
+	if err != nil {
+		log.Fatalf("error writing google application credentials file: %s", err)
+	}
+
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir))
 
 	err = ctrl.DownloadTools(ctrl.ProviderConfig.ToolsDir)
 	if err != nil {
@@ -185,6 +197,12 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
+	err = ctrl.WriteVaultSecrets()
+	if err != nil {
+		ctrl.HandleError(err.Error())
+		return err
+	}
+
 	err = ctrl.RunUsersTerraform()
 	if err != nil {
 		ctrl.HandleError(err.Error())
@@ -195,8 +213,8 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 	log.Info("deploying kubefirst console and verifying cluster installation is complete")
 	consoleDeployment, err := k8s.ReturnDeploymentObject(
 		kcfg.Clientset,
-		"app.kubernetes.io/instance",
-		"kubefirst",
+		"app.kubernetes.io/name",
+		"console",
 		"kubefirst",
 		1200,
 	)
@@ -217,18 +235,6 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 	defer func() {
 		close(cluster1KubefirstApiStopChannel)
 	}()
-	if strings.ToLower(os.Getenv("K1_LOCAL_DEBUG")) != "" { //allow using local kubefirst api running on port 8082
-		k8s.OpenPortForwardPodWrapper(
-			kcfg.Clientset,
-			kcfg.RestConfig,
-			"kubefirst-kubefirst-api",
-			"kubefirst",
-			8081,
-			8082,
-			cluster1KubefirstApiStopChannel,
-		)
-		log.Info("Port forward opened to mgmt cluster kubefirst api")
-	}
 
 	//* export and import cluster
 	err = ctrl.ExportClusterRecord()

@@ -16,11 +16,11 @@ import (
 
 
 func ListInstanceSizesForRegion(c *gin.Context) {
-	dnsProvider, param := c.Params.Get("dns_provider")
+	dnsProvider, param := c.Params.Get("cloud_provider")
 
 	if !param {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: ":dns_provider not provided",
+			Message: ":cloud_provider not provided",
 		})
 		return
 	}
@@ -34,6 +34,8 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 		return
 	}
 
+
+	var instanceSizesResponse types.InstanceSizesResponse
 	
 	switch dnsProvider {
 		case "civo":
@@ -43,8 +45,6 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 				})
 				return
 			}
-		
-			var instanceSizesResponse types.CivoInstanceSizesResponse
 		
 			civoConfig := civo.CivoConfiguration{
 				Client:  civo.NewCivo(instanceSizesRequest.CivoAuth.Token, instanceSizesRequest.CloudRegion),
@@ -73,8 +73,6 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 				return
 			}
 
-			var instanceSizesResponse types.AwsInstanceSizesResponse
-
 			awsConf := &awsinternal.AWSConfiguration{
 				Config: awsinternal.NewAwsV3(
 					instanceSizesRequest.CloudRegion,
@@ -97,7 +95,7 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 				return
 			}
 
-			instanceSizesResponse.InstanceSizes = instanceSizes.InstanceTypeOfferings
+			instanceSizesResponse.InstanceSizes = instanceSizes
 			c.JSON(http.StatusOK, instanceSizesResponse)
 			return 
 
@@ -108,8 +106,6 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 				})
 				return
 			}
-
-			var instanceSizesResponse types.DigitalOceanInstanceSizesResponse
 
 			digitaloceanConf := digitalocean.DigitaloceanConfiguration{
 				Client:  digitalocean.NewDigitalocean(instanceSizesRequest.DigitaloceanAuth.Token),
@@ -124,7 +120,6 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 				return
 			}
 
-
 			instanceSizesResponse.InstanceSizes = instances
 			c.JSON(http.StatusOK, instanceSizesResponse)
 			return 
@@ -136,8 +131,6 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 				})
 				return
 			}
-
-			var instanceSizesResponse types.VultrInstanceSizesResponse
 
 			vultrConf := vultr.VultrConfiguration{
 				Client:  vultr.NewVultr(instanceSizesRequest.VultrAuth.Token),
@@ -157,6 +150,14 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 			return 
 		
 		case "google":
+
+			if instanceSizesRequest.CloudZone == "" {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: "missing cloud_zone arg, please check and try again",
+				})
+				return
+			}
+
 			if instanceSizesRequest.GoogleAuth.ProjectId == "" ||
 				instanceSizesRequest.GoogleAuth.KeyFile == "" {
 				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -172,9 +173,7 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 				KeyFile: instanceSizesRequest.GoogleAuth.KeyFile,
 			}
 
-			instances, err := googleConf.ListInstances()
-
-			fmt.Println("the instances =>", instances)
+			instances, err := googleConf.ListInstances(instanceSizesRequest.CloudZone)
 
 			if err != nil {
 				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -183,9 +182,7 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 				return
 			}
 
-			c.JSON(http.StatusOK, instances);
-			return 
-
+			instanceSizesResponse.InstanceSizes = instances
 
 		default:
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -194,5 +191,6 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 			return
 	}
 
+	c.JSON(http.StatusOK, instanceSizesResponse)
 }
 
