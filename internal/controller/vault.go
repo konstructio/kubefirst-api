@@ -9,9 +9,11 @@ package controller
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	vaultapi "github.com/hashicorp/vault/api"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
@@ -316,7 +318,7 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 		externalDnsToken = cl.DigitaloceanAuth.Token
 	case "aws":
 		externalDnsToken = "implement with cluster management"
-	case "googlecloud":
+	case "google":
 		externalDnsToken = "implement with cluster management"
 	case "cloudflare":
 		externalDnsToken = cl.CloudflareAuth.APIToken
@@ -347,7 +349,7 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 		vaultRootToken = vaultUnsealSecretData["root-token"]
 	}
 	vaultClient.SetToken(vaultRootToken)
-	//
+
 	_, err = vaultClient.KVv2("secret").Put(context.Background(), "external-dns", map[string]interface{}{
 		"token": externalDnsToken,
 	})
@@ -355,6 +357,16 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 	_, err = vaultClient.KVv2("secret").Put(context.Background(), "cloudflare", map[string]interface{}{
 		"origin-ca-api-key": cl.CloudflareAuth.OriginCaIssuerKey,
 	})
+
+	if cl.CloudProvider == "google" {
+		log.Info("writing google specific secrets to vault secret store")
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			log.Fatalf("error getting home path: %s", err)
+		}
+		writeGoogleSecrets(homeDir, vaultClient)
+		log.Info("successfully wrote google specific secrets to vault")
+	}
 
 	if err != nil {
 		log.Errorf("error writing secret to vault: %s", err)
@@ -408,5 +420,29 @@ func (clctrl *ClusterController) WaitForVault() error {
 		return err
 	}
 
+	return nil
+}
+
+func writeGoogleSecrets(homeDir string, vaultClient *vaultapi.Client) error {
+
+	// vault path - gcp/application-default-credentials
+	adcJSON, err := os.ReadFile(fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir))
+	if err != nil {
+		log.Error("error: reading google json credentials file")
+		return err
+	}
+
+	var data map[string]interface{}
+	err = json.Unmarshal([]byte(adcJSON), &data)
+	if err != nil {
+		return err
+	}
+
+	data["private_k0ey"] = strings.Replace(data["private_key"].(string), "\n", "\\n", -1)
+
+	_, err = vaultClient.KVv2("secret").Put(context.Background(), "gcp/application-default-credentials", data)
+	if err != nil {
+		return err
+	}
 	return nil
 }

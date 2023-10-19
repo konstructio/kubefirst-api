@@ -36,7 +36,7 @@ func GetGoogleTerraformEnvs(envs map[string]string, cl *pkgtypes.Cluster) map[st
 	if err != nil {
 		log.Fatalf("error getting home path: %s", err)
 	}
-	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application_default_credentials.json", homeDir)
+	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir)
 
 	return envs
 }
@@ -50,7 +50,7 @@ func GetGithubTerraformEnvs(envs map[string]string, cl *pkgtypes.Cluster) map[st
 	if err != nil {
 		log.Fatalf("error getting home path: %s", err)
 	}
-	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application_default_credentials.json", homeDir)
+	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir)
 
 	return envs
 }
@@ -67,7 +67,7 @@ func GetGitlabTerraformEnvs(envs map[string]string, gid int, cl *pkgtypes.Cluste
 	if err != nil {
 		log.Fatalf("error getting home path: %s", err)
 	}
-	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application_default_credentials.json", homeDir)
+	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir)
 
 	return envs
 }
@@ -81,7 +81,7 @@ func GetUsersTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster
 	if err != nil {
 		log.Fatalf("error getting home path: %s", err)
 	}
-	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application_default_credentials.json", homeDir)
+	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir)
 
 	return envs
 }
@@ -106,7 +106,7 @@ func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster
 	if err != nil {
 		log.Fatalf("error getting home path: %s", err)
 	}
-	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application_default_credentials.json", homeDir)
+	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir)
 
 	switch cl.GitProvider {
 	case "gitlab":

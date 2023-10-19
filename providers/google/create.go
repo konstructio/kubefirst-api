@@ -46,7 +46,7 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 		log.Fatalf("error writing google application credentials file: %s", err)
 	}
 
-	os.Setenv("GOOGLE_APPLICATIONS_CREDENTIALS", fmt.Sprintf("%s/.k1/application_default_credentials.json", homeDir))
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir))
 
 	err = ctrl.DownloadTools(ctrl.ProviderConfig.ToolsDir)
 	if err != nil {

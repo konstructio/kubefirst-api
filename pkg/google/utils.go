@@ -12,10 +12,10 @@ import (
 	"os"
 )
 
-// GoogleConfiguration stores session data to organize all google functions into a single struct
+// WriteGoogleApplicationCredentialsFile writes credentials file for use throughout installation
 func WriteGoogleApplicationCredentialsFile(googleApplicationCredentials, homeDir string) error {
 
-	file, err := os.Create(fmt.Sprintf("%s/.k1/application_default_credentials.json", homeDir))
+	file, err := os.Create(fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir))
 	if err != nil {
 		return err
 	}
