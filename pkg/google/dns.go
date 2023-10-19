@@ -130,7 +130,7 @@ func (conf *GoogleConfiguration) GetDNSDomains() ([]string, error) {
 	}
 
 	dnsService, err := googleDNS.NewService(conf.Context, option.WithCredentials(creds))
-	
+
 	if err != nil {
 		return zoneNames, err
 	}
@@ -142,13 +142,13 @@ func (conf *GoogleConfiguration) GetDNSDomains() ([]string, error) {
 	}
 
 	for _, zone := range zones.ManagedZones {
-		zoneNames = append(zoneNames, zone.Name)
+		zoneNames = append(zoneNames, strings.TrimRight(zone.DnsName, "."))
 	}
-	
+
 	return zoneNames, nil
 }
 
-func (conf *GoogleConfiguration) ListInstances(zone string) ([]string, error){
+func (conf *GoogleConfiguration) ListInstances(zone string) ([]string, error) {
 	creds, err := google.CredentialsFromJSON(conf.Context, []byte(conf.KeyFile), secretmanager.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, fmt.Errorf("could not create google storage client credentials: %s", err)
@@ -158,12 +158,12 @@ func (conf *GoogleConfiguration) ListInstances(zone string) ([]string, error){
 	if err != nil {
 		return nil, err
 	}
-	
+
 	defer machineTypeClient.Close()
 
 	machines := machineTypeClient.List(context.Background(), &computepb.ListMachineTypesRequest{
 		Project: conf.Project,
-		Zone: zone,
+		Zone:    zone,
 	})
 
 	var machineTypes []string
