@@ -238,6 +238,10 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			registryPath = fmt.Sprintf("registry/clusters/%s", clctrl.ClusterName)
 		} else if clctrl.CloudProvider == "digitalocean" && clctrl.GitProvider == "gitlab" {
 			registryPath = fmt.Sprintf("registry/clusters/%s", clctrl.ClusterName)
+		} else if clctrl.CloudProvider == "vultr" && clctrl.GitProvider == "github" {
+			registryPath = fmt.Sprintf("registry/clusters/%s", clctrl.ClusterName)
+		} else if clctrl.CloudProvider == "vultr" && clctrl.GitProvider == "gitlab" {
+			registryPath = fmt.Sprintf("registry/clusters/%s", clctrl.ClusterName)
 		} else {
 			registryPath = fmt.Sprintf("registry/%s", clctrl.ClusterName)
 		}

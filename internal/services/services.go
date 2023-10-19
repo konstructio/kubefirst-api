@@ -83,6 +83,10 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
 	} else if cl.CloudProvider == "digitalocean" && cl.GitProvider == "gitlab" {
 		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
+	} else if cl.CloudProvider == "vultr" && cl.GitProvider == "github" {
+		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
+	} else if cl.CloudProvider == "vultr" && cl.GitProvider == "gitlab" {
+		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
 	} else {
 		registryPath = fmt.Sprintf("registry/%s", cl.ClusterName)
 	}
@@ -281,6 +285,10 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string) error {
 	} else if cl.CloudProvider == "google" && cl.GitProvider == "github" {
 		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
 	} else if cl.CloudProvider == "google" && cl.GitProvider == "gitlab" {
+		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
+	} else if cl.CloudProvider == "vultr" && cl.GitProvider == "github" {
+		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
+	} else if cl.CloudProvider == "vultr" && cl.GitProvider == "gitlab" {
 		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
 	} else {
 		registryPath = fmt.Sprintf("registry/%s", cl.ClusterName)
