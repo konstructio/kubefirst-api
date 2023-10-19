@@ -16,9 +16,20 @@ import (
 	"os"
 	"time"
 
+	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/pkg/types"
 	log "github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+func NewEnvironment(envDef types.Environment) (types.Environment, error) {
+	// Create new environment
+	envDef.CreationTimestamp = fmt.Sprintf("%v", primitive.NewDateTimeFromTime(time.Now().UTC()))
+
+	newEnv, err := db.Client.InsertEnvironment(envDef)
+
+	return newEnv, err
+}
 
 func CreateDefaultEnvironments( mgmtCluster types.Cluster) error {
 
@@ -61,7 +72,20 @@ func CreateDefaultEnvironments( mgmtCluster types.Cluster) error {
 		vcluster.Environment.Name = clusterName
 		vcluster.DomainName = fmt.Sprintf("%s.%s", clusterName, mgmtCluster.DomainName)
 		vcluster.Environment.Description = fmt.Sprintf("Default %s environment", clusterName)
+		switch clusterName {
+		case "development":
+			vcluster.Environment.Color = "green"
+		case "staging":
+			vcluster.Environment.Color = "yellow"
+		case "production":
+			vcluster.Environment.Color = "pink"
+		}
 
+		var err error
+		vcluster.Environment, err = NewEnvironment(vcluster.Environment)
+		if err != nil {
+			log.Errorf("error creating default environment in db for env %s", err)
+		}
 		defaultClusters = append(defaultClusters, vcluster)
 	}
 

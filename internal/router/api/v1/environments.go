@@ -2,15 +2,14 @@ package api
 
 import (
 	"fmt"
-	"time"
 
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/db"
+	environments "github.com/kubefirst/kubefirst-api/internal/environments"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GetEnvironments(c *gin.Context) {
@@ -26,6 +25,8 @@ func GetEnvironments(c *gin.Context) {
 	c.JSON(http.StatusOK, environments)
 }
 
+
+
 func CreateEnvironment(c *gin.Context) {
 
 	// Bind to variable as application/json, handle error
@@ -38,9 +39,7 @@ func CreateEnvironment(c *gin.Context) {
 		return
 	}
 
-	environmentDefinition.CreationTimestamp = fmt.Sprintf("%v", primitive.NewDateTimeFromTime(time.Now().UTC()))
-
-	newEnv, err := db.Client.InsertEnvironment(environmentDefinition)
+	newEnv, err := environments.NewEnvironment(environmentDefinition)
 
 	if err != nil {
 		c.JSON(http.StatusConflict, types.JSONFailureResponse{
