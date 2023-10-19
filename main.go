@@ -51,7 +51,7 @@ func main() {
 	if os.Getenv("MONGODB_HOST_TYPE") == "" {
 		log.Fatalf("the MONGODB_HOST_TYPE environment variable must be set to either: atlas, local")
 	}
-	for _, v := range []string{"MONGODB_HOST", "MONGODB_USERNAME", "MONGODB_PASSWORD"} {
+	for _, v := range []string{"MONGODB_HOST", "MONGODB_USERNAME", "MONGODB_PASSWORD", "CLOUD_PROVIDER"} {
 		if os.Getenv(v) == "" {
 			log.Fatalf("the %s environment variable must be set", v)
 		}
@@ -77,9 +77,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Infof("checking for cluster import secret for %s management cluster", os.Getenv("CLOUD_PROVIDER"))
+	log.Infof("checking for cluster import secret for management cluster")
 	// Import if needed
-	importedCluster, err := db.Client.ImportClusterIfEmpty(false)
+	importedCluster, err := db.Client.ImportClusterIfEmpty(false, os.Getenv("CLOUD_PROVIDER"))
 	if err != nil {
 		log.Fatal(err)
 	}

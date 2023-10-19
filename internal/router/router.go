@@ -82,7 +82,8 @@ func SetupRouter() *gin.Engine {
 		// Environments
 		v1.GET("/environment", middleware.ValidateAPIKey(), router.GetEnvironments)
 		v1.POST("/environment", middleware.ValidateAPIKey(), router.CreateEnvironment)
-		v1.DELETE("/environment/:environment_name", middleware.ValidateAPIKey(), router.DeleteEnvironment)
+		v1.DELETE("/environment/:environment_id", middleware.ValidateAPIKey(), router.DeleteEnvironment)
+		v1.PUT("/environment/:environment_id", middleware.ValidateAPIKey(), router.UpdateEnvironment)
 
 		// Utilities
 		v1.GET("/health", router.GetHealth)

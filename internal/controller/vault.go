@@ -438,7 +438,7 @@ func writeGoogleSecrets(homeDir string, vaultClient *vaultapi.Client) error {
 		return err
 	}
 
-	data["private_k0ey"] = strings.Replace(data["private_key"].(string), "\n", "\\n", -1)
+	data["private_key"] = strings.Replace(data["private_key"].(string), "\n", "\\n", -1)
 
 	_, err = vaultClient.KVv2("secret").Put(context.Background(), "gcp/application-default-credentials", data)
 	if err != nil {
