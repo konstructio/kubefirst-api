@@ -35,7 +35,7 @@ func GetVultrTerraformEnvs(envs map[string]string, cl *pkgtypes.Cluster) map[str
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
 	envs["TF_VAR_aws_access_key_id"] = cl.StateStoreCredentials.AccessKeyID
 	envs["TF_VAR_aws_secret_access_key"] = cl.StateStoreCredentials.SecretAccessKey
-	envs["AWS_SESSION_TOKEN"] = "" // allows for debugging
+	envs["AWS_SESSION_TOKEN"] = ""        // allows for debugging
 	envs["TF_VAR_aws_session_token"] = "" // allows for debugging
 	//envs["TF_LOG"] = "debug"
 
@@ -52,7 +52,7 @@ func GetGithubTerraformEnvs(envs map[string]string, cl *pkgtypes.Cluster) map[st
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
 	envs["TF_VAR_aws_access_key_id"] = cl.StateStoreCredentials.AccessKeyID
 	envs["TF_VAR_aws_secret_access_key"] = cl.StateStoreCredentials.SecretAccessKey
-	envs["AWS_SESSION_TOKEN"] = "" // allows for debugging
+	envs["AWS_SESSION_TOKEN"] = ""        // allows for debugging
 	envs["TF_VAR_aws_session_token"] = "" // allows for debugging
 
 	return envs
@@ -71,7 +71,7 @@ func GetGitlabTerraformEnvs(envs map[string]string, gid int, cl *pkgtypes.Cluste
 	envs["TF_VAR_aws_secret_access_key"] = cl.StateStoreCredentials.SecretAccessKey
 	envs["TF_VAR_owner_group_id"] = strconv.Itoa(gid)
 	envs["TF_VAR_gitlab_owner"] = cl.GitAuth.Owner
-	envs["AWS_SESSION_TOKEN"] = "" // allows for debugging
+	envs["AWS_SESSION_TOKEN"] = ""        // allows for debugging
 	envs["TF_VAR_aws_session_token"] = "" // allows for debugging
 
 	return envs
@@ -87,7 +87,7 @@ func GetUsersTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
 	envs["TF_VAR_aws_access_key_id"] = cl.StateStoreCredentials.AccessKeyID
 	envs["TF_VAR_aws_secret_access_key"] = cl.StateStoreCredentials.SecretAccessKey
-	envs["AWS_SESSION_TOKEN"] = "" // allows for debugging
+	envs["AWS_SESSION_TOKEN"] = ""        // allows for debugging
 	envs["TF_VAR_aws_session_token"] = "" // allows for debugging
 
 	return envs
@@ -102,7 +102,7 @@ func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster
 	envs[fmt.Sprintf("TF_VAR_%s_token", cl.GitProvider)] = cl.GitAuth.Token
 	envs["VAULT_ADDR"] = providerConfigs.VaultPortForwardURL
 	envs["VAULT_TOKEN"] = readVaultTokenFromSecret(clientset)
-	envs["TF_VAR_vultr_token"] = cl.VultrAuth.Token
+	envs["TF_VAR_vultr_api_key"] = cl.VultrAuth.Token
 	envs["TF_VAR_atlantis_repo_webhook_secret"] = cl.AtlantisWebhookSecret
 	envs["TF_VAR_atlantis_repo_webhook_url"] = cl.AtlantisWebhookURL
 	envs["TF_VAR_kbot_ssh_private_key"] = cl.GitAuth.PrivateKey
@@ -112,7 +112,7 @@ func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
 	envs["TF_VAR_aws_access_key_id"] = cl.StateStoreCredentials.AccessKeyID
 	envs["TF_VAR_aws_secret_access_key"] = cl.StateStoreCredentials.SecretAccessKey
-	envs["AWS_SESSION_TOKEN"] = "" // allows for debugging
+	envs["AWS_SESSION_TOKEN"] = ""        // allows for debugging
 	envs["TF_VAR_aws_session_token"] = "" // allows for debugging
 
 	switch cl.GitProvider {
