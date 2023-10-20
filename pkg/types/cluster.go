@@ -62,7 +62,7 @@ type Cluster struct {
 	ClusterID     string `bson:"cluster_id" json:"cluster_id"`
 	ClusterType   string `bson:"cluster_type" json:"cluster_type"`
 	DomainName    string `bson:"domain_name" json:"domain_name"`
-	SubdomainName string `json:"subdomain_name,omitempty"`
+	SubdomainName string `bson:"subdomain_name" json:"subdomain_name,omitempty"`
 	DnsProvider   string `bson:"dns_provider" json:"dns_provider"`
 
 	// Auth
