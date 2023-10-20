@@ -5,7 +5,7 @@ env:
 on:
   push:
     branches:
-      - feat-one_route_to_rule_them_all
+      - main
 jobs:
   publish:
     runs-on: self-hosted
