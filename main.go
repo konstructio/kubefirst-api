@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/kubefirst/kubefirst-api/internal/environments"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 
 	"github.com/joho/godotenv"
@@ -84,8 +85,20 @@ func main() {
 		log.Fatal(err)
 	}
 
+
 	if importedCluster.ClusterName != "" {
+		log.Infof("adding default services for cluster %s", importedCluster.ClusterName)
 		services.AddDefaultServices(&importedCluster)
+			
+		// Call default environment create code if we imported  a cluster
+		// execute default environment creation concurrently 
+		go func() {
+			log.Infof("adding default environments for cluster %s", importedCluster.ClusterName)
+			err := environments.CreateDefaultEnvironments(importedCluster)
+			if err != nil {
+				log.Infof("Error creating default environments %s", err.Error())
+			}
+		}()
 	}
 	defer db.Client.Client.Disconnect(db.Client.Context)
 
