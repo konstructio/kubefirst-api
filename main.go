@@ -110,8 +110,13 @@ func main() {
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	docs.SwaggerInfo.Schemes = []string{"http"}
 
+	cl, err := db.Client.GetCluster(os.Getenv("CLUSTER_NAME"))
+	if err != nil {
+		log.Warn(err)
+	}
+
 	// Telemetry handler
-	segmentClient, err := telemetryShim.SetupInitialTelemetry(os.Getenv("CLUSTER_ID"), os.Getenv("CLUSTER_TYPE"), os.Getenv("INSTALL_METHOD"))
+	segmentClient, err := telemetryShim.SetupTelemetry(cl)
 	if err != nil {
 		log.Warn(err)
 	}
