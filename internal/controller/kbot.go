@@ -9,8 +9,8 @@ package controller
 import (
 	"os"
 
-	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/kubefirst-api/pkg/segment"
+	"github.com/kubefirst/kubefirst-api/pkg/telemetryShim"
 	internalssh "github.com/kubefirst/runtime/pkg/ssh"
 	log "github.com/sirupsen/logrus"
 )

@@ -17,8 +17,8 @@ import (
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
-	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/kubefirst-api/pkg/segment"
+	"github.com/kubefirst/kubefirst-api/pkg/telemetryShim"
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	log "github.com/sirupsen/logrus"
 )
