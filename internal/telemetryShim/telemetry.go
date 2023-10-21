@@ -60,7 +60,6 @@ func SetupTelemetry(cl pkgtypes.Cluster) (*segment.SegmentClient, error) {
 		KubefirstTeamInfo: os.Getenv("KUBEFIRST_TEAM_INFO"),
 		MachineID:         machineID,
 	}
-	segmentClient.SetupClient()
 
 	return segmentClient, nil
 }

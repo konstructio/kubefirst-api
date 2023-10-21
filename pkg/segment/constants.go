@@ -97,4 +97,5 @@ type SegmentClient struct {
 	KubefirstClient   string
 	KubefirstTeam     string
 	KubefirstTeamInfo string
+	MachineID         string
 }
