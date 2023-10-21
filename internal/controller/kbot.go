@@ -10,7 +10,7 @@ import (
 	"os"
 
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
-	"github.com/kubefirst/runtime/pkg/segment"
+	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	internalssh "github.com/kubefirst/runtime/pkg/ssh"
 	log "github.com/sirupsen/logrus"
 )
@@ -42,7 +42,7 @@ func (clctrl *ClusterController) InitializeBot() error {
 		clctrl.GitAuth.PrivateKey, clctrl.GitAuth.PublicKey, err = internalssh.CreateSshKeyPair()
 		if err != nil {
 			log.Errorf("error generating ssh keys: %s", err)
-			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricKbotSetupFailed, err.Error())
+			telemetryShim.Transmit(segmentClient, segment.MetricKbotSetupFailed, err.Error())
 			return err
 		}
 

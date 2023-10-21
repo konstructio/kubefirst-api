@@ -23,8 +23,8 @@ import (
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
+	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/k8s"
-	"github.com/kubefirst/runtime/pkg/segment"
 	vault "github.com/kubefirst/runtime/pkg/vault"
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
@@ -104,7 +104,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 			}
 		}
 
-		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricVaultInitializationStarted, "")
+		telemetryShim.Transmit(segmentClient, segment.MetricVaultInitializationStarted, "")
 
 		switch clctrl.CloudProvider {
 		case "aws", "google":
@@ -158,12 +158,12 @@ func (clctrl *ClusterController) InitializeVault() error {
 			_, err = k8s.WaitForJobComplete(kcfg.Clientset, job, 240)
 			if err != nil {
 				msg := fmt.Sprintf("could not run vault unseal job: %s", err)
-				telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricVaultInitializationFailed, msg)
+				telemetryShim.Transmit(segmentClient, segment.MetricVaultInitializationFailed, msg)
 				log.Error(msg)
 			}
 		}
 
-		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricVaultInitializationCompleted, "")
+		telemetryShim.Transmit(segmentClient, segment.MetricVaultInitializationCompleted, "")
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "vault_initialized_check", true)
 		if err != nil {
@@ -213,7 +213,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 			}
 		}
 
-		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricVaultTerraformApplyStarted, "")
+		telemetryShim.Transmit(segmentClient, segment.MetricVaultTerraformApplyStarted, "")
 
 		tfEnvs := map[string]string{}
 
@@ -267,12 +267,12 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		err = terraformext.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Errorf("error applying vault terraform: %s", err)
-			telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricVaultTerraformApplyFailed, err.Error())
+			telemetryShim.Transmit(segmentClient, segment.MetricVaultTerraformApplyFailed, err.Error())
 			return err
 		}
 
 		log.Info("vault terraform executed successfully")
-		telemetryShim.Transmit(clctrl.UseTelemetry, segmentClient, segment.MetricVaultTerraformApplyCompleted, "")
+		telemetryShim.Transmit(segmentClient, segment.MetricVaultTerraformApplyCompleted, "")
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "vault_terraform_apply_check", true)
 		if err != nil {

@@ -72,7 +72,7 @@ func PostTelemetry(c *gin.Context) {
 	}
 	defer segmentClient.Client.Close()
 
-	telemetryShim.Transmit(useTelemetry, segmentClient, req.Event, "")
+	telemetryShim.Transmit(segmentClient, req.Event, "")
 
 	c.JSON(http.StatusOK, true)
 }
