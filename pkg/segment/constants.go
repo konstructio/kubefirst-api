@@ -6,6 +6,8 @@ See the LICENSE file for more details.
 */
 package segment
 
+import "github.com/segmentio/analytics-go"
+
 // SegmentIO constants
 // SegmentIOWriteKey The write key is the unique identifier for a source that tells Segment which source data comes
 // from, to which workspace the data belongs, and which destinations should receive the data.
@@ -82,3 +84,17 @@ const (
 	MetricClusterDeleteStarted   = "kubefirst.cluster_delete.started"
 	MetricClusterDeleteCompleted = "kubefirst.cluster_delete.completed"
 )
+
+type SegmentClient struct {
+	Client            analytics.Client
+	CliVersion        string
+	CloudProvider     string
+	ClusterID         string
+	ClusterType       string
+	DomainName        string
+	GitProvider       string
+	InstallMethod     string
+	KubefirstClient   string
+	KubefirstTeam     string
+	KubefirstTeamInfo string
+}

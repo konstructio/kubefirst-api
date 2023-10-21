@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/denisbrodbeck/machineid"
+	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg"
-	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/segmentio/analytics-go"
 	log "github.com/sirupsen/logrus"
 )
