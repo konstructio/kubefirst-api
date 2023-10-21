@@ -17,8 +17,8 @@ import (
 	"github.com/kubefirst/kubefirst-api/docs"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	api "github.com/kubefirst/kubefirst-api/internal/router"
-	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
+	"github.com/kubefirst/kubefirst-api/pkg/telemetryShim"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -85,13 +85,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-
 	if importedCluster.ClusterName != "" {
 		log.Infof("adding default services for cluster %s", importedCluster.ClusterName)
 		services.AddDefaultServices(&importedCluster)
-			
+
 		// Call default environment create code if we imported  a cluster
-		// execute default environment creation concurrently 
+		// execute default environment creation concurrently
 		go func() {
 			log.Infof("adding default environments for cluster %s", importedCluster.ClusterName)
 			err := environments.CreateDefaultEnvironments(importedCluster)
