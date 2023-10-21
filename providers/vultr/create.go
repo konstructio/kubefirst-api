@@ -14,9 +14,9 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
+	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/k8s"
-	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/ssl"
 	log "github.com/sirupsen/logrus"
 )
@@ -241,7 +241,7 @@ func CreateVultrCluster(definition *pkgtypes.ClusterDefinition) error {
 		}
 		defer segmentClient.Client.Close()
 
-		telemetryShim.Transmit(rec.UseTelemetry, segmentClient, segment.MetricClusterInstallCompleted, "")
+		telemetryShim.Transmit(segmentClient, segment.MetricClusterInstallCompleted, "")
 
 		// Create default service entries
 		cl, _ := db.Client.GetCluster(ctrl.ClusterName)

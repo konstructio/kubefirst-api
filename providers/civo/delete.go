@@ -22,12 +22,12 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/errors"
 	"github.com/kubefirst/kubefirst-api/internal/telemetryShim"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
-	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -49,7 +49,7 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster) error {
 	}
 	defer segmentClient.Client.Close()
 
-	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricClusterDeleteStarted, "")
+	telemetryShim.Transmit(segmentClient, segment.MetricClusterDeleteStarted, "")
 
 	// Instantiate civo config
 	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.APIToken, cl.CloudflareAuth.OriginCaIssuerKey)
@@ -257,7 +257,7 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster) error {
 		}
 	}
 
-	telemetryShim.Transmit(cl.UseTelemetry, segmentClient, segment.MetricClusterDeleteCompleted, "")
+	telemetryShim.Transmit(segmentClient, segment.MetricClusterDeleteCompleted, "")
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleted)
 	if err != nil {

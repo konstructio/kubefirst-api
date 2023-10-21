@@ -11,8 +11,8 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
-	"github.com/kubefirst/runtime/pkg/segment"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -25,9 +25,6 @@ func HeartbeatWorkloadClusters() error {
 	}
 
 	kubefirstTeam := os.Getenv("KUBEFIRST_TEAM")
-	if kubefirstTeam == "" {
-		kubefirstTeam = "undefined"
-	}
 
 	for _, cluster := range clusters {
 		if cluster.Status == constants.ClusterStatusProvisioned {
@@ -49,7 +46,7 @@ func HeartbeatWorkloadClusters() error {
 					}
 					defer segmentClient.Client.Close()
 
-					Transmit(true, segmentClient, segment.MetricKubefirstHeartbeat, "")
+					Transmit(segmentClient, segment.MetricKubefirstHeartbeat, "")
 				}
 			}
 		}

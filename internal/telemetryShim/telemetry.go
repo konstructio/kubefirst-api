@@ -10,17 +10,25 @@ import (
 	"os"
 	"time"
 
+	"github.com/denisbrodbeck/machineid"
+	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
-	"github.com/kubefirst/runtime/pkg/segment"
+	"github.com/kubefirst/runtime/pkg"
+	"github.com/segmentio/analytics-go"
 	log "github.com/sirupsen/logrus"
 )
 
 // Heartbeat
 func Heartbeat(segmentClient *segment.SegmentClient) {
-	TransmitClusterZero(true, segmentClient, segment.MetricKubefirstHeartbeat, "")
+	// sent one heartbeat for the mgmt cluster
+	Transmit(segmentClient, segment.MetricKubefirstHeartbeat, "")
+	// workload
 	HeartbeatWorkloadClusters()
-	for range time.Tick(time.Minute * 20) {
-		TransmitClusterZero(true, segmentClient, segment.MetricKubefirstHeartbeat, "")
+	//TODO! DIETZ - NO WAY
+	for range time.Tick(time.Minute * 2) {
+		// sent one heartbeat for the mgmt cluster
+		Transmit(segmentClient, segment.MetricKubefirstHeartbeat, "")
+		// workload
 		HeartbeatWorkloadClusters()
 	}
 }
@@ -32,59 +40,34 @@ func SetupTelemetry(cl pkgtypes.Cluster) (*segment.SegmentClient, error) {
 		kubefirstVersion = "development"
 	}
 
+	strippedDomainName, err := pkg.RemoveSubdomainV2(cl.DomainName)
+	if err != nil {
+		return &segment.SegmentClient{}, nil
+	}
+	machineID, _ := machineid.ID()
+
 	// Segment Client
 	segmentClient := &segment.SegmentClient{
+		Client:            analytics.New(segment.SegmentIOWriteKey),
 		CliVersion:        kubefirstVersion,
 		CloudProvider:     cl.CloudProvider,
 		ClusterID:         cl.ClusterID,
 		ClusterType:       cl.ClusterType,
-		DomainName:        cl.DomainName,
+		DomainName:        strippedDomainName,
 		GitProvider:       cl.GitProvider,
 		KubefirstClient:   "api",
 		KubefirstTeam:     cl.KubefirstTeam,
 		KubefirstTeamInfo: os.Getenv("KUBEFIRST_TEAM_INFO"),
+		MachineID:         machineID,
 	}
-	segmentClient.SetupClient()
-
-	return segmentClient, nil
-}
-
-func SetupInitialTelemetry(clusterID string, clusterType string, installMethod string) (*segment.SegmentClient, error) {
-	kubefirstVersion := os.Getenv("KUBEFIRST_VERSION")
-	if kubefirstVersion == "" {
-		kubefirstVersion = "development"
-	}
-
-	// Segment Client
-	segmentClient := &segment.SegmentClient{
-		CliVersion:        kubefirstVersion,
-		ClusterID:         clusterID,
-		ClusterType:       clusterType,
-		KubefirstClient:   "api",
-		KubefirstTeam:     os.Getenv("KUBEFIRST_TEAM"),
-		KubefirstTeamInfo: os.Getenv("KUBEFIRST_TEAM_INFO"),
-		InstallMethod:     installMethod,
-	}
-	segmentClient.SetupClient()
 
 	return segmentClient, nil
 }
 
 // Transmit sends a metric via Segment
-func Transmit(useTelemetry bool, segmentClient *segment.SegmentClient, metricName string, errorMessage string) {
-	if useTelemetry {
-		segmentMsg := segmentClient.SendCountMetric(metricName, errorMessage)
-		if segmentMsg != "" {
-			log.Info(segmentMsg)
-		}
-	}
-}
-
-func TransmitClusterZero(useTelemetry bool, segmentClient *segment.SegmentClient, metricName string, errorMessage string) {
-	if useTelemetry {
-		segmentMsg := segmentClient.SendCountClusterZeroMetric(metricName, errorMessage)
-		if segmentMsg != "" {
-			log.Info(segmentMsg)
-		}
+func Transmit(segmentClient *segment.SegmentClient, metricName string, errorMessage string) {
+	segmentMsg := segmentClient.SendCountMetric(metricName, errorMessage)
+	if segmentMsg != "" {
+		log.Info(segmentMsg)
 	}
 }

@@ -20,6 +20,7 @@ import (
 	google "github.com/kubefirst/kubefirst-api/pkg/google"
 	"github.com/kubefirst/kubefirst-api/pkg/handlers"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg"
 	runtime "github.com/kubefirst/runtime/pkg"
@@ -27,7 +28,6 @@ import (
 	"github.com/kubefirst/runtime/pkg/github"
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
-	"github.com/kubefirst/runtime/pkg/segment"
 	"github.com/kubefirst/runtime/pkg/services"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -150,7 +150,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	}
 	defer segmentClient.Client.Close()
 
-	telemetryShim.Transmit(rec.UseTelemetry, segmentClient, segment.MetricClusterInstallStarted, "")
+	telemetryShim.Transmit(segmentClient, segment.MetricClusterInstallStarted, "")
 
 	//Copy Cluster Definiion to Cluster Controller
 	clctrl.AlertsEmail = def.AdminEmail

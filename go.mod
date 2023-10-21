@@ -19,6 +19,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.8.0
 	github.com/civo/civogo v0.3.28
 	github.com/cloudflare/cloudflare-go v0.73.0
+	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.8.2
 	github.com/go-git/go-git/v5 v5.6.1
@@ -29,6 +30,7 @@ require (
 	github.com/minio/minio-go/v7 v7.0.49
 	github.com/otiai10/copy v1.7.0
 	github.com/rs/zerolog v1.29.0
+	github.com/segmentio/analytics-go v3.1.0+incompatible
 	github.com/sirupsen/logrus v1.9.0
 	github.com/swaggo/files v1.0.0
 	github.com/swaggo/gin-swagger v1.5.3
@@ -99,7 +101,6 @@ require (
 	github.com/cloudflare/circl v1.1.0 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/denisbrodbeck/machineid v1.0.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/digitalocean/godo v1.98.0 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
@@ -211,7 +212,6 @@ require (
 	github.com/rs/xid v1.4.0 // indirect
 	github.com/russross/blackfriday v1.5.2 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
-	github.com/segmentio/analytics-go v3.1.0+incompatible // indirect
 	github.com/segmentio/backo-go v1.0.1 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/skeema/knownhosts v1.1.0 // indirect
@@ -324,5 +324,3 @@ replace (
 	k8s.io/pod-security-admission => k8s.io/pod-security-admission v0.24.2
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.24.2
 )
-
-// replace github.com/kubefirst/runtime => /Users/dhawk/Kubefirst/runtime
