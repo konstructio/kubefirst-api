@@ -20,9 +20,8 @@ import (
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
-	"github.com/kubefirst/kubefirst-api/pkg/segment"
-	"github.com/kubefirst/kubefirst-api/pkg/telemetryShim"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/sirupsen/logrus"
 	"github.com/thanhpk/randstr"
@@ -46,7 +45,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 	}
 
 	// Telemetry handler
-	segmentClient, err := telemetryShim.SetupTelemetry(cl)
+	segmentClient, err := telemetry.SetupTelemetry(cl)
 	if err != nil {
 		return err
 	}
@@ -54,12 +53,12 @@ func (clctrl *ClusterController) CreateCluster() error {
 
 	if !cl.CloudTerraformApplyCheck || cl.CloudTerraformApplyFailedCheck {
 
-		telemetryShim.Transmit(segmentClient, segment.MetricCloudTerraformApplyStarted, "")
+		//telemetry.Transmit(segmentClient, segment.MetricCloudTerraformApplyStarted, "")
 
 		log.Info("creating aws cloud resources with terraform")
 		tfEntrypoint := clctrl.ProviderConfig.GitopsDir + fmt.Sprintf("/terraform/%s", clctrl.CloudProvider)
 		tfEnvs := map[string]string{}
-		telemetryShim.Transmit(segmentClient, segment.MetricCloudTerraformApplyStarted, "")
+		//telemetry.Transmit(segmentClient, segment.MetricCloudTerraformApplyStarted, "")
 
 		log.Infof("creating %s cluster", clctrl.CloudProvider)
 
@@ -95,17 +94,17 @@ func (clctrl *ClusterController) CreateCluster() error {
 			if err != nil {
 				return err
 			}
-			telemetryShim.Transmit(segmentClient, segment.MetricCloudTerraformApplyFailed, msg)
+			//telemetry.Transmit(segmentClient, segment.MetricCloudTerraformApplyFailed, msg)
 			return fmt.Errorf(msg)
 		}
 
 		log.Infof("created %s cloud resources", clctrl.CloudProvider)
 
-		telemetryShim.Transmit(segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
+		//telemetry.Transmit(segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
 
 		log.Infof("successfully created %s cluster", clctrl.CloudProvider)
 
-		telemetryShim.Transmit(segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
+		//telemetry.Transmit(segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", false)
 		if err != nil {

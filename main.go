@@ -12,13 +12,16 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/environments"
 	"github.com/kubefirst/kubefirst-api/internal/services"
+	"github.com/kubefirst/metrics-client/pkg/segment"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
+	"github.com/segmentio/analytics-go"
 
 	"github.com/joho/godotenv"
 	"github.com/kubefirst/kubefirst-api/docs"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	api "github.com/kubefirst/kubefirst-api/internal/router"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
-	"github.com/kubefirst/kubefirst-api/pkg/telemetryShim"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -115,18 +118,38 @@ func main() {
 	}
 
 	// Telemetry handler
-	segmentClient, err := telemetryShim.SetupTelemetry(cl)
+	segmentClient := analytics.New(segment.SegmentIOWriteKey)
+	
+	segClient := segment.SegmentClient{
+		TelemetryEvent: segment.TelemetryEvent{
+			CliVersion:        "",
+			CloudProvider:     "",
+			ClusterID:         "",
+			ClusterType:       "",
+			DomainName:        "",
+			GitProvider:       "",
+			InstallMethod:     "",
+			KubefirstClient:   "",
+			KubefirstTeam:     "",
+			KubefirstTeamInfo: "",
+			MachineID:         "",
+			ErrorMessage:      "",
+			UserId:            "",
+			MetricName:        "",
+		},
+		Client:         segmentClient,
+	}
 	if err != nil {
 		log.Warn(err)
 	}
-	defer segmentClient.Client.Close()
+	defer segmentClient.Close()
 
 	// Subroutine to automatically update gitops catalog
 	go utils.ScheduledGitopsCatalogUpdate()
 
 	// Subroutine to emit heartbeat
 	if useTelemetry {
-		go telemetryShim.Heartbeat(segmentClient)
+		go telemetry.Heartbeat(&segClient)
 	}
 
 	// API

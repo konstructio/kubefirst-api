@@ -13,15 +13,15 @@ import (
 	"os"
 	"time"
 
+	"github.com/denisbrodbeck/machineid"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 	google "github.com/kubefirst/kubefirst-api/pkg/google"
 	"github.com/kubefirst/kubefirst-api/pkg/handlers"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
-	"github.com/kubefirst/kubefirst-api/pkg/segment"
-	"github.com/kubefirst/kubefirst-api/pkg/telemetryShim"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/kubefirst/metrics-client/pkg/segment"
 	"github.com/kubefirst/runtime/pkg"
 	runtime "github.com/kubefirst/runtime/pkg"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
@@ -29,6 +29,7 @@ import (
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/services"
+	"github.com/segmentio/analytics-go"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -99,11 +100,12 @@ type ClusterController struct {
 	KubefirstStateStoreBucketName string
 	KubefirstArtifactsBucketName  string
 
-	// Telemetry
-	UseTelemetry bool
-
 	// Database Controller
 	MdbCl *db.MongoDBClient
+
+	// Telemetry
+	Telemetry    *segment.SegmentClient
+	UseTelemetry bool
 
 	// Provider clients
 	AwsClient    *awsinternal.AWSConfiguration
@@ -143,14 +145,48 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		clusterID = runtime.GenerateClusterID()
 	}
 
-	// Telemetry handler
-	segmentClient, err := telemetryShim.SetupTelemetry(rec)
-	if err != nil {
-		return err
+	if os.Getenv("USE_TELEMETRY") == "false" {
+		clctrl.UseTelemetry = false
+	} else {
+		clctrl.UseTelemetry = true
 	}
-	defer segmentClient.Client.Close()
 
-	telemetryShim.Transmit(segmentClient, segment.MetricClusterInstallStarted, "")
+	// Telemetry handler
+	segmentClient := analytics.New(segment.SegmentIOWriteKey)
+
+	machineID, _ := machineid.ID()
+
+	segClient := segment.SegmentClient{
+		TelemetryEvent: segment.TelemetryEvent{
+			CliVersion:        os.Getenv("KUBEFIRST_VERSION"),
+			CloudProvider:     clctrl.CloudProvider,
+			ClusterID:         clusterID,
+			ClusterType:       def.Type,
+			DomainName:        def.DomainName,
+			GitProvider:       def.GitProvider,
+			InstallMethod:     os.Getenv("INSTALL_METHOD"),
+			KubefirstClient:   "api",
+			KubefirstTeam:     os.Getenv("KUBEFIRST_TEAM"),
+			KubefirstTeamInfo: os.Getenv("KUBEFIRST_TEAM_INFO"),
+			MachineID:         machineID,
+			ErrorMessage:      "",
+			UserId:            machineID,
+			MetricName:        segment.MetricClusterInstallStarted,
+		},
+		Client: segmentClient,
+	}
+	if err != nil {
+		log.Warn(err)
+	}
+	defer segClient.Client.Close()
+
+	if clctrl.UseTelemetry {
+		segClient.TelemetryEvent.MetricName = segment.MetricClusterInstallStarted
+		segClient.TelemetryEvent.ErrorMessage = err.Error()
+		segment.SendCountMetric(&segClient)
+	}
+	clctrl.Telemetry = &segClient
+
 
 	//Copy Cluster Definiion to Cluster Controller
 	clctrl.AlertsEmail = def.AdminEmail

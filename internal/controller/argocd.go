@@ -13,8 +13,7 @@ import (
 
 	argocdapi "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
-	"github.com/kubefirst/kubefirst-api/pkg/segment"
-	"github.com/kubefirst/kubefirst-api/pkg/telemetryShim"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
 	"github.com/kubefirst/runtime/pkg/k8s"
@@ -38,13 +37,6 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 		return err
 	}
 
-	// Telemetry handler
-	segmentClient, err := telemetryShim.SetupTelemetry(cl)
-	if err != nil {
-		return err
-	}
-	defer segmentClient.Client.Close()
-
 	if !cl.ArgoCDInstallCheck {
 		var kcfg *k8s.KubernetesClient
 
@@ -66,13 +58,13 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 
 		err = argocd.ApplyArgoCDKustomize(kcfg.Clientset, argoCDInstallPath)
 		if err != nil {
-			telemetryShim.Transmit(segmentClient, segment.MetricArgoCDInstallFailed, err.Error())
+			//telemetry.Transmit(segmentClient, segment.MetricArgoCDInstallFailed, err.Error())
 			return err
 		}
-		telemetryShim.Transmit(segmentClient, segment.MetricArgoCDInstallCompleted, "")
+		//telemetry.Transmit(segmentClient, segment.MetricArgoCDInstallCompleted, "")
 
-		telemetryShim.Transmit(segmentClient, segment.MetricArgoCDInstallStarted, "")
-		telemetryShim.Transmit(segmentClient, segment.MetricArgoCDInstallCompleted, "")
+		//telemetry.Transmit(segmentClient, segment.MetricArgoCDInstallStarted, "")
+		//telemetry.Transmit(segmentClient, segment.MetricArgoCDInstallCompleted, "")
 
 		// Wait for ArgoCD to be ready
 		_, err = k8s.VerifyArgoCDReadiness(kcfg.Clientset, true, 300)
@@ -186,7 +178,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 	}
 
 	// Telemetry handler
-	segmentClient, err := telemetryShim.SetupTelemetry(cl)
+	segmentClient, err := telemetry.SetupTelemetry(cl)
 	if err != nil {
 		return err
 	}
@@ -208,7 +200,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			}
 		}
 
-		telemetryShim.Transmit(segmentClient, segment.MetricCreateRegistryStarted, "")
+		//telemetry.Transmit(segmentClient, segment.MetricCreateRegistryStarted, "")
 		argocdClient, err := argocdapi.NewForConfig(kcfg.RestConfig)
 		if err != nil {
 			return err
@@ -253,7 +245,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 
 		_, _ = argocdClient.ArgoprojV1alpha1().Applications("argocd").Create(context.Background(), registryApplicationObject, metav1.CreateOptions{})
 
-		telemetryShim.Transmit(segmentClient, segment.MetricCreateRegistryCompleted, "")
+		//telemetry.Transmit(segmentClient, segment.MetricCreateRegistryCompleted, "")
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "argocd_create_registry_check", true)
 		if err != nil {

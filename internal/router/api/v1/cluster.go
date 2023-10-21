@@ -202,7 +202,6 @@ func GetClusters(c *gin.Context) {
 // @Param Authorization header string true "API key" default(Bearer <API key>)
 // PostCreateCluster handles a request to create a cluster
 func PostCreateCluster(c *gin.Context) {
-
 	// jsonData, err := io.ReadAll(c.Request.Body)
 	// fmt.Spintf(string(jsonData))
 	clusterName, param := c.Params.Get("cluster_name")

@@ -164,17 +164,25 @@ spec:
             "transmit",
             "--type",
             "cluster-zero",
-            "--cluster-id",
-            {{ .Values.clusterId | default $clusterId }},
-            "--cluster-type",
-            {{ .Values.clusterType | default "bootstrap" | quote }},
-            "--install-method",
-            {{ .Values.installMethod | default "helm" | quote }},
-            "--kubefirst-team",
-            {{ .Values.kubefirstTeam | default "undefined" | quote }},
-            "--kubefirst-team-info",
-            {{ .Values.kubefirstTeamInfo | default "undefined" }}
           ]
           env:
-            - name: KUBEFIRST_VERSION
+            - name: CLI_VERSION
               value: {{ .Values.global.kubefirstVersion | default "unset" }}
+            - name: CLOUD_PROVIDER
+              value: {{ .Values.cloudProvider | default "unset" }}
+            - name: CLUSTER_ID
+              value: {{ $clusterId | default "unset" }}
+            - name: CLUSTER_TYPE
+              value: {{ .Values.clusterType | default "bootstrap" }}
+            - name: DOMAIN_NAME
+              value: {{ .Values.domainName | default "unset" }}
+            - name: GIT_PROVIDER
+              value: {{ .Values.gitProvider | default "unset" }}
+            - name: INSTALL_METHOD
+              value: {{ .Values.installMethod | default "helm" }}
+            - name: KUBEFIRST_CLIENT
+              value: {{ .Values.kubefirstClient | default "api" }} # deprecated
+            - name: KUBEFIRST_TEAM
+              value: {{ .Values.kubefirstTeam | default "" }}
+            - name: KUBEFIRST_TEAM_INFO
+              value: {{ .Values.kubefirstTeamInfo | default "" }}

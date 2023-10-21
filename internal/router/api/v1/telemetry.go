@@ -13,7 +13,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
-	"github.com/kubefirst/kubefirst-api/pkg/telemetryShim"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -66,13 +65,13 @@ func PostTelemetry(c *gin.Context) {
 	}
 
 	// Telemetry handler
-	segmentClient, err := telemetryShim.SetupTelemetry(cluster)
+	segmentClient, err := telemetry.SetupTelemetry(cluster)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer segmentClient.Client.Close()
 
-	telemetryShim.Transmit(segmentClient, req.Event, "")
+	//telemetry.Transmit(segmentClient, req.Event, "")
 
 	c.JSON(http.StatusOK, true)
 }
