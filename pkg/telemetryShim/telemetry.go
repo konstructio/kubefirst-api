@@ -8,12 +8,12 @@ package telemetryShim
 
 import (
 	"os"
+	"strings"
 	"time"
 
 	"github.com/denisbrodbeck/machineid"
 	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
-	"github.com/kubefirst/runtime/pkg"
 	"github.com/segmentio/analytics-go"
 	log "github.com/sirupsen/logrus"
 )
@@ -40,7 +40,7 @@ func SetupTelemetry(cl pkgtypes.Cluster) (*segment.SegmentClient, error) {
 		kubefirstVersion = "development"
 	}
 
-	strippedDomainName, err := pkg.RemoveSubdomainV2(cl.DomainName)
+	strippedDomainName, err := RemoveSubdomainV2(cl.DomainName)
 	if err != nil {
 		return &segment.SegmentClient{}, nil
 	}
@@ -70,4 +70,18 @@ func Transmit(segmentClient *segment.SegmentClient, metricName string, errorMess
 	if segmentMsg != "" {
 		log.Info(segmentMsg)
 	}
+}
+
+func RemoveSubdomainV2(domainName string) (string, error) {
+
+	domainName = strings.TrimRight(domainName, ".")
+	domainSlice := strings.Split(domainName, ".")
+
+	if len(domainSlice) < 2 {
+		return "", nil
+	}
+
+	domainName = strings.Join([]string{domainSlice[len(domainSlice)-2], domainSlice[len(domainSlice)-1]}, ".")
+
+	return domainName, nil
 }
