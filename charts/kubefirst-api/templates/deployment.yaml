@@ -74,20 +74,28 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.existingSecret | default "kubefirst-initial-secrets" }}
                   key: K1_ACCESS_TOKEN
-            - name: INSTALL_METHOD
-              value: {{ .Values.installMethod | default "helm" | quote }}
+            - name: CLOUD_PROVIDER
+              value: {{ .Values.global.cloudProvider | default "unset" }}
             - name: CLUSTER_ID
-              value: {{ .Values.clusterId | default $clusterId }} 
+              value: {{ .Values.global.clusterId | default $clusterId }}
             - name: CLUSTER_TYPE
-              value: {{ .Values.clusterType | default "bootstrap" | quote }}
-            - name: USE_TELEMETRY
-              value: {{ .Values.useTelemetry | default "true" | quote }}
+              value: {{ .Values.global.clusterType | default "bootstrap" | quote }}
+            - name: DOMAIN_NAME
+              value: {{ .Values.global.domainName | default "unset" }}
+            - name: GIT_PROVIDER
+              value: {{ .Values.global.gitProvider | default "unset" }}
+            - name: INSTALL_METHOD
+              value: {{ .Values.global.installMethod | default "helm" | quote }}
+            - name: KUBEFIRST_CLIENT
+              value: {{ .Values.global.kubefirstClient | default "api" }} # deprecated
             - name: KUBEFIRST_TEAM
-              value: {{ .Values.kubefirstTeam | default "false" | quote }}
+              value: {{ .Values.global.kubefirstTeam | default "false" | quote }}
             - name: KUBEFIRST_TEAM_INFO
-              value: {{ .Values.kubefirstTeamInfo | default "" | quote }}
+              value: {{ .Values.global.kubefirstTeamInfo | default "" | quote }}
             - name: KUBEFIRST_VERSION
               value: {{ .Values.global.kubefirstVersion | default "unset" }}
+            - name: USE_TELEMETRY
+              value: {{ .Values.global.useTelemetry | default "true" | quote }}
           {{- if .Values.env }}
             {{- range $envVar := .Values.env }}
             - name: {{ $envVar.name }}
@@ -166,23 +174,25 @@ spec:
             "cluster-zero",
           ]
           env:
+            - name: CLOUD_PROVIDER
+              value: {{ .Values.global.cloudProvider | default "unset" }}
+            - name: CLUSTER_ID
+              value: {{ .Values.global.clusterId | default $clusterId }}
+            - name: CLUSTER_TYPE
+              value: {{ .Values.global.clusterType | default "bootstrap" | quote }}
+            - name: DOMAIN_NAME
+              value: {{ .Values.global.domainName | default "unset" }}
+            - name: GIT_PROVIDER
+              value: {{ .Values.global.gitProvider | default "unset" }}
+            - name: INSTALL_METHOD
+              value: {{ .Values.global.installMethod | default "helm" | quote }}
+            - name: KUBEFIRST_CLIENT
+              value: {{ .Values.global.kubefirstClient | default "api" }} # deprecated
+            - name: KUBEFIRST_TEAM
+              value: {{ .Values.global.kubefirstTeam | default "false" | quote }}
+            - name: KUBEFIRST_TEAM_INFO
+              value: {{ .Values.global.kubefirstTeamInfo | default "" | quote }}
             - name: KUBEFIRST_VERSION
               value: {{ .Values.global.kubefirstVersion | default "unset" }}
-            - name: CLOUD_PROVIDER
-              value: {{ .Values.cloudProvider | default "unset" }}
-            - name: CLUSTER_ID
-              value: {{ $clusterId | default "unset" }}
-            - name: CLUSTER_TYPE
-              value: {{ .Values.clusterType | default "bootstrap" }}
-            - name: DOMAIN_NAME
-              value: {{ .Values.domainName | default "unset" }}
-            - name: GIT_PROVIDER
-              value: {{ .Values.gitProvider | default "unset" }}
-            - name: INSTALL_METHOD
-              value: {{ .Values.installMethod | default "helm" }}
-            - name: KUBEFIRST_CLIENT
-              value: {{ .Values.kubefirstClient | default "api" }} # deprecated
-            - name: KUBEFIRST_TEAM
-              value: {{ .Values.kubefirstTeam | default "" }}
-            - name: KUBEFIRST_TEAM_INFO
-              value: {{ .Values.kubefirstTeamInfo | default "" }}
+            - name: USE_TELEMETRY
+              value: {{ .Values.global.useTelemetry | default "true" | quote }}

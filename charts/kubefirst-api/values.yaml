@@ -11,7 +11,7 @@ image:
   hook:
     repository: public.ecr.aws/kubefirst/metrics-client
     pullPolicy: Always
-    tag: 0.1.1
+    tag: v0.2.1
 
 imagePullSecrets: []
 nameOverride: ''
@@ -104,16 +104,15 @@ mongodbUsername: ''
 initContainer:
   enabled: false
 
-cloudProvider: ''
-clusterId: ''
-clusterType: ''
-domainName: ''
-gitProvider: ''
-installMethod: ''
-kubefirstClient: ''
-kubefirstTeam: ''
-kubefirstTeamInfo: ''
-
 
 global:
   kubefirstVersion: ''
+  cloudProvider: ''
+  clusterId: ''
+  clusterType: ''
+  domainName: ''
+  gitProvider: ''
+  installMethod: ''
+  kubefirstClient: ''
+  kubefirstTeam: ''
+  kubefirstTeamInfo: ''
