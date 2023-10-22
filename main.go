@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/denisbrodbeck/machineid"
 	"github.com/kubefirst/kubefirst-api/internal/environments"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/pkg/metrics"
@@ -21,6 +22,7 @@ import (
 	"github.com/kubefirst/kubefirst-api/docs"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	api "github.com/kubefirst/kubefirst-api/internal/router"
+	apitelemetry "github.com/kubefirst/kubefirst-api/internal/telemetry"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 
 	log "github.com/sirupsen/logrus"
@@ -35,7 +37,8 @@ import (
 // @BasePath /api/v1
 
 const (
-	port int = 8081
+	port            int    = 8081
+	kubefirstClient string = "api"
 )
 
 func main() {
@@ -113,28 +116,24 @@ func main() {
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	docs.SwaggerInfo.Schemes = []string{"http"}
 
-	// cl, err := db.Client.GetCluster(os.Getenv("CLUSTER_NAME"))
-	// if err != nil {
-	// 	log.Warn(err)
-	// }
-
 	// Telemetry handler
+	machineID, _ := machineid.ID()
 	segClient := telemetry.SegmentClient{
 		TelemetryEvent: telemetry.TelemetryEvent{
-			CliVersion:        "",
-			CloudProvider:     "",
-			ClusterID:         "",
-			ClusterType:       "",
-			DomainName:        "",
-			GitProvider:       "",
-			InstallMethod:     "",
-			KubefirstClient:   "",
-			KubefirstTeam:     "",
-			KubefirstTeamInfo: "",
-			MachineID:         "",
+			CliVersion:        os.Getenv("KUBEFIRST_VERSION"),
+			CloudProvider:     os.Getenv("CLOUD_PROVIDER"),
+			ClusterID:         os.Getenv("CLUSTER_ID"),
+			ClusterType:       os.Getenv("CLUSTER_TYPE"),
+			DomainName:        os.Getenv("DOMAIN_NAME"),
+			GitProvider:       os.Getenv("GIT_PROVIDER"),
+			InstallMethod:     os.Getenv("INSTALL_METHOD"),
+			KubefirstClient:   kubefirstClient,
+			KubefirstTeam:     os.Getenv("KUBEFIRST_TEAM"),
+			KubefirstTeamInfo: os.Getenv("KUBEFIRST_TEAM_INFO"),
+			MachineID:         machineID,
 			ErrorMessage:      "",
-			UserId:            "",
-			MetricName:        "",
+			UserId:            machineID,
+			MetricName:        metrics.KubefirstHeartbeat,
 		},
 		Client: analytics.New(segment.SegmentIOWriteKey),
 	}
@@ -145,7 +144,8 @@ func main() {
 
 	// Subroutine to emit heartbeat
 	if useTelemetry {
-		go telemetry.SendCountMetric(&segClient, metrics.KubefirstHeartbeat, "")
+
+		go apitelemetry.Heartbeat(&segClient, db.Client)
 	}
 
 	// API
