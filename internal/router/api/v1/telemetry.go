@@ -93,7 +93,7 @@ func PostTelemetry(c *gin.Context) {
 		return
 	}
 
-	telemetry.SendEvent(&segClient, req.Event, err.Error())
+	telemetry.SendEvent(&segClient, req.Event, "")
 
 	c.JSON(http.StatusOK, true)
 }

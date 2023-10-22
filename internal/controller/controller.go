@@ -145,12 +145,6 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		clusterID = runtime.GenerateClusterID()
 	}
 
-	if os.Getenv("USE_TELEMETRY") == "false" {
-		clctrl.SegmentClient.UseTelemetry = false
-	} else {
-		clctrl.SegmentClient.UseTelemetry = true
-	}
-
 	// Telemetry handle
 	machineID, _ := machineid.ID()
 
@@ -173,15 +167,20 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		},
 		Client: analytics.New(telemetry.SegmentIOWriteKey),
 	}
-	if err != nil {
-		log.Warn(err)
+	clctrl.SegmentClient = &segClient
+
+	if os.Getenv("USE_TELEMETRY") == "false" {
+		clctrl.SegmentClient.UseTelemetry = false
+	} else {
+		clctrl.SegmentClient.UseTelemetry = true
 	}
+	log.Info(segClient)
+
 	defer segClient.Client.Close()
 
 	if clctrl.SegmentClient.UseTelemetry {
-		telemetry.SendEvent(&segClient, telemetry.ClusterInstallStarted, err.Error())
+		telemetry.SendEvent(&segClient, telemetry.ClusterInstallStarted, "")
 	}
-	clctrl.SegmentClient = &segClient
 
 	//Copy Cluster Definiion to Cluster Controller
 	clctrl.AlertsEmail = def.AdminEmail
@@ -287,12 +286,6 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 			Region:  clctrl.CloudRegion,
 		}
 
-	}
-
-	if os.Getenv("USE_TELEMETRY") == "false" {
-		clctrl.SegmentClient.UseTelemetry = false
-	} else {
-		clctrl.SegmentClient.UseTelemetry = true
 	}
 
 	// Write cluster record if it doesn't exist

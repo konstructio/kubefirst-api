@@ -52,7 +52,7 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 			}
 		}
 
-		telemetry.SendEvent(clctrl.SegmentClient, telemetry.UsersTerraformApplyStarted, err.Error())
+		telemetry.SendEvent(clctrl.SegmentClient, telemetry.UsersTerraformApplyStarted, "")
 		log.Info("applying users terraform")
 
 		tfEnvs := map[string]string{}
@@ -84,7 +84,7 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 			return err
 		}
 		log.Info("executed users terraform successfully")
-		telemetry.SendEvent(clctrl.SegmentClient, telemetry.UsersTerraformApplyCompleted, err.Error())
+		telemetry.SendEvent(clctrl.SegmentClient, telemetry.UsersTerraformApplyCompleted, "")
 
 		clctrl.VaultAuth.RootToken = tfEnvs["VAULT_TOKEN"]
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "vault_auth.root_token", clctrl.VaultAuth.RootToken)

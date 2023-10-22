@@ -72,7 +72,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 	}
 
 	// //* create teams and repositories in github
-	telemetry.SendEvent(clctrl.SegmentClient, telemetry.GitTerraformApplyStarted, err.Error())
+	telemetry.SendEvent(clctrl.SegmentClient, telemetry.GitTerraformApplyStarted, "")
 
 	log.Infof("Creating %s resources with terraform", clctrl.GitProvider)
 
@@ -118,7 +118,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 		}
 
 		log.Infof("created git projects and groups for %s.com/%s", clctrl.GitProvider, clctrl.GitAuth.Owner)
-		telemetry.SendEvent(clctrl.SegmentClient, telemetry.GitTerraformApplyCompleted, err.Error())
+		telemetry.SendEvent(clctrl.SegmentClient, telemetry.GitTerraformApplyCompleted, "")
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "git_terraform_apply_check", true)
 		if err != nil {

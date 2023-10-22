@@ -37,7 +37,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 	}
 
 	var stateStoreData pkgtypes.StateStoreCredentials
-	telemetry.SendEvent(clctrl.SegmentClient, telemetry.StateStoreCredentialsCreateStarted, err.Error())
+	telemetry.SendEvent(clctrl.SegmentClient, telemetry.StateStoreCredentialsCreateStarted, "")
 
 	if !cl.StateStoreCredsCheck {
 		switch clctrl.CloudProvider {
@@ -229,7 +229,7 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 				return err
 			}
 
-			telemetry.SendEvent(clctrl.SegmentClient, telemetry.StateStoreCreateCompleted, err.Error())
+			telemetry.SendEvent(clctrl.SegmentClient, telemetry.StateStoreCreateCompleted, "")
 			log.Infof("%s state store bucket created", clctrl.CloudProvider)
 		}
 	}

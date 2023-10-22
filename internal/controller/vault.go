@@ -96,7 +96,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 			}
 		}
 
-		telemetry.SendEvent(clctrl.SegmentClient, telemetry.VaultInitializationStarted, err.Error())
+		telemetry.SendEvent(clctrl.SegmentClient, telemetry.VaultInitializationStarted, "")
 
 		switch clctrl.CloudProvider {
 		case "aws", "google":
@@ -154,7 +154,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 				log.Error(msg)
 			}
 		}
-		telemetry.SendEvent(clctrl.SegmentClient, telemetry.VaultInitializationCompleted, err.Error())
+		telemetry.SendEvent(clctrl.SegmentClient, telemetry.VaultInitializationCompleted, "")
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "vault_initialized_check", true)
 		if err != nil {
@@ -255,7 +255,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		}
 
 		log.Info("vault terraform executed successfully")
-		telemetry.SendEvent(clctrl.SegmentClient, telemetry.VaultTerraformApplyCompleted, err.Error())
+		telemetry.SendEvent(clctrl.SegmentClient, telemetry.VaultTerraformApplyCompleted, "")
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "vault_terraform_apply_check", true)
 		if err != nil {

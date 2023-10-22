@@ -50,7 +50,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 		tfEntrypoint := clctrl.ProviderConfig.GitopsDir + fmt.Sprintf("/terraform/%s", clctrl.CloudProvider)
 		tfEnvs := map[string]string{}
 
-		telemetry.SendEvent(clctrl.SegmentClient, telemetry.CloudTerraformApplyStarted, err.Error())
+		telemetry.SendEvent(clctrl.SegmentClient, telemetry.CloudTerraformApplyStarted, "")
 
 		log.Infof("creating %s cluster", clctrl.CloudProvider)
 
@@ -84,14 +84,14 @@ func (clctrl *ClusterController) CreateCluster() error {
 			log.Error(msg)
 			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
 			if err != nil {
+				telemetry.SendEvent(clctrl.SegmentClient, telemetry.CloudTerraformApplyFailed, err.Error())
 				return err
 			}
-			telemetry.SendEvent(clctrl.SegmentClient, telemetry.CloudTerraformApplyFailed, err.Error())
 			return fmt.Errorf(msg)
 		}
 
 		log.Infof("created %s cloud resources", clctrl.CloudProvider)
-		telemetry.SendEvent(clctrl.SegmentClient, telemetry.CloudTerraformApplyCompleted, err.Error())
+		telemetry.SendEvent(clctrl.SegmentClient, telemetry.CloudTerraformApplyCompleted, "")
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", false)
 		if err != nil {
