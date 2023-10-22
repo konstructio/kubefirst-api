@@ -256,7 +256,7 @@ func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 
 		log.Info("cluster creation complete")
 
-		telemetry.SendEvent(ctrl.SegmentClient, telemetry.ClusterInstallCompleted, err.Error())
+		telemetry.SendEvent(ctrl.SegmentClient, telemetry.ClusterInstallCompleted, "")
 
 		// Create default service entries
 		cl, _ := db.Client.GetCluster(ctrl.ClusterName)

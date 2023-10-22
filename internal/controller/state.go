@@ -202,7 +202,7 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 				Context: context.Background(),
 			}
 
-			telemetry.SendEvent(clctrl.SegmentClient, telemetry.StateStoreCreateStarted, err.Error())
+			telemetry.SendEvent(clctrl.SegmentClient, telemetry.StateStoreCreateStarted, "")
 
 			accessKeyId := cl.StateStoreCredentials.AccessKeyID
 			log.Infof("access key id %s", accessKeyId)
