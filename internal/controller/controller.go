@@ -19,9 +19,11 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 	google "github.com/kubefirst/kubefirst-api/pkg/google"
 	"github.com/kubefirst/kubefirst-api/pkg/handlers"
+	"github.com/kubefirst/kubefirst-api/pkg/metrics"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
-	"github.com/kubefirst/metrics-client/pkg/segment"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg"
 	runtime "github.com/kubefirst/runtime/pkg"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
@@ -30,6 +32,7 @@ import (
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/services"
 	"github.com/segmentio/analytics-go"
+
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -104,7 +107,7 @@ type ClusterController struct {
 	MdbCl *db.MongoDBClient
 
 	// Telemetry
-	Telemetry    *segment.SegmentClient
+	Telemetry    *telemetry.SegmentClient
 	UseTelemetry bool
 
 	// Provider clients
@@ -151,13 +154,11 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		clctrl.UseTelemetry = true
 	}
 
-	// Telemetry handler
-	segmentClient := analytics.New(segment.SegmentIOWriteKey)
-
+	// Telemetry handle
 	machineID, _ := machineid.ID()
 
-	segClient := segment.SegmentClient{
-		TelemetryEvent: segment.TelemetryEvent{
+	segClient := telemetry.SegmentClient{
+		TelemetryEvent: telemetry.TelemetryEvent{
 			CliVersion:        os.Getenv("KUBEFIRST_VERSION"),
 			CloudProvider:     clctrl.CloudProvider,
 			ClusterID:         clusterID,
@@ -171,9 +172,9 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 			MachineID:         machineID,
 			ErrorMessage:      "",
 			UserId:            machineID,
-			MetricName:        segment.MetricClusterInstallStarted,
+			MetricName:        metrics.ClusterInstallStarted,
 		},
-		Client: segmentClient,
+		Client: analytics.New(segment.SegmentIOWriteKey),
 	}
 	if err != nil {
 		log.Warn(err)
@@ -181,12 +182,9 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	defer segClient.Client.Close()
 
 	if clctrl.UseTelemetry {
-		segClient.TelemetryEvent.MetricName = segment.MetricClusterInstallStarted
-		segClient.TelemetryEvent.ErrorMessage = err.Error()
-		segment.SendCountMetric(&segClient)
+		telemetry.SendCountMetric(&segClient, metrics.ClusterInstallStarted, err.Error())
 	}
 	clctrl.Telemetry = &segClient
-
 
 	//Copy Cluster Definiion to Cluster Controller
 	clctrl.AlertsEmail = def.AdminEmail

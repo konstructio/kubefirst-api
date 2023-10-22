@@ -11,6 +11,7 @@ import (
 	"fmt"
 
 	cloudflare_api "github.com/cloudflare/cloudflare-go"
+	"github.com/kubefirst/kubefirst-api/pkg/metrics"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
@@ -26,15 +27,8 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 		return err
 	}
 
-	// Telemetry handler
-	segmentClient, err := telemetry.SetupTelemetry(cl)
-	if err != nil {
-		return err
-	}
-	defer segmentClient.Client.Close()
-
 	if !cl.DomainLivenessCheck {
-		//telemetry.Transmit(segmentClient, segment.MetricDomainLivenessStarted, "")
+		telemetry.SendCountMetric(clctrl.Telemetry, metrics.DomainLivenessStarted)
 
 		switch clctrl.DnsProvider {
 		case "aws":
@@ -53,7 +47,7 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 			// domain id
 			domainId, err := civoConf.GetDNSInfo(clctrl.DomainName, clctrl.CloudRegion)
 			if err != nil {
-				//telemetry.Transmit(segmentClient, segment.MetricDomainLivenessFailed, "domain liveness test failed")
+				telemetry.SendCountMetric(clctrl.Telemetry, metrics.DomainLivenessFailed)
 				log.Info(err.Error())
 			}
 
@@ -128,7 +122,7 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 			return err
 		}
 
-		//telemetry.Transmit(segmentClient, segment.MetricDomainLivenessCompleted, "")
+		telemetry.SendCountMetric(clctrl.Telemetry, metrics.DomainLivenessCompleted)
 
 		log.Infof("domain %s verified", clctrl.DomainName)
 	}

@@ -19,8 +19,10 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/errors"
+	"github.com/kubefirst/kubefirst-api/pkg/metrics"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
@@ -47,7 +49,7 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster) error {
 	}
 	defer segmentClient.Client.Close()
 
-	//telemetry.Transmit(segmentClient, segment.MetricClusterDeleteStarted, "")
+	telemetry.SendCountMetric(segmentClient, metrics.ClusterDeleteStarted, err.Error())
 
 	// Instantiate aws config
 	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.APIToken, cl.CloudflareAuth.OriginCaIssuerKey)
@@ -259,7 +261,7 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster) error {
 		}
 	}
 
-	//telemetry.Transmit(segmentClient, segment.MetricClusterDeleteCompleted, "")
+	//telemetry.Transmit(segmentClient, telemetry.MetricClusterDeleteCompleted, "")
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleted)
 	if err != nil {

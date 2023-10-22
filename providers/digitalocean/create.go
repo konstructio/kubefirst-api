@@ -241,7 +241,7 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 		}
 		defer segmentClient.Client.Close()
 
-		//telemetry.Transmit(segmentClient, segment.MetricClusterInstallCompleted, "")
+		//telemetry.Transmit(segmentClient, telemetry.MetricClusterInstallCompleted, "")
 
 		// Create default service entries
 		cl, _ := db.Client.GetCluster(ctrl.ClusterName)

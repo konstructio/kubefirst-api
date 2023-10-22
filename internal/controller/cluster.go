@@ -19,6 +19,7 @@ import (
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
+	"github.com/kubefirst/kubefirst-api/pkg/metrics"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
@@ -44,21 +45,13 @@ func (clctrl *ClusterController) CreateCluster() error {
 		return err
 	}
 
-	// Telemetry handler
-	segmentClient, err := telemetry.SetupTelemetry(cl)
-	if err != nil {
-		return err
-	}
-	defer segmentClient.Client.Close()
-
 	if !cl.CloudTerraformApplyCheck || cl.CloudTerraformApplyFailedCheck {
-
-		//telemetry.Transmit(segmentClient, segment.MetricCloudTerraformApplyStarted, "")
 
 		log.Info("creating aws cloud resources with terraform")
 		tfEntrypoint := clctrl.ProviderConfig.GitopsDir + fmt.Sprintf("/terraform/%s", clctrl.CloudProvider)
 		tfEnvs := map[string]string{}
-		//telemetry.Transmit(segmentClient, segment.MetricCloudTerraformApplyStarted, "")
+
+		telemetry.SendCountMetric(clctrl.Telemetry, metrics.CloudTerraformApplyStarted)
 
 		log.Infof("creating %s cluster", clctrl.CloudProvider)
 
@@ -94,17 +87,12 @@ func (clctrl *ClusterController) CreateCluster() error {
 			if err != nil {
 				return err
 			}
-			//telemetry.Transmit(segmentClient, segment.MetricCloudTerraformApplyFailed, msg)
+			telemetry.SendCountMetric(clctrl.Telemetry, metrics.CloudTerraformApplyFailed)
 			return fmt.Errorf(msg)
 		}
 
 		log.Infof("created %s cloud resources", clctrl.CloudProvider)
-
-		//telemetry.Transmit(segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
-
-		log.Infof("successfully created %s cluster", clctrl.CloudProvider)
-
-		//telemetry.Transmit(segmentClient, segment.MetricCloudTerraformApplyCompleted, "")
+		telemetry.SendCountMetric(clctrl.Telemetry, metrics.CloudTerraformApplyCompleted)
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", false)
 		if err != nil {

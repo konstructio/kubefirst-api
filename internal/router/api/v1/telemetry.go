@@ -13,7 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
-	log "github.com/sirupsen/logrus"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 )
 
 // PostTelemetry godoc
@@ -64,14 +64,9 @@ func PostTelemetry(c *gin.Context) {
 		return
 	}
 
-	// Telemetry handler
-	segmentClient, err := telemetry.SetupTelemetry(cluster)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer segmentClient.Client.Close()
+	// todo create segmentClient
 
-	//telemetry.Transmit(segmentClient, req.Event, "")
+	telemetry.SendCountMetric(segmentClient, req.Event, err.Error())
 
 	c.JSON(http.StatusOK, true)
 }

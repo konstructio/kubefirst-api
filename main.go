@@ -12,7 +12,6 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/environments"
 	"github.com/kubefirst/kubefirst-api/internal/services"
-	"github.com/kubefirst/metrics-client/pkg/segment"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/segmentio/analytics-go"
 
@@ -118,10 +117,10 @@ func main() {
 	}
 
 	// Telemetry handler
-	segmentClient := analytics.New(segment.SegmentIOWriteKey)
-	
-	segClient := segment.SegmentClient{
-		TelemetryEvent: segment.TelemetryEvent{
+	segmentClient := analytics.New(telemetry.SegmentIOWriteKey)
+
+	segClient := telemetry.SegmentClient{
+		TelemetryEvent: telemetry.TelemetryEvent{
 			CliVersion:        "",
 			CloudProvider:     "",
 			ClusterID:         "",
@@ -137,7 +136,7 @@ func main() {
 			UserId:            "",
 			MetricName:        "",
 		},
-		Client:         segmentClient,
+		Client: segmentClient,
 	}
 	if err != nil {
 		log.Warn(err)

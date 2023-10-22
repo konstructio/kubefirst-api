@@ -13,6 +13,7 @@ import (
 
 	argocdapi "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
+	"github.com/kubefirst/kubefirst-api/pkg/metrics"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
@@ -58,13 +59,13 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 
 		err = argocd.ApplyArgoCDKustomize(kcfg.Clientset, argoCDInstallPath)
 		if err != nil {
-			//telemetry.Transmit(segmentClient, segment.MetricArgoCDInstallFailed, err.Error())
+
+			telemetry.SendCountMetric(clctrl.Telemetry, metrics.ArgoCDInstallFailed, err.Error())
+
 			return err
 		}
-		//telemetry.Transmit(segmentClient, segment.MetricArgoCDInstallCompleted, "")
 
-		//telemetry.Transmit(segmentClient, segment.MetricArgoCDInstallStarted, "")
-		//telemetry.Transmit(segmentClient, segment.MetricArgoCDInstallCompleted, "")
+		telemetry.SendCountMetric(clctrl.Telemetry, metrics.ArgoCDInstallCompleted, err.Error())
 
 		// Wait for ArgoCD to be ready
 		_, err = k8s.VerifyArgoCDReadiness(kcfg.Clientset, true, 300)
@@ -177,12 +178,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		return err
 	}
 
-	// Telemetry handler
-	segmentClient, err := telemetry.SetupTelemetry(cl)
-	if err != nil {
-		return err
-	}
-	defer segmentClient.Client.Close()
+	// telemetry todo
 
 	if !cl.ArgoCDCreateRegistryCheck {
 		var kcfg *k8s.KubernetesClient
@@ -200,7 +196,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			}
 		}
 
-		//telemetry.Transmit(segmentClient, segment.MetricCreateRegistryStarted, "")
+		telemetry.SendCountMetric(clctrl.Telemetry, metrics.CreateRegistryStarted, err.Error())
 		argocdClient, err := argocdapi.NewForConfig(kcfg.RestConfig)
 		if err != nil {
 			return err
@@ -245,7 +241,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 
 		_, _ = argocdClient.ArgoprojV1alpha1().Applications("argocd").Create(context.Background(), registryApplicationObject, metav1.CreateOptions{})
 
-		//telemetry.Transmit(segmentClient, segment.MetricCreateRegistryCompleted, "")
+		telemetry.SendCountMetric(clctrl.Telemetry, metrics.CreateRegistryCompleted, err.Error())
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "argocd_create_registry_check", true)
 		if err != nil {

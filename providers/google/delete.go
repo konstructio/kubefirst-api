@@ -48,7 +48,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster) error {
 	}
 	defer segmentClient.Client.Close()
 
-	//telemetry.Transmit(segmentClient, segment.MetricClusterDeleteStarted, "")
+	//telemetry.Transmit(segmentClient, telemetry.MetricClusterDeleteStarted, "")
 
 	// Instantiate google config
 	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.Token, "")
@@ -257,7 +257,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster) error {
 		}
 	}
 
-	//telemetry.Transmit(segmentClient, segment.MetricClusterDeleteCompleted, "")
+	//telemetry.Transmit(segmentClient, telemetry.MetricClusterDeleteCompleted, "")
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleted)
 	if err != nil {
