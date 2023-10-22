@@ -179,7 +179,6 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		return err
 	}
 
-	// telemetry todo
 
 	if !cl.ArgoCDCreateRegistryCheck {
 		var kcfg *k8s.KubernetesClient
