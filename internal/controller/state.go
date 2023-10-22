@@ -142,7 +142,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 
 			objst, err := vultrConf.CreateObjectStorage(clctrl.KubefirstStateStoreBucketName)
 			if err != nil {
-				telemetry.SendCountMetric(clctrl.Telemetry, metrics.StateStoreCreateFailed, err.Error())
+				telemetry.SendCountMetric(clctrl.Telemetry, metrics.StateStoreCredentialsCreateFailed, err.Error())
 				log.Error(err.Error())
 				return err
 			}
