@@ -69,6 +69,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				Name:                clctrl.KubefirstStateStoreBucketName,
 			})
 			if err != nil {
+				telemetry.SendEvent(segClient, telemetry.StateStoreCredentialsCreateFailed, err.Error())
 				return err
 			}
 		case "civo":
@@ -79,6 +80,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 
 			creds, err := civoConf.GetAccessCredentials(clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
 			if err != nil {
+				telemetry.SendEvent(segClient, telemetry.StateStoreCredentialsCreateFailed, err.Error())
 				log.Error(err.Error())
 			}
 
@@ -154,6 +156,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				Endpoint:        objst.S3Hostname,
 			}, clctrl.KubefirstStateStoreBucketName)
 			if err != nil {
+				telemetry.SendEvent(segClient, telemetry.StateStoreCredentialsCreateFailed, err.Error())
 				return fmt.Errorf("error creating vultr state storage bucket: %s", err)
 			}
 
@@ -183,7 +186,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 		if err != nil {
 			return err
 		}
-
+		telemetry.SendEvent(segClient, telemetry.CloudCredentialsCheckCompleted, "")
 		log.Infof("%s object storage credentials created and set", clctrl.CloudProvider)
 	}
 

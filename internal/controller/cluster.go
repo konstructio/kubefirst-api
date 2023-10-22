@@ -83,11 +83,11 @@ func (clctrl *ClusterController) CreateCluster() error {
 
 		err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
+			telemetry.SendEvent(segClient, telemetry.CloudTerraformApplyFailed, err.Error())
 			msg := fmt.Sprintf("error creating %s resources with terraform %s: %s", clctrl.CloudProvider, tfEntrypoint, err)
 			log.Error(msg)
 			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
 			if err != nil {
-				telemetry.SendEvent(segClient, telemetry.CloudTerraformApplyFailed, err.Error())
 				return err
 			}
 			return fmt.Errorf(msg)

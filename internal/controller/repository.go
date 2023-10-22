@@ -253,7 +253,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 		)
 		if err != nil {
 			msg := fmt.Sprintf("error pushing detokenized gitops repository to remote %s: %s", clctrl.ProviderConfig.DestinationGitopsRepoURL, err)
-			telemetry.SendEvent(segClient, telemetry.GitopsRepoPushFailed, "")
+			telemetry.SendEvent(segClient, telemetry.GitopsRepoPushFailed, err.Error())
 			return fmt.Errorf(msg)
 		}
 
