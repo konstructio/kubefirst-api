@@ -38,7 +38,7 @@ func InitClient() *telemetry.SegmentClient {
 			MachineID:         machineID,
 			ErrorMessage:      "",
 			UserId:            machineID,
-			MetricName:        telemetry.KubefirstHeartbeat,
+			MetricName:        telemetry.ClusterInstallStarted,
 		},
 		Client: sc,
 	}
