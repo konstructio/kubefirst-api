@@ -22,8 +22,7 @@ import (
 	googleext "github.com/kubefirst/kubefirst-api/extensions/google"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
-	"github.com/kubefirst/kubefirst-api/pkg/segment"
-	"github.com/kubefirst/kubefirst-api/pkg/telemetryShim"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	vault "github.com/kubefirst/runtime/pkg/vault"
 	log "github.com/sirupsen/logrus"
@@ -79,13 +78,6 @@ func (clctrl *ClusterController) InitializeVault() error {
 		return err
 	}
 
-	// Telemetry handler
-	segmentClient, err := telemetryShim.SetupTelemetry(cl)
-	if err != nil {
-		return err
-	}
-	defer segmentClient.Client.Close()
-
 	if !cl.VaultInitializedCheck {
 		var kcfg *k8s.KubernetesClient
 		var vaultHandlerPath string
@@ -104,7 +96,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 			}
 		}
 
-		telemetryShim.Transmit(segmentClient, segment.MetricVaultInitializationStarted, "")
+		telemetry.SendEvent(clctrl.SegmentClient, telemetry.VaultInitializationStarted, err.Error())
 
 		switch clctrl.CloudProvider {
 		case "aws", "google":
@@ -158,12 +150,11 @@ func (clctrl *ClusterController) InitializeVault() error {
 			_, err = k8s.WaitForJobComplete(kcfg.Clientset, job, 240)
 			if err != nil {
 				msg := fmt.Sprintf("could not run vault unseal job: %s", err)
-				telemetryShim.Transmit(segmentClient, segment.MetricVaultInitializationFailed, msg)
+				telemetry.SendEvent(clctrl.SegmentClient, telemetry.VaultInitializationFailed, err.Error())
 				log.Error(msg)
 			}
 		}
-
-		telemetryShim.Transmit(segmentClient, segment.MetricVaultInitializationCompleted, "")
+		telemetry.SendEvent(clctrl.SegmentClient, telemetry.VaultInitializationCompleted, err.Error())
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "vault_initialized_check", true)
 		if err != nil {
@@ -190,13 +181,6 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		return err
 	}
 
-	// Telemetry handler
-	segmentClient, err := telemetryShim.SetupTelemetry(cl)
-	if err != nil {
-		return err
-	}
-	defer segmentClient.Client.Close()
-
 	if !cl.VaultTerraformApplyCheck {
 		var kcfg *k8s.KubernetesClient
 
@@ -212,8 +196,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 				return err
 			}
 		}
-
-		telemetryShim.Transmit(segmentClient, segment.MetricVaultTerraformApplyStarted, "")
+		telemetry.SendEvent(clctrl.SegmentClient, telemetry.VaultTerraformApplyStarted, err.Error())
 
 		tfEnvs := map[string]string{}
 
@@ -267,12 +250,12 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		err = terraformext.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Errorf("error applying vault terraform: %s", err)
-			telemetryShim.Transmit(segmentClient, segment.MetricVaultTerraformApplyFailed, err.Error())
+			telemetry.SendEvent(clctrl.SegmentClient, telemetry.VaultTerraformApplyFailed, err.Error())
 			return err
 		}
 
 		log.Info("vault terraform executed successfully")
-		telemetryShim.Transmit(segmentClient, segment.MetricVaultTerraformApplyCompleted, "")
+		telemetry.SendEvent(clctrl.SegmentClient, telemetry.VaultTerraformApplyCompleted, err.Error())
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "vault_terraform_apply_check", true)
 		if err != nil {

@@ -20,9 +20,8 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/errors"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
-	"github.com/kubefirst/kubefirst-api/pkg/segment"
-	"github.com/kubefirst/kubefirst-api/pkg/telemetryShim"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
@@ -32,7 +31,7 @@ import (
 )
 
 // DeleteAWSCluster
-func DeleteAWSCluster(cl *pkgtypes.Cluster) error {
+func DeleteAWSCluster(cl *pkgtypes.Cluster, segmentClient *telemetry.SegmentClient) error {
 	// Logging handler
 	// Logs to stdout to maintain compatibility with event streaming
 	log.SetFormatter(&log.TextFormatter{
@@ -42,19 +41,12 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster) error {
 	log.SetReportCaller(false)
 	log.SetOutput(os.Stdout)
 
-	// Telemetry handler
-	segmentClient, err := telemetryShim.SetupTelemetry(*cl)
-	if err != nil {
-		return err
-	}
-	defer segmentClient.Client.Close()
-
-	telemetryShim.Transmit(segmentClient, segment.MetricClusterDeleteStarted, "")
+	telemetry.SendEvent(segmentClient, telemetry.ClusterDeleteStarted, "")
 
 	// Instantiate aws config
 	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.APIToken, cl.CloudflareAuth.OriginCaIssuerKey)
 
-	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleting)
+	err := db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleting)
 	if err != nil {
 		return err
 	}
@@ -261,7 +253,7 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster) error {
 		}
 	}
 
-	telemetryShim.Transmit(segmentClient, segment.MetricClusterDeleteCompleted, "")
+	telemetry.SendEvent(segmentClient, telemetry.ClusterDeleteCompleted, "")
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleted)
 	if err != nil {

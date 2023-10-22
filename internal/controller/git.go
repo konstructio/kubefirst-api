@@ -17,8 +17,7 @@ import (
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
-	"github.com/kubefirst/kubefirst-api/pkg/segment"
-	"github.com/kubefirst/kubefirst-api/pkg/telemetryShim"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	log "github.com/sirupsen/logrus"
 )
@@ -72,15 +71,8 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 		return err
 	}
 
-	// Telemetry handler
-	segmentClient, err := telemetryShim.SetupTelemetry(cl)
-	if err != nil {
-		return err
-	}
-	defer segmentClient.Client.Close()
-
 	// //* create teams and repositories in github
-	telemetryShim.Transmit(segmentClient, segment.MetricGitTerraformApplyStarted, "")
+	telemetry.SendEvent(clctrl.SegmentClient, telemetry.GitTerraformApplyStarted, err.Error())
 
 	log.Infof("Creating %s resources with terraform", clctrl.GitProvider)
 
@@ -121,12 +113,12 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 		if err != nil {
 			msg := fmt.Sprintf("error creating %s resources with terraform %s: %s", clctrl.GitProvider, tfEntrypoint, err)
 			log.Error(msg)
-			telemetryShim.Transmit(segmentClient, segment.MetricGitTerraformApplyFailed, msg)
+			telemetry.SendEvent(clctrl.SegmentClient, telemetry.GitTerraformApplyFailed, err.Error())
 			return fmt.Errorf(msg)
 		}
 
 		log.Infof("created git projects and groups for %s.com/%s", clctrl.GitProvider, clctrl.GitAuth.Owner)
-		telemetryShim.Transmit(segmentClient, segment.MetricGitTerraformApplyCompleted, "")
+		telemetry.SendEvent(clctrl.SegmentClient, telemetry.GitTerraformApplyCompleted, err.Error())
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "git_terraform_apply_check", true)
 		if err != nil {

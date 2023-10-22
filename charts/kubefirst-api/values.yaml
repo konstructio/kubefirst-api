@@ -104,5 +104,16 @@ mongodbUsername: ''
 initContainer:
   enabled: false
 
+cloudProvider: ''
+clusterId: ''
+clusterType: ''
+domainName: ''
+gitProvider: ''
+installMethod: ''
+kubefirstClient: ''
+kubefirstTeam: ''
+kubefirstTeamInfo: ''
+
+
 global:
   kubefirstVersion: ''

@@ -21,9 +21,8 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/errors"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
-	"github.com/kubefirst/kubefirst-api/pkg/segment"
-	"github.com/kubefirst/kubefirst-api/pkg/telemetryShim"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	runtime "github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
@@ -33,7 +32,7 @@ import (
 )
 
 // DeleteVultrCluster
-func DeleteVultrCluster(cl *pkgtypes.Cluster) error {
+func DeleteVultrCluster(cl *pkgtypes.Cluster, segmentClient *telemetry.SegmentClient) error {
 	// Logging handler
 	// Logs to stdout to maintain compatibility with event streaming
 	log.SetFormatter(&log.TextFormatter{
@@ -43,19 +42,12 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster) error {
 	log.SetReportCaller(false)
 	log.SetOutput(os.Stdout)
 
-	// Telemetry handler
-	segmentClient, err := telemetryShim.SetupTelemetry(*cl)
-	if err != nil {
-		return err
-	}
-	defer segmentClient.Client.Close()
-
-	telemetryShim.Transmit(segmentClient, segment.MetricClusterDeleteStarted, "")
+	telemetry.SendEvent(segmentClient, telemetry.ClusterDeleteStarted, "")
 
 	// Instantiate vultr config
 	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.Token, "")
 
-	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleting)
+	err := db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleting)
 	if err != nil {
 		return err
 	}
@@ -287,7 +279,7 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster) error {
 		}
 	}
 
-	telemetryShim.Transmit(segmentClient, segment.MetricClusterDeleteCompleted, "")
+	telemetry.SendEvent(segmentClient, telemetry.ClusterDeleteCompleted, "")
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleted)
 	if err != nil {

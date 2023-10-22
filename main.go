@@ -12,13 +12,15 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/environments"
 	"github.com/kubefirst/kubefirst-api/internal/services"
+	"github.com/kubefirst/kubefirst-api/pkg/segment"
 
 	"github.com/joho/godotenv"
 	"github.com/kubefirst/kubefirst-api/docs"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	api "github.com/kubefirst/kubefirst-api/internal/router"
+	apitelemetry "github.com/kubefirst/kubefirst-api/internal/telemetry"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
-	"github.com/kubefirst/kubefirst-api/pkg/telemetryShim"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -109,24 +111,16 @@ func main() {
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	docs.SwaggerInfo.Schemes = []string{"http"}
 
-	cl, err := db.Client.GetCluster(os.Getenv("CLUSTER_NAME"))
-	if err != nil {
-		log.Warn(err)
-	}
-
 	// Telemetry handler
-	segmentClient, err := telemetryShim.SetupTelemetry(cl)
-	if err != nil {
-		log.Warn(err)
-	}
-	defer segmentClient.Client.Close()
+	segClient := segment.InitClient()
+	defer segClient.Client.Close()
 
 	// Subroutine to automatically update gitops catalog
 	go utils.ScheduledGitopsCatalogUpdate()
 
 	// Subroutine to emit heartbeat
 	if useTelemetry {
-		go telemetryShim.Heartbeat(segmentClient)
+		go apitelemetry.Heartbeat(segClient, db.Client)
 	}
 
 	// API

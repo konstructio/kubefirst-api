@@ -15,9 +15,8 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/pkg/google"
-	"github.com/kubefirst/kubefirst-api/pkg/segment"
-	"github.com/kubefirst/kubefirst-api/pkg/telemetryShim"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/sirupsen/logrus"
 )
@@ -254,20 +253,7 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 
 		log.Info("cluster creation complete")
 
-		// Telemetry handler
-		rec, err := ctrl.GetCurrentClusterRecord()
-		if err != nil {
-			return err
-		}
-
-		// Telemetry handler
-		segmentClient, err := telemetryShim.SetupTelemetry(rec)
-		if err != nil {
-			return err
-		}
-		defer segmentClient.Client.Close()
-
-		telemetryShim.Transmit(segmentClient, segment.MetricClusterInstallCompleted, "")
+		telemetry.SendEvent(ctrl.SegmentClient, telemetry.ClusterInstallCompleted, "")
 
 		// Create default service entries
 		cl, _ := db.Client.GetCluster(ctrl.ClusterName)
