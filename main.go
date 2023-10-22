@@ -112,7 +112,6 @@ func main() {
 	docs.SwaggerInfo.Schemes = []string{"http"}
 
 	// Telemetry handler
-
 	segClient := segment.InitClient()
 	defer segClient.Client.Close()
 
@@ -121,7 +120,6 @@ func main() {
 
 	// Subroutine to emit heartbeat
 	if useTelemetry {
-
 		go apitelemetry.Heartbeat(segClient, db.Client)
 	}
 
