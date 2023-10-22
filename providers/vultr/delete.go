@@ -280,7 +280,7 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, segmentClient *telemetry.SegmentCl
 		}
 	}
 
-	//telemetry.Transmit(segmentClient, telemetry.MetricClusterDeleteCompleted, "")
+	telemetry.SendCountMetric(segmentClient, metrics.ClusterDeleteCompleted, "")
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleted)
 	if err != nil {
