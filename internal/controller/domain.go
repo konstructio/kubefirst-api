@@ -27,7 +27,6 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 		return err
 	}
 
-	// Telemetry handler
 	segClient := segment.InitClient()
 	defer segClient.Client.Close()
 
@@ -51,7 +50,7 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 			// domain id
 			domainId, err := civoConf.GetDNSInfo(clctrl.DomainName, clctrl.CloudRegion)
 			if err != nil {
-				telemetry.SendEvent(clctrl.SegmentClient, telemetry.DomainLivenessFailed, err.Error())
+				telemetry.SendEvent(segClient, telemetry.DomainLivenessFailed, err.Error())
 				log.Info(err.Error())
 			}
 
@@ -126,7 +125,7 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 			return err
 		}
 
-		telemetry.SendEvent(clctrl.SegmentClient, telemetry.DomainLivenessCompleted, "")
+		telemetry.SendEvent(segClient, telemetry.DomainLivenessCompleted, "")
 
 		log.Infof("domain %s verified", clctrl.DomainName)
 	}

@@ -12,6 +12,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/civo"
@@ -37,7 +38,9 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 	}
 
 	var stateStoreData pkgtypes.StateStoreCredentials
-	telemetry.SendEvent(clctrl.SegmentClient, telemetry.StateStoreCredentialsCreateStarted, "")
+	segClient := segment.InitClient()
+	defer segClient.Client.Close()
+	telemetry.SendEvent(segClient, telemetry.StateStoreCredentialsCreateStarted, "")
 
 	if !cl.StateStoreCredsCheck {
 		switch clctrl.CloudProvider {
@@ -100,7 +103,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			if err != nil {
 				msg := fmt.Sprintf("error creating spaces bucket %s: %s", clctrl.KubefirstStateStoreBucketName, err)
 				log.Error(msg)
-				telemetry.SendEvent(clctrl.SegmentClient, telemetry.StateStoreCredentialsCreateFailed, err.Error())
+				telemetry.SendEvent(segClient, telemetry.StateStoreCredentialsCreateFailed, err.Error())
 				return fmt.Errorf(msg)
 			}
 
@@ -126,7 +129,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			if err != nil {
 				msg := fmt.Sprintf("error creating google bucket %s: %s", clctrl.KubefirstStateStoreBucketName, err)
 				log.Error()
-				telemetry.SendEvent(clctrl.SegmentClient, telemetry.StateStoreCreateFailed, msg)
+				telemetry.SendEvent(segClient, telemetry.StateStoreCreateFailed, msg)
 				return fmt.Errorf(msg)
 			}
 
@@ -141,7 +144,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 
 			objst, err := vultrConf.CreateObjectStorage(clctrl.KubefirstStateStoreBucketName)
 			if err != nil {
-				telemetry.SendEvent(clctrl.SegmentClient, telemetry.StateStoreCreateFailed, err.Error())
+				telemetry.SendEvent(segClient, telemetry.StateStoreCreateFailed, err.Error())
 				log.Error(err.Error())
 				return err
 			}
@@ -197,19 +200,21 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 	if !cl.StateStoreCreateCheck {
 		switch clctrl.CloudProvider {
 		case "civo":
+			segClient := segment.InitClient()
+			defer segClient.Client.Close()
 			civoConf := civo.CivoConfiguration{
 				Client:  civo.NewCivo(cl.CivoAuth.Token, cl.CloudRegion),
 				Context: context.Background(),
 			}
 
-			telemetry.SendEvent(clctrl.SegmentClient, telemetry.StateStoreCreateStarted, "")
+			telemetry.SendEvent(segClient, telemetry.StateStoreCreateStarted, "")
 
 			accessKeyId := cl.StateStoreCredentials.AccessKeyID
 			log.Infof("access key id %s", accessKeyId)
 
 			bucket, err := civoConf.CreateStorageBucket(accessKeyId, clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
 			if err != nil {
-				telemetry.SendEvent(clctrl.SegmentClient, telemetry.StateStoreCreateFailed, err.Error())
+				telemetry.SendEvent(segClient, telemetry.StateStoreCreateFailed, err.Error())
 				log.Error(err.Error())
 				return err
 			}
@@ -229,7 +234,7 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 				return err
 			}
 
-			telemetry.SendEvent(clctrl.SegmentClient, telemetry.StateStoreCreateCompleted, "")
+			telemetry.SendEvent(segClient, telemetry.StateStoreCreateCompleted, "")
 			log.Infof("%s state store bucket created", clctrl.CloudProvider)
 		}
 	}
