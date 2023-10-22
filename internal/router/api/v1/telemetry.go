@@ -14,7 +14,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
-	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/segmentio/analytics-go"
 )
@@ -55,7 +54,7 @@ func PostTelemetry(c *gin.Context) {
 			UserId:            machineID,
 			MetricName:        telemetry.ClusterDeleteStarted,
 		},
-		Client: analytics.New(segment.SegmentIOWriteKey),
+		Client: analytics.New(telemetry.SegmentIOWriteKey),
 	}
 	defer segClient.Client.Close()
 	useTelemetry := true
@@ -94,7 +93,7 @@ func PostTelemetry(c *gin.Context) {
 		return
 	}
 
-	telemetry.SendCountMetric(&segClient, req.Event, err.Error())
+	telemetry.SendEvent(&segClient, req.Event, err.Error())
 
 	c.JSON(http.StatusOK, true)
 }

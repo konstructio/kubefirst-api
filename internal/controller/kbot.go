@@ -34,7 +34,7 @@ func (clctrl *ClusterController) InitializeBot() error {
 		clctrl.GitAuth.PrivateKey, clctrl.GitAuth.PublicKey, err = internalssh.CreateSshKeyPair()
 		if err != nil {
 			log.Errorf("error generating ssh keys: %s", err)
-			telemetry.SendCountMetric(clctrl.SegmentClient, telemetry.KbotSetupFailed, err.Error())
+			telemetry.SendEvent(clctrl.SegmentClient, telemetry.KbotSetupFailed, err.Error())
 			return err
 		}
 

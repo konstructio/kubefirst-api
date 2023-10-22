@@ -42,7 +42,7 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, segmentClient *telemetry.SegmentCl
 	log.SetReportCaller(false)
 	log.SetOutput(os.Stdout)
 
-	telemetry.SendCountMetric(segmentClient, telemetry.ClusterDeleteStarted, "")
+	telemetry.SendEvent(segmentClient, telemetry.ClusterDeleteStarted, "")
 
 	// Instantiate vultr config
 	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.Token, "")
@@ -279,7 +279,7 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, segmentClient *telemetry.SegmentCl
 		}
 	}
 
-	telemetry.SendCountMetric(segmentClient, telemetry.ClusterDeleteCompleted, "")
+	telemetry.SendEvent(segmentClient, telemetry.ClusterDeleteCompleted, "")
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleted)
 	if err != nil {

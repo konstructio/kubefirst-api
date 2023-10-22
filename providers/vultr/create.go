@@ -227,7 +227,7 @@ func CreateVultrCluster(definition *pkgtypes.ClusterDefinition) error {
 
 		log.Info("cluster creation complete")
 
-		telemetry.SendCountMetric(ctrl.Telemetry, telemetry.ClusterInstallCompleted, "")
+		telemetry.SendEvent(ctrl.SegmentClient, telemetry.ClusterInstallCompleted, "")
 
 		// Create default service entries
 		cl, _ := db.Client.GetCluster(ctrl.ClusterName)

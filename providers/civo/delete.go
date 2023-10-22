@@ -41,7 +41,7 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster, segmentClient *telemetry.SegmentCli
 	log.SetReportCaller(false)
 	log.SetOutput(os.Stdout)
 
-	telemetry.SendCountMetric(segmentClient, telemetry.ClusterDeleteStarted, "")
+	telemetry.SendEvent(segmentClient, telemetry.ClusterDeleteStarted, "")
 
 	// Instantiate civo config
 	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.APIToken, cl.CloudflareAuth.OriginCaIssuerKey)
@@ -249,7 +249,7 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster, segmentClient *telemetry.SegmentCli
 		}
 	}
 
-	telemetry.SendCountMetric(segmentClient, telemetry.ClusterDeleteCompleted, "")
+	telemetry.SendEvent(segmentClient, telemetry.ClusterDeleteCompleted, "")
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleted)
 	if err != nil {

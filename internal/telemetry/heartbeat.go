@@ -5,17 +5,16 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
-	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/segmentio/analytics-go"
 )
 
 func Heartbeat(segmentClient *telemetry.SegmentClient, dbClient *db.MongoDBClient) {
-	telemetry.SendCountMetric(segmentClient, telemetry.KubefirstHeartbeat, "")
+	telemetry.SendEvent(segmentClient, telemetry.KubefirstHeartbeat, "")
 	HeartbeatWorkloadClusters(segmentClient, dbClient)
 
 	for range time.Tick(time.Second * 30) {
-		telemetry.SendCountMetric(segmentClient, telemetry.KubefirstHeartbeat, "")
+		telemetry.SendEvent(segmentClient, telemetry.KubefirstHeartbeat, "")
 		HeartbeatWorkloadClusters(segmentClient, dbClient)
 	}
 }
@@ -46,11 +45,11 @@ func HeartbeatWorkloadClusters(segmentClient *telemetry.SegmentClient, dbClient 
 							UserId:            segmentClient.TelemetryEvent.MachineID,
 							MetricName:        telemetry.KubefirstHeartbeat,
 						},
-						Client: analytics.New(segment.SegmentIOWriteKey),
+						Client: analytics.New(telemetry.SegmentIOWriteKey),
 					}
 					defer workloadClient.Client.Close()
 
-					telemetry.SendCountMetric(&workloadClient, telemetry.KubefirstHeartbeat, "")
+					telemetry.SendEvent(&workloadClient, telemetry.KubefirstHeartbeat, "")
 				}
 			}
 		}

@@ -52,7 +52,7 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 			}
 		}
 
-		telemetry.SendCountMetric(clctrl.SegmentClient, telemetry.UsersTerraformApplyStarted, err.Error())
+		telemetry.SendEvent(clctrl.SegmentClient, telemetry.UsersTerraformApplyStarted, err.Error())
 		log.Info("applying users terraform")
 
 		tfEnvs := map[string]string{}
@@ -80,11 +80,11 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		err = terraformext.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Errorf("error applying users terraform: %s", err)
-			telemetry.SendCountMetric(clctrl.SegmentClient, telemetry.UsersTerraformApplyFailed, err.Error())
+			telemetry.SendEvent(clctrl.SegmentClient, telemetry.UsersTerraformApplyFailed, err.Error())
 			return err
 		}
 		log.Info("executed users terraform successfully")
-		telemetry.SendCountMetric(clctrl.SegmentClient, telemetry.UsersTerraformApplyCompleted, err.Error())
+		telemetry.SendEvent(clctrl.SegmentClient, telemetry.UsersTerraformApplyCompleted, err.Error())
 
 		clctrl.VaultAuth.RootToken = tfEnvs["VAULT_TOKEN"]
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "vault_auth.root_token", clctrl.VaultAuth.RootToken)

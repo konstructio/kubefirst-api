@@ -4,9 +4,8 @@ import (
 	"os"
 
 	"github.com/denisbrodbeck/machineid"
-	"github.com/kubefirst/runtime/pkg/segment"
-
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
+
 	"github.com/segmentio/analytics-go"
 )
 
@@ -17,6 +16,7 @@ const (
 func InitClient() *telemetry.SegmentClient {
 
 	machineID, _ := machineid.ID()
+	sc := analytics.New(telemetry.SegmentIOWriteKey)
 
 	c := telemetry.SegmentClient{
 		TelemetryEvent: telemetry.TelemetryEvent{
@@ -35,7 +35,7 @@ func InitClient() *telemetry.SegmentClient {
 			UserId:            machineID,
 			MetricName:        telemetry.KubefirstHeartbeat,
 		},
-		Client: analytics.New(segment.SegmentIOWriteKey),
+		Client: sc,
 	}
 
 	return &c

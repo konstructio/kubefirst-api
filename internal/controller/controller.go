@@ -20,7 +20,6 @@ import (
 	google "github.com/kubefirst/kubefirst-api/pkg/google"
 	"github.com/kubefirst/kubefirst-api/pkg/handlers"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
-	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg"
@@ -172,7 +171,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 			UserId:            machineID,
 			MetricName:        telemetry.ClusterInstallStarted,
 		},
-		Client: analytics.New(segment.SegmentIOWriteKey),
+		Client: analytics.New(telemetry.SegmentIOWriteKey),
 	}
 	if err != nil {
 		log.Warn(err)
@@ -180,9 +179,9 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	defer segClient.Client.Close()
 
 	if clctrl.SegmentClient.UseTelemetry {
-		telemetry.SendCountMetric(&segClient, telemetry.ClusterInstallStarted, err.Error())
+		telemetry.SendEvent(&segClient, telemetry.ClusterInstallStarted, err.Error())
 	}
-	clctrl.Telemetry = &segClient
+	clctrl.SegmentClient = &segClient
 
 	//Copy Cluster Definiion to Cluster Controller
 	clctrl.AlertsEmail = def.AdminEmail
