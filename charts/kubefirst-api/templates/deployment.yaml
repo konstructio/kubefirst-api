@@ -166,7 +166,7 @@ spec:
             "cluster-zero",
           ]
           env:
-            - name: CLI_VERSION
+            - name: KUBEFIRST_VERSION
               value: {{ .Values.global.kubefirstVersion | default "unset" }}
             - name: CLOUD_PROVIDER
               value: {{ .Values.cloudProvider | default "unset" }}
