@@ -201,7 +201,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		}
 		segClient := segment.InitClient()
 		defer segClient.Client.Close()
-		telemetry.SendEvent(segClient, telemetry.VaultTerraformApplyStarted, err.Error())
+		telemetry.SendEvent(segClient, telemetry.VaultTerraformApplyStarted, "")
 
 		tfEnvs := map[string]string{}
 
