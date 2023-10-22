@@ -20,7 +20,6 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
-	"github.com/kubefirst/kubefirst-api/pkg/metrics"
 	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/kubefirst-api/providers/aws"
@@ -81,7 +80,7 @@ func DeleteCluster(c *gin.Context) {
 			MachineID:         machineID,
 			ErrorMessage:      err.Error(),
 			UserId:            machineID,
-			MetricName:        metrics.ClusterDeleteStarted,
+			MetricName:        telemetry.ClusterDeleteStarted,
 		},
 		Client: analytics.New(segment.SegmentIOWriteKey),
 	}

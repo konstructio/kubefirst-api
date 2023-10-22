@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/denisbrodbeck/machineid"
-	"github.com/kubefirst/kubefirst-api/pkg/metrics"
 	"github.com/kubefirst/runtime/pkg/segment"
 
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
@@ -12,11 +11,7 @@ import (
 )
 
 const (
-	// SegmentIO constants
-	// SegmentIOWriteKey The write key is the unique identifier for a source that tells Segment which source data comes
-	// from, to which workspace the data belongs, and which destinations should receive the data.
-	SegmentIOWriteKey        = "0gAYkX5RV3vt7s4pqCOOsDb6WHPLT30M"
-	kubefirstClient   string = "api"
+	kubefirstClient string = "api"
 )
 
 func InitClient() *telemetry.SegmentClient {
@@ -38,7 +33,7 @@ func InitClient() *telemetry.SegmentClient {
 			MachineID:         machineID,
 			ErrorMessage:      "",
 			UserId:            machineID,
-			MetricName:        metrics.KubefirstHeartbeat,
+			MetricName:        telemetry.KubefirstHeartbeat,
 		},
 		Client: analytics.New(segment.SegmentIOWriteKey),
 	}

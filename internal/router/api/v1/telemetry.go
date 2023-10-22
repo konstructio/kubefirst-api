@@ -14,7 +14,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
-	"github.com/kubefirst/kubefirst-api/pkg/metrics"
 	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/segmentio/analytics-go"
@@ -54,7 +53,7 @@ func PostTelemetry(c *gin.Context) {
 			MachineID:         machineID,
 			ErrorMessage:      "",
 			UserId:            machineID,
-			MetricName:        metrics.ClusterDeleteStarted,
+			MetricName:        telemetry.ClusterDeleteStarted,
 		},
 		Client: analytics.New(segment.SegmentIOWriteKey),
 	}

@@ -20,7 +20,6 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/errors"
-	"github.com/kubefirst/kubefirst-api/pkg/metrics"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
@@ -43,7 +42,7 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, segmentClient *telemetry.SegmentCl
 	log.SetReportCaller(false)
 	log.SetOutput(os.Stdout)
 
-	telemetry.SendCountMetric(segmentClient, metrics.ClusterDeleteStarted, "")
+	telemetry.SendCountMetric(segmentClient, telemetry.ClusterDeleteStarted, "")
 
 	// Instantiate vultr config
 	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.Token, "")
@@ -280,7 +279,7 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, segmentClient *telemetry.SegmentCl
 		}
 	}
 
-	telemetry.SendCountMetric(segmentClient, metrics.ClusterDeleteCompleted, "")
+	telemetry.SendCountMetric(segmentClient, telemetry.ClusterDeleteCompleted, "")
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleted)
 	if err != nil {

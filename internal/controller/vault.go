@@ -22,7 +22,6 @@ import (
 	googleext "github.com/kubefirst/kubefirst-api/extensions/google"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
-	"github.com/kubefirst/kubefirst-api/pkg/metrics"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	vault "github.com/kubefirst/runtime/pkg/vault"
@@ -97,7 +96,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 			}
 		}
 
-		telemetry.SendCountMetric(clctrl.Telemetry, metrics.VaultInitializationStarted, err.Error())
+		telemetry.SendCountMetric(clctrl.SegmentClient, telemetry.VaultInitializationStarted, err.Error())
 
 		switch clctrl.CloudProvider {
 		case "aws", "google":
@@ -151,11 +150,11 @@ func (clctrl *ClusterController) InitializeVault() error {
 			_, err = k8s.WaitForJobComplete(kcfg.Clientset, job, 240)
 			if err != nil {
 				msg := fmt.Sprintf("could not run vault unseal job: %s", err)
-				telemetry.SendCountMetric(clctrl.Telemetry, metrics.VaultInitializationFailed, err.Error())
+				telemetry.SendCountMetric(clctrl.SegmentClient, telemetry.VaultInitializationFailed, err.Error())
 				log.Error(msg)
 			}
 		}
-		telemetry.SendCountMetric(clctrl.Telemetry, metrics.VaultInitializationCompleted, err.Error())
+		telemetry.SendCountMetric(clctrl.SegmentClient, telemetry.VaultInitializationCompleted, err.Error())
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "vault_initialized_check", true)
 		if err != nil {
@@ -197,7 +196,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 				return err
 			}
 		}
-		telemetry.SendCountMetric(clctrl.Telemetry, metrics.VaultTerraformApplyStarted, err.Error())
+		telemetry.SendCountMetric(clctrl.SegmentClient, telemetry.VaultTerraformApplyStarted, err.Error())
 
 		tfEnvs := map[string]string{}
 
@@ -251,12 +250,12 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		err = terraformext.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Errorf("error applying vault terraform: %s", err)
-			telemetry.SendCountMetric(clctrl.Telemetry, metrics.VaultTerraformApplyFailed, err.Error())
+			telemetry.SendCountMetric(clctrl.SegmentClient, telemetry.VaultTerraformApplyFailed, err.Error())
 			return err
 		}
 
 		log.Info("vault terraform executed successfully")
-		telemetry.SendCountMetric(clctrl.Telemetry, metrics.VaultTerraformApplyCompleted, err.Error())
+		telemetry.SendCountMetric(clctrl.SegmentClient, telemetry.VaultTerraformApplyCompleted, err.Error())
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "vault_terraform_apply_check", true)
 		if err != nil {

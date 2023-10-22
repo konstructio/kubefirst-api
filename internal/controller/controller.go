@@ -19,7 +19,6 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 	google "github.com/kubefirst/kubefirst-api/pkg/google"
 	"github.com/kubefirst/kubefirst-api/pkg/handlers"
-	"github.com/kubefirst/kubefirst-api/pkg/metrics"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
@@ -107,8 +106,7 @@ type ClusterController struct {
 	MdbCl *db.MongoDBClient
 
 	// Telemetry
-	Telemetry    *telemetry.SegmentClient
-	UseTelemetry bool
+	SegmentClient *telemetry.SegmentClient
 
 	// Provider clients
 	AwsClient    *awsinternal.AWSConfiguration
@@ -149,9 +147,9 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	}
 
 	if os.Getenv("USE_TELEMETRY") == "false" {
-		clctrl.UseTelemetry = false
+		clctrl.SegmentClient.UseTelemetry = false
 	} else {
-		clctrl.UseTelemetry = true
+		clctrl.SegmentClient.UseTelemetry = true
 	}
 
 	// Telemetry handle
@@ -172,7 +170,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 			MachineID:         machineID,
 			ErrorMessage:      "",
 			UserId:            machineID,
-			MetricName:        metrics.ClusterInstallStarted,
+			MetricName:        telemetry.ClusterInstallStarted,
 		},
 		Client: analytics.New(segment.SegmentIOWriteKey),
 	}
@@ -181,8 +179,8 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	}
 	defer segClient.Client.Close()
 
-	if clctrl.UseTelemetry {
-		telemetry.SendCountMetric(&segClient, metrics.ClusterInstallStarted, err.Error())
+	if clctrl.SegmentClient.UseTelemetry {
+		telemetry.SendCountMetric(&segClient, telemetry.ClusterInstallStarted, err.Error())
 	}
 	clctrl.Telemetry = &segClient
 
@@ -293,16 +291,16 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	}
 
 	if os.Getenv("USE_TELEMETRY") == "false" {
-		clctrl.UseTelemetry = false
+		clctrl.SegmentClient.UseTelemetry = false
 	} else {
-		clctrl.UseTelemetry = true
+		clctrl.SegmentClient.UseTelemetry = true
 	}
 
 	// Write cluster record if it doesn't exist
 	cl := pkgtypes.Cluster{
 		ID:                    primitive.NewObjectID(),
 		CreationTimestamp:     fmt.Sprintf("%v", primitive.NewDateTimeFromTime(time.Now().UTC())),
-		UseTelemetry:          clctrl.UseTelemetry,
+		UseTelemetry:          clctrl.SegmentClient.UseTelemetry,
 		Status:                constants.ClusterStatusProvisioning,
 		AlertsEmail:           clctrl.AlertsEmail,
 		ClusterName:           clctrl.ClusterName,

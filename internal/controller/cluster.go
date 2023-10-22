@@ -19,7 +19,6 @@ import (
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
-	"github.com/kubefirst/kubefirst-api/pkg/metrics"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
@@ -51,7 +50,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 		tfEntrypoint := clctrl.ProviderConfig.GitopsDir + fmt.Sprintf("/terraform/%s", clctrl.CloudProvider)
 		tfEnvs := map[string]string{}
 
-		telemetry.SendCountMetric(clctrl.Telemetry, metrics.CloudTerraformApplyStarted, err.Error())
+		telemetry.SendCountMetric(clctrl.SegmentClient, telemetry.CloudTerraformApplyStarted, err.Error())
 
 		log.Infof("creating %s cluster", clctrl.CloudProvider)
 
@@ -87,12 +86,12 @@ func (clctrl *ClusterController) CreateCluster() error {
 			if err != nil {
 				return err
 			}
-			telemetry.SendCountMetric(clctrl.Telemetry, metrics.CloudTerraformApplyFailed, err.Error())
+			telemetry.SendCountMetric(clctrl.SegmentClient, telemetry.CloudTerraformApplyFailed, err.Error())
 			return fmt.Errorf(msg)
 		}
 
 		log.Infof("created %s cloud resources", clctrl.CloudProvider)
-		telemetry.SendCountMetric(clctrl.Telemetry, metrics.CloudTerraformApplyCompleted, err.Error())
+		telemetry.SendCountMetric(clctrl.SegmentClient, telemetry.CloudTerraformApplyCompleted, err.Error())
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", false)
 		if err != nil {
