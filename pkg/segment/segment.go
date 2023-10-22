@@ -18,9 +18,14 @@ func InitClient() *telemetry.SegmentClient {
 	machineID, _ := machineid.ID()
 	sc := analytics.New(telemetry.SegmentIOWriteKey)
 
+	kubefirstVersion := os.Getenv("KUBEFIRST_VERSION")
+	if kubefirstVersion == "" {
+		kubefirstVersion = "development"
+	}
+
 	c := telemetry.SegmentClient{
 		TelemetryEvent: telemetry.TelemetryEvent{
-			CliVersion:        os.Getenv("KUBEFIRST_VERSION"),
+			CliVersion:        kubefirstVersion,
 			CloudProvider:     os.Getenv("CLOUD_PROVIDER"),
 			ClusterID:         os.Getenv("CLUSTER_ID"),
 			ClusterType:       os.Getenv("CLUSTER_TYPE"),

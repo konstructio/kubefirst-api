@@ -24,7 +24,7 @@ func Heartbeat(segmentClient *telemetry.SegmentClient, dbClient *db.MongoDBClien
 }
 
 func HeartbeatWorkloadClusters(segmentClient *telemetry.SegmentClient, dbClient *db.MongoDBClient) error {
-	
+
 	clusters, _ := dbClient.GetClusters()
 
 	for _, cluster := range clusters {
@@ -32,7 +32,7 @@ func HeartbeatWorkloadClusters(segmentClient *telemetry.SegmentClient, dbClient 
 			for _, workloadCluster := range cluster.WorkloadClusters {
 				if workloadCluster.Status == constants.ClusterStatusProvisioned {
 
-					workloadClient := telemetry.SegmentClient{
+					workloadClient := &telemetry.SegmentClient{
 						TelemetryEvent: telemetry.TelemetryEvent{
 							CliVersion:        segmentClient.TelemetryEvent.CliVersion,
 							CloudProvider:     workloadCluster.CloudProvider,
@@ -53,7 +53,7 @@ func HeartbeatWorkloadClusters(segmentClient *telemetry.SegmentClient, dbClient 
 					}
 					defer workloadClient.Client.Close()
 
-					telemetry.SendEvent(&workloadClient, telemetry.KubefirstHeartbeat, "")
+					telemetry.SendEvent(workloadClient, telemetry.KubefirstHeartbeat, "")
 				}
 			}
 		}
