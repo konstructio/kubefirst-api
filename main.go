@@ -12,6 +12,8 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/environments"
 	"github.com/kubefirst/kubefirst-api/internal/services"
+	"github.com/kubefirst/kubefirst-api/pkg/metrics"
+	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/segmentio/analytics-go"
 
@@ -111,14 +113,12 @@ func main() {
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	docs.SwaggerInfo.Schemes = []string{"http"}
 
-	cl, err := db.Client.GetCluster(os.Getenv("CLUSTER_NAME"))
-	if err != nil {
-		log.Warn(err)
-	}
+	// cl, err := db.Client.GetCluster(os.Getenv("CLUSTER_NAME"))
+	// if err != nil {
+	// 	log.Warn(err)
+	// }
 
 	// Telemetry handler
-	segmentClient := analytics.New(telemetry.SegmentIOWriteKey)
-
 	segClient := telemetry.SegmentClient{
 		TelemetryEvent: telemetry.TelemetryEvent{
 			CliVersion:        "",
@@ -136,19 +136,16 @@ func main() {
 			UserId:            "",
 			MetricName:        "",
 		},
-		Client: segmentClient,
+		Client: analytics.New(segment.SegmentIOWriteKey),
 	}
-	if err != nil {
-		log.Warn(err)
-	}
-	defer segmentClient.Close()
+	defer segClient.Client.Close()
 
 	// Subroutine to automatically update gitops catalog
 	go utils.ScheduledGitopsCatalogUpdate()
 
 	// Subroutine to emit heartbeat
 	if useTelemetry {
-		go telemetry.Heartbeat(&segClient)
+		go telemetry.SendCountMetric(&segClient, metrics.KubefirstHeartbeat, "")
 	}
 
 	// API

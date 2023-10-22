@@ -12,6 +12,7 @@ import (
 
 	"net/http"
 
+	"github.com/denisbrodbeck/machineid"
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
@@ -19,13 +20,17 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
+	"github.com/kubefirst/kubefirst-api/pkg/metrics"
+	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/kubefirst-api/providers/aws"
 	"github.com/kubefirst/kubefirst-api/providers/civo"
 	"github.com/kubefirst/kubefirst-api/providers/digitalocean"
 	"github.com/kubefirst/kubefirst-api/providers/google"
 	"github.com/kubefirst/kubefirst-api/providers/vultr"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/segmentio/analytics-go"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -59,6 +64,29 @@ func DeleteCluster(c *gin.Context) {
 		return
 	}
 
+	// Telemetry handler
+	machineID, _ := machineid.ID()
+	segClient := telemetry.SegmentClient{
+		TelemetryEvent: telemetry.TelemetryEvent{
+			CliVersion:        os.Getenv("KUBEFIRST_VERSION"),
+			CloudProvider:     rec.CloudProvider,
+			ClusterID:         rec.ClusterID,
+			ClusterType:       rec.ClusterType,
+			DomainName:        rec.DomainName,
+			GitProvider:       rec.GitProvider,
+			InstallMethod:     "",
+			KubefirstClient:   "api",
+			KubefirstTeam:     os.Getenv("KUBEFIRST_TEAM"),
+			KubefirstTeamInfo: os.Getenv("KUBEFIRST_TEAM_INFO"),
+			MachineID:         machineID,
+			ErrorMessage:      err.Error(),
+			UserId:            machineID,
+			MetricName:        metrics.ClusterDeleteStarted,
+		},
+		Client: analytics.New(segment.SegmentIOWriteKey),
+	}
+	defer segClient.Client.Close()
+
 	if rec.LastCondition != "" {
 		err = db.Client.UpdateCluster(rec.ClusterName, "last_condition", "")
 		if err != nil {
@@ -75,7 +103,7 @@ func DeleteCluster(c *gin.Context) {
 	switch rec.CloudProvider {
 	case "aws":
 		go func() {
-			err := aws.DeleteAWSCluster(&rec)
+			err := aws.DeleteAWSCluster(&rec, &segClient)
 			if err != nil {
 				log.Errorf(err.Error())
 			}
@@ -86,7 +114,7 @@ func DeleteCluster(c *gin.Context) {
 		})
 	case "civo":
 		go func() {
-			err := civo.DeleteCivoCluster(&rec)
+			err := civo.DeleteCivoCluster(&rec, &segClient)
 			if err != nil {
 				log.Errorf(err.Error())
 			}
@@ -97,7 +125,7 @@ func DeleteCluster(c *gin.Context) {
 		})
 	case "digitalocean":
 		go func() {
-			err := digitalocean.DeleteDigitaloceanCluster(&rec)
+			err := digitalocean.DeleteDigitaloceanCluster(&rec, &segClient)
 			if err != nil {
 				log.Errorf(err.Error())
 			}
@@ -108,7 +136,7 @@ func DeleteCluster(c *gin.Context) {
 		})
 	case "vultr":
 		go func() {
-			err := vultr.DeleteVultrCluster(&rec)
+			err := vultr.DeleteVultrCluster(&rec, &segClient)
 			if err != nil {
 				log.Errorf(err.Error())
 			}
@@ -119,7 +147,7 @@ func DeleteCluster(c *gin.Context) {
 		})
 	case "google":
 		go func() {
-			err := google.DeleteGoogleCluster(&rec)
+			err := google.DeleteGoogleCluster(&rec, &segClient)
 			if err != nil {
 				log.Errorf(err.Error())
 			}

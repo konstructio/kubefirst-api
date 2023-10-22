@@ -122,11 +122,11 @@ func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 	}
 
 	// Cluster bootstrap (aws specific)
-	rec, err := ctrl.GetCurrentClusterRecord()
-	if err != nil {
-		ctrl.HandleError(err.Error())
-		return err
-	}
+	// rec, err := ctrl.GetCurrentClusterRecord()
+	// if err != nil {
+	// 	ctrl.HandleError(err.Error())
+	// 	return err
+	// }
 
 	err = ctrl.InstallArgoCD()
 	if err != nil {

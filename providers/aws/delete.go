@@ -32,7 +32,7 @@ import (
 )
 
 // DeleteAWSCluster
-func DeleteAWSCluster(cl *pkgtypes.Cluster) error {
+func DeleteAWSCluster(cl *pkgtypes.Cluster, segmentClient *telemetry.SegmentClient) error {
 	// Logging handler
 	// Logs to stdout to maintain compatibility with event streaming
 	log.SetFormatter(&log.TextFormatter{
@@ -42,19 +42,12 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster) error {
 	log.SetReportCaller(false)
 	log.SetOutput(os.Stdout)
 
-	// Telemetry handler
-	segmentClient, err := telemetry.SetupTelemetry(*cl)
-	if err != nil {
-		return err
-	}
-	defer segmentClient.Client.Close()
-
-	telemetry.SendCountMetric(segmentClient, metrics.ClusterDeleteStarted, err.Error())
+	telemetry.SendCountMetric(segmentClient, metrics.ClusterDeleteStarted, "")
 
 	// Instantiate aws config
 	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.APIToken, cl.CloudflareAuth.OriginCaIssuerKey)
 
-	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleting)
+	err := db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleting)
 	if err != nil {
 		return err
 	}
@@ -261,7 +254,7 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster) error {
 		}
 	}
 
-	//telemetry.Transmit(segmentClient, telemetry.MetricClusterDeleteCompleted, "")
+	telemetry.SendCountMetric(segmentClient, metrics.ClusterDeleteCompleted, "")
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleted)
 	if err != nil {

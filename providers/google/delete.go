@@ -21,8 +21,10 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/errors"
 	"github.com/kubefirst/kubefirst-api/pkg/google"
+	"github.com/kubefirst/kubefirst-api/pkg/metrics"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
@@ -31,7 +33,7 @@ import (
 )
 
 // DeleteGoogleCluster
-func DeleteGoogleCluster(cl *pkgtypes.Cluster) error {
+func DeleteGoogleCluster(cl *pkgtypes.Cluster, segmentClient *telemetry.SegmentClient) error {
 	// Logging handler
 	// Logs to stdout to maintain compatibility with event streaming
 	log.SetFormatter(&log.TextFormatter{
@@ -41,19 +43,12 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster) error {
 	log.SetReportCaller(false)
 	log.SetOutput(os.Stdout)
 
-	// Telemetry handler
-	segmentClient, err := telemetry.SetupTelemetry(*cl)
-	if err != nil {
-		return err
-	}
-	defer segmentClient.Client.Close()
-
-	//telemetry.Transmit(segmentClient, telemetry.MetricClusterDeleteStarted, "")
+	telemetry.SendCountMetric(segmentClient, metrics.ClusterDeleteStarted, "")
 
 	// Instantiate google config
 	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.Token, "")
 
-	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleting)
+	err := db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleting)
 	if err != nil {
 		return err
 	}

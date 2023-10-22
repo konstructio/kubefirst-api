@@ -13,7 +13,9 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/controller"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/services"
+	"github.com/kubefirst/kubefirst-api/pkg/metrics"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/ssl"
 	log "github.com/sirupsen/logrus"
@@ -226,20 +228,7 @@ func CreateVultrCluster(definition *pkgtypes.ClusterDefinition) error {
 
 		log.Info("cluster creation complete")
 
-		// Telemetry handler
-		rec, err := ctrl.GetCurrentClusterRecord()
-		if err != nil {
-			return err
-		}
-
-		// Telemetry handler
-		segmentClient, err := telemetry.SetupTelemetry(rec)
-		if err != nil {
-			return err
-		}
-		defer segmentClient.Client.Close()
-
-		//telemetry.Transmit(segmentClient, telemetry.MetricClusterInstallCompleted, "")
+		telemetry.SendCountMetric(ctrl.Telemetry, metrics.ClusterInstallCompleted, "")
 
 		// Create default service entries
 		cl, _ := db.Client.GetCluster(ctrl.ClusterName)
