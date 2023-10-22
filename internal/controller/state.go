@@ -38,13 +38,9 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 	}
 
 	var stateStoreData pkgtypes.StateStoreCredentials
-<<<<<<< HEAD
-	telemetry.SendEvent(clctrl.SegmentClient, telemetry.StateStoreCredentialsCreateStarted, "")
-=======
 	segClient := segment.InitClient()
 	defer segClient.Client.Close()
 	telemetry.SendEvent(segClient, telemetry.StateStoreCredentialsCreateStarted, "")
->>>>>>> eeb0e87e1ac5c48d1a7c29dda4c700b382811a7c
 
 	if !cl.StateStoreCredsCheck {
 		switch clctrl.CloudProvider {
