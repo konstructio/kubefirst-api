@@ -51,9 +51,11 @@ func HeartbeatWorkloadClusters(segmentClient *telemetry.SegmentClient, dbClient 
 						},
 						Client: analytics.New(telemetry.SegmentIOWriteKey),
 					}
+
 					defer workloadClient.Client.Close()
 
 					telemetry.SendEvent(workloadClient, telemetry.KubefirstHeartbeat, "")
+					time.Sleep(time.Second * 3)
 				}
 			}
 		}
