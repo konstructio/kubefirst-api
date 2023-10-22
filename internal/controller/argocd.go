@@ -57,6 +57,7 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 		argoCDInstallPath := fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
 		log.Infof("installing argocd")
 
+		telemetry.SendCountMetric(clctrl.Telemetry, metrics.ArgoCDInstallStarted, err.Error())
 		err = argocd.ApplyArgoCDKustomize(kcfg.Clientset, argoCDInstallPath)
 		if err != nil {
 
