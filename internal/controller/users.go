@@ -37,13 +37,6 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		return err
 	}
 
-	// Telemetry handler
-	segmentClient, err := telemetry.SetupTelemetry(cl)
-	if err != nil {
-		return err
-	}
-	defer segmentClient.Client.Close()
-
 	if !cl.UsersTerraformApplyCheck {
 		var kcfg *k8s.KubernetesClient
 

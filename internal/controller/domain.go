@@ -28,7 +28,7 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 	}
 
 	if !cl.DomainLivenessCheck {
-		telemetry.SendCountMetric(clctrl.Telemetry, metrics.DomainLivenessStarted)
+		telemetry.SendCountMetric(clctrl.Telemetry, metrics.DomainLivenessStarted, err.Error())
 
 		switch clctrl.DnsProvider {
 		case "aws":
@@ -47,7 +47,7 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 			// domain id
 			domainId, err := civoConf.GetDNSInfo(clctrl.DomainName, clctrl.CloudRegion)
 			if err != nil {
-				telemetry.SendCountMetric(clctrl.Telemetry, metrics.DomainLivenessFailed)
+				telemetry.SendCountMetric(clctrl.Telemetry, metrics.DomainLivenessFailed, err.Error())
 				log.Info(err.Error())
 			}
 
@@ -122,7 +122,7 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 			return err
 		}
 
-		telemetry.SendCountMetric(clctrl.Telemetry, metrics.DomainLivenessCompleted)
+		telemetry.SendCountMetric(clctrl.Telemetry, metrics.DomainLivenessCompleted, err.Error())
 
 		log.Infof("domain %s verified", clctrl.DomainName)
 	}

@@ -195,7 +195,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 		gitopsDir := clctrl.ProviderConfig.GitopsDir
 		metaphorDir := clctrl.ProviderConfig.MetaphorDir
 
-		telemetry.SendCountMetric(clctrl.Telemetry, metrics.GitopsRepoPushStarted))
+		telemetry.SendCountMetric(clctrl.Telemetry, metrics.GitopsRepoPushStarted, err.Error())
 		gitopsRepo, err := git.PlainOpen(gitopsDir)
 		if err != nil {
 			log.Infof("error opening repo at: %s", gitopsDir)
@@ -251,7 +251,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 		)
 		if err != nil {
 			msg := fmt.Sprintf("error pushing detokenized gitops repository to remote %s: %s", clctrl.ProviderConfig.DestinationGitopsRepoURL, err)
-			telemetry.SendCountMetric(clctrl.Telemetry, metrics.GitopsRepoPushFailed)
+			telemetry.SendCountMetric(clctrl.Telemetry, metrics.GitopsRepoPushFailed, err.Error())
 			return fmt.Errorf(msg)
 		}
 
@@ -267,14 +267,14 @@ func (clctrl *ClusterController) RepositoryPush() error {
 		)
 		if err != nil {
 			msg := fmt.Sprintf("error pushing detokenized metaphor repository to remote %s: %s", clctrl.ProviderConfig.DestinationMetaphorRepoURL, err)
-			telemetry.SendCountMetric(clctrl.Telemetry, metrics.GitopsRepoPushFailed)
+			telemetry.SendCountMetric(clctrl.Telemetry, metrics.GitopsRepoPushFailed, err.Error())
 			return fmt.Errorf(msg)
 		}
 
 		log.Infof("successfully pushed gitops and metaphor repositories to git@%s/%s", clctrl.GitHost, clctrl.GitAuth.Owner)
 		// todo delete the local gitops repo and re-clone it
 		// todo that way we can stop worrying about which origin we're going to push to
-		telemetry.SendCountMetric(clctrl.Telemetry, metrics.GitopsRepoPushCompleted)
+		telemetry.SendCountMetric(clctrl.Telemetry, metrics.GitopsRepoPushCompleted, err.Error())
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "gitops_pushed_check", true)
 		if err != nil {
