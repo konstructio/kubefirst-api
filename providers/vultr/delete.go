@@ -21,6 +21,7 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/errors"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	runtime "github.com/kubefirst/runtime/pkg"
@@ -33,6 +34,8 @@ import (
 
 // DeleteVultrCluster
 func DeleteVultrCluster(cl *pkgtypes.Cluster, segmentClient *telemetry.SegmentClient) error {
+	segClient := segment.InitClient()
+	defer segClient.Client.Close()
 	// Logging handler
 	// Logs to stdout to maintain compatibility with event streaming
 	log.SetFormatter(&log.TextFormatter{
@@ -42,7 +45,7 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, segmentClient *telemetry.SegmentCl
 	log.SetReportCaller(false)
 	log.SetOutput(os.Stdout)
 
-	telemetry.SendEvent(segmentClient, telemetry.ClusterDeleteStarted, "")
+	telemetry.SendEvent(segClient, telemetry.ClusterDeleteStarted, "")
 
 	// Instantiate vultr config
 	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.Token, "")
@@ -279,7 +282,7 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, segmentClient *telemetry.SegmentCl
 		}
 	}
 
-	telemetry.SendEvent(segmentClient, telemetry.ClusterDeleteCompleted, "")
+	telemetry.SendEvent(segClient, telemetry.ClusterDeleteCompleted, "")
 
 	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleted)
 	if err != nil {

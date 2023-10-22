@@ -15,6 +15,7 @@ import (
 	googleext "github.com/kubefirst/kubefirst-api/extensions/google"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
+	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/sirupsen/logrus"
@@ -52,7 +53,9 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 			}
 		}
 
-		telemetry.SendEvent(clctrl.SegmentClient, telemetry.UsersTerraformApplyStarted, err.Error())
+		segClient := segment.InitClient()
+		defer segClient.Client.Close()
+		telemetry.SendEvent(segClient, telemetry.UsersTerraformApplyStarted, "")
 		log.Info("applying users terraform")
 
 		tfEnvs := map[string]string{}
@@ -80,11 +83,11 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		err = terraformext.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Errorf("error applying users terraform: %s", err)
-			telemetry.SendEvent(clctrl.SegmentClient, telemetry.UsersTerraformApplyFailed, err.Error())
+			telemetry.SendEvent(segClient, telemetry.UsersTerraformApplyFailed, err.Error())
 			return err
 		}
 		log.Info("executed users terraform successfully")
-		telemetry.SendEvent(clctrl.SegmentClient, telemetry.UsersTerraformApplyCompleted, err.Error())
+		telemetry.SendEvent(segClient, telemetry.UsersTerraformApplyCompleted, "")
 
 		clctrl.VaultAuth.RootToken = tfEnvs["VAULT_TOKEN"]
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "vault_auth.root_token", clctrl.VaultAuth.RootToken)

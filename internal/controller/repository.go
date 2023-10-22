@@ -15,6 +15,7 @@ import (
 	githttps "github.com/go-git/go-git/v5/plumbing/transport/http"
 	google "github.com/kubefirst/kubefirst-api/pkg/google"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
@@ -194,7 +195,9 @@ func (clctrl *ClusterController) RepositoryPush() error {
 		gitopsDir := clctrl.ProviderConfig.GitopsDir
 		metaphorDir := clctrl.ProviderConfig.MetaphorDir
 
-		telemetry.SendEvent(clctrl.SegmentClient, telemetry.GitopsRepoPushStarted, err.Error())
+		segClient := segment.InitClient()
+		defer segClient.Client.Close()
+		telemetry.SendEvent(segClient, telemetry.GitopsRepoPushStarted, "")
 		gitopsRepo, err := git.PlainOpen(gitopsDir)
 		if err != nil {
 			log.Infof("error opening repo at: %s", gitopsDir)
@@ -250,7 +253,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 		)
 		if err != nil {
 			msg := fmt.Sprintf("error pushing detokenized gitops repository to remote %s: %s", clctrl.ProviderConfig.DestinationGitopsRepoURL, err)
-			telemetry.SendEvent(clctrl.SegmentClient, telemetry.GitopsRepoPushFailed, err.Error())
+			telemetry.SendEvent(segClient, telemetry.GitopsRepoPushFailed, err.Error())
 			return fmt.Errorf(msg)
 		}
 
@@ -266,14 +269,14 @@ func (clctrl *ClusterController) RepositoryPush() error {
 		)
 		if err != nil {
 			msg := fmt.Sprintf("error pushing detokenized metaphor repository to remote %s: %s", clctrl.ProviderConfig.DestinationMetaphorRepoURL, err)
-			telemetry.SendEvent(clctrl.SegmentClient, telemetry.GitopsRepoPushFailed, err.Error())
+			telemetry.SendEvent(segClient, telemetry.GitopsRepoPushFailed, err.Error())
 			return fmt.Errorf(msg)
 		}
 
 		log.Infof("successfully pushed gitops and metaphor repositories to git@%s/%s", clctrl.GitHost, clctrl.GitAuth.Owner)
 		// todo delete the local gitops repo and re-clone it
 		// todo that way we can stop worrying about which origin we're going to push to
-		telemetry.SendEvent(clctrl.SegmentClient, telemetry.GitopsRepoPushCompleted, err.Error())
+		telemetry.SendEvent(segClient, telemetry.GitopsRepoPushCompleted, "")
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "gitops_pushed_check", true)
 		if err != nil {

@@ -9,6 +9,7 @@ package controller
 import (
 	"os"
 
+	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	internalssh "github.com/kubefirst/runtime/pkg/ssh"
 	log "github.com/sirupsen/logrus"
@@ -31,10 +32,12 @@ func (clctrl *ClusterController) InitializeBot() error {
 	}
 
 	if !cl.KbotSetupCheck {
+		segClient := segment.InitClient()
+		defer segClient.Client.Close()
 		clctrl.GitAuth.PrivateKey, clctrl.GitAuth.PublicKey, err = internalssh.CreateSshKeyPair()
 		if err != nil {
 			log.Errorf("error generating ssh keys: %s", err)
-			telemetry.SendEvent(clctrl.SegmentClient, telemetry.KbotSetupFailed, err.Error())
+			telemetry.SendEvent(segClient, telemetry.KbotSetupFailed, err.Error())
 			return err
 		}
 
