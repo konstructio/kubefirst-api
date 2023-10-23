@@ -10,9 +10,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/denisbrodbeck/machineid"
 	"github.com/kubefirst/kubefirst-api/internal/environments"
 	"github.com/kubefirst/kubefirst-api/internal/services"
-	"github.com/kubefirst/kubefirst-api/pkg/segment"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 
 	"github.com/joho/godotenv"
 	"github.com/kubefirst/kubefirst-api/docs"
@@ -112,15 +113,37 @@ func main() {
 	docs.SwaggerInfo.Schemes = []string{"http"}
 
 	// Telemetry handler
-	segClient := segment.InitClient()
-	defer segClient.Client.Close()
+	// segClient := segment.InitClient()
+	// defer segClient.Client.Close()
+	machineID, err := machineid.ID()
+	if err != nil {
+		fmt.Println("machine id FAILED")
+		log.Info("machine id FAILED")
+	}
+	event := telemetry.TelemetryEvent{
+		CliVersion:        "development",
+		CloudProvider:     os.Getenv("CLOUD_PROVIDER"),
+		ClusterID:         os.Getenv("CLUSTER_ID"),
+		ClusterType:       os.Getenv("CLUSTER_TYPE"),
+		DomainName:        os.Getenv("DOMAIN_NAME"),
+		GitProvider:       os.Getenv("GIT_PROVIDER"),
+		InstallMethod:     os.Getenv("INSTALL_METHOD"),
+		KubefirstClient:   "api",
+		KubefirstTeam:     os.Getenv("KUBEFIRST_TEAM"),
+		KubefirstTeamInfo: os.Getenv("KUBEFIRST_TEAM_INFO"),
+		MachineID:         machineID,
+		ErrorMessage:      "",
+		UserId:            machineID,
+		MetricName:        telemetry.ClusterInstallStarted,
+	}
 
 	// Subroutine to automatically update gitops catalog
 	go utils.ScheduledGitopsCatalogUpdate()
 
 	// Subroutine to emit heartbeat
 	if useTelemetry {
-		go apitelemetry.Heartbeat(segClient, db.Client)
+		// go apitelemetry.Heartbeat(segClient, db.Client)
+		go apitelemetry.HeartbeatV2(event, db.Client)
 	}
 
 	// API
