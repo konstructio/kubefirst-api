@@ -32,13 +32,13 @@ func HeartbeatV2(event telemetry.TelemetryEvent, dbClient *db.MongoDBClient) {
 	fmt.Println("INSIDE HEARTBEATV2")
 	log.Info("LOG: INSIDE HEARTBEATV2")
 
-	telemetry.SendEventV3(telemetry.SegmentIOWriteKey, event, telemetry.KubefirstHeartbeat, "")
+	telemetry.SendEvent(telemetry.SegmentIOWriteKey, event, telemetry.KubefirstHeartbeat, "")
 	// HeartbeatWorkloadClusters(dbClient)
 
 	for range time.Tick(time.Second * 30) {
 		fmt.Println("INSIDE HEARTBEATV2 TICK TICK TICK")
 		log.Info("LOG: INSIDE HEARTBEATV2 TICK TICK TICK")
-		telemetry.SendEventV3(telemetry.SegmentIOWriteKey, event, telemetry.KubefirstHeartbeat, "")
+		telemetry.SendEvent(telemetry.SegmentIOWriteKey, event, telemetry.KubefirstHeartbeat, "")
 		// HeartbeatWorkloadClusters(dbClient)
 	}
 }
