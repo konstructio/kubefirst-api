@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/kubefirst/kubefirst-api/internal/environments"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
@@ -96,63 +97,11 @@ func main() {
 		log.Infof("adding default services for cluster %s", importedCluster.ClusterName)
 		services.AddDefaultServices(&importedCluster)
 
-		// Call default environment create code if we imported  a cluster
-		// execute default environment creation concurrently
-		// go func() {
-		// 	log.Infof("adding default environments for cluster %s", importedCluster.ClusterName)
-		// 	err := environments.CreateDefaultEnvironments(importedCluster)
-		// 	if err != nil {
-		// 		log.Infof("Error creating default environments %s", err.Error())
-		// 	}
-		// }()
-		arrayOne := [3]string{"development", "staging", "production"}
-
-		for _, env := range arrayOne {
-
-			log.Infoln("creating cluster", env)
-            // - name: CLOUD_PROVIDER
-            // - name: CLUSTER_ID
-            // - name: CLUSTER_TYPE
-            // - name: DOMAIN_NAME
-            // - name: GIT_PROVIDER
-            // - name: INSTALL_METHOD
-            // - name: KUBEFIRST_CLIENT
-            // - name: KUBEFIRST_TEAM
-            // - name: KUBEFIRST_TEAM_INFO
-            // - name: KUBEFIRST_VERSION
-            // - name: USE_TELEMETRY
-              
-			var developmentCluster = pkgtypes.WorkloadCluster{
-				AdminEmail:    "alerts@kubefirst.io", //todo
-				CloudProvider: os.Getenv("CLOUD_PROVIDER"),
-				ClusterID:     "",
-				ClusterName:   env,
-				ClusterType:   "workload-vcluster",
-				CloudRegion:   "fra1", //todo
-				DomainName:    fmt.Sprintf("%s.%s", env, os.Getenv("DOMAIN_NAME")),
-				DnsProvider:   "civo", //todo
-				Environment: pkgtypes.Environment{
-					ID:          [12]byte{},
-					Name:        env,
-					Color:       "fucia", //todo
-					Description: "pretty",
-				},
-				GitAuth: pkgtypes.GitAuth{
-					Token:      "",
-					User:       "",
-					Owner:      "",
-					PublicKey:  "",
-					PrivateKey: "",
-					PublicKeys: "",
-				},
-				InstanceSize: "medium",
-				MachineType:  "",
-				NodeCount:    1,
-				Status:       "",
-			}
-			postVcluster(developmentCluster, os.Getenv("CLUSTER_ID"))
+		log.Infof("adding default environments for cluster %s", importedCluster.ClusterName)
+		err := environments.CreateDefaultEnvironments(importedCluster)
+		if err != nil {
+			log.Infof("Error creating default environments %s", err.Error())
 		}
-
 	}
 	defer db.Client.Client.Disconnect(db.Client.Context)
 
