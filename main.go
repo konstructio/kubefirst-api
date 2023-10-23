@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/denisbrodbeck/machineid"
 	"github.com/kubefirst/kubefirst-api/internal/environments"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
@@ -115,11 +114,11 @@ func main() {
 	// Telemetry handler
 	// segClient := segment.InitClient()
 	// defer segClient.Client.Close()
-	machineID, err := machineid.ID()
-	if err != nil {
-		fmt.Println("machine id FAILED")
-		log.Info("machine id FAILED")
-	}
+	// machineID, err := machineid.ID()
+	// if err != nil {
+	// 	fmt.Println("machine id FAILED")
+	// 	log.Info("machine id FAILED")
+	// }
 	event := telemetry.TelemetryEvent{
 		CliVersion:        "development",
 		CloudProvider:     os.Getenv("CLOUD_PROVIDER"),
@@ -131,9 +130,9 @@ func main() {
 		KubefirstClient:   "api",
 		KubefirstTeam:     os.Getenv("KUBEFIRST_TEAM"),
 		KubefirstTeamInfo: os.Getenv("KUBEFIRST_TEAM_INFO"),
-		MachineID:         machineID,
+		MachineID:         "4023E168-98FD-53C0-98FF-DC09FFC76F88",
 		ErrorMessage:      "",
-		UserId:            machineID,
+		UserId:            "4023E168-98FD-53C0-98FF-DC09FFC76F88",
 		MetricName:        telemetry.ClusterInstallStarted,
 	}
 
@@ -142,8 +141,7 @@ func main() {
 
 	// Subroutine to emit heartbeat
 	if useTelemetry {
-		// go apitelemetry.Heartbeat(segClient, db.Client)
-		go apitelemetry.HeartbeatV2(event, db.Client)
+		go apitelemetry.Heartbeat(event, db.Client)
 	}
 
 	// API
