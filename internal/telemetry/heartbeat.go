@@ -18,6 +18,8 @@ func Heartbeat(segmentClient *telemetry.SegmentClient, dbClient *db.MongoDBClien
 	HeartbeatWorkloadClusters(segClient, dbClient)
 
 	for range time.Tick(time.Second * 30) {
+		segClient := segment.InitClient()
+		defer segClient.Client.Close()
 		telemetry.SendEvent(segClient, telemetry.KubefirstHeartbeat, "")
 		HeartbeatWorkloadClusters(segClient, dbClient)
 	}
