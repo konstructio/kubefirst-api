@@ -5,23 +5,18 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
-	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/segmentio/analytics-go"
 )
 
 func Heartbeat(segmentClient *telemetry.SegmentClient, dbClient *db.MongoDBClient) {
 
-	segClient := segment.InitClient()
-	defer segClient.Client.Close()
-	telemetry.SendEvent(segClient, telemetry.KubefirstHeartbeat, "")
-	HeartbeatWorkloadClusters(segClient, dbClient)
+	telemetry.SendEvent(segmentClient, telemetry.KubefirstHeartbeat, "")
+	HeartbeatWorkloadClusters(segmentClient, dbClient)
 
 	for range time.Tick(time.Second * 30) {
-		segClient := segment.InitClient()
-		defer segClient.Client.Close()
-		telemetry.SendEvent(segClient, telemetry.KubefirstHeartbeat, "")
-		HeartbeatWorkloadClusters(segClient, dbClient)
+		telemetry.SendEvent(segmentClient, telemetry.KubefirstHeartbeat, "")
+		HeartbeatWorkloadClusters(segmentClient, dbClient)
 	}
 }
 
