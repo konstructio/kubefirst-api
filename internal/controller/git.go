@@ -17,7 +17,6 @@ import (
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
-	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	log "github.com/sirupsen/logrus"
@@ -73,9 +72,8 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 	}
 
 	// //* create teams and repositories in github
-	segClient := segment.InitClient()
-	defer segClient.Client.Close()
-	telemetry.SendEvent(segClient, telemetry.GitTerraformApplyStarted, "")
+
+	telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.GitTerraformApplyStarted, "")
 
 	log.Infof("Creating %s resources with terraform", clctrl.GitProvider)
 
@@ -116,12 +114,12 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 		if err != nil {
 			msg := fmt.Sprintf("error creating %s resources with terraform %s: %s", clctrl.GitProvider, tfEntrypoint, err)
 			log.Error(msg)
-			telemetry.SendEvent(segClient, telemetry.GitTerraformApplyFailed, err.Error())
+			telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.GitTerraformApplyFailed, err.Error())
 			return fmt.Errorf(msg)
 		}
 
 		log.Infof("created git projects and groups for %s.com/%s", clctrl.GitProvider, clctrl.GitAuth.Owner)
-		telemetry.SendEvent(segClient, telemetry.GitTerraformApplyCompleted, "")
+		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.GitTerraformApplyCompleted, "")
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "git_terraform_apply_check", true)
 		if err != nil {

@@ -60,17 +60,6 @@ func main() {
 		}
 	}
 
-	useTelemetry := true
-	if os.Getenv("USE_TELEMETRY") == "false" {
-		useTelemetry = false
-	} else {
-		for _, v := range []string{"CLUSTER_ID", "CLUSTER_TYPE", "INSTALL_METHOD"} {
-			if os.Getenv(v) == "" {
-				log.Fatalf("the %s environment variable must be set", v)
-			}
-		}
-	}
-
 	// Verify database connectivity
 	err := db.Client.EstablishMongoConnection(db.EstablishConnectArgs{
 		Tries:  20,
@@ -112,37 +101,27 @@ func main() {
 	docs.SwaggerInfo.Schemes = []string{"http"}
 
 	// Telemetry handler
-	// segClient := segment.InitClient()
-	// defer segClient.Client.Close()
-	// machineID, err := machineid.ID()
-	// if err != nil {
-	// 	fmt.Println("machine id FAILED")
-	// 	log.Info("machine id FAILED")
-	// }
-	event := telemetry.TelemetryEvent{
-		CliVersion:        "development",
+	telemetryEvent := telemetry.TelemetryEvent{
+		CliVersion:        os.Getenv("KUBEFIRST_VERSION"),
 		CloudProvider:     os.Getenv("CLOUD_PROVIDER"),
 		ClusterID:         os.Getenv("CLUSTER_ID"),
 		ClusterType:       os.Getenv("CLUSTER_TYPE"),
 		DomainName:        os.Getenv("DOMAIN_NAME"),
+		ErrorMessage:      "",
 		GitProvider:       os.Getenv("GIT_PROVIDER"),
 		InstallMethod:     os.Getenv("INSTALL_METHOD"),
 		KubefirstClient:   "api",
 		KubefirstTeam:     os.Getenv("KUBEFIRST_TEAM"),
 		KubefirstTeamInfo: os.Getenv("KUBEFIRST_TEAM_INFO"),
-		MachineID:         "4023E168-98FD-53C0-98FF-DC09FFC76F88",
-		ErrorMessage:      "",
-		UserId:            "4023E168-98FD-53C0-98FF-DC09FFC76F88",
+		MachineID:         os.Getenv("CLUSTER_ID"),
 		MetricName:        telemetry.ClusterInstallStarted,
+		UserId:            os.Getenv("CLUSTER_ID"),
 	}
 
 	// Subroutine to automatically update gitops catalog
 	go utils.ScheduledGitopsCatalogUpdate()
 
-	// Subroutine to emit heartbeat
-	if useTelemetry {
-		go apitelemetry.Heartbeat(event, db.Client)
-	}
+	go apitelemetry.Heartbeat(telemetryEvent, db.Client)
 
 	// API
 	r := api.SetupRouter()
