@@ -13,7 +13,7 @@ func Heartbeat(event telemetry.TelemetryEvent, dbClient *db.MongoDBClient) {
 	telemetry.SendEvent(event, telemetry.KubefirstHeartbeat, "")
 	HeartbeatWorkloadClusters(event, dbClient)
 
-	for range time.Tick(time.Second * 30) {
+	for range time.Tick(time.Second * 300) {
 		telemetry.SendEvent(event, telemetry.KubefirstHeartbeat, "")
 		HeartbeatWorkloadClusters(event, dbClient)
 	}
