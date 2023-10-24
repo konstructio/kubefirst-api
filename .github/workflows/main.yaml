@@ -5,7 +5,7 @@ env:
 on:
   push:
     branches:
-      - simple
+      - rc56-mods-needed
 jobs:
   publish:
     runs-on: self-hosted
