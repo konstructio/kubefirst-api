@@ -145,7 +145,7 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 			return err
 		}
 
-		log.Infof("Default environments initiatied %s", string(body))
+		log.Infof("cluster %s created. result: %s", cluster.ClusterName, string(body))
 	}
 	return nil
 }
