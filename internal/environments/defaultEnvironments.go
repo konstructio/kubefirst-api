@@ -146,6 +146,7 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 		}
 
 		log.Infof("cluster %s created. result: %s", cluster.ClusterName, string(body))
+		time.Sleep(10 * time.Second)
 	}
 	return nil
 }
