@@ -10,12 +10,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/denisbrodbeck/machineid"
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
-	"github.com/segmentio/analytics-go"
 )
 
 // PostTelemetry godoc
@@ -30,43 +28,6 @@ import (
 // @Param Authorization header string true "API key" default(Bearer <API key>)
 // PostTelemetry sents a new telemetry event
 func PostTelemetry(c *gin.Context) {
-
-	// TODO
-	// TODO THIS ROUTE NEEDS TO BE FIXED
-	// TODO
-	// TODO
-	// Telemetry handler
-	machineID, _ := machineid.ID()
-	segClient := telemetry.SegmentClient{
-		TelemetryEvent: telemetry.TelemetryEvent{
-			CliVersion:        os.Getenv("KUBEFIRST_VERSION"),
-			CloudProvider:     "cl.CloudProvider",
-			ClusterID:         "cl.ClusterID",
-			ClusterType:       "cl.ClusterType",
-			DomainName:        "cl.DomainName",
-			GitProvider:       "cl.GitProvider",
-			InstallMethod:     "",
-			KubefirstClient:   "api",
-			KubefirstTeam:     os.Getenv("KUBEFIRST_TEAM"),
-			KubefirstTeamInfo: os.Getenv("KUBEFIRST_TEAM_INFO"),
-			MachineID:         machineID,
-			ErrorMessage:      "",
-			UserId:            machineID,
-			MetricName:        telemetry.ClusterDeleteStarted,
-		},
-		Client: analytics.New(telemetry.SegmentIOWriteKey),
-	}
-	defer segClient.Client.Close()
-	useTelemetry := true
-	if os.Getenv("USE_TELEMETRY") == "false" {
-		useTelemetry = false
-	}
-
-	if !useTelemetry {
-		c.JSON(http.StatusOK, "telemetry is not enabled")
-		return
-	}
-
 	clusterName, param := c.Params.Get("cluster_name")
 	if !param {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -76,12 +37,28 @@ func PostTelemetry(c *gin.Context) {
 	}
 
 	// Retrieve cluster info
-	_, err := db.Client.GetCluster(clusterName)
+	cl, err := db.Client.GetCluster(clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: "cluster not found",
 		})
 		return
+	}
+	telEvent := telemetry.TelemetryEvent{
+		CliVersion:        os.Getenv("KUBEFIRST_VERSION"),
+		CloudProvider:     cl.CloudProvider,
+		ClusterID:         cl.ClusterID,
+		ClusterType:       cl.ClusterType,
+		DomainName:        cl.DomainName,
+		GitProvider:       cl.GitProvider,
+		InstallMethod:     "",
+		KubefirstClient:   "api",
+		KubefirstTeam:     os.Getenv("KUBEFIRST_TEAM"),
+		KubefirstTeamInfo: os.Getenv("KUBEFIRST_TEAM_INFO"),
+		MachineID:         cl.DomainName,
+		ErrorMessage:      "",
+		UserId:            cl.DomainName,
+		MetricName:       "",
 	}
 
 	var req types.TelemetryRequest
@@ -93,7 +70,7 @@ func PostTelemetry(c *gin.Context) {
 		return
 	}
 
-	telemetry.SendEvent(&segClient, req.Event, "")
+	telemetry.SendEvent(telEvent, req.Event, "")
 
 	c.JSON(http.StatusOK, true)
 }

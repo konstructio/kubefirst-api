@@ -5,25 +5,21 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
-	"github.com/kubefirst/kubefirst-api/pkg/segment"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
-	"github.com/segmentio/analytics-go"
 )
 
-func Heartbeat(segmentClient *telemetry.SegmentClient, dbClient *db.MongoDBClient) {
+func Heartbeat(event telemetry.TelemetryEvent, dbClient *db.MongoDBClient) {
 
-	segClient := segment.InitClient()
-	defer segClient.Client.Close()
-	telemetry.SendEvent(segClient, telemetry.KubefirstHeartbeat, "")
-	HeartbeatWorkloadClusters(segClient, dbClient)
+	telemetry.SendEvent(event, telemetry.KubefirstHeartbeat, "")
+	HeartbeatWorkloadClusters(event, dbClient)
 
 	for range time.Tick(time.Second * 30) {
-		telemetry.SendEvent(segClient, telemetry.KubefirstHeartbeat, "")
-		HeartbeatWorkloadClusters(segClient, dbClient)
+		telemetry.SendEvent(event, telemetry.KubefirstHeartbeat, "")
+		HeartbeatWorkloadClusters(event, dbClient)
 	}
 }
 
-func HeartbeatWorkloadClusters(segmentClient *telemetry.SegmentClient, dbClient *db.MongoDBClient) error {
+func HeartbeatWorkloadClusters(event telemetry.TelemetryEvent, dbClient *db.MongoDBClient) error {
 
 	clusters, _ := dbClient.GetClusters()
 
@@ -32,28 +28,24 @@ func HeartbeatWorkloadClusters(segmentClient *telemetry.SegmentClient, dbClient 
 			for _, workloadCluster := range cluster.WorkloadClusters {
 				if workloadCluster.Status == constants.ClusterStatusProvisioned {
 
-					workloadClient := &telemetry.SegmentClient{
-						TelemetryEvent: telemetry.TelemetryEvent{
-							CliVersion:        segmentClient.TelemetryEvent.CliVersion,
-							CloudProvider:     workloadCluster.CloudProvider,
-							ClusterID:         workloadCluster.ClusterID,
-							ClusterType:       workloadCluster.ClusterType,
-							DomainName:        workloadCluster.DomainName,
-							GitProvider:       segmentClient.TelemetryEvent.GitProvider,
-							InstallMethod:     segmentClient.TelemetryEvent.InstallMethod,
-							KubefirstClient:   segmentClient.TelemetryEvent.KubefirstClient,
-							KubefirstTeam:     segmentClient.TelemetryEvent.KubefirstTeam,
-							KubefirstTeamInfo: segmentClient.TelemetryEvent.KubefirstTeamInfo,
-							MachineID:         segmentClient.TelemetryEvent.MachineID,
-							ErrorMessage:      "",
-							UserId:            segmentClient.TelemetryEvent.MachineID,
-							MetricName:        telemetry.KubefirstHeartbeat,
-						},
-						Client: analytics.New(telemetry.SegmentIOWriteKey),
+					telemetryEvent := telemetry.TelemetryEvent{
+						CliVersion:        event.CliVersion,
+						CloudProvider:     workloadCluster.CloudProvider,
+						ClusterID:         workloadCluster.ClusterID,
+						ClusterType:       workloadCluster.ClusterType,
+						DomainName:        workloadCluster.DomainName,
+						GitProvider:       event.GitProvider,
+						InstallMethod:     event.InstallMethod,
+						KubefirstClient:   event.KubefirstClient,
+						KubefirstTeam:     event.KubefirstTeam,
+						KubefirstTeamInfo: event.KubefirstTeamInfo,
+						MachineID:         workloadCluster.DomainName,
+						ErrorMessage:      "",
+						UserId:            workloadCluster.DomainName,
+						MetricName:        telemetry.KubefirstHeartbeat,
 					}
-					defer workloadClient.Client.Close()
 
-					telemetry.SendEvent(workloadClient, telemetry.KubefirstHeartbeat, "")
+					telemetry.SendEvent(telemetryEvent, telemetry.KubefirstHeartbeat, "")
 				}
 			}
 		}
