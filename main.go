@@ -7,11 +7,7 @@ See the LICENSE file for more details.
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -22,9 +18,7 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	apitelemetry "github.com/kubefirst/kubefirst-api/internal/telemetry"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
-	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
-	"github.com/kubefirst/runtime/pkg"
 
 	log "github.com/sirupsen/logrus"
 )
