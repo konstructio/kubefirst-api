@@ -7,19 +7,24 @@ See the LICENSE file for more details.
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
-
-	"github.com/kubefirst/kubefirst-api/internal/environments"
-	"github.com/kubefirst/kubefirst-api/internal/services"
-	"github.com/kubefirst/metrics-client/pkg/telemetry"
 
 	"github.com/joho/godotenv"
 	"github.com/kubefirst/kubefirst-api/docs"
 	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/internal/environments"
 	api "github.com/kubefirst/kubefirst-api/internal/router"
+	"github.com/kubefirst/kubefirst-api/internal/services"
 	apitelemetry "github.com/kubefirst/kubefirst-api/internal/telemetry"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
+	"github.com/kubefirst/runtime/pkg"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -80,8 +85,6 @@ func main() {
 		log.Infof("adding default services for cluster %s", importedCluster.ClusterName)
 		services.AddDefaultServices(&importedCluster)
 
-		// Call default environment create code if we imported  a cluster
-		// execute default environment creation concurrently
 		go func() {
 			log.Infof("adding default environments for cluster %s", importedCluster.ClusterName)
 			err := environments.CreateDefaultEnvironments(importedCluster)
@@ -130,4 +133,38 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error starting API: %s", err)
 	}
+}
+
+func postVcluster(workloadClusterDef pkgtypes.WorkloadCluster, mgmtClusterID string) (string, error) {
+
+	payload, err := json.Marshal(&workloadClusterDef)
+	if err != nil {
+		return "", err
+	}
+
+	clusterApi := fmt.Sprintf("http://kubefirst-api-ee.kubefirst.svc.cluster.local:8080/cluster/%s", mgmtClusterID)
+
+	req, err := http.NewRequest(http.MethodPost, clusterApi, bytes.NewBuffer(payload))
+	if err != nil {
+		log.Infof("error setting request")
+	}
+
+	k1AccessToken := os.Getenv("")
+	req.Header.Add("Content-Type", pkg.JSONContentType)
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", k1AccessToken))
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	defer res.Body.Close()
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+	log.Infof(string(body))
+
+	return "yay", nil
 }
