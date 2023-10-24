@@ -58,7 +58,7 @@ func PostTelemetry(c *gin.Context) {
 		MachineID:         cl.DomainName,
 		ErrorMessage:      "",
 		UserId:            cl.DomainName,
-		MetricName:        telemetry.ClusterDeleteStarted,
+		MetricName:       "",
 	}
 
 	var req types.TelemetryRequest
