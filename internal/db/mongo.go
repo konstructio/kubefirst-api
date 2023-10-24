@@ -150,7 +150,7 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster,
 				return pkgtypes.Cluster{}, fmt.Errorf("error inserting cluster %v: %s", clusterFromSecret, err)
 			}
 			// log clusterFromSecret
-			log.Infof("inserted cluster record to db. adding default services. %v", clusterFromSecret)
+			log.Infof("inserted cluster record to db. adding default services. %s", clusterFromSecret.ClusterName)
 
 			return clusterFromSecret, nil
 		} else {

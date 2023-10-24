@@ -107,6 +107,9 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 	httpClient := http.Client{Transport: customTransport}
 
 	for i, cluster := range goPayload.Clusters {
+		log.Infof("sleeping 10 seconds per cluster")
+		time.Sleep(10 * time.Second)
+		log.Infof("sleeping period complete")
 
 		log.Infof("creating cluster %s for %s", strconv.Itoa(i), cluster.ClusterName)
 		payload, err := json.Marshal(cluster)
@@ -135,7 +138,7 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 			time.Sleep(10 * time.Second)
 		}
 
-		if res.StatusCode != http.StatusOK {
+		if res.StatusCode != http.StatusAccepted {
 			log.Errorf("unable to create default workload clusters and default environments %s: \n request: %s", res.Status, res.Request.URL)
 			return err
 		}
@@ -145,7 +148,8 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 			return err
 		}
 
-		log.Infof("Default environments initiatied %s", string(body))
+		log.Infof("cluster %s created. result: %s", cluster.ClusterName, string(body))
+		time.Sleep(10 * time.Second)
 	}
 	return nil
 }
