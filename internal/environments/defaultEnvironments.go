@@ -135,7 +135,7 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 			time.Sleep(10 * time.Second)
 		}
 
-		if res.StatusCode != http.StatusOK {
+		if res.StatusCode != http.StatusAccepted {
 			log.Errorf("unable to create default workload clusters and default environments %s: \n request: %s", res.Status, res.Request.URL)
 			return err
 		}
