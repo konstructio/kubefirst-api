@@ -14,16 +14,17 @@ import (
 type ClusterDefinition struct {
 
 	//Cluster
-	AdminEmail    string `json:"admin_email" binding:"required"`
-	CloudProvider string `json:"cloud_provider" binding:"required,oneof=aws civo digitalocean vultr google"`
-	CloudRegion   string `json:"cloud_region" binding:"required"`
-	ClusterName   string `json:"cluster_name,omitempty"`
-	DomainName    string `json:"domain_name" binding:"required"`
-	SubdomainName string `json:"subdomain_name,omitempty"`
-	DnsProvider   string `json:"dns_provider,omitempty" binding:"required"`
-	Type          string `json:"type" binding:"required,oneof=mgmt workload"`
-	ForceDestroy  bool   `bson:"force_destroy,omitempty" json:"force_destroy,omitempty"`
-
+	AdminEmail       string `json:"admin_email" binding:"required"`
+	CloudProvider    string `json:"cloud_provider" binding:"required,oneof=aws civo digitalocean vultr google"`
+	CloudRegion      string `json:"cloud_region" binding:"required"`
+	ClusterName      string `json:"cluster_name,omitempty"`
+	DomainName       string `json:"domain_name" binding:"required"`
+	SubdomainName    string `json:"subdomain_name,omitempty"`
+	DnsProvider      string `json:"dns_provider,omitempty" binding:"required"`
+	Type             string `json:"type" binding:"required,oneof=mgmt workload"`
+	ForceDestroy     bool   `bson:"force_destroy,omitempty" json:"force_destroy,omitempty"`
+	MachineType      string `json:"machine_type" binding:"required"`
+	MachineTypeCount string `json:"machine_type_count" binding:"required"`
 
 	//Git
 	GitopsTemplateURL    string `json:"gitops_template_url"`
@@ -150,10 +151,10 @@ type ProxyImportRequest struct {
 
 type Environment struct {
 	ID                primitive.ObjectID `bson:"_id" json:"_id"`
-	Name        			string             `bson:"name" json:"name"`
-	Color       			string 						 `bson:"color" json:"color"`
-	Description       string 						 `bson:"description,omitempty" json:"description,omitempty"`
-	CreationTimestamp string 						 `bson:"creation_timestamp" json:"creation_timestamp"`
+	Name              string             `bson:"name" json:"name"`
+	Color             string             `bson:"color" json:"color"`
+	Description       string             `bson:"description,omitempty" json:"description,omitempty"`
+	CreationTimestamp string             `bson:"creation_timestamp" json:"creation_timestamp"`
 }
 
 type WorkloadCluster struct {

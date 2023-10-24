@@ -82,6 +82,9 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				newContents = strings.Replace(newContents, "<KUBEFIRST_VERSION>", tokens.KubefirstVersion, -1)
 				newContents = strings.Replace(newContents, "<KUBEFIRST_STATE_STORE_BUCKET_HOSTNAME>", tokens.StateStoreBucketHostname, -1)
 
+				newContents = strings.Replace(newContents, "<MACHINE_TYPE>", tokens.MachineType, -1)
+				newContents = strings.Replace(newContents, "<MACHINE_TYPE_COUNT>", tokens.MachineTypeCount, -1)
+
 				// AWS
 				newContents = strings.Replace(newContents, "<AWS_ACCOUNT_ID>", tokens.AwsAccountID, -1)
 				newContents = strings.Replace(newContents, "<AWS_IAM_ARN_ACCOUNT_ROOT>", tokens.AwsIamArnAccountRoot, -1)
