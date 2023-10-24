@@ -107,7 +107,10 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 	httpClient := http.Client{Transport: customTransport}
 
 	for i, cluster := range goPayload.Clusters {
-
+		log.Infof("sleeping 10 seconds per cluster")
+		time.Sleep(10 * time.Second)
+		log.Infof("sleeping period complete")
+		
 		log.Infof("creating cluster %s for %s", strconv.Itoa(i), cluster.ClusterName)
 		payload, err := json.Marshal(cluster)
 		if err != nil {
