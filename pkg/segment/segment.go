@@ -19,7 +19,6 @@ func InitClient() *telemetry.SegmentClient {
 
 	machineID, err := machineid.ID()
 	if err != nil {
-		fmt.Println("machine id FAILED")
 		log.Info("machine id FAILED")
 	}
 	sc := analytics.New(telemetry.SegmentIOWriteKey)
