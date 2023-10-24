@@ -12,7 +12,6 @@ import (
 
 	"net/http"
 
-	"github.com/denisbrodbeck/machineid"
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
@@ -28,7 +27,6 @@ import (
 	"github.com/kubefirst/kubefirst-api/providers/vultr"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/k8s"
-	"github.com/segmentio/analytics-go"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -62,28 +60,22 @@ func DeleteCluster(c *gin.Context) {
 		return
 	}
 
-	// Telemetry handler
-	machineID, _ := machineid.ID()
-	segClient := telemetry.SegmentClient{
-		TelemetryEvent: telemetry.TelemetryEvent{
-			CliVersion:        os.Getenv("KUBEFIRST_VERSION"),
-			CloudProvider:     rec.CloudProvider,
-			ClusterID:         rec.ClusterID,
-			ClusterType:       rec.ClusterType,
-			DomainName:        rec.DomainName,
-			GitProvider:       rec.GitProvider,
-			InstallMethod:     "",
-			KubefirstClient:   "api",
-			KubefirstTeam:     os.Getenv("KUBEFIRST_TEAM"),
-			KubefirstTeamInfo: os.Getenv("KUBEFIRST_TEAM_INFO"),
-			MachineID:         machineID,
-			ErrorMessage:      err.Error(),
-			UserId:            machineID,
-			MetricName:        telemetry.ClusterDeleteStarted,
-		},
-		Client: analytics.New(telemetry.SegmentIOWriteKey),
+	telemetryEvent := telemetry.TelemetryEvent{
+		CliVersion:        os.Getenv("KUBEFIRST_VERSION"),
+		CloudProvider:     rec.CloudProvider,
+		ClusterID:         rec.ClusterID,
+		ClusterType:       rec.ClusterType,
+		DomainName:        rec.DomainName,
+		GitProvider:       rec.GitProvider,
+		InstallMethod:     "",
+		KubefirstClient:   "api",
+		KubefirstTeam:     os.Getenv("KUBEFIRST_TEAM"),
+		KubefirstTeamInfo: os.Getenv("KUBEFIRST_TEAM_INFO"),
+		MachineID:         rec.DomainName,
+		ErrorMessage:      "",
+		UserId:            rec.DomainName,
+		MetricName:        telemetry.ClusterDeleteStarted,
 	}
-	defer segClient.Client.Close()
 
 	if rec.LastCondition != "" {
 		err = db.Client.UpdateCluster(rec.ClusterName, "last_condition", "")
@@ -101,7 +93,7 @@ func DeleteCluster(c *gin.Context) {
 	switch rec.CloudProvider {
 	case "aws":
 		go func() {
-			err := aws.DeleteAWSCluster(&rec, &segClient)
+			err := aws.DeleteAWSCluster(&rec, telemetryEvent)
 			if err != nil {
 				log.Errorf(err.Error())
 			}
@@ -112,7 +104,7 @@ func DeleteCluster(c *gin.Context) {
 		})
 	case "civo":
 		go func() {
-			err := civo.DeleteCivoCluster(&rec, &segClient)
+			err := civo.DeleteCivoCluster(&rec, telemetryEvent)
 			if err != nil {
 				log.Errorf(err.Error())
 			}
@@ -123,7 +115,7 @@ func DeleteCluster(c *gin.Context) {
 		})
 	case "digitalocean":
 		go func() {
-			err := digitalocean.DeleteDigitaloceanCluster(&rec, &segClient)
+			err := digitalocean.DeleteDigitaloceanCluster(&rec, telemetryEvent)
 			if err != nil {
 				log.Errorf(err.Error())
 			}
@@ -134,7 +126,7 @@ func DeleteCluster(c *gin.Context) {
 		})
 	case "vultr":
 		go func() {
-			err := vultr.DeleteVultrCluster(&rec, &segClient)
+			err := vultr.DeleteVultrCluster(&rec, telemetryEvent)
 			if err != nil {
 				log.Errorf(err.Error())
 			}
@@ -145,7 +137,7 @@ func DeleteCluster(c *gin.Context) {
 		})
 	case "google":
 		go func() {
-			err := google.DeleteGoogleCluster(&rec, &segClient)
+			err := google.DeleteGoogleCluster(&rec, telemetryEvent)
 			if err != nil {
 				log.Errorf(err.Error())
 			}

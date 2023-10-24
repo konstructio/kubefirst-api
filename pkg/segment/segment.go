@@ -1,12 +1,14 @@
 package segment
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/denisbrodbeck/machineid"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 
 	"github.com/segmentio/analytics-go"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -15,7 +17,10 @@ const (
 
 func InitClient() *telemetry.SegmentClient {
 
-	machineID, _ := machineid.ID()
+	machineID, err := machineid.ID()
+	if err != nil {
+		log.Info("machine id FAILED")
+	}
 	sc := analytics.New(telemetry.SegmentIOWriteKey)
 
 	kubefirstVersion := os.Getenv("KUBEFIRST_VERSION")
