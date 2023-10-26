@@ -112,7 +112,7 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/v1/cluster/%s", KubefirstApiEe, os.Getenv("CLUSTER_ID")), bytes.NewReader(payload))
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/v1/environments/%s", KubefirstApiEe, os.Getenv("CLUSTER_ID")), bytes.NewReader(payload))
 
 	if err != nil {
 		log.Errorf("error creating http request %s", err)
