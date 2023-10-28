@@ -86,6 +86,8 @@ type Cluster struct {
 	AtlantisWebhookSecret string `bson:"atlantis_webhook_secret" json:"atlantis_webhook_secret"`
 	AtlantisWebhookURL    string `bson:"atlantis_webhook_url" json:"atlantis_webhook_url"`
 	KubefirstTeam         string `bson:"kubefirst_team" json:"kubefirst_team"`
+	// MachineType           string `bson:"machine_type" json:"machine_type" binding:"required"`
+	// MachineTypeCount      string `bson:"machine_type_count" json:"machine_type_count" binding:"required"`
 
 	StateStoreCredentials StateStoreCredentials `bson:"state_store_credentials,omitempty" json:"state_store_credentials,omitempty"`
 	StateStoreDetails     StateStoreDetails     `bson:"state_store_details,omitempty" json:"state_store_details,omitempty"`

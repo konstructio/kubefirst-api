@@ -13,7 +13,6 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/kubefirst/kubefirst-api/docs"
 	"github.com/kubefirst/kubefirst-api/internal/db"
-	"github.com/kubefirst/kubefirst-api/internal/environments"
 	api "github.com/kubefirst/kubefirst-api/internal/router"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	apitelemetry "github.com/kubefirst/kubefirst-api/internal/telemetry"
@@ -79,13 +78,13 @@ func main() {
 		log.Infof("adding default services for cluster %s", importedCluster.ClusterName)
 		services.AddDefaultServices(&importedCluster)
 
-		go func() {
-			log.Infof("adding default environments for cluster %s", importedCluster.ClusterName)
-			err := environments.CreateDefaultEnvironments(importedCluster)
-			if err != nil {
-				log.Infof("Error creating default environments %s", err.Error())
-			}
-		}()
+		// go func() {
+		// 	log.Infof("adding default environments for cluster %s", importedCluster.ClusterName)
+		// 	err := environments.CreateDefaultEnvironments(importedCluster)
+		// 	if err != nil {
+		// 		log.Infof("Error creating default environments %s", err.Error())
+		// 	}
+		// }()
 	}
 	defer db.Client.Client.Disconnect(db.Client.Context)
 
