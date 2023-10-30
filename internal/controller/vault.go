@@ -398,7 +398,7 @@ func (clctrl *ClusterController) WaitForVault() error {
 		log.Errorf("error finding Vault StatefulSet: %s", err)
 		return err
 	}
-	_, err = k8s.WaitForStatefulSetReady(kcfg.Clientset, vaultStatefulSet, 120, true)
+	_, err = k8s.WaitForStatefulSetReady(kcfg.Clientset, vaultStatefulSet, 300, true)
 	if err != nil {
 		log.Errorf("error waiting for Vault StatefulSet ready state: %s", err)
 		return err
