@@ -96,6 +96,8 @@ spec:
               value: {{ .Values.global.kubefirstVersion | default "unset" }}
             - name: USE_TELEMETRY
               value: {{ .Values.global.useTelemetry | default "true" | quote }}
+            - name: IS_CLUSTER_ZERO
+              value: {{ .Values.isClusterZero | default "true" | quote }} #internal use
           {{- if .Values.env }}
             {{- range $envVar := .Values.env }}
             - name: {{ $envVar.name }}
