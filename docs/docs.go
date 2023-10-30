@@ -931,12 +931,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "token": {
+                    "description": "DEPRECATED: please transition to APIToken",
                     "type": "string"
                 }
             }
         },
         "types.Cluster": {
             "type": "object",
+            "required": [
+                "node_count",
+                "node_type"
+            ],
             "properties": {
                 "_id": {
                     "type": "string"
@@ -1091,6 +1096,12 @@ const docTemplate = `{
                 "last_condition": {
                     "type": "string"
                 },
+                "node_count": {
+                    "type": "string"
+                },
+                "node_type": {
+                    "type": "string"
+                },
                 "state_store_create_check": {
                     "type": "boolean"
                 },
@@ -1147,6 +1158,8 @@ const docTemplate = `{
                 "domain_name",
                 "git_protocol",
                 "git_provider",
+                "node_count",
+                "node_type",
                 "type"
             ],
             "properties": {
@@ -1226,6 +1239,12 @@ const docTemplate = `{
                 },
                 "google_auth": {
                     "$ref": "#/definitions/types.GoogleAuth"
+                },
+                "node_count": {
+                    "type": "string"
+                },
+                "node_type": {
+                    "type": "string"
                 },
                 "subdomain_name": {
                     "type": "string"
@@ -1310,7 +1329,13 @@ const docTemplate = `{
         "types.Environment": {
             "type": "object",
             "properties": {
+                "_id": {
+                    "type": "string"
+                },
                 "color": {
+                    "type": "string"
+                },
+                "creation_timestamp": {
                     "type": "string"
                 },
                 "description": {
@@ -1616,11 +1641,11 @@ const docTemplate = `{
                 "instance_size": {
                     "type": "string"
                 },
-                "machine_type": {
-                    "type": "string"
-                },
                 "node_count": {
                     "type": "integer"
+                },
+                "node_type": {
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"

@@ -14,17 +14,17 @@ import (
 type ClusterDefinition struct {
 
 	//Cluster
-	AdminEmail       string `json:"admin_email" binding:"required"`
-	CloudProvider    string `json:"cloud_provider" binding:"required,oneof=aws civo digitalocean vultr google"`
-	CloudRegion      string `json:"cloud_region" binding:"required"`
-	ClusterName      string `json:"cluster_name,omitempty"`
-	DomainName       string `json:"domain_name" binding:"required"`
-	SubdomainName    string `json:"subdomain_name,omitempty"`
-	DnsProvider      string `json:"dns_provider,omitempty" binding:"required"`
-	Type             string `json:"type" binding:"required,oneof=mgmt workload"`
-	ForceDestroy     bool   `bson:"force_destroy,omitempty" json:"force_destroy,omitempty"`
-	MachineType      string `json:"machine_type" binding:"required"`
-	MachineTypeCount string `json:"machine_type_count" binding:"required"`
+	AdminEmail    string `json:"admin_email" binding:"required"`
+	CloudProvider string `json:"cloud_provider" binding:"required,oneof=aws civo digitalocean vultr google"`
+	CloudRegion   string `json:"cloud_region" binding:"required"`
+	ClusterName   string `json:"cluster_name,omitempty"`
+	DomainName    string `json:"domain_name" binding:"required"`
+	SubdomainName string `json:"subdomain_name,omitempty"`
+	DnsProvider   string `json:"dns_provider,omitempty" binding:"required"`
+	Type          string `json:"type" binding:"required,oneof=mgmt workload"`
+	ForceDestroy  bool   `bson:"force_destroy,omitempty" json:"force_destroy,omitempty"`
+	NodeType      string `json:"node_type" binding:"required"`
+	NodeCount     string `json:"node_count" binding:"required"`
 
 	//Git
 	GitopsTemplateURL    string `json:"gitops_template_url"`
@@ -86,8 +86,8 @@ type Cluster struct {
 	AtlantisWebhookSecret string `bson:"atlantis_webhook_secret" json:"atlantis_webhook_secret"`
 	AtlantisWebhookURL    string `bson:"atlantis_webhook_url" json:"atlantis_webhook_url"`
 	KubefirstTeam         string `bson:"kubefirst_team" json:"kubefirst_team"`
-	// MachineType           string `bson:"machine_type" json:"machine_type" binding:"required"`
-	// MachineTypeCount      string `bson:"machine_type_count" json:"machine_type_count" binding:"required"`
+	NodeType              string `bson:"node_type" json:"node_type" binding:"required"`
+	NodeCount             string `bson:"node_count" json:"node_count" binding:"required"`
 
 	StateStoreCredentials StateStoreCredentials `bson:"state_store_credentials,omitempty" json:"state_store_credentials,omitempty"`
 	StateStoreDetails     StateStoreDetails     `bson:"state_store_details,omitempty" json:"state_store_details,omitempty"`
@@ -172,7 +172,7 @@ type WorkloadCluster struct {
 	Environment       Environment `bson:"environment,omitempty" json:"environment,omitempty"`
 	GitAuth           GitAuth     `bson:"git_auth,omitempty" json:"git_auth,omitempty"`
 	InstanceSize      string      `bson:"instance_size,omitempty" json:"instance_size,omitempty"`
-	MachineType       string      `bson:"machine_type,omitempty" json:"machine_type,omitempty"`
+	NodeType          string      `bson:"node_type,omitempty" json:"node_type,omitempty"`
 	NodeCount         int         `bson:"node_count,omitempty" json:"node_count,omitempty"`
 	Status            string      `bson:"status,omitempty" json:"status,omitempty"`
 }

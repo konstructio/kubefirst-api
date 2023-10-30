@@ -25,8 +25,8 @@ type GitopsDirectoryValues struct {
 	KubefirstTeam             string
 	KubefirstVersion          string
 	StateStoreBucketHostname  string
-	MachineType               string
-	MachineTypeCount          string
+	NodeType                  string
+	NodeCount                 string
 
 	ArgoCDIngressURL               string
 	ArgoCDIngressNoHTTPSURL        string

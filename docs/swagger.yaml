@@ -36,6 +36,7 @@ definitions:
       origin_ca_issuer_key:
         type: string
       token:
+        description: 'DEPRECATED: please transition to APIToken'
         type: string
     type: object
   types.Cluster:
@@ -142,6 +143,10 @@ definitions:
         type: string
       last_condition:
         type: string
+      node_count:
+        type: string
+      node_type:
+        type: string
       state_store_create_check:
         type: boolean
       state_store_credentials:
@@ -172,6 +177,9 @@ definitions:
         items:
           $ref: '#/definitions/types.WorkloadCluster'
         type: array
+    required:
+    - node_count
+    - node_type
     type: object
   types.ClusterDefinition:
     properties:
@@ -228,6 +236,10 @@ definitions:
         type: string
       google_auth:
         $ref: '#/definitions/types.GoogleAuth'
+      node_count:
+        type: string
+      node_type:
+        type: string
       subdomain_name:
         type: string
       type:
@@ -245,6 +257,8 @@ definitions:
     - domain_name
     - git_protocol
     - git_provider
+    - node_count
+    - node_type
     - type
     type: object
   types.ClusterServiceList:
@@ -291,7 +305,11 @@ definitions:
     type: object
   types.Environment:
     properties:
+      _id:
+        type: string
       color:
+        type: string
+      creation_timestamp:
         type: string
       description:
         type: string
@@ -490,10 +508,10 @@ definitions:
         $ref: '#/definitions/types.GitAuth'
       instance_size:
         type: string
-      machine_type:
-        type: string
       node_count:
         type: integer
+      node_type:
+        type: string
       status:
         type: string
     type: object

@@ -60,7 +60,7 @@ func CreateDefaultEnvironments(mgmtCluster types.Cluster) error {
 		},
 		GitAuth:      mgmtCluster.GitAuth,
 		InstanceSize: "", // left up to terraform
-		MachineType:  "", //left up to terraform
+		NodeType:     "", //left up to terraform
 		NodeCount:    3,  //defaulted here
 	}
 
