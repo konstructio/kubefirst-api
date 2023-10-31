@@ -57,6 +57,7 @@ type ClusterController struct {
 	GitAuth            pkgtypes.GitAuth
 	VaultAuth          pkgtypes.VaultAuth
 	GoogleAuth         pkgtypes.GoogleAuth
+	K3sAuth            pkgtypes.K3sAuth
 	AwsAccessKeyID     string
 	AwsSecretAccessKey string
 	NodeType           string
@@ -165,7 +166,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	}
 	clctrl.TelemetryEvent = telemetryEvent
 
-	//Copy Cluster Definiion to Cluster Controller
+	// Copy Cluster Definiion to Cluster Controller
 	clctrl.AlertsEmail = def.AdminEmail
 	clctrl.CloudProvider = def.CloudProvider
 	clctrl.CloudRegion = def.CloudRegion
@@ -184,6 +185,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	clctrl.DigitaloceanAuth = def.DigitaloceanAuth
 	clctrl.VultrAuth = def.VultrAuth
 	clctrl.GoogleAuth = def.GoogleAuth
+	clctrl.K3sAuth = def.K3sAuth
 	clctrl.CloudflareAuth = def.CloudflareAuth
 
 	clctrl.Repositories = []string{"gitops", "metaphor"}
@@ -251,6 +253,13 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	case "vultr":
 		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
 		clctrl.ProviderConfig.VultrToken = clctrl.VultrAuth.Token
+	case "k3s":
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		clctrl.ProviderConfig.K3sServersPrivateIps = clctrl.K3sAuth.K3sServersPrivateIps
+		clctrl.ProviderConfig.K3sServersPublicIps = clctrl.K3sAuth.K3sServersPublicIps
+		clctrl.ProviderConfig.K3sSshPrivateKey = clctrl.K3sAuth.K3sSshPrivateKey
+		clctrl.ProviderConfig.K3sSshUser = clctrl.K3sAuth.K3sSshUser
+		clctrl.ProviderConfig.K3sServersArgs = clctrl.K3sAuth.K3sServersArgs
 	}
 
 	// Instantiate provider clients and copy cluster controller to cluster type
@@ -303,6 +312,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		GoogleAuth:            clctrl.GoogleAuth,
 		DigitaloceanAuth:      clctrl.DigitaloceanAuth,
 		VultrAuth:             clctrl.VultrAuth,
+		K3sAuth:               clctrl.K3sAuth,
 		CloudflareAuth:        clctrl.CloudflareAuth,
 		NodeType:              clctrl.NodeType,
 		NodeCount:             clctrl.NodeCount,

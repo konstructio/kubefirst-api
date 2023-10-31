@@ -44,7 +44,7 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 		switch clctrl.CloudProvider {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-		case "civo", "digitalocean", "vultr":
+		case "civo", "digitalocean", "vultr", "k3s":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 		case "google":
 			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
@@ -103,7 +103,7 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 		switch clctrl.CloudProvider {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-		case "civo", "digitalocean", "vultr":
+		case "civo", "digitalocean", "vultr", "k3s":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 		case "google":
 			var err error
@@ -128,7 +128,7 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 		var argoCDToken string
 
 		switch clctrl.CloudProvider {
-		case "aws", "civo", "google", "digitalocean", "vultr":
+		case "aws", "civo", "google", "digitalocean", "vultr", "k3s":
 
 			// kcfg.Clientset.RbacV1().
 			argoCDStopChannel := make(chan struct{}, 1)
@@ -182,7 +182,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		switch clctrl.CloudProvider {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-		case "civo", "digitalocean", "vultr":
+		case "civo", "digitalocean", "vultr", "k3s":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 		case "google":
 			var err error
@@ -225,6 +225,10 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		} else if clctrl.CloudProvider == "vultr" && clctrl.GitProvider == "github" {
 			registryPath = fmt.Sprintf("registry/clusters/%s", clctrl.ClusterName)
 		} else if clctrl.CloudProvider == "vultr" && clctrl.GitProvider == "gitlab" {
+			registryPath = fmt.Sprintf("registry/clusters/%s", clctrl.ClusterName)
+		} else if clctrl.CloudProvider == "k3s" && clctrl.GitProvider == "github" {
+			registryPath = fmt.Sprintf("registry/clusters/%s", clctrl.ClusterName)
+		} else if clctrl.CloudProvider == "k3s" && clctrl.GitProvider == "gitlab" {
 			registryPath = fmt.Sprintf("registry/clusters/%s", clctrl.ClusterName)
 		} else {
 			registryPath = fmt.Sprintf("registry/%s", clctrl.ClusterName)

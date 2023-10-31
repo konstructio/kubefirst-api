@@ -21,6 +21,7 @@ import (
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
 	googleext "github.com/kubefirst/kubefirst-api/extensions/google"
+	k3sext "github.com/kubefirst/kubefirst-api/extensions/k3s"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
@@ -49,7 +50,7 @@ func (clctrl *ClusterController) GetUserPassword(user string) error {
 
 	// empty conf
 	vaultConf := &vault.Conf
-	//sets up vault client within function
+	// sets up vault client within function
 	clctrl.VaultAuth.KbotPassword, err = vaultConf.GetUserPassword(vault.VaultDefaultAddress, cl.VaultAuth.RootToken, "kbot", "initial-password")
 	if err != nil {
 		return err
@@ -86,7 +87,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 		switch clctrl.CloudProvider {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-		case "civo", "digitalocean", "vultr":
+		case "civo", "digitalocean", "vultr", "k3s":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 			vaultHandlerPath = "github.com:kubefirst/manifests.git/vault-handler/replicas-3"
 		case "google":
@@ -127,7 +128,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 			if err != nil {
 				return err
 			}
-		case "civo", "digitalocean", "vultr":
+		case "civo", "digitalocean", "vultr", "k3s":
 			// Initialize and unseal Vault
 			// Build and apply manifests
 			yamlData, err := kcfg.KustomizeBuild(vaultHandlerPath)
@@ -188,7 +189,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		switch clctrl.CloudProvider {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-		case "civo", "digitalocean", "vultr":
+		case "civo", "digitalocean", "vultr", "k3s":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 		case "google":
 			var err error
@@ -202,7 +203,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 
 		tfEnvs := map[string]string{}
 
-		//Common TfEnvs
+		// Common TfEnvs
 		var usernamePasswordString, base64DockerAuth, registryAuth string
 
 		if clctrl.GitProvider == "gitlab" {
@@ -225,7 +226,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 			tfEnvs["TF_VAR_owner_group_id"] = strconv.Itoa(clctrl.GitlabOwnerGroupID)
 		}
 
-		//Specific TfEnvs
+		// Specific TfEnvs
 		switch clctrl.CloudProvider {
 		case "aws":
 			tfEnvs = awsext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
@@ -243,6 +244,9 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		case "vultr":
 			tfEnvs = vultrext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
+		case "k3s":
+			tfEnvs = k3sext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEnvs = k3sext.GetK3sTerraformEnvs(tfEnvs, &cl)
 		}
 
 		tfEntrypoint := clctrl.ProviderConfig.GitopsDir + "/terraform/vault"
@@ -319,7 +323,7 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 	switch clctrl.CloudProvider {
 	case "aws":
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-	case "civo", "digitalocean", "vultr":
+	case "civo", "digitalocean", "vultr", "k3s":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 	case "google":
 		var err error
@@ -384,7 +388,7 @@ func (clctrl *ClusterController) WaitForVault() error {
 	switch clctrl.CloudProvider {
 	case "aws":
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-	case "civo", "digitalocean", "vultr":
+	case "civo", "digitalocean", "vultr", "k3s":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 	case "google":
 		var err error
@@ -415,7 +419,6 @@ func (clctrl *ClusterController) WaitForVault() error {
 }
 
 func writeGoogleSecrets(homeDir string, vaultClient *vaultapi.Client) error {
-
 	// vault path - gcp/application-default-credentials
 	adcJSON, err := os.ReadFile(fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir))
 	if err != nil {

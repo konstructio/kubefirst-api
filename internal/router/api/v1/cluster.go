@@ -9,8 +9,8 @@ package api
 import (
 	"context"
 	"fmt"
-
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
@@ -25,6 +25,7 @@ import (
 	"github.com/kubefirst/kubefirst-api/providers/civo"
 	"github.com/kubefirst/kubefirst-api/providers/digitalocean"
 	"github.com/kubefirst/kubefirst-api/providers/google"
+	"github.com/kubefirst/kubefirst-api/providers/k3s"
 	"github.com/kubefirst/kubefirst-api/providers/vultr"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	civoruntime "github.com/kubefirst/runtime/pkg/civo"
@@ -272,20 +273,21 @@ func PostCreateCluster(c *gin.Context) {
 		}
 	}
 
-	//Retry mechanism
+	// Retry mechanism
 	if cluster.ClusterName != "" {
-		//Assign cloud and git credentials
+		// Assign cloud and git credentials
 		clusterDefinition.AWSAuth = cluster.AWSAuth
 		clusterDefinition.CivoAuth = cluster.CivoAuth
 		clusterDefinition.VultrAuth = cluster.VultrAuth
 		clusterDefinition.DigitaloceanAuth = cluster.DigitaloceanAuth
 		clusterDefinition.GoogleAuth = cluster.GoogleAuth
+		clusterDefinition.K3sAuth = cluster.K3sAuth
 		clusterDefinition.GitAuth = cluster.GitAuth
 	}
 
 	// Determine authentication type
 	useSecretForAuth := false
-	var k1AuthSecret = map[string]string{}
+	k1AuthSecret := map[string]string{}
 
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
@@ -471,6 +473,50 @@ func PostCreateCluster(c *gin.Context) {
 		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
 			Message: "cluster create enqueued",
 		})
+		// }
+	case "k3s":
+		if useSecretForAuth {
+			err := utils.ValidateAuthenticationFields(k1AuthSecret)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: fmt.Sprintf("error checking k3s auth: %s", err),
+				})
+				return
+			}
+			// force empty array if not server spubilc ips provided, to avoid errror of terraform tokenisation
+			defaultK3sServersPublicIps := []string{}
+			if k1AuthSecret["servers-public-ips"] != "" {
+				defaultK3sServersPublicIps = strings.Split(k1AuthSecret["servers-public-ips"], ",")
+			}
+
+			clusterDefinition.K3sAuth = pkgtypes.K3sAuth{
+				K3sServersPrivateIps: strings.Split(k1AuthSecret["servers-private-ips"], ","),
+				K3sServersPublicIps:  defaultK3sServersPublicIps,
+				K3sSshUser:           k1AuthSecret["ssh-user"],
+				K3sSshPrivateKey:     k1AuthSecret["ssh-privatekey"],
+				K3sServersArgs:       strings.Split(k1AuthSecret["servers-args"], ","),
+			}
+		} else {
+			if len(clusterDefinition.K3sAuth.K3sServersPrivateIps) == 0 ||
+				clusterDefinition.K3sAuth.K3sSshUser == "" ||
+				clusterDefinition.K3sAuth.K3sSshPrivateKey == "" {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					// Message: "missing authentication credentials in request, please check and try again",
+					Message: fmt.Sprintf("missing authentication credentials in request, please check and try again: %v", clusterDefinition.K3sAuth),
+				})
+				return
+			}
+		}
+		go func() {
+			err = k3s.CreateK3sCluster(&clusterDefinition)
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+		}()
+
+		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
+			Message: "cluster create enqueued",
+		})
 	}
 }
 
@@ -558,7 +604,6 @@ func GetClusterKubeconfig(c *gin.Context) {
 		}
 
 		kubeConfig, err := digitaloceanConf.GetKubeconfig(clusterName)
-
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: err.Error(),
@@ -576,7 +621,6 @@ func GetClusterKubeconfig(c *gin.Context) {
 		}
 
 		kubeConfig, err := vultrConf.GetKubeconfig(clusterName)
-
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: err.Error(),
@@ -592,6 +636,7 @@ func GetClusterKubeconfig(c *gin.Context) {
 		})
 		return
 	}
+	return
 }
 
 // PostImportCluster godoc

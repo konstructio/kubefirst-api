@@ -102,6 +102,22 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 				log.Errorf("error downloading dependencies: %s", err)
 				return err
 			}
+
+			// TODO: move to runtime
+			// use vultr DownloadTools meanwhile
+		case "k3s":
+			err := vultr.DownloadTools(
+				clctrl.ProviderConfig.KubectlClient,
+				providerConfigs.KubectlClientVersion,
+				providerConfigs.LocalhostOS,
+				providerConfigs.LocalhostArch,
+				providerConfigs.TerraformClientVersion,
+				toolsDir,
+			)
+			if err != nil {
+				log.Errorf("error downloading dependencies: %s", err)
+				return err
+			}
 		}
 		log.Info("dependency downloads complete")
 

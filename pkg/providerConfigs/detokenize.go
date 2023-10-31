@@ -7,8 +7,10 @@ See the LICENSE file for more details.
 package providerConfigs
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -27,7 +29,6 @@ func DetokenizeGitGitops(path string, tokens *GitopsDirectoryValues, gitProtocol
 
 func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol string, useCloudflareOriginIssuer bool) filepath.WalkFunc {
 	return filepath.WalkFunc(func(path string, fi os.FileInfo, err error) error {
-
 		if fi.IsDir() && fi.Name() == ".git" {
 			return filepath.SkipDir
 		}
@@ -96,6 +97,37 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				newContents = strings.Replace(newContents, "<TERRAFORM_FORCE_DESTROY>", tokens.ForceDestroy, -1)
 				newContents = strings.Replace(newContents, "<GOOGLE_UNIQUENESS>", tokens.GoogleUniqueness, -1)
 
+				// k3s
+				newContents = strings.Replace(newContents, "<K3S_ENDPOINT>", tokens.K3sServersPrivateIps[0], -1)
+				// TODO: this is a hack to get around
+				// need to be refactored into a single function with args
+				var terraformServersPrivateIpsList string
+				jsonBytes, err := json.Marshal(tokens.K3sServersPrivateIps)
+				if err != nil {
+					log.Fatalf("detokenise issue on %s", err)
+				}
+				terraformServersPrivateIpsList = string(jsonBytes)
+				newContents = strings.Replace(newContents, "<K3S_SERVERS_PRIVATE_IPS>", terraformServersPrivateIpsList, -1)
+
+				var terraformServersPublicIpsList string
+				jsonBytes2, err := json.Marshal(tokens.K3sServersPublicIps)
+				if err != nil {
+					log.Fatalf("detokenise issue on %s", err)
+				}
+				terraformServersPublicIpsList = string(jsonBytes2)
+				newContents = strings.Replace(newContents, "<K3S_SERVERS_PUBLIC_IPS>", terraformServersPublicIpsList, -1)
+
+				var terraformServersArgsList string
+				jsonBytes3, err := json.Marshal(tokens.K3sServersArgs)
+				if err != nil {
+					log.Fatalf("detokenise issue on %s", err)
+				}
+				terraformServersArgsList = string(jsonBytes3)
+				newContents = strings.Replace(newContents, "<K3S_SERVERS_ARGS>", terraformServersArgsList, -1)
+
+				newContents = strings.Replace(newContents, "<SSH_USER>", tokens.SshUser, -1)
+				newContents = strings.Replace(newContents, "<SSH_PRIVATEKEY>", tokens.SshPrivateKey, -1)
+
 				newContents = strings.Replace(newContents, "<ARGOCD_INGRESS_URL>", tokens.ArgoCDIngressURL, -1)
 				newContents = strings.Replace(newContents, "<ARGOCD_INGRESS_NO_HTTP_URL>", tokens.ArgoCDIngressNoHTTPSURL, -1)
 				newContents = strings.Replace(newContents, "<ARGO_WORKFLOWS_INGRESS_URL>", tokens.ArgoWorkflowsIngressURL, -1)
@@ -143,7 +175,7 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				newContents = strings.Replace(newContents, "<EXTERNAL_DNS_PROVIDER_SECRET_KEY>", tokens.ExternalDNSProviderSecretKey, -1)
 				newContents = strings.Replace(newContents, "<EXTERNAL_DNS_DOMAIN_NAME>", tokens.DomainName, -1)
 
-				//origin issuer defines which annotations should be on ingresses
+				// origin issuer defines which annotations should be on ingresses
 				if useCloudflareOriginIssuer {
 					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_1>", "cert-manager.io/issuer: cloudflare-origin-issuer", -1)
 					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_2>", "cert-manager.io/issuer-kind: OriginIssuer", -1)
@@ -161,7 +193,7 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				// Switch the repo url based on https flag
 				newContents = strings.Replace(newContents, "<GITOPS_REPO_URL>", tokens.GitopsRepoURL, -1)
 
-				//The fqdn is used by metaphor/argo to choose the appropriate url for cicd operations.
+				// The fqdn is used by metaphor/argo to choose the appropriate url for cicd operations.
 				if gitProtocol == "https" {
 					newContents = strings.Replace(newContents, "<GIT_FQDN>", fmt.Sprintf("https://%v.com/", tokens.GitProvider), -1)
 				} else {

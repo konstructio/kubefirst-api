@@ -49,7 +49,7 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 	switch clctrl.CloudProvider {
 	case "aws":
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-	case "civo", "digitalocean", "vultr":
+	case "civo", "digitalocean", "vultr", "k3s":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 	case "google":
 		var err error
