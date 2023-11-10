@@ -10,18 +10,17 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 	google "github.com/kubefirst/kubefirst-api/pkg/google"
 	"github.com/kubefirst/kubefirst-api/pkg/handlers"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
-	"github.com/kubefirst/runtime/pkg"
 	runtime "github.com/kubefirst/runtime/pkg"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/github"
@@ -113,6 +112,12 @@ type ClusterController struct {
 
 // InitController
 func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition) error {
+
+	env, getEnvError := env.GetEnv()
+
+	if getEnvError != nil {
+		log.Fatal(getEnvError.Error())
+	}
 	// Create k1 dir if it doesn't exist
 	utils.CreateK1Directory(def.ClusterName)
 
@@ -144,20 +149,20 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	}
 
 	telemetryEvent := telemetry.TelemetryEvent{
-		CliVersion:        os.Getenv("KUBEFIRST_VERSION"),
-		CloudProvider:     os.Getenv("CLOUD_PROVIDER"),
-		ClusterID:         os.Getenv("CLUSTER_ID"),
-		ClusterType:       os.Getenv("CLUSTER_TYPE"),
-		DomainName:        os.Getenv("DOMAIN_NAME"),
+		CliVersion:        env.KubefirstVersion,
+		CloudProvider:     env.CloudProvider,
+		ClusterID:         env.ClusterId,
+		ClusterType:       env.ClusterType,
+		DomainName:        env.DomainName,
 		ErrorMessage:      "",
-		GitProvider:       os.Getenv("GIT_PROVIDER"),
-		InstallMethod:     os.Getenv("INSTALL_METHOD"),
+		GitProvider:       env.GitProvider,
+		InstallMethod:     env.InstallMethod,
 		KubefirstClient:   "api",
-		KubefirstTeam:     os.Getenv("KUBEFIRST_TEAM"),
-		KubefirstTeamInfo: os.Getenv("KUBEFIRST_TEAM_INFO"),
-		MachineID:         os.Getenv("CLUSTER_ID"),
+		KubefirstTeam:     env.KubefirstTeam,
+		KubefirstTeamInfo: env.KubefirstTeamInfo,
+		MachineID:         env.ClusterId,
 		MetricName:        telemetry.ClusterInstallStarted,
-		UserId:            os.Getenv("CLUSTER_ID"),
+		UserId:            env.ClusterId,
 	}
 	clctrl.TelemetryEvent = telemetryEvent
 
@@ -206,11 +211,9 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	clctrl.KubefirstStateStoreBucketName = fmt.Sprintf("k1-state-store-%s-%s", clctrl.ClusterName, clusterID)
 	clctrl.KubefirstArtifactsBucketName = fmt.Sprintf("k1-artifacts-%s-%s", clctrl.ClusterName, clusterID)
 
-	clctrl.KubefirstTeam = os.Getenv("KUBEFIRST_TEAM")
-	if clctrl.KubefirstTeam == "" {
-		clctrl.KubefirstTeam = "undefined"
-	}
-	clctrl.AtlantisWebhookSecret = pkg.Random(20)
+	clctrl.KubefirstTeam = env.KubefirstTeam
+
+	clctrl.AtlantisWebhookSecret = runtime.Random(20)
 
 	var fullDomainName string
 	if clctrl.SubdomainName != "" {

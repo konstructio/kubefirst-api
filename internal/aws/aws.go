@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"os"
 	"strconv"
 	"time"
 
@@ -19,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	route53Types "github.com/aws/aws-sdk-go-v2/service/route53/types"
+	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 	log "github.com/sirupsen/logrus"
 )
@@ -35,13 +35,16 @@ var Conf AWSConfiguration = AWSConfiguration{
 
 // NewAws instantiates a new AWS configuration
 func NewAws() aws.Config {
-	region := os.Getenv("AWS_REGION")
-	profile := os.Getenv("AWS_PROFILE")
+	env, getEnvError := env.GetEnv()
 
+	if getEnvError != nil {
+		log.Fatal(getEnvError.Error())
+	}
+	
 	awsClient, err := config.LoadDefaultConfig(
 		context.Background(),
-		config.WithRegion(region),
-		config.WithSharedConfigProfile(profile),
+		config.WithRegion(env.AWSRegion),
+		config.WithSharedConfigProfile(env.AWSProfile),
 	)
 	if err != nil {
 		log.Errorf("Could not create AWS config: %s", err.Error())
