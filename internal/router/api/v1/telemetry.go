@@ -28,9 +28,6 @@ import (
 // @Param Authorization header string true "API key" default(Bearer <API key>)
 // PostTelemetry sents a new telemetry event
 func PostTelemetry(c *gin.Context) {
-
-	env, _ := env.GetEnv()
-
 	clusterName, param := c.Params.Get("cluster_name")
 	if !param {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -47,6 +44,8 @@ func PostTelemetry(c *gin.Context) {
 		})
 		return
 	}
+
+	env, _ := env.GetEnv()
 
 	telEvent := telemetry.TelemetryEvent{
 		CliVersion:        env.KubefirstVersion,

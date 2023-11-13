@@ -98,13 +98,6 @@ func CreateDefaultEnvironments(mgmtCluster types.Cluster) error {
 }
 
 func callApiEE(goPayload types.WorkloadClusterSet) error {
-
-	env, getEnvError := env.GetEnv()
-
-	if getEnvError != nil {
-		log.Fatal(getEnvError.Error())
-	}
-
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
 	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	httpClient := http.Client{Transport: customTransport}
@@ -113,6 +106,8 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 	if err != nil {
 		return err
 	}
+
+	env, _ := env.GetEnv()
 
 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/v1/environments/%s", env.EnterpriseApiUrl, env.ClusterId), bytes.NewReader(payload))
 

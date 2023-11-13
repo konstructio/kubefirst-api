@@ -32,10 +32,10 @@ import (
 
 func main() {
 
-	env, getEnvError := env.GetEnv()
+	env, err := env.GetEnv()
 
-	if getEnvError != nil {
-		log.Fatal(getEnvError.Error())
+	if err != nil {
+		log.Fatal(err.Error())
 	}
 
 	log.SetFormatter(&log.TextFormatter{
@@ -45,7 +45,7 @@ func main() {
 	log.SetReportCaller(false)
 
 	// Verify database connectivity
-	err := db.Client.EstablishMongoConnection(db.EstablishConnectArgs{
+	err = db.Client.EstablishMongoConnection(db.EstablishConnectArgs{
 		Tries:  20,
 		Silent: false,
 	})

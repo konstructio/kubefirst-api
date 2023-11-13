@@ -111,12 +111,6 @@ func (clctrl *ClusterController) CreateCluster() error {
 
 // CreateTokens
 func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
-	env, getEnvError := env.GetEnv()
-
-	if getEnvError != nil {
-		log.Fatal(getEnvError.Error())
-	}
-
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
@@ -163,6 +157,8 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 		if err != nil {
 			return err
 		}
+
+		env, _ := env.GetEnv()
 
 		// Default gitopsTemplateTokens
 		gitopsTemplateTokens := &providerConfigs.GitopsDirectoryValues{

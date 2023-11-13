@@ -45,12 +45,6 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 	log.SetReportCaller(false)
 	log.SetOutput(os.Stdout)
 
-	env, getEnvError := env.GetEnv()
-
-	if getEnvError != nil {
-		log.Fatal(getEnvError.Error())
-	}
-
 	switch cl.Status {
 	case constants.ClusterStatusDeleted, constants.ClusterStatusDeleting, constants.ClusterStatusError, constants.ClusterStatusProvisioning:
 		return fmt.Errorf("cluster %s - unable to deploy service %s to cluster: cannot deploy services to a cluster in %s state", cl.ClusterName, serviceName, cl.Status)
@@ -100,6 +94,8 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 	serviceFile := fmt.Sprintf("%s/%s/%s.yaml", tmpGitopsDir, registryPath, serviceName)
 
 	var kcfg *k8s.KubernetesClient
+
+	env, _ := env.GetEnv()
 
 	kcfg = k8s.CreateKubeConfig(env.InCluster, fmt.Sprintf("%s/kubeconfig", tmpGitopsDir))
 

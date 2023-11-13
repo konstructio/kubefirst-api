@@ -112,12 +112,6 @@ type ClusterController struct {
 
 // InitController
 func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition) error {
-
-	env, getEnvError := env.GetEnv()
-
-	if getEnvError != nil {
-		log.Fatal(getEnvError.Error())
-	}
 	// Create k1 dir if it doesn't exist
 	utils.CreateK1Directory(def.ClusterName)
 
@@ -147,6 +141,8 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	} else {
 		clusterID = runtime.GenerateClusterID()
 	}
+
+	env, _ := env.GetEnv()
 
 	telemetryEvent := telemetry.TelemetryEvent{
 		CliVersion:        env.KubefirstVersion,

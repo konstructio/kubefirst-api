@@ -43,13 +43,6 @@ import (
 // @Param Authorization header string true "API key" default(Bearer <API key>)
 // DeleteCluster handles a request to delete a cluster
 func DeleteCluster(c *gin.Context) {
-
-	env, getEnvError := env.GetEnv()
-
-	if getEnvError != nil {
-		log.Fatal(getEnvError.Error())
-	}
-
 	clusterName, param := c.Params.Get("cluster_name")
 	if !param {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -66,6 +59,8 @@ func DeleteCluster(c *gin.Context) {
 		})
 		return
 	}
+
+	env, _ := env.GetEnv()
 
 	telemetryEvent := telemetry.TelemetryEvent{
 		CliVersion:        env.KubefirstVersion,
@@ -227,13 +222,6 @@ func GetClusters(c *gin.Context) {
 // @Param Authorization header string true "API key" default(Bearer <API key>)
 // PostCreateCluster handles a request to create a cluster
 func PostCreateCluster(c *gin.Context) {
-
-	env, getEnvError := env.GetEnv()
-
-	if getEnvError != nil {
-		log.Fatal(getEnvError.Error())
-	}
-
 	clusterName, param := c.Params.Get("cluster_name")
 	if !param || string(clusterName) == ":cluster_name" {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -294,6 +282,8 @@ func PostCreateCluster(c *gin.Context) {
 	// Determine authentication type
 	useSecretForAuth := false
 	var k1AuthSecret = map[string]string{}
+
+	env, _ := env.GetEnv()
 
 	if env.InCluster {
 		kcfg := k8s.CreateKubeConfig(env.InCluster, "")

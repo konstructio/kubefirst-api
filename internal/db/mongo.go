@@ -83,17 +83,13 @@ func Connect() *MongoDBClient {
 
 // TestDatabaseConnection
 func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
-	env, getEnvError := env.GetEnv()
-
-	if getEnvError != nil {
-		log.Fatal(getEnvError.Error())
-	}
-
 	err := mdbcl.Client.Database("admin").RunCommand(mdbcl.Context, bson.D{{Key: "ping", Value: 1}}).Err()
 	if err != nil {
 		log.Fatalf("error connecting to mongodb: %s", err)
 	}
 	if !silent {
+		env, _ := env.GetEnv()
+
 		log.Infof("connected to mongodb host %s", env.MongoDBHost)
 	}
 
@@ -102,11 +98,7 @@ func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
 
 // ImportClusterIfEmpty
 func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster, error) {
-	env, getEnvError := env.GetEnv()
-
-	if getEnvError != nil {
-		log.Fatal(getEnvError.Error())
-	}
+	env, _ := env.GetEnv()
 
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp:   true,
@@ -117,7 +109,7 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster,
 	// find the secret in mgmt cluster's kubefirst namespace and read import payload and clustername
 	var kcfg *k8s.KubernetesClient
 
-	if env.IsClusterZero == true {
+	if env.IsClusterZero {
 		log.Info("IS_CLUSTER_ZERO is set to true, skipping import cluster logic.")
 		return pkgtypes.Cluster{}, nil
 	}
@@ -183,11 +175,7 @@ type EstablishConnectArgs struct {
 }
 
 func (mdbcl *MongoDBClient) EstablishMongoConnection(args EstablishConnectArgs) error {
-	env, getEnvError := env.GetEnv()
-
-	if getEnvError != nil {
-		log.Fatal(getEnvError.Error())
-	}
+	env, _ := env.GetEnv()
 
 	var pingError error
 
