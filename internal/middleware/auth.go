@@ -8,27 +8,30 @@ package middleware
 
 import (
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/rs/zerolog/log"
 )
 
 // ValidateAPIKey determines whether or not a request is authenticated with a valid API key
 func ValidateAPIKey() gin.HandlerFunc {
+	
 	return func(c *gin.Context) {
 		APIKey := strings.TrimPrefix(c.Request.Header.Get("Authorization"), "Bearer ")
-
+		
 		if APIKey == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"status": 401, "message": "Authentication failed - no API key provided in request"})
 			c.Abort()
-
+			
 			log.Info().Msgf(" Request Status: 401;  Authentication failed - no API key provided in request")
 			return
 		}
-		apiToken := os.Getenv("K1_ACCESS_TOKEN")
-		if APIKey != apiToken {
+		
+		env, _ := env.GetEnv()
+
+		if APIKey != env.K1AccessToken {
 			c.JSON(http.StatusUnauthorized, gin.H{"status": 401, "message": "Authentication failed - not a valid API key"})
 			c.Abort()
 

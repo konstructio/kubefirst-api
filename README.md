@@ -30,8 +30,8 @@ Kubefirst API runtime implementation.
   - [local environment variables](#local-environment-variables)
   - [Provider Support](#provider-support)
   - [Creating a Cluster](#creating-a-cluster)
-      - [Kubernetes Secret](#kubernetes-secret)
-      - [API Call Parameters](#api-call-parameters)
+    - [Kubernetes Secret](#kubernetes-secret)
+    - [API Call Parameters](#api-call-parameters)
     - [AWS](#aws)
     - [Civo](#civo)
     - [Digital Ocean](#digital-ocean)
@@ -48,7 +48,7 @@ The API is available at `http://localhost:8081/api/v1` while running.
 ### Build the Binary
 
 The API can be run locally for testing. It can be run by using `make build` and then calling the binary in the `bin/` directory or by using `go run .`.
-   
+
 ### Leverage `air` for Live Reloading Locally
 
 **Prerequsite** - Install [air](https://github.com/cosmtrek/air).
@@ -57,7 +57,7 @@ The API can be run locally for testing. It can be run by using `make build` and 
 go install github.com/cosmtrek/air@latest
 ```
 
-Run `air` from the root of the repository. This will watch go files and live rebuild a local running instance of `kubefirst-api`.   
+Run `air` from the root of the repository. This will watch go files and live rebuild a local running instance of `kubefirst-api`.
 
 ## Prerequisites
 
@@ -75,19 +75,19 @@ The host:port for MongoDB should be supplied as the environment variable `MONGOD
 
 Some variables are required, others are optional depending on deployment type.
 
-| Variable            | Description                                                                                                                                      | Required       |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------- |
-| `MONGODB_HOST_TYPE` | Can be either `atlas` or `local`.                                                                                                                | Yes            |
-| `MONGODB_HOST`      | The host to connect to. For Atlas, use only the portion of the string not containing username or password. For all other types, append the port. | Yes            |
-| `MONGODB_USERNAME`  | Required when using Atlas.                                                                                                                       | If using Atlas |
-| `MONGODB_PASSWORD`  | Required when using Atlas.                                                                                                                       | If using Atlas |
-| `IN_CLUSTER`        | Specify whether or not the API is running inside a Kubernetes cluster. By default, this is assumed `false`.                                      | No             |
-| `CLUSTER_ID`        | The ID of the cluster running API.                                                                                                               | Yes            |
-| `CLUSTER_TYPE`      | Cluster type.                                                                                                                                    | Yes            |
-| `INSTALL_METHOD`    | Description of the method through which the API was deployed. Example: `helm`                                                                    | Yes            |
-| `K1_ACCESS_TOKEN`    | Access token in authorization header to prevent unsolicited in-cluster access | Yes            |
+| Variable            | Description                                                                                                                                      | Required                       |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------ |
+| `MONGODB_HOST_TYPE` | Can be either `atlas` or `local`.                                                                                                                | Yes                            |
+| `MONGODB_HOST`      | The host to connect to. For Atlas, use only the portion of the string not containing username or password. For all other types, append the port. | Yes                            |
+| `MONGODB_USERNAME`  | Required when using Atlas/ Docker compose.                                                                                                       | If using Atlas/ Docker compose |
+| `MONGODB_PASSWORD`  | Required when using Atlas/ Docker compose.                                                                                                       | If using Atlas/ Docker compose |
+| `IN_CLUSTER`        | Specify whether or not the API is running inside a Kubernetes cluster. By default, this is assumed `false`.                                      | No                             |
+| `CLUSTER_ID`        | The ID of the cluster running API.                                                                                                               | Yes                            |
+| `CLUSTER_TYPE`      | Cluster type.                                                                                                                                    | Yes                            |
+| `INSTALL_METHOD`    | Description of the method through which the API was deployed. Example: `helm`                                                                    | Yes                            |
+| `K1_ACCESS_TOKEN`   | Access token in authorization header to prevent unsolicited in-cluster access                                                                    | Yes                            |
 
-### To run locally: 
+### To run locally:
 
 ```bash
 # optional local mongodb for kubefirst-api
@@ -98,7 +98,14 @@ docker run -d --name k1-api-mongodb \
   mongo
 ```
 
+### Using Docker compose:
+
+```bash
+  docker compose up
+```
+
 ## local environment variables
+
 see [this .env example](./.env.example) for the necessary values
 
 ## Provider Support
@@ -146,46 +153,46 @@ This would require the following parameters added to the API call depending on w
 
 ```json
 {
-	"aws_auth": {
-		"access_key_id": "foo",
-		"secret_access_key": "bar",
-		"session_token": "baz"
-	}
+  "aws_auth": {
+    "access_key_id": "foo",
+    "secret_access_key": "bar",
+    "session_token": "baz"
+  }
 }
 ```
 
 ```json
 {
-	"civo_auth": {
-		"token": "my-civo-token"
-	}
+  "civo_auth": {
+    "token": "my-civo-token"
+  }
 }
 ```
 
 ```json
 {
-	"do_auth": {
-		"token": "my-do-token",
-		"spaces_key": "foo",
-		"spaces_secret": "bar"
-	}
+  "do_auth": {
+    "token": "my-do-token",
+    "spaces_key": "foo",
+    "spaces_secret": "bar"
+  }
 }
 ```
 
 ```json
 {
-	"do_auth": {
-		"key_file": "my-google-credentials-json-keyfile-stringified-no-newline-characters",
-		"project_id": "google cloud project id"
-	}
+  "do_auth": {
+    "key_file": "my-google-credentials-json-keyfile-stringified-no-newline-characters",
+    "project_id": "google cloud project id"
+  }
 }
 ```
 
 ```json
 {
-	"vultr_auth": {
-		"token": "my-vultr-api-key"
-	}
+  "vultr_auth": {
+    "token": "my-vultr-api-key"
+  }
 }
 ```
 

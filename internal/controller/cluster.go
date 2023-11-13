@@ -18,6 +18,7 @@ import (
 	googleext "github.com/kubefirst/kubefirst-api/extensions/google"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
+	"github.com/kubefirst/kubefirst-api/internal/env"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
@@ -110,11 +111,6 @@ func (clctrl *ClusterController) CreateCluster() error {
 
 // CreateTokens
 func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
-	kubefirstVersion := os.Getenv("KUBEFIRST_VERSION")
-	if kubefirstVersion == "" {
-		kubefirstVersion = "development"
-	}
-
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
@@ -162,6 +158,8 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			return err
 		}
 
+		env, _ := env.GetEnv()
+
 		// Default gitopsTemplateTokens
 		gitopsTemplateTokens := &providerConfigs.GitopsDirectoryValues{
 			AlertsEmail:               clctrl.AlertsEmail,
@@ -174,7 +172,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			SubdomainName:             clctrl.SubdomainName,
 			KubefirstStateStoreBucket: clctrl.KubefirstStateStoreBucketName,
 			KubefirstTeam:             clctrl.KubefirstTeam,
-			KubefirstVersion:          kubefirstVersion,
+			KubefirstVersion:          env.KubefirstVersion,
 			Kubeconfig:                clctrl.ProviderConfig.Kubeconfig, //AWS
 			KubeconfigPath:            clctrl.ProviderConfig.Kubeconfig, //Not AWS
 
@@ -251,7 +249,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			} else {
 				// moving commented line below to default behavior
 				// gitopsTemplateTokens.ContainerRegistryURL = fmt.Sprintf("%s/%s", clctrl.ContainerRegistryHost, clctrl.GitAuth.Owner)
-				log.Info("NOT using ECR but instead %s URL %s", clctrl.GitProvider, gitopsTemplateTokens.ContainerRegistryURL)
+				log.Infof("NOT using ECR but instead %s URL %s", clctrl.GitProvider, gitopsTemplateTokens.ContainerRegistryURL)
 			}
 		}
 
@@ -374,9 +372,6 @@ func (clctrl *ClusterController) ContainerRegistryAuth() (string, error) {
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 
 		// Container registry authentication creation
-		if !clctrl.ECR {
-
-		}
 		containerRegistryAuth := gitShim.ContainerRegistryAuth{
 			GitProvider:           clctrl.GitProvider,
 			GitUser:               clctrl.GitAuth.User,
