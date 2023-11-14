@@ -8,10 +8,10 @@ package api
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 )
@@ -44,8 +44,11 @@ func PostTelemetry(c *gin.Context) {
 		})
 		return
 	}
+
+	env, _ := env.GetEnv()
+
 	telEvent := telemetry.TelemetryEvent{
-		CliVersion:        os.Getenv("KUBEFIRST_VERSION"),
+		CliVersion:        env.KubefirstVersion,
 		CloudProvider:     cl.CloudProvider,
 		ClusterID:         cl.ClusterID,
 		ClusterType:       cl.ClusterType,
@@ -53,8 +56,8 @@ func PostTelemetry(c *gin.Context) {
 		GitProvider:       cl.GitProvider,
 		InstallMethod:     "",
 		KubefirstClient:   "api",
-		KubefirstTeam:     os.Getenv("KUBEFIRST_TEAM"),
-		KubefirstTeamInfo: os.Getenv("KUBEFIRST_TEAM_INFO"),
+		KubefirstTeam:     env.KubefirstTeam,
+		KubefirstTeamInfo: env.KubefirstTeamInfo,
 		MachineID:         cl.DomainName,
 		ErrorMessage:      "",
 		UserId:            cl.DomainName,
