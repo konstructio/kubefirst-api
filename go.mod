@@ -14,6 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.18.19
 	github.com/aws/aws-sdk-go-v2/service/eks v1.27.10
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.27.5
+	github.com/caarlos0/env/v10 v10.0.0
 	github.com/charmbracelet/bubbles v0.15.0
 	github.com/charmbracelet/bubbletea v0.23.2
 	github.com/charmbracelet/lipgloss v0.8.0

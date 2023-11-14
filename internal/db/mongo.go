@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/kubefirst/kubefirst-api/internal/env"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/sirupsen/logrus"
@@ -34,25 +35,31 @@ var Client = Connect()
 
 // Connect
 func Connect() *MongoDBClient {
+	env, getEnvError := env.GetEnv()
+
+	if getEnvError != nil {
+		log.Fatal(getEnvError.Error())
+	}
+
 	var connString string
 	var clientOptions *options.ClientOptions
 
 	ctx := context.Background()
 
-	switch os.Getenv("MONGODB_HOST_TYPE") {
+	switch env.MongoDBHostType {
 	case "atlas":
 		serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 		connString = fmt.Sprintf("mongodb+srv://%s:%s@%s",
-			os.Getenv("MONGODB_USERNAME"),
-			os.Getenv("MONGODB_PASSWORD"),
-			os.Getenv("MONGODB_HOST"),
+			env.MongoDBUsername,
+			env.MongoDBPassword,
+			env.MongoDBHost,
 		)
 		clientOptions = options.Client().ApplyURI(connString).SetServerAPIOptions(serverAPI)
 	case "local":
 		connString = fmt.Sprintf("mongodb://%s:%s@%s/?authSource=admin",
-			os.Getenv("MONGODB_USERNAME"),
-			os.Getenv("MONGODB_PASSWORD"),
-			os.Getenv("MONGODB_HOST"),
+			env.MongoDBUsername,
+			env.MongoDBPassword,
+			env.MongoDBHost,
 		)
 		clientOptions = options.Client().ApplyURI(connString)
 	}
@@ -81,7 +88,9 @@ func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
 		log.Fatalf("error connecting to mongodb: %s", err)
 	}
 	if !silent {
-		log.Infof("connected to mongodb host %s", os.Getenv("MONGODB_HOST"))
+		env, _ := env.GetEnv()
+
+		log.Infof("connected to mongodb host %s", env.MongoDBHost)
 	}
 
 	return nil
@@ -89,6 +98,8 @@ func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
 
 // ImportClusterIfEmpty
 func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster, error) {
+	env, _ := env.GetEnv()
+
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp:   true,
 		TimestampFormat: "",
@@ -98,7 +109,7 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster,
 	// find the secret in mgmt cluster's kubefirst namespace and read import payload and clustername
 	var kcfg *k8s.KubernetesClient
 
-	if os.Getenv("IS_CLUSTER_ZERO") == "true" {
+	if env.IsClusterZero {
 		log.Info("IS_CLUSTER_ZERO is set to true, skipping import cluster logic.")
 		return pkgtypes.Cluster{}, nil
 	}
@@ -109,12 +120,7 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster,
 	}
 	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, "")
 
-	inCluster := false
-	if os.Getenv("IN_CLUSTER") == "true" {
-		inCluster = true
-	}
-
-	kcfg = k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
+	kcfg = k8s.CreateKubeConfig(env.InCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
 
 	log.Infof("reading secret mongo-state to determine if import is needed")
 	secData, err := k8s.ReadSecretV2(kcfg.Clientset, "kubefirst", "mongodb-state")
@@ -169,6 +175,8 @@ type EstablishConnectArgs struct {
 }
 
 func (mdbcl *MongoDBClient) EstablishMongoConnection(args EstablishConnectArgs) error {
+	env, _ := env.GetEnv()
+
 	var pingError error
 
 	for tries := 0; tries < args.Tries; tries += 1 {
@@ -181,7 +189,7 @@ func (mdbcl *MongoDBClient) EstablishMongoConnection(args EstablishConnectArgs) 
 		}
 
 		if !args.Silent {
-			log.Infof("connected to mongodb host %s", os.Getenv("MONGODB_HOST"))
+			log.Infof("connected to mongodb host %s", env.MongoDBHost)
 		}
 
 		return nil

@@ -87,17 +87,17 @@ The host:port for MongoDB should be supplied as the environment variable `MONGOD
 
 Some variables are required, others are optional depending on deployment type.
 
-| Variable            | Description                                                                                                                                      | Required       |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------- |
-| `MONGODB_HOST_TYPE` | Can be either `atlas` or `local`.                                                                                                                | Yes            |
-| `MONGODB_HOST`      | The host to connect to. For Atlas, use only the portion of the string not containing username or password. For all other types, append the port. | Yes            |
-| `MONGODB_USERNAME`  | Required when using Atlas.                                                                                                                       | If using Atlas |
-| `MONGODB_PASSWORD`  | Required when using Atlas.                                                                                                                       | If using Atlas |
-| `IN_CLUSTER`        | Specify whether or not the API is running inside a Kubernetes cluster. By default, this is assumed `false`.                                      | No             |
-| `CLUSTER_ID`        | The ID of the cluster running API.                                                                                                               | Yes            |
-| `CLUSTER_TYPE`      | Cluster type.                                                                                                                                    | Yes            |
-| `INSTALL_METHOD`    | Description of the method through which the API was deployed. Example: `helm`                                                                    | Yes            |
-| `K1_ACCESS_TOKEN`    | Access token in authorization header to prevent unsolicited in-cluster access | Yes            |
+| Variable            | Description                                                                                                                                      | Required                       |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------ |
+| `MONGODB_HOST_TYPE` | Can be either `atlas` or `local`.                                                                                                                | Yes                            |
+| `MONGODB_HOST`      | The host to connect to. For Atlas, use only the portion of the string not containing username or password. For all other types, append the port. | Yes                            |
+| `MONGODB_USERNAME`  | Required when using Atlas/ Docker compose.                                                                                                       | If using Atlas/ Docker compose |
+| `MONGODB_PASSWORD`  | Required when using Atlas/ Docker compose.                                                                                                       | If using Atlas/ Docker compose |
+| `IN_CLUSTER`        | Specify whether or not the API is running inside a Kubernetes cluster. By default, this is assumed `false`.                                      | No                             |
+| `CLUSTER_ID`        | The ID of the cluster running API.                                                                                                               | Yes                            |
+| `CLUSTER_TYPE`      | Cluster type.                                                                                                                                    | Yes                            |
+| `INSTALL_METHOD`    | Description of the method through which the API was deployed. Example: `helm`                                                                    | Yes                            |
+| `K1_ACCESS_TOKEN`   | Access token in authorization header to prevent unsolicited in-cluster access                                                                    | Yes                            |
 
 ### To run locally
 
@@ -108,6 +108,12 @@ docker run -d --name k1-api-mongodb \
   -e MONGO_INITDB_ROOT_PASSWORD=some-password \
   -p 27017:27017 \
   mongo
+```
+
+### Using Docker compose:
+
+```bash
+  docker compose up
 ```
 
 ## local environment variables

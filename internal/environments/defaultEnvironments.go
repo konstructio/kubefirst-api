@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/kubefirst/kubefirst-api/pkg/types"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -97,12 +98,6 @@ func CreateDefaultEnvironments(mgmtCluster types.Cluster) error {
 }
 
 func callApiEE(goPayload types.WorkloadClusterSet) error {
-
-
-	// in cluster url
-	KubefirstApiEe := os.Getenv("ENTERPRISE_API_URL")
-
-
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
 	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	httpClient := http.Client{Transport: customTransport}
@@ -112,7 +107,9 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/v1/environments/%s", KubefirstApiEe, os.Getenv("CLUSTER_ID")), bytes.NewReader(payload))
+	env, _ := env.GetEnv()
+
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/v1/environments/%s", env.EnterpriseApiUrl, env.ClusterId), bytes.NewReader(payload))
 
 	if err != nil {
 		log.Errorf("error creating http request %s", err)
@@ -143,7 +140,7 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 		return err
 	}
 
-	log.Infof("Default environments initiatied", string(body))
+	log.Info("Default environments initiatied", string(body))
 
 	return nil
 }

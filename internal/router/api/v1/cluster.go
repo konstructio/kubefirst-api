@@ -8,13 +8,13 @@ package api
 
 import (
 	"fmt"
-	"os"
 
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/internal/types"
@@ -60,8 +60,10 @@ func DeleteCluster(c *gin.Context) {
 		return
 	}
 
+	env, _ := env.GetEnv()
+
 	telemetryEvent := telemetry.TelemetryEvent{
-		CliVersion:        os.Getenv("KUBEFIRST_VERSION"),
+		CliVersion:        env.KubefirstVersion,
 		CloudProvider:     rec.CloudProvider,
 		ClusterID:         rec.ClusterID,
 		ClusterType:       rec.ClusterType,
@@ -69,8 +71,8 @@ func DeleteCluster(c *gin.Context) {
 		GitProvider:       rec.GitProvider,
 		InstallMethod:     "",
 		KubefirstClient:   "api",
-		KubefirstTeam:     os.Getenv("KUBEFIRST_TEAM"),
-		KubefirstTeamInfo: os.Getenv("KUBEFIRST_TEAM_INFO"),
+		KubefirstTeam:     env.KubefirstTeam,
+		KubefirstTeamInfo: env.KubefirstTeamInfo,
 		MachineID:         rec.DomainName,
 		ErrorMessage:      "",
 		UserId:            rec.DomainName,
@@ -220,8 +222,6 @@ func GetClusters(c *gin.Context) {
 // @Param Authorization header string true "API key" default(Bearer <API key>)
 // PostCreateCluster handles a request to create a cluster
 func PostCreateCluster(c *gin.Context) {
-	// jsonData, err := io.ReadAll(c.Request.Body)
-	// fmt.Spintf(string(jsonData))
 	clusterName, param := c.Params.Get("cluster_name")
 	if !param || string(clusterName) == ":cluster_name" {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -280,15 +280,13 @@ func PostCreateCluster(c *gin.Context) {
 	}
 
 	// Determine authentication type
-	inCluster := false
 	useSecretForAuth := false
 	var k1AuthSecret = map[string]string{}
-	if os.Getenv("IN_CLUSTER") == "true" {
-		inCluster = true
-	}
 
-	if inCluster {
-		kcfg := k8s.CreateKubeConfig(inCluster, "")
+	env, _ := env.GetEnv()
+
+	if env.InCluster {
+		kcfg := k8s.CreateKubeConfig(env.InCluster, "")
 		k1AuthSecret, err := k8s.ReadSecretV2(kcfg.Clientset, constants.KubefirstNamespace, constants.KubefirstAuthSecretName)
 		if err != nil {
 			log.Warnf("authentication secret does not exist, continuing: %s", err)
