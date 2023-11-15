@@ -169,8 +169,6 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 
 		log.Info("gitops repository initialized")
 	}
-	log.Info("exiting intentionally - need to review tokens for node count and node size")
-	os.Exit(1)
 
 	return nil
 }

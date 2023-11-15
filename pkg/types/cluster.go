@@ -24,7 +24,7 @@ type ClusterDefinition struct {
 	Type          string `json:"type" binding:"required,oneof=mgmt workload"`
 	ForceDestroy  bool   `bson:"force_destroy,omitempty" json:"force_destroy,omitempty"`
 	NodeType      string `json:"node_type" binding:"required"`
-	NodeCount     string `json:"node_count" binding:"required"`
+	NodeCount     int    `json:"node_count" binding:"required"`
 
 	//Git
 	GitopsTemplateURL    string `json:"gitops_template_url"`
@@ -87,7 +87,7 @@ type Cluster struct {
 	AtlantisWebhookURL    string `bson:"atlantis_webhook_url" json:"atlantis_webhook_url"`
 	KubefirstTeam         string `bson:"kubefirst_team" json:"kubefirst_team"`
 	NodeType              string `bson:"node_type" json:"node_type" binding:"required"`
-	NodeCount             string `bson:"node_count" json:"node_count" binding:"required"`
+	NodeCount             int    `bson:"node_count" json:"node_count" binding:"required"`
 
 	StateStoreCredentials StateStoreCredentials `bson:"state_store_credentials,omitempty" json:"state_store_credentials,omitempty"`
 	StateStoreDetails     StateStoreDetails     `bson:"state_store_details,omitempty" json:"state_store_details,omitempty"`

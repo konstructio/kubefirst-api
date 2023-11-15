@@ -235,7 +235,6 @@ func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-
 	log.Info("cluster creation complete")
 
 	//* export and import cluster

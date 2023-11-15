@@ -43,6 +43,6 @@ func GetHealth(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, types.JSONHealthResponse{
-		Status: "healthz",
+		Status: "codezero is cool",
 	})
 }

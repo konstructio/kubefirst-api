@@ -62,6 +62,8 @@ func AdjustGitopsRepo(
 			return err
 		}
 		os.RemoveAll(driverContent)
+		//! todo
+		// managementClusterTerraform := fmt.Sprintf("%s/terraform/%s/management", gitopsRepoDir, cloudProvider)
 
 		//* copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
 		clusterContent := fmt.Sprintf("%s/templates/%s", gitopsRepoDir, clusterType)

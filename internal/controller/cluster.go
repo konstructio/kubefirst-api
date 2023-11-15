@@ -174,7 +174,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			KubefirstTeam:             clctrl.KubefirstTeam,
 			NodeType:                  clctrl.NodeType,
 			NodeCount:                 clctrl.NodeCount,
-			KubefirstVersion:          kubefirstVersion,
+			KubefirstVersion:          env.KubefirstVersion,
 			Kubeconfig:                clctrl.ProviderConfig.Kubeconfig, //AWS
 			KubeconfigPath:            clctrl.ProviderConfig.Kubeconfig, //Not AWS
 

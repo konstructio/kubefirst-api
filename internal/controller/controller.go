@@ -60,7 +60,7 @@ type ClusterController struct {
 	AwsAccessKeyID     string
 	AwsSecretAccessKey string
 	NodeType           string
-	NodeCount          string
+	NodeCount          int
 
 	// configs
 	ProviderConfig providerConfigs.ProviderConfig
