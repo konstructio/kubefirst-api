@@ -187,7 +187,7 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 	}
 
 	// Wait for last sync wave app transition to Running
-	log.Info("waiting for final sync wave argocd application deploymen to transition to Running")
+	log.Info("waiting for final sync wave Deployment to transition to Running")
 	crossplaneDeployment, err := k8s.ReturnDeploymentObject(
 		kcfg.Clientset,
 		"app.kubernetes.io/instance",
