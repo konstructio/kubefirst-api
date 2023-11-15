@@ -203,7 +203,7 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		ctrl.HandleError(err.Error())
 		return err
 	}
-	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, crossplaneDeployment, 120)
+	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, crossplaneDeployment, 300)
 	if err != nil {
 		log.Errorf("Error waiting for all Apps to sync ready state: %s", err)
 

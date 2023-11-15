@@ -222,7 +222,7 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 		ctrl.HandleError(err.Error())
 		return err
 	}
-	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, consoleDeployment, 120)
+	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, consoleDeployment, 300)
 	if err != nil {
 		log.Errorf("Error waiting for kubefirst api Deployment ready state: %s", err)
 
