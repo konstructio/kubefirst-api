@@ -208,13 +208,13 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	// Wait for console Deployment Pods to transition to Running
-	log.Info("deploying kubefirst console and verifying cluster installation is complete")
-	consoleDeployment, err := k8s.ReturnDeploymentObject(
+	// Wait for last sync wave app transition to Running
+	log.Info("waiting for final sync wave argocd application deploymen to transition to Running")
+	crossplaneDeployment, err := k8s.ReturnDeploymentObject(
 		kcfg.Clientset,
-		"app.kubernetes.io/name",
-		"console",
-		"kubefirst",
+		"app.kubernetes.io/instance",
+		"crossplane",
+		"crossplane-system",
 		1200,
 	)
 	if err != nil {
@@ -222,13 +222,15 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 		ctrl.HandleError(err.Error())
 		return err
 	}
-	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, consoleDeployment, 300)
+	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, crossplaneDeployment, 300)
 	if err != nil {
-		log.Errorf("Error waiting for kubefirst api Deployment ready state: %s", err)
+		log.Errorf("Error waiting for all Apps to sync ready state: %s", err)
 
 		ctrl.HandleError(err.Error())
 		return err
 	}
+
+	log.Info("cluster creation complete")
 
 	cluster1KubefirstApiStopChannel := make(chan struct{}, 1)
 	defer func() {

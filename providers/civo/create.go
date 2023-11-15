@@ -189,8 +189,8 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	// Wait for console Deployment Pods to transition to Running
-	log.Info("deploying kubefirst console and verifying cluster installation is complete")
+	// Wait for last sync wave app transition to Running
+	log.Info("waiting for final sync wave argocd application deploymen to transition to Running")
 	crossplaneDeployment, err := k8s.ReturnDeploymentObject(
 		kcfg.Clientset,
 		"app.kubernetes.io/instance",
