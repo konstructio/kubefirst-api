@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD033 MD041 -->
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="images/kubefirst-light.svg" alt="Kubefirst Logo">
@@ -24,14 +25,16 @@ Kubefirst API runtime implementation.
   - [Running Locally](#running-locally)
     - [Build the Binary](#build-the-binary)
     - [Leverage `air` for Live Reloading Locally](#leverage-air-for-live-reloading-locally)
+    - [Use with the CLI](#use-with-the-cli)
   - [Prerequisites](#prerequisites)
     - [Environment Variables](#environment-variables)
     - [To run locally:](#to-run-locally)
   - [local environment variables](#local-environment-variables)
   - [Provider Support](#provider-support)
   - [Creating a Cluster](#creating-a-cluster)
-    - [Kubernetes Secret](#kubernetes-secret)
-    - [API Call Parameters](#api-call-parameters)
+    - [Authentication Credentials](#authentication-credentials)
+      - [Kubernetes Secret](#kubernetes-secret)
+      - [API Call Parameters](#api-call-parameters)
     - [AWS](#aws)
     - [Civo](#civo)
     - [Digital Ocean](#digital-ocean)
@@ -58,6 +61,15 @@ go install github.com/cosmtrek/air@latest
 ```
 
 Run `air` from the root of the repository. This will watch go files and live rebuild a local running instance of `kubefirst-api`.
+
+### Use with the CLI
+
+If you want to use your local API version with the CLI, you need to do two things:
+
+1. Set the `K1_LOCAL_DEBUG` environment variable to `true` with `export K1_LOCAL_DEBUG=true`.
+2. Run the [console application](https://github.com/kubefirst/console) locally also by following [those instructions](https://github.com/kubefirst/console#setup-instructions).
+
+Be sure that you do not change the default port for the console (3000), and the default one for the API (8081) for this to work.
 
 ## Prerequisites
 
@@ -87,9 +99,9 @@ Some variables are required, others are optional depending on deployment type.
 | `INSTALL_METHOD`    | Description of the method through which the API was deployed. Example: `helm`                                                                    | Yes                            |
 | `K1_ACCESS_TOKEN`   | Access token in authorization header to prevent unsolicited in-cluster access                                                                    | Yes                            |
 
-### To run locally:
+### To run locally
 
-```bash
+```shell
 # optional local mongodb for kubefirst-api
 docker run -d --name k1-api-mongodb \
   -e MONGO_INITDB_ROOT_USERNAME=root \
@@ -121,6 +133,8 @@ The following providers are available for use with the API.
 
 ## Creating a Cluster
 
+### Authentication Credentials
+
 In order to create a cluster, authentication credentials must be provided in one of two ways:
 
 #### Kubernetes Secret
@@ -129,7 +143,7 @@ If a Kubernetes `Secret` called `kubefirst-auth` exists, the API will attempt to
 
 The `Secret` format is expected to have the following keys based on which clouds you are deploying to:
 
-```
+```text
 aws-access-key-id
 aws-secret-access-key
 aws-session-token
@@ -202,7 +216,7 @@ If either of these options is missing, the API will return an error.
 
 You must use the authentication strategy above to set credentials before running.
 
-```bash
+```shell
 curl -X POST http://localhost:8081/api/v1/cluster/kf-api-scott-test -H "Content-Type: application/json" -d '{"admin_email": "scott@kubeshop.io", "cloud_provider": "aws", "cloud_region": "us-east-1", "domain_name": "kubefirst.cloud", "git_owner": "kubefirst-cloud", "git_provider": "github", "git_token": "ghp_...", "type": "mgmt"}'
 ```
 
@@ -210,7 +224,7 @@ curl -X POST http://localhost:8081/api/v1/cluster/kf-api-scott-test -H "Content-
 
 You must use the authentication strategy above to set credentials before running.
 
-```bash
+```shell
 curl -X POST http://localhost:8081/api/v1/cluster/my-cool-cluster -H "Content-Type: application/json" -d '{"admin_email": "scott@kubeshop.io", "cloud_provider": "civo", "cloud_region": "nyc1", "domain_name": "your-dns.io", "git_owner": "your-dns-io", "git_provider": "github", "git_token": "ghp_...", "type": "mgmt"}'
 ```
 
@@ -220,7 +234,7 @@ Kubefirst does not create a Digital Ocean space for you. You must create one ahe
 
 You must use the authentication strategy above to set credentials before running.
 
-```bash
+```shell
 curl -X POST http://localhost:8081/api/v1/cluster/my-cool-cluster -H "Content-Type: application/json" -d '{"admin_email": "scott@kubeshop.io", "cloud_provider": "digitalocean", "cloud_region": "nyc3", "domain_name": "kubefunk.de", "git_owner": "kubefunk-de", "git_provider": "github", "git_token": "ghp_...", "type": "mgmt"}'
 ```
 
@@ -228,13 +242,13 @@ curl -X POST http://localhost:8081/api/v1/cluster/my-cool-cluster -H "Content-Ty
 
 You must use the authentication strategy above to set credentials before running.
 
-```bash
+```shell
 curl -X POST http://localhost:8081/api/v1/cluster/my-cool-cluster -H "Content-Type: application/json" -d '{"admin_email": "scott@kubeshop.io", "cloud_provider": "vultr", "cloud_region": "ewr", "domain_name": "kubesecond.com", "git_owner": "your-dns-io", "git_provider": "github", "git_token": "ghp_...", "type": "mgmt"}'
 ```
 
 ### Deleting a Cluster
 
-```bash
+```shell
 curl -X DELETE http://localhost:8081/api/v1/cluster/my-cool-cluster
 ```
 
@@ -242,7 +256,7 @@ curl -X DELETE http://localhost:8081/api/v1/cluster/my-cool-cluster
 
 The API expects an `Authorization` header with the content `Bearer <API key>`. For example:
 
-```bash
+```shell
 ❯ curl -X GET "localhost:8081/api/v1/cluster" \
      -H "Authorization: Bearer my-api-key" \
      -H "Content-Type:application/json"
@@ -252,7 +266,7 @@ The provided bearer token is validated against an auto-generated key that gets s
 
 ## Swagger UI
 
-When the app is running, the UI is available via http://localhost:8081/swagger/index.html.
+When the app is running, the UI is available via <http://localhost:8081/swagger/index.html>.
 
 ## Updating Swagger Docs
 
@@ -262,10 +276,10 @@ Any time godoc defs for routes are changed, `swag init` should be run.
 
 In order to generate docs:
 
-```bash
+```shell
 go install github.com/swaggo/swag/cmd/swag@latest
 ```
 
-```bash
+```shell
 make updateswagger
 ```
