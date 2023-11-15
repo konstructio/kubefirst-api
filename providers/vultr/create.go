@@ -185,13 +185,13 @@ func CreateVultrCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	// Wait for console Deployment Pods to transition to Running
-	log.Info("deploying kubefirst console and verifying cluster installation is complete")
-	consoleDeployment, err := k8s.ReturnDeploymentObject(
+	// Wait for last sync wave app transition to Running
+	log.Info("waiting for final sync wave Deployment to transition to Running")
+	crossplaneDeployment, err := k8s.ReturnDeploymentObject(
 		kcfg.Clientset,
-		"app.kubernetes.io/name",
-		"console",
-		"kubefirst",
+		"app.kubernetes.io/instance",
+		"crossplane",
+		"crossplane-system",
 		1200,
 	)
 	if err != nil {
@@ -199,15 +199,14 @@ func CreateVultrCluster(definition *pkgtypes.ClusterDefinition) error {
 		ctrl.HandleError(err.Error())
 		return err
 	}
-	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, consoleDeployment, 120)
+	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, crossplaneDeployment, 300)
 	if err != nil {
-		log.Errorf("Error waiting for kubefirst api Deployment ready state: %s", err)
+		log.Errorf("Error waiting for all Apps to sync ready state: %s", err)
 
 		ctrl.HandleError(err.Error())
 		return err
 	}
 
-	log.Info("cluster creation complete")
 
 	//* export and import cluster
 	err = ctrl.ExportClusterRecord()
@@ -236,6 +235,29 @@ func CreateVultrCluster(definition *pkgtypes.ClusterDefinition) error {
 			log.Errorf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
 		}
 	}
+
+	log.Info("waiting for kubefirst-api Deployment to transition to Running")
+	kubefirstAPI, err := k8s.ReturnDeploymentObject(
+		kcfg.Clientset,
+		"app.kubernetes.io/name",
+		"kubefirst-api",
+		"kubefirst",
+		1200,
+	)
+	if err != nil {
+		log.Errorf("Error finding kubefirst api Deployment: %s", err)
+		ctrl.HandleError(err.Error())
+		return err
+	}
+	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, kubefirstAPI, 300)
+	if err != nil {
+		log.Errorf("Error waiting for kubefirst-api to transition to Running: %s", err)
+
+		ctrl.HandleError(err.Error())
+		return err
+	}
+
+	log.Info("cluster creation complete")
 
 	return nil
 }
