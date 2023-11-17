@@ -152,7 +152,7 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryE
 					kcfg.RestConfig,
 					"argocd-server",
 					"argocd",
-					8080,
+					80,
 					8080,
 					argoCDStopChannel,
 				)

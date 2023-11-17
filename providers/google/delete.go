@@ -162,7 +162,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 					kcfg.RestConfig,
 					"argocd-server",
 					"argocd",
-					8080,
+					80,
 					8080,
 					argoCDStopChannel,
 				)

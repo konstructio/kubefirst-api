@@ -184,7 +184,7 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 					kcfg.RestConfig,
 					"argocd-server",
 					"argocd",
-					8080,
+					80,
 					8080,
 					argoCDStopChannel,
 				)
