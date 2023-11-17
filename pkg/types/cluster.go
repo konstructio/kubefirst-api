@@ -65,8 +65,6 @@ type Cluster struct {
 	DomainName    string `bson:"domain_name" json:"domain_name"`
 	SubdomainName string `bson:"subdomain_name" json:"subdomain_name,omitempty"`
 	DnsProvider   string `bson:"dns_provider" json:"dns_provider"`
-	NodeType      string `bson:"node_type" json:"node_type"`
-	NodeCount     int    `bson:"node_count" json:"node_count"`
 
 	// Auth
 	AWSAuth          AWSAuth          `bson:"aws_auth,omitempty" json:"aws_auth,omitempty"`
@@ -88,6 +86,8 @@ type Cluster struct {
 	AtlantisWebhookSecret string `bson:"atlantis_webhook_secret" json:"atlantis_webhook_secret"`
 	AtlantisWebhookURL    string `bson:"atlantis_webhook_url" json:"atlantis_webhook_url"`
 	KubefirstTeam         string `bson:"kubefirst_team" json:"kubefirst_team"`
+	NodeType              string `bson:"node_type" json:"node_type" binding:"required"`
+	NodeCount             int    `bson:"node_count" json:"node_count" binding:"required"`
 
 	StateStoreCredentials StateStoreCredentials `bson:"state_store_credentials,omitempty" json:"state_store_credentials,omitempty"`
 	StateStoreDetails     StateStoreDetails     `bson:"state_store_details,omitempty" json:"state_store_details,omitempty"`

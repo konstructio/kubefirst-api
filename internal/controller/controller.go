@@ -47,8 +47,6 @@ type ClusterController struct {
 	DnsProvider               string
 	UseCloudflareOriginIssuer bool
 	AlertsEmail               string
-	NodeType                  string 
-	NodeCount                 int    
 
 	// auth
 	AWSAuth            pkgtypes.AWSAuth
@@ -61,6 +59,8 @@ type ClusterController struct {
 	GoogleAuth         pkgtypes.GoogleAuth
 	AwsAccessKeyID     string
 	AwsSecretAccessKey string
+	NodeType           string
+	NodeCount          int
 
 	// configs
 	ProviderConfig providerConfigs.ProviderConfig
