@@ -144,7 +144,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		clusterID = runtime.GenerateClusterID()
 	}
 
-	env, _ := env.GetEnv(true)
+	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
 	telemetryEvent := telemetry.TelemetryEvent{
 		CliVersion:        env.KubefirstVersion,

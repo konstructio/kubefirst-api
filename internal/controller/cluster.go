@@ -18,6 +18,7 @@ import (
 	googleext "github.com/kubefirst/kubefirst-api/extensions/google"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
+	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/env"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
@@ -158,7 +159,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			return err
 		}
 
-		env, _ := env.GetEnv(true)
+		env, _ := env.GetEnv(constants.SilenceGetEnv)
 
 		// Default gitopsTemplateTokens
 		gitopsTemplateTokens := &providerConfigs.GitopsDirectoryValues{

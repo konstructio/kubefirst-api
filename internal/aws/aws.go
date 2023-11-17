@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	route53Types "github.com/aws/aws-sdk-go-v2/service/route53/types"
+	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 	log "github.com/sirupsen/logrus"
@@ -35,7 +36,7 @@ var Conf AWSConfiguration = AWSConfiguration{
 
 // NewAws instantiates a new AWS configuration
 func NewAws() aws.Config {
-	env, _ := env.GetEnv(true)
+	env, _ := env.GetEnv(constants.SilenceGetEnv)
 	
 	awsClient, err := config.LoadDefaultConfig(
 		context.Background(),

@@ -95,7 +95,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 
 	var kcfg *k8s.KubernetesClient
 
-	env, _ := env.GetEnv(true)
+	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
 	kcfg = k8s.CreateKubeConfig(env.InCluster, fmt.Sprintf("%s/kubeconfig", tmpGitopsDir))
 

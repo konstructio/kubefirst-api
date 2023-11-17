@@ -19,4 +19,6 @@ const (
 	ClusterStatusError        = "error"
 	ClusterStatusProvisioned  = "provisioned"
 	ClusterStatusProvisioning = "provisioning"
+
+	SilenceGetEnv             = true
 )
