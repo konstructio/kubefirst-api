@@ -153,10 +153,10 @@ type ProxyImportRequest struct {
 
 type Environment struct {
 	ID                primitive.ObjectID `bson:"_id" json:"_id"`
-	Name        			string             `bson:"name" json:"name"`
-	Color       			string 						 `bson:"color" json:"color"`
-	Description       string 						 `bson:"description,omitempty" json:"description,omitempty"`
-	CreationTimestamp string 						 `bson:"creation_timestamp" json:"creation_timestamp"`
+	Name              string             `bson:"name" json:"name"`
+	Color             string             `bson:"color" json:"color"`
+	Description       string             `bson:"description,omitempty" json:"description,omitempty"`
+	CreationTimestamp string             `bson:"creation_timestamp" json:"creation_timestamp"`
 }
 
 type WorkloadCluster struct {
@@ -172,7 +172,7 @@ type WorkloadCluster struct {
 	Environment       Environment `bson:"environment,omitempty" json:"environment,omitempty"`
 	GitAuth           GitAuth     `bson:"git_auth,omitempty" json:"git_auth,omitempty"`
 	InstanceSize      string      `bson:"instance_size,omitempty" json:"instance_size,omitempty"`
-	MachineType       string      `bson:"machine_type,omitempty" json:"machine_type,omitempty"`
+	NodeType          string      `bson:"node_type,omitempty" json:"node_type,omitempty"`
 	NodeCount         int         `bson:"node_count,omitempty" json:"node_count,omitempty"`
 	Status            string      `bson:"status,omitempty" json:"status,omitempty"`
 }
