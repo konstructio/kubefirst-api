@@ -23,7 +23,8 @@ type ClusterDefinition struct {
 	DnsProvider   string `json:"dns_provider,omitempty" binding:"required"`
 	Type          string `json:"type" binding:"required,oneof=mgmt workload"`
 	ForceDestroy  bool   `bson:"force_destroy,omitempty" json:"force_destroy,omitempty"`
-
+	NodeType      string `json:"node_type" binding:"required"`
+	NodeCount     int    `json:"node_count" binding:"required"`
 
 	//Git
 	GitopsTemplateURL    string `json:"gitops_template_url"`
@@ -85,6 +86,8 @@ type Cluster struct {
 	AtlantisWebhookSecret string `bson:"atlantis_webhook_secret" json:"atlantis_webhook_secret"`
 	AtlantisWebhookURL    string `bson:"atlantis_webhook_url" json:"atlantis_webhook_url"`
 	KubefirstTeam         string `bson:"kubefirst_team" json:"kubefirst_team"`
+	NodeType              string `bson:"node_type" json:"node_type" binding:"required"`
+	NodeCount             int    `bson:"node_count" json:"node_count" binding:"required"`
 
 	StateStoreCredentials StateStoreCredentials `bson:"state_store_credentials,omitempty" json:"state_store_credentials,omitempty"`
 	StateStoreDetails     StateStoreDetails     `bson:"state_store_details,omitempty" json:"state_store_details,omitempty"`
@@ -150,10 +153,10 @@ type ProxyImportRequest struct {
 
 type Environment struct {
 	ID                primitive.ObjectID `bson:"_id" json:"_id"`
-	Name        			string             `bson:"name" json:"name"`
-	Color       			string 						 `bson:"color" json:"color"`
-	Description       string 						 `bson:"description,omitempty" json:"description,omitempty"`
-	CreationTimestamp string 						 `bson:"creation_timestamp" json:"creation_timestamp"`
+	Name              string             `bson:"name" json:"name"`
+	Color             string             `bson:"color" json:"color"`
+	Description       string             `bson:"description,omitempty" json:"description,omitempty"`
+	CreationTimestamp string             `bson:"creation_timestamp" json:"creation_timestamp"`
 }
 
 type WorkloadCluster struct {
@@ -169,7 +172,7 @@ type WorkloadCluster struct {
 	Environment       Environment `bson:"environment,omitempty" json:"environment,omitempty"`
 	GitAuth           GitAuth     `bson:"git_auth,omitempty" json:"git_auth,omitempty"`
 	InstanceSize      string      `bson:"instance_size,omitempty" json:"instance_size,omitempty"`
-	MachineType       string      `bson:"machine_type,omitempty" json:"machine_type,omitempty"`
+	NodeType          string      `bson:"node_type,omitempty" json:"node_type,omitempty"`
 	NodeCount         int         `bson:"node_count,omitempty" json:"node_count,omitempty"`
 	Status            string      `bson:"status,omitempty" json:"status,omitempty"`
 }

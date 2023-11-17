@@ -81,6 +81,10 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				newContents = strings.Replace(newContents, "<KUBEFIRST_TEAM_INFO>", os.Getenv("KUBEFIRST_TEAM_INFO"), -1)
 				newContents = strings.Replace(newContents, "<KUBEFIRST_VERSION>", tokens.KubefirstVersion, -1)
 				newContents = strings.Replace(newContents, "<KUBEFIRST_STATE_STORE_BUCKET_HOSTNAME>", tokens.StateStoreBucketHostname, -1)
+				newContents = strings.Replace(newContents, "<WORKLOAD_CLUSTER_TERRAFORM_MODULE_URL>", "git::https://<GITOPS_REPO_NO_HTTPS_URL>//terraform/<CLOUD_PROVIDER>/modules/workload-cluster?ref=main", -1)
+
+				newContents = strings.Replace(newContents, "<NODE_TYPE>", tokens.NodeType, -1)
+				newContents = strings.Replace(newContents, "<NODE_COUNT>", fmt.Sprint(tokens.NodeCount), -1)
 
 				// AWS
 				newContents = strings.Replace(newContents, "<AWS_ACCOUNT_ID>", tokens.AwsAccountID, -1)
@@ -111,7 +115,7 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				newContents = strings.Replace(newContents, "<GIT_RUNNER>", tokens.GitRunner, -1)
 				newContents = strings.Replace(newContents, "<GIT_RUNNER_DESCRIPTION>", tokens.GitRunnerDescription, -1)
 				newContents = strings.Replace(newContents, "<GIT_RUNNER_NS>", tokens.GitRunnerNS, -1)
-				newContents = strings.Replace(newContents, "<GIT_URL>", tokens.GitURL, -1)
+				newContents = strings.Replace(newContents, "<GIT_URL>", tokens.GitURL, -1) // remove
 
 				// GitHub
 				newContents = strings.Replace(newContents, "<GITHUB_HOST>", tokens.GitHubHost, -1)

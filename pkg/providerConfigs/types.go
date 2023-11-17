@@ -7,25 +7,26 @@ See the LICENSE file for more details.
 package providerConfigs
 
 type GitopsDirectoryValues struct {
-	AlertsEmail               string
-	AtlantisAllowList         string
-	CloudProvider             string
-	CloudRegion               string
-	ClusterId                 string
-	ClusterName               string
-	ClusterType               string
-	ContainerRegistryURL      string
-	DomainName                string
-	SubdomainName             string
-	DNSProvider               string
-	Kubeconfig                string
-	KubeconfigPath            string
-	KubefirstArtifactsBucket  string
-	KubefirstStateStoreBucket string
-	KubefirstTeam             string
-	KubefirstVersion          string
-	StateStoreBucketHostname  string
-
+	AlertsEmail                    string
+	AtlantisAllowList              string
+	CloudProvider                  string
+	CloudRegion                    string
+	ClusterId                      string
+	ClusterName                    string
+	ClusterType                    string
+	ContainerRegistryURL           string
+	DomainName                     string
+	SubdomainName                  string
+	DNSProvider                    string
+	Kubeconfig                     string
+	KubeconfigPath                 string
+	KubefirstArtifactsBucket       string
+	KubefirstStateStoreBucket      string
+	KubefirstTeam                  string
+	KubefirstVersion               string
+	StateStoreBucketHostname       string
+	NodeType                       string
+	NodeCount                      int
 	ArgoCDIngressURL               string
 	ArgoCDIngressNoHTTPSURL        string
 	ArgoWorkflowsIngressURL        string

@@ -59,6 +59,8 @@ type ClusterController struct {
 	GoogleAuth         pkgtypes.GoogleAuth
 	AwsAccessKeyID     string
 	AwsSecretAccessKey string
+	NodeType           string
+	NodeCount          int
 
 	// configs
 	ProviderConfig providerConfigs.ProviderConfig
@@ -206,6 +208,8 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 
 	clctrl.KubefirstStateStoreBucketName = fmt.Sprintf("k1-state-store-%s-%s", clctrl.ClusterName, clusterID)
 	clctrl.KubefirstArtifactsBucketName = fmt.Sprintf("k1-artifacts-%s-%s", clctrl.ClusterName, clusterID)
+	clctrl.NodeType = def.NodeType
+	clctrl.NodeCount = def.NodeCount
 
 	clctrl.KubefirstTeam = env.KubefirstTeam
 
