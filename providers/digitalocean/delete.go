@@ -185,7 +185,7 @@ func DeleteDigitaloceanCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Te
 					kcfg.RestConfig,
 					"argocd-server",
 					"argocd",
-					8080,
+					80,
 					8080,
 					argoCDStopChannel,
 				)
