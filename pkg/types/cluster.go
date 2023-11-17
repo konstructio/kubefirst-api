@@ -23,7 +23,8 @@ type ClusterDefinition struct {
 	DnsProvider   string `json:"dns_provider,omitempty" binding:"required"`
 	Type          string `json:"type" binding:"required,oneof=mgmt workload"`
 	ForceDestroy  bool   `bson:"force_destroy,omitempty" json:"force_destroy,omitempty"`
-
+	NodeType      string `json:"node_type" binding:"required"`
+	NodeCount     int    `json:"node_count" binding:"required"`
 
 	//Git
 	GitopsTemplateURL    string `json:"gitops_template_url"`
@@ -64,6 +65,8 @@ type Cluster struct {
 	DomainName    string `bson:"domain_name" json:"domain_name"`
 	SubdomainName string `bson:"subdomain_name" json:"subdomain_name,omitempty"`
 	DnsProvider   string `bson:"dns_provider" json:"dns_provider"`
+	NodeType      string `bson:"node_type" json:"node_type"`
+	NodeCount     int    `bson:"node_count" json:"node_count"`
 
 	// Auth
 	AWSAuth          AWSAuth          `bson:"aws_auth,omitempty" json:"aws_auth,omitempty"`
