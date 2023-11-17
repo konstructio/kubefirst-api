@@ -45,7 +45,7 @@ func PostTelemetry(c *gin.Context) {
 		return
 	}
 
-	env, _ := env.GetEnv()
+	env, _ := env.GetEnv(true)
 
 	telEvent := telemetry.TelemetryEvent{
 		CliVersion:        env.KubefirstVersion,

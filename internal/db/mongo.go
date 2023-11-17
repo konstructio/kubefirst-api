@@ -35,7 +35,7 @@ var Client = Connect()
 
 // Connect
 func Connect() *MongoDBClient {
-	env, getEnvError := env.GetEnv()
+	env, getEnvError := env.GetEnv(true)
 
 	if getEnvError != nil {
 		log.Fatal(getEnvError.Error())
@@ -88,7 +88,7 @@ func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
 		log.Fatalf("error connecting to mongodb: %s", err)
 	}
 	if !silent {
-		env, _ := env.GetEnv()
+		env, _ := env.GetEnv(true)
 
 		log.Infof("connected to mongodb host %s", env.MongoDBHost)
 	}
@@ -98,7 +98,7 @@ func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
 
 // ImportClusterIfEmpty
 func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster, error) {
-	env, _ := env.GetEnv()
+	env, _ := env.GetEnv(true)
 
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp:   true,
@@ -175,7 +175,7 @@ type EstablishConnectArgs struct {
 }
 
 func (mdbcl *MongoDBClient) EstablishMongoConnection(args EstablishConnectArgs) error {
-	env, _ := env.GetEnv()
+	env, _ := env.GetEnv(true)
 
 	var pingError error
 

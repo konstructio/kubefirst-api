@@ -35,7 +35,7 @@ var Conf AWSConfiguration = AWSConfiguration{
 
 // NewAws instantiates a new AWS configuration
 func NewAws() aws.Config {
-	env, _ := env.GetEnv()
+	env, _ := env.GetEnv(true)
 	
 	awsClient, err := config.LoadDefaultConfig(
 		context.Background(),

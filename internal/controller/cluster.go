@@ -158,7 +158,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			return err
 		}
 
-		env, _ := env.GetEnv()
+		env, _ := env.GetEnv(true)
 
 		// Default gitopsTemplateTokens
 		gitopsTemplateTokens := &providerConfigs.GitopsDirectoryValues{

@@ -32,7 +32,7 @@ import (
 
 func main() {
 
-	env, err := env.GetEnv()
+	env, err := env.GetEnv(false)
 
 	if err != nil {
 		log.Fatal(err.Error())

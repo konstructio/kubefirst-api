@@ -29,15 +29,15 @@ type Env struct {
 	EnterpriseApiUrl  string    `env:"ENTERPRISE_API_URL"`
 }
 
-func GetEnv()(Env,error) {
-	envError := godotenv.Load(".env")
+func GetEnv(silent bool)(Env,error) {
+	err := godotenv.Load(".env")
 
-	if envError != nil {
+	if err != nil && !silent {
 		log.Info("error loading .env file, using local environment variables")
 	}
 
 	environment := Env{}
-	err := env.Parse(&environment)
+	err = env.Parse(&environment)
 	if err != nil {
 		return Env{}, err
 	}

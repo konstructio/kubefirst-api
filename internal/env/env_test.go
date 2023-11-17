@@ -51,7 +51,7 @@ func TestEnv(t *testing.T) {
 	}()
 
 	env := Env{}
-	env, err := GetEnv()
+	env, err := GetEnv(true)
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}

@@ -107,7 +107,7 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 		return err
 	}
 
-	env, _ := env.GetEnv()
+	env, _ := env.GetEnv(true)
 
 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/v1/environments/%s", env.EnterpriseApiUrl, env.ClusterId), bytes.NewReader(payload))
 
