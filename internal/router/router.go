@@ -53,6 +53,7 @@ func SetupRouter() *gin.Engine {
 		v1.POST("/cluster/:cluster_name", middleware.ValidateAPIKey(), router.PostCreateCluster)
 		v1.GET("/cluster/:cluster_name/export", middleware.ValidateAPIKey(), router.GetExportCluster)
 		v1.POST("/cluster/:cluster_name/reset_progress", middleware.ValidateAPIKey(), router.PostResetClusterProgress)
+		v1.POST("/cluster/:cluster_name/:cloud_provider/kubeconfig", middleware.ValidateAPIKey(), router.GetClusterKubeconfig)
 
 		// Gitops Catalog
 		v1.GET("/gitops-catalog/apps", middleware.ValidateAPIKey(), router.GetGitopsCatalogApps)
