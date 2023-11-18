@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/rs/zerolog/log"
 )
@@ -29,7 +30,7 @@ func ValidateAPIKey() gin.HandlerFunc {
 			return
 		}
 		
-		env, _ := env.GetEnv()
+		env, _ := env.GetEnv(constants.SilenceGetEnv)
 
 		if APIKey != env.K1AccessToken {
 			c.JSON(http.StatusUnauthorized, gin.H{"status": 401, "message": "Authentication failed - not a valid API key"})

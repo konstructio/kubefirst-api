@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package api
 
 import (
+	"context"
 	"fmt"
 
 	"net/http"
@@ -26,7 +27,10 @@ import (
 	"github.com/kubefirst/kubefirst-api/providers/google"
 	"github.com/kubefirst/kubefirst-api/providers/vultr"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
+	civoruntime "github.com/kubefirst/runtime/pkg/civo"
+	digioceanruntime "github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/k8s"
+	vultrruntime "github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -60,7 +64,7 @@ func DeleteCluster(c *gin.Context) {
 		return
 	}
 
-	env, _ := env.GetEnv()
+	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
 	telemetryEvent := telemetry.TelemetryEvent{
 		CliVersion:        env.KubefirstVersion,
@@ -283,7 +287,7 @@ func PostCreateCluster(c *gin.Context) {
 	useSecretForAuth := false
 	var k1AuthSecret = map[string]string{}
 
-	env, _ := env.GetEnv()
+	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
 	if env.InCluster {
 		kcfg := k8s.CreateKubeConfig(env.InCluster, "")
@@ -497,8 +501,92 @@ func GetExportCluster(c *gin.Context) {
 
 	// return json of cluster
 	c.IndentedJSON(http.StatusOK, cluster)
-	return
+}
 
+func GetClusterKubeconfig(c *gin.Context) {
+	clusterName, param := c.Params.Get("cluster_name")
+	if !param {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: ":cluster_name not provided",
+		})
+		return
+	}
+
+	cloudProvider, param := c.Params.Get("cloud_provider")
+	if !param {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: ":cloud_provider not provided",
+		})
+		return
+	}
+
+	var instanceSizesRequest types.InstanceSizesRequest
+	err := c.Bind(&instanceSizesRequest)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+	
+	switch cloudProvider {
+		case "civo":
+			civoConfig := civoruntime.CivoConfiguration{
+				Client:  civoruntime.NewCivo(instanceSizesRequest.CivoAuth.Token, instanceSizesRequest.CloudRegion),
+				Context: context.Background(),
+			}
+		
+			kubeConfig, cfgError := civoConfig.GetKubeconfig(clusterName)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: cfgError.Error(),
+				})
+				return
+			}
+		
+			c.IndentedJSON(http.StatusOK, kubeConfig)
+			
+		case "digitalocean":
+			digitaloceanConf := digioceanruntime.DigitaloceanConfiguration{
+				Client:  digioceanruntime.NewDigitalocean(instanceSizesRequest.DigitaloceanAuth.Token),
+				Context: context.Background(),
+			}
+			
+			kubeConfig, err := digitaloceanConf.GetKubeconfig(clusterName)
+
+			if err != nil {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: err.Error(),
+				})
+				return
+			}
+
+			c.IndentedJSON(http.StatusOK, kubeConfig)
+
+		case "vultr":
+
+			vultrConf := vultrruntime.VultrConfiguration{
+				Client:  vultrruntime.NewVultr(instanceSizesRequest.VultrAuth.Token),
+				Context: context.Background(),
+			}
+			
+			kubeConfig, err := vultrConf.GetKubeconfig(clusterName)
+
+			if err != nil {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: err.Error(),
+				})
+				return
+			}
+
+			c.IndentedJSON(http.StatusOK, kubeConfig)
+			
+		default:
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: fmt.Sprintf("provided cloud provider: %v not implemented", cloudProvider),
+			})
+			return
+	}
 }
 
 // PostImportCluster godoc

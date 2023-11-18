@@ -144,7 +144,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		clusterID = runtime.GenerateClusterID()
 	}
 
-	env, _ := env.GetEnv()
+	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
 	telemetryEvent := telemetry.TelemetryEvent{
 		CliVersion:        env.KubefirstVersion,
@@ -177,6 +177,8 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	clctrl.DnsProvider = def.DnsProvider
 	clctrl.ClusterType = def.Type
 	clctrl.HttpClient = http.DefaultClient
+	clctrl.NodeType = def.NodeType
+	clctrl.NodeCount = def.NodeCount
 
 	clctrl.AWSAuth = def.AWSAuth
 	clctrl.CivoAuth = def.CivoAuth
@@ -303,6 +305,8 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		DigitaloceanAuth:      clctrl.DigitaloceanAuth,
 		VultrAuth:             clctrl.VultrAuth,
 		CloudflareAuth:        clctrl.CloudflareAuth,
+		NodeType:        			 clctrl.NodeType,
+		NodeCount:             clctrl.NodeCount,
 	}
 	err = clctrl.MdbCl.InsertCluster(cl)
 	if err != nil {

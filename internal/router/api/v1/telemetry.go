@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/kubefirst/kubefirst-api/internal/types"
@@ -45,7 +46,7 @@ func PostTelemetry(c *gin.Context) {
 		return
 	}
 
-	env, _ := env.GetEnv()
+	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
 	telEvent := telemetry.TelemetryEvent{
 		CliVersion:        env.KubefirstVersion,

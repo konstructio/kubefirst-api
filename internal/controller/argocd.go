@@ -47,7 +47,6 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 		case "civo", "digitalocean", "vultr":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 		case "google":
-			var err error
 			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
 			if err != nil {
 				return err

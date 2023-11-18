@@ -16,6 +16,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/kubefirst/kubefirst-api/pkg/types"
@@ -107,7 +108,7 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 		return err
 	}
 
-	env, _ := env.GetEnv()
+	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/v1/environments/%s", env.EnterpriseApiUrl, env.ClusterId), bytes.NewReader(payload))
 

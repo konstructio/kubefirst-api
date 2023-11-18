@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/env"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/k8s"
@@ -35,7 +36,7 @@ var Client = Connect()
 
 // Connect
 func Connect() *MongoDBClient {
-	env, getEnvError := env.GetEnv()
+	env, getEnvError := env.GetEnv(constants.SilenceGetEnv)
 
 	if getEnvError != nil {
 		log.Fatal(getEnvError.Error())
@@ -88,7 +89,7 @@ func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
 		log.Fatalf("error connecting to mongodb: %s", err)
 	}
 	if !silent {
-		env, _ := env.GetEnv()
+		env, _ := env.GetEnv(constants.SilenceGetEnv)
 
 		log.Infof("connected to mongodb host %s", env.MongoDBHost)
 	}
@@ -98,7 +99,7 @@ func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
 
 // ImportClusterIfEmpty
 func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster, error) {
-	env, _ := env.GetEnv()
+	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp:   true,
@@ -175,7 +176,7 @@ type EstablishConnectArgs struct {
 }
 
 func (mdbcl *MongoDBClient) EstablishMongoConnection(args EstablishConnectArgs) error {
-	env, _ := env.GetEnv()
+	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
 	var pingError error
 
