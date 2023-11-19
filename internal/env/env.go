@@ -24,12 +24,12 @@ type Env struct {
 	KubefirstTeamInfo string `env:"KUBEFIRST_TEAM_INFO"`
 	AWSRegion         string `env:"AWS_REGION"`
 	AWSProfile        string `env:"AWS_PROFILE"`
-	IsClusterZero     bool   `env:"IS_CLUSTER_ZERO"`
+	IsClusterZero     string `env:"IS_CLUSTER_ZERO"`
 	InCluster         bool   `env:"IN_CLUSTER" envDefault:"false"`
 	EnterpriseApiUrl  string `env:"ENTERPRISE_API_URL"`
 }
 
-func GetEnv(silent bool)(Env,error) {
+func GetEnv(silent bool) (Env, error) {
 	err := godotenv.Load(".env")
 
 	if err != nil && !silent {
