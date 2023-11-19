@@ -110,20 +110,35 @@ spec:
               parameters:
                 - name: chartDir
                   value: 'charts/kubefirst'
-        # - - name: pull-commit-push-charts
-        #     templateRef:
-        #       name: cwft-git
-        #       template: pull-commit-push
-        #       clusterScope: true
-        #     arguments:
-        #       artifacts:
-        #         - name: repo-source
-        #           from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
-        #       parameters:
-        #         - name: commitMessage
-        #           value: 'prepared next macro chart for kubefirst - set {{workflow.parameters.appName}} to {{steps.get-initial-chart-version.outputs.result}}-rc.{{workflow.parameters.shortSha}}'
-        #         - name: gitUrlNoProtocol
-        #           value: '{{workflow.parameters.gitUrlNoProtocol}}'
-        #         - name: repoName
-        #           value: 'charts'
 
+        - - name: publish-macro-helm-chart
+            templateRef:
+              name: cwft-helm
+              template: publish-chart
+              clusterScope: true
+            arguments:
+              artifacts:
+                - name: repo-source
+                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
+              parameters:
+                - name: appName
+                  value: charts # sets workingDir
+                - name: chartDir
+                  value: 'charts/kubefirst'
+
+        - - name: pull-commit-push-charts
+            templateRef:
+              name: cwft-git
+              template: pull-commit-push
+              clusterScope: true
+            arguments:
+              artifacts:
+                - name: repo-source
+                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
+              parameters:
+                - name: commitMessage
+                  value: 'prepared next macro chart for kubefirst - set {{workflow.parameters.appName}} to {{steps.get-initial-chart-version.outputs.result}}-rc.{{workflow.parameters.shortSha}}'
+                - name: gitUrlNoProtocol
+                  value: '{{workflow.parameters.gitUrlNoProtocol}}'
+                - name: repoName
+                  value: 'charts'
