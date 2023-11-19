@@ -98,10 +98,10 @@ spec:
                   value: 'charts/kubefirst'
                 - name: nextAppChartVersion
                   value: '{{steps.get-initial-chart-version.outputs.result}}-rc.{{workflow.parameters.shortSha}}'
-        - - name: pull-commit-push
+        - - name: pull-commit-push-charts
             templateRef:
               name: cwft-git
-              template: publish-chart
+              template: pull-commit-push
               clusterScope: true
             arguments:
               artifacts:
