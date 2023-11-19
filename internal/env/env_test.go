@@ -124,7 +124,7 @@ func TestEnv(t *testing.T) {
 		t.Errorf("expected AWSProfile to be 'aws_profile', but got '%s'", env.AWSProfile)
 	}
 
-	if env.IsClusterZero != true {
+	if env.IsClusterZero != "true" {
 		t.Errorf("expected IsClusterZero to be true, but got false")
 	}
 
