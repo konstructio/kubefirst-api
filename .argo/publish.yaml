@@ -98,6 +98,18 @@ spec:
                   value: 'charts/kubefirst'
                 - name: nextAppChartVersion
                   value: '{{steps.get-initial-chart-version.outputs.result}}-rc.{{workflow.parameters.shortSha}}'
+        # - - name: helm-dependency-update
+        #     templateRef:
+        #       name: cwft-helm
+        #       template: dependency-update
+        #       clusterScope: true
+        #     arguments:
+        #       artifacts:
+        #         - name: repo-source
+        #           from: '{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}'
+        #       parameters:
+        #         - name: chartDir
+        #           value: 'charts/kubefirst'
         # - - name: pull-commit-push-charts
         #     templateRef:
         #       name: cwft-git
