@@ -100,7 +100,7 @@ spec:
                   value: '{{steps.get-initial-chart-version.outputs.result}}-rc.{{workflow.parameters.shortSha}}'
         - - name: pull-commit-push
             templateRef:
-              name: cwft-helm
+              name: cwft-git
               template: publish-chart
               clusterScope: true
             arguments:
