@@ -7,7 +7,7 @@ import (
 )
 
 type Env struct {
-	ServerPort        int    `env:"SERVER_PORT" envDefault:"8081"`
+	ServerPort        string `env:"SERVER_PORT" envDefault:"8081"`
 	K1AccessToken     string `env:"K1_ACCESS_TOKEN"`
 	MongoDBHost       string `env:"MONGODB_HOST,notEmpty"`
 	MongoDBHostType   string `env:"MONGODB_HOST_TYPE,notEmpty"`
@@ -24,8 +24,8 @@ type Env struct {
 	KubefirstTeamInfo string `env:"KUBEFIRST_TEAM_INFO"`
 	AWSRegion         string `env:"AWS_REGION"`
 	AWSProfile        string `env:"AWS_PROFILE"`
-	IsClusterZero     string `env:"IS_CLUSTER_ZERO"`
-	InCluster         bool   `env:"IN_CLUSTER" envDefault:"false"`
+	IsClusterZero     string `env:"IS_CLUSTER_ZERO" envDefault:"false"`
+	InCluster         string `env:"IN_CLUSTER" envDefault:"false"`
 	EnterpriseApiUrl  string `env:"ENTERPRISE_API_URL"`
 }
 

@@ -289,8 +289,13 @@ func PostCreateCluster(c *gin.Context) {
 
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
-	if env.InCluster {
-		kcfg := k8s.CreateKubeConfig(env.InCluster, "")
+	var inCluster bool = false 
+	if env.InCluster == "true" {
+		inCluster = true 
+	}
+
+	if inCluster {
+		kcfg := k8s.CreateKubeConfig(inCluster, "")
 		k1AuthSecret, err := k8s.ReadSecretV2(kcfg.Clientset, constants.KubefirstNamespace, constants.KubefirstAuthSecretName)
 		if err != nil {
 			log.Warnf("authentication secret does not exist, continuing: %s", err)
