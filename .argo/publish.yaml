@@ -136,6 +136,10 @@ spec:
                 - name: repo-source
                   from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
               parameters:
+                - name: appName
+                  value: "charts"
+                - name: chartDir
+                  value: "charts/kubefirst"
                 - name: version
                   value: "next"
         - - name: pull-commit-push-charts
