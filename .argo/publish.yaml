@@ -170,6 +170,8 @@ spec:
               parameters:
                 - name: appName
                   value: "gitops-template" # sets workingDir:
+                - name: appName
+                  value: "charts/kubefirst"
                 - name: nextChartVersion
                   value: "{{steps.output-next-chart-version.outputs.result}}"
         - - name: pull-commit-push-gitops-template
