@@ -110,7 +110,12 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster,
 	// find the secret in mgmt cluster's kubefirst namespace and read import payload and clustername
 	var kcfg *k8s.KubernetesClient
 
-	if env.IsClusterZero == "" {
+	var isClusterZero bool = true 
+	if env.IsClusterZero == "false" {
+		isClusterZero = false 
+	}
+
+	if isClusterZero {
 		log.Info("IS_CLUSTER_ZERO is set to true, skipping import cluster logic.")
 		return pkgtypes.Cluster{}, nil
 	}
@@ -121,7 +126,12 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster,
 	}
 	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, "")
 
-	kcfg = k8s.CreateKubeConfig(env.InCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
+	var inCluster bool = false 
+	if env.InCluster == "true" {
+		inCluster = true 
+	}
+
+	kcfg = k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
 
 	log.Infof("reading secret mongo-state to determine if import is needed")
 	secData, err := k8s.ReadSecretV2(kcfg.Clientset, "kubefirst", "mongodb-state")

@@ -3,6 +3,8 @@ package env
 import (
 	"os"
 	"testing"
+
+	"github.com/kubefirst/kubefirst-api/internal/constants"
 )
 
 func TestEnv(t *testing.T) {
@@ -51,13 +53,13 @@ func TestEnv(t *testing.T) {
 	}()
 
 	env := Env{}
-	env, err := GetEnv(true)
+	env, err := GetEnv(constants.SilenceGetEnv)
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 
-	if env.ServerPort != 8081 {
-		t.Errorf("expected ServerPort to be 8081, but got %d", env.ServerPort)
+	if env.ServerPort != "8081" {
+		t.Errorf("expected ServerPort to be 8081, but got %v", env.ServerPort)
 	}
 
 	if env.K1AccessToken != "k1_access_token" {
@@ -125,11 +127,11 @@ func TestEnv(t *testing.T) {
 	}
 
 	if env.IsClusterZero != "true" {
-		t.Errorf("expected IsClusterZero to be true, but got false")
+		t.Errorf("expected IsClusterZero to be true, but got %v", env.IsClusterZero)
 	}
 
-	if env.InCluster != false {
-		t.Errorf("expected InCluster to be false, but got true")
+	if env.InCluster != "false" {
+		t.Errorf("expected InCluster to be false, but got %v", env.InCluster)
 	}
 
 	if env.EnterpriseApiUrl != "enterprise_api_url" {

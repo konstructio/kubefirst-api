@@ -97,7 +97,12 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
-	kcfg = k8s.CreateKubeConfig(env.InCluster, fmt.Sprintf("%s/kubeconfig", tmpGitopsDir))
+	var inCluster bool = false 
+	if env.InCluster == "true" {
+		inCluster = true 
+	}
+
+	kcfg = k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", tmpGitopsDir))
 
 	var fullDomainName string
 	if cl.SubdomainName != "" {
