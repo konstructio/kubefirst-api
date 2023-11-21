@@ -190,3 +190,4 @@ spec:
                   value: '{{workflow.parameters.gitUrlNoProtocol}}'
                 - name: repoName
                   value: 'gitops-template'
+
