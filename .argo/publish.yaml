@@ -182,7 +182,7 @@ spec:
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
+                  from: '{{steps.set-new-kubefirst-chart-version.outputs.artifacts.repo-source}}'
               parameters:
                 - name: commitMessage
                   value: 'set next macro chart for kubefirst - {{steps.output-next-chart-version.outputs.result}}'
