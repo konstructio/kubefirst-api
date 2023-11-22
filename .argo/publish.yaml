@@ -177,16 +177,14 @@ spec:
         - - name: pull-commit-push-gitops-template
             templateRef:
               name: cwft-git
-              template: pull-commit-push
+              template: pull-sign-commit-push
               clusterScope: true
             arguments:
               artifacts:
                 - name: repo-source
                   from: '{{steps.set-new-kubefirst-chart-version.outputs.artifacts.repo-source}}'
               parameters:
+                - name: appName
+                  value: 'gitops-template'
                 - name: commitMessage
                   value: 'set next macro chart for kubefirst - {{steps.output-next-chart-version.outputs.result}}'
-                - name: gitUrlNoProtocol
-                  value: '{{workflow.parameters.gitUrlNoProtocol}}'
-                - name: repoName
-                  value: 'gitops-template'
