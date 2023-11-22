@@ -189,6 +189,8 @@ spec:
                   value: 'gitops'
                 - name: commitMessage
                   value: 'set next macro chart for kubefirst - {{steps.output-current-chart-version.outputs.result}}'
-                - name: nextChartVersion
+                - name: chartVersion
                   value: "{{steps.output-current-chart-version.outputs.result}}"
+                - name: environment
+                  value: "development"
 
