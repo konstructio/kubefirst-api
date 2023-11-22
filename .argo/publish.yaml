@@ -158,10 +158,10 @@ spec:
                   value: '{{workflow.parameters.gitUrlNoProtocol}}'
                 - name: repoName
                   value: 'charts'
-        - - name: pull-commit-push-gitops-template
+        - - name: pull-sign-commit-push-gitops-template
             templateRef:
               name: cwft-git
-              template: pull-sign-commit-push
+              template: pull-sign-commit-push-gitops-template
               clusterScope: true
             arguments:
               artifacts:
@@ -171,6 +171,25 @@ spec:
                 - name: appName
                   value: 'gitops-template'
                 - name: commitMessage
-                  value: 'set next macro chart for kubefirst - {{steps.output-next-chart-version.outputs.result}}'
+                  value: 'set next macro chart for kubefirst - {{steps.output-current-chart-version.outputs.result}}'
                 - name: nextChartVersion
-                  value: "{{steps.output-next-chart-version.outputs.result}}"
+                  value: "{{steps.output-current-chart-version.outputs.result}}"
+
+        - - name: pull-sign-commit-push-gitops
+            templateRef:
+              name: cwft-git
+              template: pull-sign-commit-push-gitops
+              clusterScope: true
+            arguments:
+              artifacts:
+                - name: repo-source
+                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
+              parameters:
+                - name: appName
+                  value: 'gitops'
+                - name: commitMessage
+                  value: 'set next macro chart for kubefirst - {{steps.output-current-chart-version.outputs.result}}'
+                - name: chartVersion
+                  value: "{{steps.output-current-chart-version.outputs.result}}"
+                - name: environment
+                  value: "development"
