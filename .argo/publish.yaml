@@ -158,22 +158,20 @@ spec:
                   value: '{{workflow.parameters.gitUrlNoProtocol}}'
                 - name: repoName
                   value: 'charts'
-        - - name: set-new-kubefirst-chart-version
-            templateRef:
-              name: cwft-kubefirst
-              template: version-bump
-              clusterScope: true
-            arguments:
-              artifacts:
-                - name: repo-source
-                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
-              parameters:
-                - name: appName
-                  value: "gitops-template" # sets workingDir:
-                - name: chartDir
-                  value: "charts/kubefirst"
-                - name: nextChartVersion
-                  value: "{{steps.output-next-chart-version.outputs.result}}"
+        # - - name: set-new-kubefirst-chart-version
+        #     templateRef:
+        #       name: cwft-kubefirst
+        #       template: version-bump
+        #       clusterScope: true
+        #     arguments:
+        #       artifacts:
+        #         - name: repo-source
+        #           from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
+        #       parameters:
+        #         - name: appName
+        #           value: "gitops-template" # sets workingDir:
+        #         - name: nextChartVersion
+        #           value: "{{steps.output-next-chart-version.outputs.result}}"
         - - name: pull-commit-push-gitops-template
             templateRef:
               name: cwft-git
@@ -188,3 +186,5 @@ spec:
                   value: 'gitops-template'
                 - name: commitMessage
                   value: 'set next macro chart for kubefirst - {{steps.output-next-chart-version.outputs.result}}'
+                - name: nextChartVersion
+                  value: "{{steps.output-next-chart-version.outputs.result}}"
