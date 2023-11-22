@@ -126,7 +126,7 @@ spec:
                   value: charts # sets workingDir
                 - name: chartDir
                   value: 'charts/kubefirst'
-        - - name: output-next-chart-version
+        - - name: output-current-chart-version
             templateRef:
               name: cwft-helm
               template: output-macro-chart-version
@@ -141,7 +141,7 @@ spec:
                 - name: chartDir
                   value: "charts/kubefirst"
                 - name: version
-                  value: "next"
+                  value: "current"
         - - name: pull-commit-push-charts
             templateRef:
               name: cwft-git
