@@ -193,4 +193,3 @@ spec:
                   value: "{{steps.output-current-chart-version.outputs.result}}"
                 - name: environment
                   value: "development"
-
