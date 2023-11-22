@@ -82,3 +82,95 @@ spec:
                   value: '{{workflow.parameters.appName}}'
                 - name: chartDir
                   value: 'charts/{{workflow.parameters.appName}}'
+        - - name: set-app-version-and-bump-macro-chartz
+            templateRef:
+              name: cwft-helm
+              template: set-app-version-and-bump-macro-chart
+              clusterScope: true
+            arguments:
+              artifacts:
+                - name: repo-source
+                  from: '{{steps.set-chart-versions.outputs.artifacts.repo-source}}'
+              parameters:
+                - name: appName
+                  value: '{{workflow.parameters.appName}}'
+                - name: chartDir
+                  value: 'charts/kubefirst'
+                - name: nextAppChartVersion
+                  value: '{{steps.get-initial-chart-version.outputs.result}}-rc.{{workflow.parameters.shortSha}}'
+
+        - - name: helm-dependency-update
+            templateRef:
+              name: cwft-helm
+              template: dependency-update
+              clusterScope: true
+            arguments:
+              artifacts:
+                - name: repo-source
+                  from: '{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}'
+              parameters:
+                - name: chartDir
+                  value: 'charts/kubefirst'
+
+        - - name: publish-macro-helm-chart
+            templateRef:
+              name: cwft-helm
+              template: publish-chart
+              clusterScope: true
+            arguments:
+              artifacts:
+                - name: repo-source
+                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
+              parameters:
+                - name: appName
+                  value: charts # sets workingDir
+                - name: chartDir
+                  value: 'charts/kubefirst'
+        - - name: output-next-chart-version
+            templateRef:
+              name: cwft-helm
+              template: output-macro-chart-version
+              clusterScope: true
+            arguments:
+              artifacts:
+                - name: repo-source
+                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
+              parameters:
+                - name: appName
+                  value: "charts"
+                - name: chartDir
+                  value: "charts/kubefirst"
+                - name: version
+                  value: "next"
+        - - name: pull-commit-push-charts
+            templateRef:
+              name: cwft-git
+              template: pull-commit-push
+              clusterScope: true
+            arguments:
+              artifacts:
+                - name: repo-source
+                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
+              parameters:
+                - name: commitMessage
+                  value: 'prepared next macro chart for kubefirst - set {{workflow.parameters.appName}} to {{steps.get-initial-chart-version.outputs.result}}-rc.{{workflow.parameters.shortSha}}'
+                - name: gitUrlNoProtocol
+                  value: '{{workflow.parameters.gitUrlNoProtocol}}'
+                - name: repoName
+                  value: 'charts'
+        - - name: pull-commit-push-gitops-template
+            templateRef:
+              name: cwft-git
+              template: pull-sign-commit-push
+              clusterScope: true
+            arguments:
+              artifacts:
+                - name: repo-source
+                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
+              parameters:
+                - name: appName
+                  value: 'gitops-template'
+                - name: commitMessage
+                  value: 'set next macro chart for kubefirst - {{steps.output-next-chart-version.outputs.result}}'
+                - name: nextChartVersion
+                  value: "{{steps.output-next-chart-version.outputs.result}}"
