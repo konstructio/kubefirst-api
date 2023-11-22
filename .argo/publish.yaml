@@ -174,3 +174,4 @@ spec:
                   value: 'set next macro chart for kubefirst - {{steps.output-current-chart-version.outputs.result}}'
                 - name: nextChartVersion
                   value: "{{steps.output-current-chart-version.outputs.result}}"
+
