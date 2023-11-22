@@ -161,7 +161,7 @@ spec:
         - - name: pull-commit-push-gitops-template
             templateRef:
               name: cwft-git
-              template: pull-sign-commit-push
+              template: pull-sign-commit-push-gitops-template
               clusterScope: true
             arguments:
               artifacts:
