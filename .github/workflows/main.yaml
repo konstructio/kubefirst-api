@@ -5,7 +5,7 @@ env:
 on:
   push:
     branches:
-      - env-for-donna
+      - main
 jobs:
   publish:
     runs-on: self-hosted
