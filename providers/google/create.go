@@ -16,7 +16,6 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/pkg/google"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
-	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/sirupsen/logrus"
 )
@@ -255,8 +254,6 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 
 		log.Info("cluster creation complete")
 
-		telemetry.SendEvent(ctrl.TelemetryEvent, telemetry.ClusterInstallCompleted, "")
-
 		// Create default service entries
 		cl, _ := db.Client.GetCluster(ctrl.ClusterName)
 		err = services.AddDefaultServices(&cl)
@@ -264,7 +261,7 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 			log.Errorf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
 		}
 	}
-	
+
 	log.Info("waiting for kubefirst-api Deployment to transition to Running")
 	kubefirstAPI, err := k8s.ReturnDeploymentObject(
 		kcfg.Clientset,

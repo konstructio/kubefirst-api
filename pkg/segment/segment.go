@@ -1,7 +1,6 @@
 package segment
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/denisbrodbeck/machineid"
@@ -41,9 +40,10 @@ func InitClient() *telemetry.SegmentClient {
 			KubefirstTeam:     os.Getenv("KUBEFIRST_TEAM"),
 			KubefirstTeamInfo: os.Getenv("KUBEFIRST_TEAM_INFO"),
 			MachineID:         machineID,
+			ParentClusterId:   os.Getenv("PARENT_CLUSTER_ID"),
 			ErrorMessage:      "",
 			UserId:            machineID,
-			MetricName:        telemetry.ClusterInstallStarted,
+			MetricName:        telemetry.ClusterInstallCompleted,
 		},
 		Client: sc,
 	}

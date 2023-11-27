@@ -13,7 +13,6 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
-	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/sirupsen/logrus"
@@ -254,8 +253,6 @@ func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 		}
 
 		log.Info("cluster creation complete")
-
-		telemetry.SendEvent(ctrl.TelemetryEvent, telemetry.ClusterInstallCompleted, "")
 
 		// Create default service entries
 		cl, _ := db.Client.GetCluster(ctrl.ClusterName)
