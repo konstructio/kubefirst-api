@@ -98,10 +98,10 @@ spec:
               value: {{ .Values.global.useTelemetry | default "true" | quote }}
             - name: IS_CLUSTER_ZERO
               value: {{ .Values.isClusterZero | default "true" | quote }} #internal use
-          {{- range $key, $value := .Values.extraEnv }}
+            {{- range $key, $value := .Values.extraEnv }}
             - name: {{ $key }}
               value: {{ $value | quote }}
-          {{ end }}
+            {{ end }}
           {{- with .Values.envFrom }}
           envFrom:
             {{- toYaml . | nindent 12 }}
