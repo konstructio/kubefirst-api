@@ -18,7 +18,7 @@ require (
 	github.com/charmbracelet/bubbles v0.15.0
 	github.com/charmbracelet/bubbletea v0.23.2
 	github.com/charmbracelet/lipgloss v0.8.0
-	github.com/civo/civogo v0.3.28
+	github.com/civo/civogo v0.3.53
 	github.com/cloudflare/cloudflare-go v0.73.0
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/gin-contrib/cors v1.4.0
@@ -28,7 +28,7 @@ require (
 	github.com/hashicorp/vault/api v1.9.0
 	github.com/joho/godotenv v1.5.1
 	github.com/kubefirst/metrics-client v0.2.8
-	github.com/kubefirst/runtime v0.3.32
+	github.com/kubefirst/runtime v0.3.33
 	github.com/minio/minio-go/v7 v7.0.49
 	github.com/otiai10/copy v1.7.0
 	github.com/rs/zerolog v1.29.1
@@ -43,8 +43,8 @@ require (
 	golang.org/x/text v0.12.0
 	google.golang.org/api v0.126.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.26.0
-	k8s.io/apimachinery v0.26.0
+	k8s.io/api v0.27.1
+	k8s.io/apimachinery v0.27.1
 	k8s.io/client-go v11.0.1-0.20190816222228-6d55c1b1f1ca+incompatible
 	sigs.k8s.io/aws-iam-authenticator v0.6.7
 )
