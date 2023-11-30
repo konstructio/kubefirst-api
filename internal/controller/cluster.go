@@ -210,7 +210,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 
 			GitopsRepoAtlantisWebhookURL:      clctrl.AtlantisWebhookURL,
 			GitopsRepoNoHTTPSURL:              fmt.Sprintf("%s/%s/gitops.git", clctrl.GitHost, clctrl.GitAuth.Owner),
-			WorkloadClusterTerraformModuleURL: fmt.Sprintf("git::https://%s/%s//terraform/%s/modules/workload-cluster?ref=main", clctrl.GitHost, clctrl.GitAuth.Owner, clctrl.CloudProvider),
+			WorkloadClusterTerraformModuleURL: fmt.Sprintf("git::https://%s/%s/gitops.git//terraform/%s/modules/workload-cluster?ref=main", clctrl.GitHost, clctrl.GitAuth.Owner, clctrl.CloudProvider),
 			ClusterId:                         clctrl.ClusterID,
 
 			// external-dns optionality to provide cloudflare support regardless of cloud provider
