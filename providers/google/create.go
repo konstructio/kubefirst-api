@@ -218,19 +218,18 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 		1200,
 	)
 	if err != nil {
-		log.Errorf("Error finding kubefirst api Deployment: %s", err)
+		log.Errorf("Error finding crossplane Deployment: %s", err)
 		ctrl.HandleError(err.Error())
 		return err
 	}
-	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, crossplaneDeployment, 300)
+	log.Infof("waiting on dns, tls certificates from letsencrypt and remaining sync waves.\n this may take up to 60 minutes but regularly completes in under 20 minutes")
+	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, crossplaneDeployment, 3600)
 	if err != nil {
 		log.Errorf("Error waiting for all Apps to sync ready state: %s", err)
 
 		ctrl.HandleError(err.Error())
 		return err
 	}
-
-	log.Info("cluster creation complete")
 
 	cluster1KubefirstApiStopChannel := make(chan struct{}, 1)
 	defer func() {
@@ -253,8 +252,6 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 			return err
 		}
 
-		log.Info("cluster creation complete")
-
 		telemetry.SendEvent(ctrl.TelemetryEvent, telemetry.ClusterInstallCompleted, "")
 
 		// Create default service entries
@@ -264,7 +261,7 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 			log.Errorf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
 		}
 	}
-	
+
 	log.Info("waiting for kubefirst-api Deployment to transition to Running")
 	kubefirstAPI, err := k8s.ReturnDeploymentObject(
 		kcfg.Clientset,
