@@ -120,7 +120,7 @@ docker run -d --name k1-api-mongodb \
 
 see [this .env example](./.env.example) for the necessary values
 
-Be sure to set `IS_CLUSTER_ZERO` to `yes` if you want to run the API without having console running.
+Be sure to set `IS_CLUSTER_ZERO` to `true` if you want to run the API without having console running.
 
 ## Provider Support
 
