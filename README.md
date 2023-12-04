@@ -105,7 +105,7 @@ Some variables are required, others are optional depending on deployment type.
 # optional local mongodb for kubefirst-api
 docker run -d --name k1-api-mongodb \
   -e MONGO_INITDB_ROOT_USERNAME=root \
-  -e MONGO_INITDB_ROOT_PASSWORD=some-password \
+  -e MONGO_INITDB_ROOT_PASSWORD=password \
   -p 27017:27017 \
   mongo
 ```
