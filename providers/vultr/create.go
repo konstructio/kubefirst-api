@@ -192,7 +192,7 @@ func CreateVultrCluster(definition *pkgtypes.ClusterDefinition) error {
 		"app.kubernetes.io/instance",
 		"crossplane",
 		"crossplane-system",
-		1200,
+		3600,
 	)
 	if err != nil {
 		log.Errorf("Error finding crossplane Deployment: %s", err)
