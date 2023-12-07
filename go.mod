@@ -28,7 +28,7 @@ require (
 	github.com/hashicorp/vault/api v1.9.0
 	github.com/joho/godotenv v1.5.1
 	github.com/kubefirst/metrics-client v0.2.8
-	github.com/kubefirst/runtime v0.3.33
+	github.com/kubefirst/runtime v0.3.34
 	github.com/minio/minio-go/v7 v7.0.49
 	github.com/otiai10/copy v1.7.0
 	github.com/rs/zerolog v1.29.1
