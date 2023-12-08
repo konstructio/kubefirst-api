@@ -249,7 +249,7 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		"app.kubernetes.io/name",
 		"kubefirst-api",
 		"kubefirst",
-		3600,
+		1200,
 	)
 	if err != nil {
 		log.Errorf("Error finding kubefirst api Deployment: %s", err)
