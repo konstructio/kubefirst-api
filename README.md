@@ -105,12 +105,12 @@ Some variables are required, others are optional depending on deployment type.
 # optional local mongodb for kubefirst-api
 docker run -d --name k1-api-mongodb \
   -e MONGO_INITDB_ROOT_USERNAME=root \
-  -e MONGO_INITDB_ROOT_PASSWORD=some-password \
+  -e MONGO_INITDB_ROOT_PASSWORD=password \
   -p 27017:27017 \
   mongo
 ```
 
-### Using Docker compose:
+### Using Docker compose
 
 ```bash
   docker compose up
@@ -119,6 +119,8 @@ docker run -d --name k1-api-mongodb \
 ## local environment variables
 
 see [this .env example](./.env.example) for the necessary values
+
+Be sure to set `IS_CLUSTER_ZERO` to `true` if you want to run the API without having console running.
 
 ## Provider Support
 
@@ -283,4 +285,3 @@ go install github.com/swaggo/swag/cmd/swag@latest
 ```shell
 make updateswagger
 ```
-
