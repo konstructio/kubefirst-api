@@ -97,9 +97,9 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
-	var inCluster bool = false 
+	var inCluster bool = false
 	if env.InCluster == "true" {
-		inCluster = true 
+		inCluster = true
 	}
 
 	kcfg = k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", tmpGitopsDir))

@@ -43,7 +43,7 @@ func CreateDefaultEnvironments(mgmtCluster types.Cluster) error {
 	})
 	log.SetReportCaller(false)
 	log.SetOutput(os.Stdout)
-	
+
 	defaultClusterNames := []string{"development", "staging", "production"}
 
 	defaultVclusterTemplate := types.WorkloadCluster{
@@ -64,7 +64,7 @@ func CreateDefaultEnvironments(mgmtCluster types.Cluster) error {
 		NodeType:     "", //left up to terraform
 		NodeCount:    3,  //defaulted here
 	}
-	
+
 	defaultClusters := []types.WorkloadCluster{}
 
 	for _, clusterName := range defaultClusterNames {

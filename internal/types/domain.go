@@ -12,7 +12,7 @@ import (
 
 // DomainListRequest
 type DomainListRequest struct {
-	CloudRegion      string           `json:"cloud_region"`
+	CloudRegion      string                    `json:"cloud_region"`
 	AWSAuth          pkgtypes.AWSAuth          `json:"aws_auth,omitempty"`
 	CivoAuth         pkgtypes.CivoAuth         `json:"civo_auth,omitempty"`
 	DigitaloceanAuth pkgtypes.DigitaloceanAuth `json:"do_auth,omitempty"`
@@ -25,4 +25,3 @@ type DomainListRequest struct {
 type DomainListResponse struct {
 	Domains []string `json:"domains"`
 }
-

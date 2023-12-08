@@ -42,7 +42,7 @@ func (mdbcl *MongoDBClient) GetEnvironments() ([]pkgtypes.Environment, error) {
 // GetEnvironment
 func (mdbcl *MongoDBClient) GetEnvironment(name string) (pkgtypes.Environment, error) {
 	// Find
-	filter := bson.D{{Key: "name", Value: name }}
+	filter := bson.D{{Key: "name", Value: name}}
 	var result pkgtypes.Environment
 	err := mdbcl.EnvironmentsCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {
@@ -56,14 +56,14 @@ func (mdbcl *MongoDBClient) GetEnvironment(name string) (pkgtypes.Environment, e
 }
 
 // InsertEnvironment
-func (mdbcl *MongoDBClient) InsertEnvironment(env pkgtypes.Environment) (pkgtypes.Environment ,error) {
-	filter := bson.D{{ Key: "name", Value: env.Name }}
+func (mdbcl *MongoDBClient) InsertEnvironment(env pkgtypes.Environment) (pkgtypes.Environment, error) {
+	filter := bson.D{{Key: "name", Value: env.Name}}
 
-	result := pkgtypes.Environment {
-		ID: primitive.NewObjectID(),
-		Name: env.Name,
-		Color: env.Color,
-		Description: env.Description,
+	result := pkgtypes.Environment{
+		ID:                primitive.NewObjectID(),
+		Name:              env.Name,
+		Color:             env.Color,
+		Description:       env.Description,
 		CreationTimestamp: env.CreationTimestamp,
 	}
 
@@ -87,11 +87,11 @@ func (mdbcl *MongoDBClient) InsertEnvironment(env pkgtypes.Environment) (pkgtype
 
 func (mdbcl *MongoDBClient) DeleteEnvironment(envId string) error {
 	objectId, idErr := primitive.ObjectIDFromHex(envId)
-	if idErr != nil{
+	if idErr != nil {
 		return fmt.Errorf("invalid id %v", envId)
 	}
 
-	filter := bson.D{{Key: "_id", Value: objectId }}
+	filter := bson.D{{Key: "_id", Value: objectId}}
 
 	findError := mdbcl.EnvironmentsCollection.FindOne(mdbcl.Context, filter).Err()
 
@@ -99,7 +99,7 @@ func (mdbcl *MongoDBClient) DeleteEnvironment(envId string) error {
 		return fmt.Errorf("no environment with id %v", envId)
 	}
 
-	_,err := mdbcl.EnvironmentsCollection.DeleteOne(mdbcl.Context, filter)
+	_, err := mdbcl.EnvironmentsCollection.DeleteOne(mdbcl.Context, filter)
 	if err != nil {
 		return fmt.Errorf("error deleting environment with provided id %v: %s", envId, err)
 	}
@@ -111,12 +111,12 @@ func (mdbcl *MongoDBClient) DeleteEnvironment(envId string) error {
 
 func (mdbcl *MongoDBClient) UpdateEnvironment(id string, env types.EnvironmentUpdateRequest) error {
 	objectId, idErr := primitive.ObjectIDFromHex(id)
-	if idErr != nil{
+	if idErr != nil {
 		return fmt.Errorf("invalid id %v", id)
 	}
 
-	filter := bson.D{{ Key: "_id", Value: objectId }}
-	update := bson.D{{ "$set", env }}
+	filter := bson.D{{Key: "_id", Value: objectId}}
+	update := bson.D{{"$set", env}}
 
 	_, err := mdbcl.EnvironmentsCollection.UpdateOne(mdbcl.Context, filter, update)
 	if err != nil {

@@ -80,6 +80,9 @@ func SetupRouter() *gin.Engine {
 		// Instance Sizes
 		v1.POST("/instance-sizes/:cloud_provider", middleware.ValidateAPIKey(), router.ListInstanceSizesForRegion)
 
+		// Default instance size and node count for supported cloud providers
+		v1.GET("/cloud-defaults", middleware.ValidateAPIKey(), router.GetCloudProviderDefaults)
+
 		// Environments
 		v1.GET("/environment", middleware.ValidateAPIKey(), router.GetEnvironments)
 		v1.POST("/environment", middleware.ValidateAPIKey(), router.CreateEnvironment)

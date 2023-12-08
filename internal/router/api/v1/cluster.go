@@ -289,9 +289,9 @@ func PostCreateCluster(c *gin.Context) {
 
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
-	var inCluster bool = false 
+	var inCluster bool = false
 	if env.InCluster == "true" {
-		inCluster = true 
+		inCluster = true
 	}
 
 	if inCluster {
@@ -533,64 +533,64 @@ func GetClusterKubeconfig(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	switch cloudProvider {
-		case "civo":
-			civoConfig := civoruntime.CivoConfiguration{
-				Client:  civoruntime.NewCivo(instanceSizesRequest.CivoAuth.Token, instanceSizesRequest.CloudRegion),
-				Context: context.Background(),
-			}
-		
-			kubeConfig, cfgError := civoConfig.GetKubeconfig(clusterName)
-			if err != nil {
-				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-					Message: cfgError.Error(),
-				})
-				return
-			}
-		
-			c.IndentedJSON(http.StatusOK, kubeConfig)
-			
-		case "digitalocean":
-			digitaloceanConf := digioceanruntime.DigitaloceanConfiguration{
-				Client:  digioceanruntime.NewDigitalocean(instanceSizesRequest.DigitaloceanAuth.Token),
-				Context: context.Background(),
-			}
-			
-			kubeConfig, err := digitaloceanConf.GetKubeconfig(clusterName)
+	case "civo":
+		civoConfig := civoruntime.CivoConfiguration{
+			Client:  civoruntime.NewCivo(instanceSizesRequest.CivoAuth.Token, instanceSizesRequest.CloudRegion),
+			Context: context.Background(),
+		}
 
-			if err != nil {
-				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-					Message: err.Error(),
-				})
-				return
-			}
-
-			c.IndentedJSON(http.StatusOK, kubeConfig)
-
-		case "vultr":
-
-			vultrConf := vultrruntime.VultrConfiguration{
-				Client:  vultrruntime.NewVultr(instanceSizesRequest.VultrAuth.Token),
-				Context: context.Background(),
-			}
-			
-			kubeConfig, err := vultrConf.GetKubeconfig(clusterName)
-
-			if err != nil {
-				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-					Message: err.Error(),
-				})
-				return
-			}
-
-			c.IndentedJSON(http.StatusOK, kubeConfig)
-			
-		default:
+		kubeConfig, cfgError := civoConfig.GetKubeconfig(clusterName)
+		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-				Message: fmt.Sprintf("provided cloud provider: %v not implemented", cloudProvider),
+				Message: cfgError.Error(),
 			})
 			return
+		}
+
+		c.IndentedJSON(http.StatusOK, kubeConfig)
+
+	case "digitalocean":
+		digitaloceanConf := digioceanruntime.DigitaloceanConfiguration{
+			Client:  digioceanruntime.NewDigitalocean(instanceSizesRequest.DigitaloceanAuth.Token),
+			Context: context.Background(),
+		}
+
+		kubeConfig, err := digitaloceanConf.GetKubeconfig(clusterName)
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+
+		c.IndentedJSON(http.StatusOK, kubeConfig)
+
+	case "vultr":
+
+		vultrConf := vultrruntime.VultrConfiguration{
+			Client:  vultrruntime.NewVultr(instanceSizesRequest.VultrAuth.Token),
+			Context: context.Background(),
+		}
+
+		kubeConfig, err := vultrConf.GetKubeconfig(clusterName)
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+
+		c.IndentedJSON(http.StatusOK, kubeConfig)
+
+	default:
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: fmt.Sprintf("provided cloud provider: %v not implemented", cloudProvider),
+		})
+		return
 	}
 }
 

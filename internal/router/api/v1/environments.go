@@ -25,8 +25,6 @@ func GetEnvironments(c *gin.Context) {
 	c.JSON(http.StatusOK, environments)
 }
 
-
-
 func CreateEnvironment(c *gin.Context) {
 
 	// Bind to variable as application/json, handle error
@@ -47,7 +45,7 @@ func CreateEnvironment(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusCreated, newEnv)
 }
 
@@ -85,7 +83,7 @@ func UpdateEnvironment(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	var environmentUpdate types.EnvironmentUpdateRequest
 	err := c.Bind(&environmentUpdate)
 	if err != nil {
@@ -94,14 +92,13 @@ func UpdateEnvironment(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	if environmentUpdate.Color == "" && environmentUpdate.Description == "" {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: "please provide a description and or color to update",
 		})
 		return
 	}
-
 
 	updateErr := db.Client.UpdateEnvironment(envId, environmentUpdate)
 
