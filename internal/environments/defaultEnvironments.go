@@ -14,6 +14,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
@@ -43,7 +44,7 @@ func CreateDefaultEnvironments(mgmtCluster types.Cluster) error {
 	})
 	log.SetReportCaller(false)
 	log.SetOutput(os.Stdout)
-	
+
 	defaultClusterNames := []string{"development", "staging", "production"}
 
 	defaultVclusterTemplate := types.WorkloadCluster{
@@ -64,7 +65,7 @@ func CreateDefaultEnvironments(mgmtCluster types.Cluster) error {
 		NodeType:     "", //left up to terraform
 		NodeCount:    3,  //defaulted here
 	}
-	
+
 	defaultClusters := []types.WorkloadCluster{}
 
 	for _, clusterName := range defaultClusterNames {
@@ -103,45 +104,50 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	httpClient := http.Client{Transport: customTransport}
 
-	payload, err := json.Marshal(goPayload)
-	if err != nil {
-		return err
-	}
-
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/v1/environments/%s", env.EnterpriseApiUrl, env.ClusterId), bytes.NewReader(payload))
+	for i, cluster := range goPayload.Clusters {
 
-	if err != nil {
-		log.Errorf("error creating http request %s", err)
-		return err
-	}
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Accept", "application/json")
-
-	res, err := httpClient.Do(req)
-	timer := 0
-	for err != nil {
-		if timer > 12 {
-			log.Errorf("error in http call to api ee: api url (%s) did not come up within 2 minutes %s", req.URL, err.Error())
-		} else {
-			res, err = httpClient.Do(req)
+		log.Infof("creating cluster %s for %s", strconv.Itoa(i), cluster.ClusterName)
+		payload, err := json.Marshal(cluster)
+		if err != nil {
+			return err
 		}
-		timer++
-		time.Sleep(10 * time.Second)
+
+		req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/v1/cluster/%s", env.EnterpriseApiUrl, env.ClusterId), bytes.NewReader(payload))
+
+		if err != nil {
+			log.Errorf("error creating http request %s", err)
+			return err
+		}
+		req.Header.Add("Content-Type", "application/json")
+		req.Header.Add("Accept", "application/json")
+
+		res, err := httpClient.Do(req)
+		timer := 0
+		for err != nil {
+			if timer > 12 {
+				log.Errorf("error in http call to api ee: api url (%s) did not come up within 2 minutes %s", req.URL, err.Error())
+			} else {
+				res, err = httpClient.Do(req)
+			}
+			timer++
+			time.Sleep(10 * time.Second)
+		}
+
+		if res.StatusCode != http.StatusAccepted {
+			log.Errorf("unable to create default workload clusters and default environments %s: \n request: %s", res.Status, res.Request.URL)
+			return err
+		}
+
+		body, err := io.ReadAll(res.Body)
+		if err != nil {
+			return err
+		}
+
+		log.Infof("cluster %s created. result: %s", cluster.ClusterName, string(body))
+		time.Sleep(20 * time.Second)
+
 	}
-
-	if res.StatusCode != http.StatusAccepted {
-		log.Errorf("unable to create default workload clusters and default environments %s: \n request: %s", res.Status, res.Request.URL)
-		return err
-	}
-
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		return err
-	}
-
-	log.Info("Default environments initiatied", string(body))
-
 	return nil
 }
