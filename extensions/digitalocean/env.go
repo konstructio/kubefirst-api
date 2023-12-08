@@ -54,7 +54,7 @@ func GetGithubTerraformEnvs(envs map[string]string, cl *pkgtypes.Cluster) map[st
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
 	envs["TF_VAR_aws_access_key_id"] = cl.StateStoreCredentials.AccessKeyID
 	envs["TF_VAR_aws_secret_access_key"] = cl.StateStoreCredentials.SecretAccessKey
-	envs["AWS_SESSION_TOKEN"] = "" // allows for debugging
+	envs["AWS_SESSION_TOKEN"] = ""        // allows for debugging
 	envs["TF_VAR_aws_session_token"] = "" // allows for debugging
 
 	return envs
@@ -74,7 +74,7 @@ func GetGitlabTerraformEnvs(envs map[string]string, gid int, cl *pkgtypes.Cluste
 	envs["TF_VAR_aws_secret_access_key"] = cl.StateStoreCredentials.SecretAccessKey
 	envs["TF_VAR_owner_group_id"] = strconv.Itoa(gid)
 	envs["TF_VAR_gitlab_owner"] = cl.GitAuth.Owner
-	envs["AWS_SESSION_TOKEN"] = "" // allows for debugging
+	envs["AWS_SESSION_TOKEN"] = ""        // allows for debugging
 	envs["TF_VAR_aws_session_token"] = "" // allows for debugging
 
 	return envs
@@ -91,7 +91,7 @@ func GetUsersTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
 	envs["TF_VAR_aws_access_key_id"] = cl.StateStoreCredentials.AccessKeyID
 	envs["TF_VAR_aws_secret_access_key"] = cl.StateStoreCredentials.SecretAccessKey
-	envs["AWS_SESSION_TOKEN"] = "" // allows for debugging
+	envs["AWS_SESSION_TOKEN"] = ""        // allows for debugging
 	envs["TF_VAR_aws_session_token"] = "" // allows for debugging
 
 	return envs
@@ -116,7 +116,7 @@ func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
 	envs["TF_VAR_aws_access_key_id"] = cl.StateStoreCredentials.AccessKeyID
 	envs["TF_VAR_aws_secret_access_key"] = cl.StateStoreCredentials.SecretAccessKey
-	envs["AWS_SESSION_TOKEN"] = "" // allows for debugging
+	envs["AWS_SESSION_TOKEN"] = ""        // allows for debugging
 	envs["TF_VAR_aws_session_token"] = "" // allows for debugging
 
 	switch cl.GitProvider {

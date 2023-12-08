@@ -110,9 +110,9 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster,
 	// find the secret in mgmt cluster's kubefirst namespace and read import payload and clustername
 	var kcfg *k8s.KubernetesClient
 
-	var isClusterZero bool = true 
+	var isClusterZero bool = true
 	if env.IsClusterZero == "false" {
-		isClusterZero = false 
+		isClusterZero = false
 	}
 
 	if isClusterZero {
@@ -126,9 +126,9 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster,
 	}
 	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, "")
 
-	var inCluster bool = false 
+	var inCluster bool = false
 	if env.InCluster == "true" {
-		inCluster = true 
+		inCluster = true
 	}
 
 	kcfg = k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))

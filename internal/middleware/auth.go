@@ -18,18 +18,18 @@ import (
 
 // ValidateAPIKey determines whether or not a request is authenticated with a valid API key
 func ValidateAPIKey() gin.HandlerFunc {
-	
+
 	return func(c *gin.Context) {
 		APIKey := strings.TrimPrefix(c.Request.Header.Get("Authorization"), "Bearer ")
-		
+
 		if APIKey == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"status": 401, "message": "Authentication failed - no API key provided in request"})
 			c.Abort()
-			
+
 			log.Info().Msgf(" Request Status: 401;  Authentication failed - no API key provided in request")
 			return
 		}
-		
+
 		env, _ := env.GetEnv(constants.SilenceGetEnv)
 
 		if APIKey != env.K1AccessToken {
