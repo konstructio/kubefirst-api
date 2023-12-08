@@ -30,6 +30,7 @@ func AdjustGitopsRepo(
 	gitProvider string,
 	k1Dir string,
 	apexContentExists bool,
+	useCloudflareOriginIssuer bool,
 ) error {
 	//* clean up all other platforms
 	for _, platform := range pkg.SupportedPlatforms {
@@ -50,6 +51,27 @@ func AdjustGitopsRepo(
 			return false, nil
 
 		},
+	}
+
+	if !useCloudflareOriginIssuer {
+		os.RemoveAll(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/mgmt/cloudflare-origin-ca-issuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
+		os.RemoveAll(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/mgmt/cloudflare-origin-issuer-crd.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
+		os.RemoveAll(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/mgmt/components/argo-workflows/cloudflareissuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
+		os.RemoveAll(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/mgmt/components/argocd/cloudflareissuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
+		os.RemoveAll(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/mgmt/components/atlantis/cloudflareissuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
+		os.RemoveAll(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/mgmt/components/chartmuseum/cloudflareissuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
+		os.RemoveAll(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/mgmt/components/kubefirst/cloudflareissuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
+		os.RemoveAll(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/mgmt/components/vault/cloudflareissuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
+
+		os.RemoveAll(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/workload-cluster/cloudflare-origin-issuer", gitopsRepoDir, cloudProvider, gitProvider)))
+		os.RemoveAll(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/workload-cluster/40-cloudflare-origin-issuer-crd.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
+		os.RemoveAll(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/workload-cluster/41-cloudflare-origin-ca-issuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
+		os.RemoveAll(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/workload-cluster/45-cloudflare-origin-issuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
+
+		os.RemoveAll(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/workload-vcluster/cloudflare-origin-issuer", gitopsRepoDir, cloudProvider, gitProvider)))
+		os.RemoveAll(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/workload-vcluster/40-cloudflare-origin-issuer-crd.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
+		os.RemoveAll(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/workload-vcluster/41-cloudflare-origin-ca-issuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
+		os.RemoveAll(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/workload-vcluster/45-cloudflare-origin-issuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
 	}
 
 	AWS_GITHUB := "aws-github"
@@ -796,7 +818,7 @@ func PrepareGitRepositories(
 
 	// ADJUST CONTENT
 	//* adjust the content for the gitops repo
-	err = AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsDir, gitProvider, k1Dir, apexContentExists)
+	err = AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsDir, gitProvider, k1Dir, apexContentExists, useCloudflareOriginIssuer)
 	if err != nil {
 		log.Info().Msgf("err: %v", err)
 		return err
