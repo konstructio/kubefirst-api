@@ -2,7 +2,7 @@ package types
 
 type CloudDefault struct {
 	InstanceSize string `json:"instance_size"`
-	NodeCount    string `json:"node_count"`
+	NodeCount    int    `json:"node_count"`
 }
 
 type CloudProviderDefaults struct {
