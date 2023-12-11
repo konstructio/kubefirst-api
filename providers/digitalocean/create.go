@@ -186,6 +186,9 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
+	log.Info("waiting for applications to create, looking up crossplane in 5 minutes")
+	time.Sleep(time.Minute * 5)
+
 	// Wait for last sync wave app transition to Running
 	log.Info("waiting for final sync wave Deployment to transition to Running")
 	crossplaneDeployment, err := k8s.ReturnDeploymentObject(
