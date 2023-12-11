@@ -18,9 +18,8 @@ require (
 	github.com/charmbracelet/bubbles v0.15.0
 	github.com/charmbracelet/bubbletea v0.23.2
 	github.com/charmbracelet/lipgloss v0.8.0
-	github.com/civo/civogo v0.3.28
+	github.com/civo/civogo v0.3.53
 	github.com/cloudflare/cloudflare-go v0.73.0
-	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.8.2
 	github.com/go-git/go-git/v5 v5.6.1
@@ -28,11 +27,10 @@ require (
 	github.com/hashicorp/vault/api v1.9.0
 	github.com/joho/godotenv v1.5.1
 	github.com/kubefirst/metrics-client v0.2.8
-	github.com/kubefirst/runtime v0.3.31
+	github.com/kubefirst/runtime v0.3.35
 	github.com/minio/minio-go/v7 v7.0.49
 	github.com/otiai10/copy v1.7.0
 	github.com/rs/zerolog v1.29.1
-	github.com/segmentio/analytics-go v3.1.0+incompatible
 	github.com/sirupsen/logrus v1.9.0
 	github.com/swaggo/files v1.0.0
 	github.com/swaggo/gin-swagger v1.5.3
@@ -43,8 +41,8 @@ require (
 	golang.org/x/text v0.12.0
 	google.golang.org/api v0.126.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.26.0
-	k8s.io/apimachinery v0.26.0
+	k8s.io/api v0.27.1
+	k8s.io/apimachinery v0.27.1
 	k8s.io/client-go v11.0.1-0.20190816222228-6d55c1b1f1ca+incompatible
 	sigs.k8s.io/aws-iam-authenticator v0.6.7
 )
@@ -214,6 +212,7 @@ require (
 	github.com/rs/xid v1.4.0 // indirect
 	github.com/russross/blackfriday v1.5.2 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
+	github.com/segmentio/analytics-go v3.1.0+incompatible // indirect
 	github.com/segmentio/backo-go v1.0.1 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/skeema/knownhosts v1.1.0 // indirect

@@ -62,7 +62,7 @@ func PostTelemetry(c *gin.Context) {
 		MachineID:         cl.DomainName,
 		ErrorMessage:      "",
 		UserId:            cl.DomainName,
-		MetricName:       "",
+		MetricName:        "",
 	}
 
 	var req types.TelemetryRequest

@@ -11,7 +11,7 @@ import (
 )
 
 type ZonesListRequest struct {
-	CloudRegion	string           	  `json:"cloud_region" binding:"required"`
+	CloudRegion string              `json:"cloud_region" binding:"required"`
 	GoogleAuth  pkgtypes.GoogleAuth `json:"google_auth" binding:"required"`
 }
 

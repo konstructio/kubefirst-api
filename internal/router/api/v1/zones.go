@@ -28,7 +28,6 @@ func ListZonesForRegion(c *gin.Context) {
 		KeyFile: zonesListRequest.GoogleAuth.KeyFile,
 	}
 
-
 	var zonesListResponse types.ZonesListResponse
 
 	zones, err := googleConf.GetZones()
@@ -43,4 +42,3 @@ func ListZonesForRegion(c *gin.Context) {
 
 	c.JSON(http.StatusOK, zonesListResponse)
 }
-

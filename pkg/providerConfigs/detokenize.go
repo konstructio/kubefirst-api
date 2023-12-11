@@ -81,7 +81,7 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				newContents = strings.Replace(newContents, "<KUBEFIRST_TEAM_INFO>", os.Getenv("KUBEFIRST_TEAM_INFO"), -1)
 				newContents = strings.Replace(newContents, "<KUBEFIRST_VERSION>", tokens.KubefirstVersion, -1)
 				newContents = strings.Replace(newContents, "<KUBEFIRST_STATE_STORE_BUCKET_HOSTNAME>", tokens.StateStoreBucketHostname, -1)
-				newContents = strings.Replace(newContents, "<WORKLOAD_CLUSTER_TERRAFORM_MODULE_URL>", "git::https://<GITOPS_REPO_NO_HTTPS_URL>//terraform/<CLOUD_PROVIDER>/modules/workload-cluster?ref=main", -1)
+				newContents = strings.Replace(newContents, "<WORKLOAD_CLUSTER_TERRAFORM_MODULE_URL>", tokens.WorkloadClusterTerraformModuleURL, -1)
 
 				newContents = strings.Replace(newContents, "<NODE_TYPE>", tokens.NodeType, -1)
 				newContents = strings.Replace(newContents, "<NODE_COUNT>", fmt.Sprint(tokens.NodeCount), -1)

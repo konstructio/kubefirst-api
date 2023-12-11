@@ -20,5 +20,5 @@ const (
 	ClusterStatusProvisioned  = "provisioned"
 	ClusterStatusProvisioning = "provisioning"
 
-	SilenceGetEnv             = true
+	SilenceGetEnv = true
 )

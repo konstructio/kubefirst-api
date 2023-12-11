@@ -304,7 +304,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		DigitaloceanAuth:      clctrl.DigitaloceanAuth,
 		VultrAuth:             clctrl.VultrAuth,
 		CloudflareAuth:        clctrl.CloudflareAuth,
-		NodeType:        			 clctrl.NodeType,
+		NodeType:              clctrl.NodeType,
 		NodeCount:             clctrl.NodeCount,
 	}
 	err = clctrl.MdbCl.InsertCluster(cl)
