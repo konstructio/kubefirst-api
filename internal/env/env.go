@@ -26,7 +26,7 @@ type Env struct {
 	AWSProfile        string `env:"AWS_PROFILE"`
 	IsClusterZero     string `env:"IS_CLUSTER_ZERO"`
 	ParentClusterId   string `env:"PARENT_CLUSTER_ID"`
-	InCluster         bool   `env:"IN_CLUSTER" envDefault:"false"`
+	InCluster         string `env:"IN_CLUSTER" envDefault:"false"`
 	EnterpriseApiUrl  string `env:"ENTERPRISE_API_URL"`
 }
 

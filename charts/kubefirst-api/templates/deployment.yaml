@@ -170,8 +170,6 @@ spec:
           imagePullPolicy: {{ .Values.image.hook.pullPolicy }}
           args: [
             "transmit",
-            "--type",
-            "cluster-zero",
           ]
           env:
             - name: CLOUD_PROVIDER
@@ -194,5 +192,7 @@ spec:
               value: {{ .Values.global.kubefirstTeamInfo | default "" | quote }}
             - name: KUBEFIRST_VERSION
               value: {{ .Values.global.kubefirstVersion | default "unset" }}
+            - name: PARENT_CLUSTER_ID
+              value: {{ .Values.global.clusterId | default $clusterId }}
             - name: USE_TELEMETRY
               value: {{ .Values.global.useTelemetry | default "true" | quote }}
