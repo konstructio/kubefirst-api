@@ -97,6 +97,7 @@ func main() {
 		KubefirstTeamInfo: env.KubefirstTeamInfo,
 		MachineID:         env.ClusterId,
 		MetricName:        telemetry.ClusterInstallCompleted,
+		ParentClusterId:   env.ParentClusterId,
 		UserId:            env.ClusterId,
 	}
 
