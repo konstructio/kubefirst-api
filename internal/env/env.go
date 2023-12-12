@@ -24,7 +24,8 @@ type Env struct {
 	KubefirstTeamInfo string `env:"KUBEFIRST_TEAM_INFO"`
 	AWSRegion         string `env:"AWS_REGION"`
 	AWSProfile        string `env:"AWS_PROFILE"`
-	IsClusterZero     string `env:"IS_CLUSTER_ZERO" envDefault:"false"`
+	IsClusterZero     string `env:"IS_CLUSTER_ZERO"`
+	ParentClusterId   string `env:"PARENT_CLUSTER_ID"`
 	InCluster         string `env:"IN_CLUSTER" envDefault:"false"`
 	EnterpriseApiUrl  string `env:"ENTERPRISE_API_URL"`
 }

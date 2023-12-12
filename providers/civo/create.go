@@ -14,7 +14,6 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
-	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/ssl"
 	log "github.com/sirupsen/logrus"
@@ -233,7 +232,7 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 			return err
 		}
 
-		telemetry.SendEvent(ctrl.TelemetryEvent, telemetry.ClusterInstallCompleted, "")
+		log.Info("cluster creation complete")
 
 		// Create default service entries
 		cl, _ := db.Client.GetCluster(ctrl.ClusterName)

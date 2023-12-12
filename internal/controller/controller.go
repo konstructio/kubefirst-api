@@ -159,12 +159,11 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		KubefirstTeam:     env.KubefirstTeam,
 		KubefirstTeamInfo: env.KubefirstTeamInfo,
 		MachineID:         env.ClusterId,
-		MetricName:        telemetry.ClusterInstallStarted,
+		ParentClusterId:   env.ParentClusterId,
+		MetricName:        telemetry.ClusterInstallCompleted,
 		UserId:            env.ClusterId,
 	}
 	clctrl.TelemetryEvent = telemetryEvent
-
-	telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.ClusterInstallStarted, "")
 
 	//Copy Cluster Definiion to Cluster Controller
 	clctrl.AlertsEmail = def.AdminEmail
