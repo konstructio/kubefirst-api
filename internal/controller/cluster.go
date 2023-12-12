@@ -11,6 +11,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
@@ -82,15 +83,21 @@ func (clctrl *ClusterController) CreateCluster() error {
 
 		err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
-			telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.CloudTerraformApplyFailed, err.Error())
-			msg := fmt.Sprintf("error creating %s resources with terraform %s: %s", clctrl.CloudProvider, tfEntrypoint, err)
-			log.Error(msg)
-			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
+			log.Errorf("error applying cloud terraform: %s", err)
+			log.Info("sleeping 10 seconds before retrying terraform execution once more")
+			time.Sleep(10 * time.Second)
+			err = terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.CloudTerraformApplyFailed, err.Error())
-				return err
+				msg := fmt.Sprintf("error creating %s resources with terraform %s: %s", clctrl.CloudProvider, tfEntrypoint, err)
+				log.Error(msg)
+				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
+				if err != nil {
+					telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.CloudTerraformApplyFailed, err.Error())
+					return err
+				}
+				return fmt.Errorf(msg)
 			}
-			return fmt.Errorf(msg)
 		}
 
 		log.Infof("created %s cloud resources", clctrl.CloudProvider)

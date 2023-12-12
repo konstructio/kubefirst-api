@@ -14,6 +14,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	vaultapi "github.com/hashicorp/vault/api"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
@@ -251,8 +252,14 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		err = terraformext.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Errorf("error applying vault terraform: %s", err)
-			telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.VaultTerraformApplyFailed, err.Error())
-			return err
+			log.Info("sleeping 10 seconds before retrying terraform execution once more")
+			time.Sleep(10 * time.Second)
+			err = terraformext.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
+			if err != nil {
+				log.Errorf("error applying vault terraform: %s", err)
+				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.VaultTerraformApplyFailed, err.Error())
+				return err
+			}
 		}
 
 		log.Info("vault terraform executed successfully")
