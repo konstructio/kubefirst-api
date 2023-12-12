@@ -7,8 +7,8 @@ See the LICENSE file for more details.
 package digitalocean
 
 import (
-	"time"
 	"os"
+	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"

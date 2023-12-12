@@ -78,8 +78,6 @@ func (clctrl *ClusterController) DetokenizeKMSKeyID() error {
 				return err
 			}
 
-			//Leaving this here until I know where else it is used and caching the keys for now
-
 			err = gitopsRepo.Push(&git.PushOptions{
 				RemoteName: clctrl.GitProvider,
 				Auth: &githttps.BasicAuth{

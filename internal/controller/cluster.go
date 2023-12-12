@@ -456,7 +456,7 @@ func (clctrl *ClusterController) WaitForClusterReady() error {
 			"kubernetes.io/name",
 			"CoreDNS",
 			"kube-system",
-			120,
+			300,
 		)
 		if err != nil {
 			log.Errorf("error finding CoreDNS deployment: %s", err)
@@ -468,7 +468,7 @@ func (clctrl *ClusterController) WaitForClusterReady() error {
 			"k8s-app",
 			"kube-dns",
 			"kube-system",
-			120,
+			300,
 		)
 		if err != nil {
 			log.Errorf("error finding CoreDNS deployment: %s", err)
