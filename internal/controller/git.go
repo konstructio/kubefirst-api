@@ -9,6 +9,7 @@ package controller
 import (
 	"fmt"
 	"os"
+	"time"
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
@@ -112,10 +113,16 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 
 		err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
-			msg := fmt.Sprintf("error creating %s resources with terraform %s: %s", clctrl.GitProvider, tfEntrypoint, err)
-			log.Error(msg)
-			telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.GitTerraformApplyFailed, err.Error())
-			return fmt.Errorf(msg)
+			log.Errorf("error applying git terraform: %s", err)
+			log.Info("sleeping 10 seconds before retrying terraform execution once more")
+			time.Sleep(10 * time.Second)
+			err = terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.TerraformClient, tfEntrypoint, tfEnvs)
+			if err != nil {
+				msg := fmt.Sprintf("error creating %s resources with terraform %s: %s", clctrl.GitProvider, tfEntrypoint, err)
+				log.Error(msg)
+				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.GitTerraformApplyFailed, err.Error())
+				return fmt.Errorf(msg)
+			}
 		}
 
 		log.Infof("created git projects and groups for %s.com/%s", clctrl.GitProvider, clctrl.GitAuth.Owner)

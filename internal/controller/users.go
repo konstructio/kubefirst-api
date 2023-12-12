@@ -8,6 +8,7 @@ package controller
 
 import (
 	"os"
+	"time"
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
@@ -80,8 +81,14 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		err = terraformext.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Errorf("error applying users terraform: %s", err)
-			telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.UsersTerraformApplyFailed, err.Error())
-			return err
+			log.Info("sleeping 10 seconds before retrying terraform execution once more")
+			time.Sleep(10 * time.Second)
+			err = terraformext.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
+			if err != nil {
+				log.Errorf("error applying users terraform: %s", err)
+				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.UsersTerraformApplyFailed, err.Error())
+				return err
+			}
 		}
 		log.Info("executed users terraform successfully")
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.UsersTerraformApplyCompleted, "")
