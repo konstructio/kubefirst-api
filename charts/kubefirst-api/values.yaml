@@ -11,7 +11,7 @@ image:
   hook:
     repository: public.ecr.aws/kubefirst/metrics-client
     pullPolicy: Always
-    tag: v0.2.8
+    tag: v0.3.0
 
 imagePullSecrets: []
 nameOverride: ''
