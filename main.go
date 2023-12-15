@@ -64,13 +64,15 @@ func main() {
 		log.Infof("adding default services for cluster %s", importedCluster.ClusterName)
 		services.AddDefaultServices(&importedCluster)
 
-		go func() {
-			log.Infof("adding default environments for cluster %s", importedCluster.ClusterName)
-			err := environments.CreateDefaultEnvironments(importedCluster)
-			if err != nil {
-				log.Infof("Error creating default environments %s", err.Error())
-			}
-		}()
+		if importedCluster.CloudProvider != "k3d" {
+			go func() {
+				log.Infof("adding default environments for cluster %s", importedCluster.ClusterName)
+				err := environments.CreateDefaultEnvironments(importedCluster)
+				if err != nil {
+					log.Infof("Error creating default environments %s", err.Error())
+				}
+			}()
+		}
 	}
 	defer db.Client.Client.Disconnect(db.Client.Context)
 
