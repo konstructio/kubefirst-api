@@ -1091,7 +1091,7 @@
                     "type": "string"
                 },
                 "node_count": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "node_type": {
                     "type": "string"
@@ -1235,7 +1235,7 @@
                     "$ref": "#/definitions/types.GoogleAuth"
                 },
                 "node_count": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "node_type": {
                     "type": "string"
