@@ -8,6 +8,7 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	cloudflare_api "github.com/cloudflare/cloudflare-go"
@@ -94,6 +95,35 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 			if err != nil {
 				return err
 			}
+		case "linode":
+			return errors.New("Linode DNS is not currently supported.")
+			// tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: clctrl.LinodeAuth.Token})
+
+			// oauth2Client := &http.Client{
+			// 	Transport: &oauth2.Transport{
+			// 		Source: tokenSource,
+			// 	},
+			// }
+
+			// linodeConf := linode.LinodeConfiguration{
+			// 	Client:  linodego.NewClient(oauth2Client),
+			// 	Context: context.Background(),
+			// }
+			// linodeConf.Client.SetDebug(true)
+
+			//! domain id
+			// domainId, err := linodeConf.GetDNSInfo(clctrl.DomainName)
+			// if err != nil {
+			// 	log.Info(err.Error())
+			// }
+
+			// log.Infof("domainId: %s", domainId)
+			// domainLiveness := linodeConf.TestDomainLiveness(clctrl.DomainName)
+
+			// err = clctrl.HandleDomainLiveness(domainLiveness)
+			// if err != nil {
+
+			// }
 		case "vultr":
 			vultrConf := vultr.VultrConfiguration{
 				Client:  vultr.NewVultr(cl.VultrAuth.Token),

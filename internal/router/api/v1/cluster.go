@@ -410,6 +410,36 @@ func PostCreateCluster(c *gin.Context) {
 		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
 			Message: "cluster create enqueued",
 		})
+	case "linode":
+		if useSecretForAuth {
+			err := utils.ValidateAuthenticationFields(k1AuthSecret)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: fmt.Sprintf("error checking civo auth: %s", err),
+				})
+				return
+			}
+			clusterDefinition.CivoAuth = pkgtypes.LinodeAuth{
+				Token: k1AuthSecret["linode-token"],
+			}
+		} else {
+			if clusterDefinition.CivoAuth.Token == "" {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: "missing authentication credentials in request, please check and try again",
+				})
+				return
+			}
+		}
+		go func() {
+			err = civo.CreateCivoCluster(&clusterDefinition)
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+		}()
+
+		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
+			Message: "cluster create enqueued",
+		})
 	case "vultr":
 		if useSecretForAuth {
 			err := utils.ValidateAuthenticationFields(k1AuthSecret)

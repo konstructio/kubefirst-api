@@ -32,6 +32,11 @@ type DigitaloceanAuth struct {
 	SpacesSecret string `bson:"spaces_secret" json:"spaces_secret"`
 }
 
+// LinodeAuth holds necessary auth credentials for interacting with linode
+type LinodeAuth struct {
+	Token string `bson:"token" json:"token"`
+}
+
 // VultrAuth holds necessary auth credentials for interacting with vultr
 type VultrAuth struct {
 	Token string `bson:"token" json:"token"`

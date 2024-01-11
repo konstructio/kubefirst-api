@@ -54,6 +54,7 @@ type ClusterController struct {
 	DigitaloceanAuth   pkgtypes.DigitaloceanAuth
 	VultrAuth          pkgtypes.VultrAuth
 	CloudflareAuth     pkgtypes.CloudflareAuth
+	LinodeAuth         pkgtypes.LinodeAuth
 	GitAuth            pkgtypes.GitAuth
 	VaultAuth          pkgtypes.VaultAuth
 	GoogleAuth         pkgtypes.GoogleAuth
@@ -182,6 +183,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	clctrl.AWSAuth = def.AWSAuth
 	clctrl.CivoAuth = def.CivoAuth
 	clctrl.DigitaloceanAuth = def.DigitaloceanAuth
+	clctrl.LinodeAuth = def.LinodeAuth
 	clctrl.VultrAuth = def.VultrAuth
 	clctrl.GoogleAuth = def.GoogleAuth
 	clctrl.CloudflareAuth = def.CloudflareAuth
@@ -248,6 +250,9 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	case "digitalocean":
 		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
 		clctrl.ProviderConfig.DigitaloceanToken = clctrl.DigitaloceanAuth.Token
+	case "linode":
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		clctrl.ProviderConfig.LinodeToken = clctrl.LinodeAuth.Token
 	case "vultr":
 		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
 		clctrl.ProviderConfig.VultrToken = clctrl.VultrAuth.Token
@@ -302,6 +307,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		CivoAuth:              clctrl.CivoAuth,
 		GoogleAuth:            clctrl.GoogleAuth,
 		DigitaloceanAuth:      clctrl.DigitaloceanAuth,
+		LinodeAuth:            clctrl.LinodeAuth,
 		VultrAuth:             clctrl.VultrAuth,
 		CloudflareAuth:        clctrl.CloudflareAuth,
 		NodeType:              clctrl.NodeType,

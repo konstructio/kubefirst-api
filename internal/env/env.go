@@ -7,7 +7,7 @@ import (
 )
 
 type Env struct {
-	ServerPort        string `env:"SERVER_PORT" envDefault:"8081"`
+	ServerPort        string `env:"SERVER_PORT" envDefault:"8088"`
 	K1AccessToken     string `env:"K1_ACCESS_TOKEN"`
 	MongoDBHost       string `env:"MONGODB_HOST,notEmpty"`
 	MongoDBHostType   string `env:"MONGODB_HOST_TYPE,notEmpty"`

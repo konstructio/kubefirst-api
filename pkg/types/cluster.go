@@ -39,6 +39,7 @@ type ClusterDefinition struct {
 	AWSAuth          AWSAuth          `json:"aws_auth,omitempty"`
 	CivoAuth         CivoAuth         `json:"civo_auth,omitempty"`
 	DigitaloceanAuth DigitaloceanAuth `json:"do_auth,omitempty"`
+	LinodeAuth       LinodeAuth       `json:"linode_auth,omitempty"`
 	VultrAuth        VultrAuth        `json:"vultr_auth,omitempty"`
 	CloudflareAuth   CloudflareAuth   `json:"cloudflare_auth,omitempty"`
 	GoogleAuth       GoogleAuth       `json:"google_auth,omitempty"`
@@ -70,6 +71,7 @@ type Cluster struct {
 	AWSAuth          AWSAuth          `bson:"aws_auth,omitempty" json:"aws_auth,omitempty"`
 	CivoAuth         CivoAuth         `bson:"civo_auth,omitempty" json:"civo_auth,omitempty"`
 	DigitaloceanAuth DigitaloceanAuth `bson:"do_auth,omitempty" json:"do_auth,omitempty"`
+	LinodeAuth       LinodeAuth       `bson:"linode_auth,omitempty" json:"linode_auth,omitempty"`
 	VultrAuth        VultrAuth        `bson:"vultr_auth,omitempty" json:"vultr_auth,omitempty"`
 	CloudflareAuth   CloudflareAuth   `bson:"cloudflare_auth,omitempty" json:"cloudflare_auth,omitempty"`
 	GitAuth          GitAuth          `bson:"git_auth,omitempty" json:"git_auth,omitempty"`

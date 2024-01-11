@@ -16,6 +16,7 @@ import (
 type ProviderConfig struct {
 	CivoToken                        string
 	DigitaloceanToken                string
+	LinodeToken                      string
 	GoogleAuth                       string
 	GoogleProject                    string
 	VultrToken                       string
