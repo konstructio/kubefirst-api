@@ -54,6 +54,10 @@ func SetupRouter() *gin.Engine {
 		v1.GET("/cluster/:cluster_name/export", middleware.ValidateAPIKey(), router.GetExportCluster)
 		v1.POST("/cluster/:cluster_name/reset_progress", middleware.ValidateAPIKey(), router.PostResetClusterProgress)
 		v1.POST("/cluster/:cluster_name/:cloud_provider/kubeconfig", middleware.ValidateAPIKey(), router.GetClusterKubeconfig)
+		
+		// Cluster Secret
+		v1.GET("/secret/:cluster_name/:secret", router.GetClusterSecret)
+		v1.POST("/secret/:cluster_name/:secret", router.UpdateClusterSecret)
 
 		// Gitops Catalog
 		v1.GET("/gitops-catalog/apps", middleware.ValidateAPIKey(), router.GetGitopsCatalogApps)
@@ -95,6 +99,8 @@ func SetupRouter() *gin.Engine {
 		// Event streaming
 		v1.GET("/stream", router.GetLogs)
 
+		
+		
 		// Telemetry
 		v1.POST("/telemetry/:cluster_name", middleware.ValidateAPIKey(), router.PostTelemetry)
 	}
