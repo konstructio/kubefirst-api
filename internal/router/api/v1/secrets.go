@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2021-2023, Kubefirst
+Copyright (C) 2021-2024, Kubefirst
 
 This program is licensed under MIT.
 See the LICENSE file for more details.
@@ -13,7 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/types"
-	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/kubefirst/kubefirst-api/pkg/k8s"
 )
 
 
