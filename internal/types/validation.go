@@ -55,3 +55,7 @@ type GoogleDomainValidationRequest struct {
 type GoogleDomainValidationResponse struct {
 	Validated bool `json:"validated"`
 }
+
+type ClusterSecretUpdateRequest struct {
+	ConsoleTour bool `json:"console-tour"`
+}
