@@ -73,7 +73,7 @@ func SetupRouter() *gin.Engine {
 		v1.GET("/domain/validate/aws/:domain", middleware.ValidateAPIKey(), router.GetValidateAWSDomain)
 		v1.GET("/domain/validate/civo/:domain", middleware.ValidateAPIKey(), router.GetValidateCivoDomain)
 		v1.POST("/domain/validate/cloudflare/:domain", middleware.ValidateAPIKey(), router.PostValidateCloudflareDomain)
-		// v1.GET("/domain/validate/digitalocean/:domain", middleware.ValidateAPIKey(), router.GetValidateDigitalOceanDomain)
+		v1.POST("/domain/validate/digitalocean/:domain", middleware.ValidateAPIKey(), router.PostValidateDigitalOceanDomain)
 		// v1.GET("/domain/validate/vultr/:domain", middleware.ValidateAPIKey(), router.GetValidateVultrDomain)
 		// v1.GET("/domain/validate/google/:domain", middleware.ValidateAPIKey(), router.GetValidateGoogleDomain)
 		// Regions

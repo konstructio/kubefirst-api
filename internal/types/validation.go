@@ -36,7 +36,7 @@ type CloudflareDomainValidationResponse struct {
 
 // DigitalOceanDomainValidationRequest /digitalocean/domain/validate required parameters
 type DigitalOceanDomainValidationRequest struct {
-	CloudRegion string `json:"cloud_region"`
+	Token string `json:"token"`
 }
 
 // DigitalOceanDomainValidationResponse is the response for the /digitalocean/domain/validate route
