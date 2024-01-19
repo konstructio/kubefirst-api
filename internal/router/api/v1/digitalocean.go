@@ -46,7 +46,7 @@ func PostValidateDigitalOceanDomain(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, types.CivoDomainValidationResponse{
+	c.JSON(http.StatusOK, types.DigitalOceanDomainValidationResponse{
 		Validated: validated,
 	})
 }
