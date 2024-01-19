@@ -54,7 +54,7 @@ func SetupRouter() *gin.Engine {
 		v1.GET("/cluster/:cluster_name/export", middleware.ValidateAPIKey(), router.GetExportCluster)
 		v1.POST("/cluster/:cluster_name/reset_progress", middleware.ValidateAPIKey(), router.PostResetClusterProgress)
 		v1.POST("/cluster/:cluster_name/:cloud_provider/kubeconfig", middleware.ValidateAPIKey(), router.GetClusterKubeconfig)
-		
+
 		// Cluster Secret
 		v1.GET("/secret/:cluster_name/:secret", router.GetClusterSecret)
 		v1.POST("/secret/:cluster_name/:secret", router.UpdateClusterSecret)
@@ -72,6 +72,7 @@ func SetupRouter() *gin.Engine {
 		v1.POST("/domain/:dns_provider", middleware.ValidateAPIKey(), router.PostDomains)
 		v1.GET("/domain/validate/aws/:domain", middleware.ValidateAPIKey(), router.GetValidateAWSDomain)
 		v1.GET("/domain/validate/civo/:domain", middleware.ValidateAPIKey(), router.GetValidateCivoDomain)
+		v1.POST("/domain/validate/cloudflare/:domain", middleware.ValidateAPIKey(), router.PostValidateCloudflareDomain)
 		// v1.GET("/domain/validate/digitalocean/:domain", middleware.ValidateAPIKey(), router.GetValidateDigitalOceanDomain)
 		// v1.GET("/domain/validate/vultr/:domain", middleware.ValidateAPIKey(), router.GetValidateVultrDomain)
 		// v1.GET("/domain/validate/google/:domain", middleware.ValidateAPIKey(), router.GetValidateGoogleDomain)
@@ -99,8 +100,6 @@ func SetupRouter() *gin.Engine {
 		// Event streaming
 		v1.GET("/stream", router.GetLogs)
 
-		
-		
 		// Telemetry
 		v1.POST("/telemetry/:cluster_name", middleware.ValidateAPIKey(), router.PostTelemetry)
 	}

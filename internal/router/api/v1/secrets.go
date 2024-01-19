@@ -16,7 +16,6 @@ import (
 	"github.com/kubefirst/kubefirst-api/pkg/k8s"
 )
 
-
 func GetClusterSecret(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
 	if !param {
@@ -46,7 +45,7 @@ func GetClusterSecret(c *gin.Context) {
 
 	kcfg := k8s.CreateKubeConfig(false, fmt.Sprintf("%s/kubeconfig", clusterDir))
 
-	secrets, err := k8s.ReadSecretV2(kcfg.Clientset,"kubefirst",secret)
+	secrets, err := k8s.ReadSecretV2(kcfg.Clientset, "kubefirst", secret)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -95,7 +94,7 @@ func UpdateClusterSecret(c *gin.Context) {
 
 	kcfg := k8s.CreateKubeConfig(false, fmt.Sprintf("%s/kubeconfig", clusterDir))
 
-	err = k8s.UpdateSecretV2(kcfg.Clientset,"kubefirst",secret, clusterSecretUpdates)
+	err = k8s.UpdateSecretV2(kcfg.Clientset, "kubefirst", secret, clusterSecretUpdates)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -107,4 +106,3 @@ func UpdateClusterSecret(c *gin.Context) {
 		Message: "cluster secret updated",
 	})
 }
-

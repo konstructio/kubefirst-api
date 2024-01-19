@@ -26,6 +26,14 @@ type CivoDomainValidationResponse struct {
 	Validated bool `json:"validated"`
 }
 
+type CloudflareDomainValidationRequest struct {
+	Token string `json:"token"`
+}
+
+type CloudflareDomainValidationResponse struct {
+	Validated bool `json:"validated"`
+}
+
 // DigitalOceanDomainValidationRequest /digitalocean/domain/validate required parameters
 type DigitalOceanDomainValidationRequest struct {
 	CloudRegion string `json:"cloud_region"`
