@@ -57,13 +57,13 @@ func UpdateSecretV2(clientset *kubernetes.Clientset, namespace string, secretNam
 
 	// create map to iterate over values to change
 	secretsToUpdateMap := make(map[string]string)
-	err = json.Unmarshal(secretsToUpdate,&secretsToUpdateMap)
+	err = json.Unmarshal(secretsToUpdate, &secretsToUpdateMap)
 	if err != nil {
 		return err
 	}
 
 	currentSecret, err := clientset.CoreV1().Secrets(namespace).Get(context.Background(), secretName, metav1.GetOptions{})
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
