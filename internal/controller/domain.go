@@ -13,6 +13,7 @@ import (
 	cloudflare_api "github.com/cloudflare/cloudflare-go"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/civo"
+	"github.com/kubefirst/runtime/pkg/cloudflare"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/dns"
 	"github.com/kubefirst/runtime/pkg/vultr"
@@ -59,22 +60,22 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 			}
 		case "cloudflare":
 
-			_, err := cloudflare_api.NewWithAPIToken(clctrl.CloudflareAuth.APIToken)
+			client, err := cloudflare_api.NewWithAPIToken(clctrl.CloudflareAuth.APIToken)
 			if err != nil {
 				return err
 			}
 
-			// cloudflareConf := cloudflare.CloudflareConfiguration{
-			// 	Client:  client,
-			// 	Context: context.Background(),
-			// }
+			cloudflareConf := cloudflare.CloudflareConfiguration{
+				Client:  client,
+				Context: context.Background(),
+			}
 
-			// domainLiveness := cloudflareConf.TestDomainLiveness(clctrl.DomainName)
+			domainLiveness := cloudflareConf.TestDomainLiveness(clctrl.DomainName)
 
-			// err = clctrl.HandleDomainLiveness(domainLiveness)
-			// if err != nil {
-			// 	return err
-			// }
+			err = clctrl.HandleDomainLiveness(domainLiveness)
+			if err != nil {
+				return err
+			}
 		case "digitalocean":
 			digitaloceanConf := digitalocean.DigitaloceanConfiguration{
 				Client:  digitalocean.NewDigitalocean(cl.DigitaloceanAuth.Token),
