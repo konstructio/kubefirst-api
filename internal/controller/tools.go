@@ -7,15 +7,13 @@ See the LICENSE file for more details.
 package controller
 
 import (
-	"os"
-
 	awsinternal "github.com/kubefirst/kubefirst-api/pkg/aws"
 	google "github.com/kubefirst/kubefirst-api/pkg/google"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/vultr"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 )
 
 // DownloadTools
@@ -24,12 +22,12 @@ import (
 func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 	// Logging handler
 	// Logs to stdout to maintain compatibility with event streaming
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
-	log.SetOutput(os.Stdout)
+	// log.SetFormatter(&log.TextFormatter{
+	// 	FullTimestamp:   true,
+	// 	TimestampFormat: "",
+	// })
+	// log.SetReportCaller(false)
+	// log.SetOutput(os.Stdout)
 
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
@@ -37,7 +35,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 	}
 
 	if !cl.InstallToolsCheck {
-		log.Info("installing kubefirst dependencies")
+		log.Info().Msg("installing kubefirst dependencies")
 
 		switch cl.CloudProvider {
 		case "aws":
@@ -47,7 +45,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 				providerConfigs.TerraformClientVersion,
 			)
 			if err != nil {
-				log.Errorf("error downloading dependencies: %s", err)
+				log.Error().Msgf("error downloading dependencies: %s", err)
 				return err
 			}
 		case "civo":
@@ -60,7 +58,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 				toolsDir,
 			)
 			if err != nil {
-				log.Errorf("error downloading dependencies: %s", err)
+				log.Error().Msgf("error downloading dependencies: %s", err)
 				return err
 			}
 		case "google":
@@ -73,7 +71,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 				toolsDir,
 			)
 			if err != nil {
-				log.Errorf("error downloading dependencies: %s", err)
+				log.Error().Msgf("error downloading dependencies: %s", err)
 				return err
 			}
 		case "digitalocean":
@@ -86,7 +84,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 				toolsDir,
 			)
 			if err != nil {
-				log.Errorf("error downloading dependencies: %s", err)
+				log.Error().Msgf("error downloading dependencies: %s", err)
 				return err
 			}
 		case "vultr":
@@ -99,11 +97,11 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 				toolsDir,
 			)
 			if err != nil {
-				log.Errorf("error downloading dependencies: %s", err)
+				log.Error().Msgf("error downloading dependencies: %s", err)
 				return err
 			}
 		}
-		log.Info("dependency downloads complete")
+		log.Info().Msg("dependency downloads complete")
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "install_tools_check", true)
 		if err != nil {

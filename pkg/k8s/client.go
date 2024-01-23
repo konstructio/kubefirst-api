@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 
 	"github.com/kubefirst/runtime/pkg/helpers"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -31,12 +31,12 @@ func CreateKubeConfig(inCluster bool, kubeConfigPath string) *KubernetesClient {
 	if inCluster {
 		config, err := rest.InClusterConfig()
 		if err != nil {
-			log.Errorf("error creating kubernetes config: %s", err)
+			log.Error().Msgf("error creating kubernetes config: %s", err)
 		}
 
 		clientset, err := kubernetes.NewForConfig(config)
 		if err != nil {
-			log.Errorf("error creating kubernetes client: %s", err)
+			log.Error().Msgf("error creating kubernetes client: %s", err)
 		}
 
 		return &KubernetesClient{
@@ -52,22 +52,22 @@ func CreateKubeConfig(inCluster bool, kubeConfigPath string) *KubernetesClient {
 	// Check to make sure kubeconfig actually exists
 	// If it doesn't, go fetch it
 	if helpers.FileExists(fs, kubeconfig) {
-		log.Debug("kubeconfig exists, moving on.")
+		log.Debug().Msg("kubeconfig exists, moving on.")
 	}
 
 	// Show what path was set for kubeconfig
-	log.Debugf("setting kubeconfig to: %s", kubeconfig)
+	log.Debug().Msgf("setting kubeconfig to: %s", kubeconfig)
 
 	// Build configuration instance from the provided config file
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
-		log.Errorf("unable to locate kubeconfig file - checked path: %s", kubeconfig)
+		log.Error().Msgf("unable to locate kubeconfig file - checked path: %s", kubeconfig)
 	}
 
 	// Create clientset, which is used to run operations against the API
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		log.Errorf("error creating kubernetes client: %s", err)
+		log.Error().Msgf("error creating kubernetes client: %s", err)
 	}
 
 	return &KubernetesClient{

@@ -19,7 +19,7 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 )
 
 // @title Kubefirst API
@@ -35,14 +35,14 @@ func main() {
 	env, err := env.GetEnv(false)
 
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatal().Msg(err.Error())
 	}
 
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
+	// log.SetFormatter(&log.TextFormatter{
+	// 	FullTimestamp:   true,
+	// 	TimestampFormat: "",
+	// })
+	// log.SetReportCaller(false)
 
 	// Verify database connectivity
 	err = db.Client.EstablishMongoConnection(db.EstablishConnectArgs{
@@ -50,26 +50,28 @@ func main() {
 		Silent: false,
 	})
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Msg(err.Error())
+
 	}
 
-	log.Infof("checking for cluster import secret for management cluster")
+	log.Info().Msg("checking for cluster import secret for management cluster")
 	// Import if needed
 	importedCluster, err := db.Client.ImportClusterIfEmpty(false)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Msg(err.Error())
+
 	}
 
 	if importedCluster.ClusterName != "" {
-		log.Infof("adding default services for cluster %s", importedCluster.ClusterName)
+		log.Info().Msgf("adding default services for cluster %s", importedCluster.ClusterName)
 		services.AddDefaultServices(&importedCluster)
 
 		if importedCluster.CloudProvider != "k3d" {
 			go func() {
-				log.Infof("adding default environments for cluster %s", importedCluster.ClusterName)
+				log.Info().Msgf("adding default environments for cluster %s", importedCluster.ClusterName)
 				err := environments.CreateDefaultEnvironments(importedCluster)
 				if err != nil {
-					log.Infof("Error creating default environments %s", err.Error())
+					log.Info().Msgf("Error creating default environments %s", err.Error())
 				}
 			}()
 		}
@@ -113,6 +115,6 @@ func main() {
 
 	err = r.Run(fmt.Sprintf(":%v", env.ServerPort))
 	if err != nil {
-		log.Fatalf("Error starting API: %s", err)
+		log.Fatal().Msgf("Error starting API: %s", err)
 	}
 }

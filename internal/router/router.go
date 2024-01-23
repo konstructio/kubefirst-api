@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/middleware"
 	router "github.com/kubefirst/kubefirst-api/internal/router/api/v1"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -21,7 +21,7 @@ func SetupRouter() *gin.Engine {
 	// Release mode in production
 	// Omit when developing for debug
 	gin.SetMode(gin.ReleaseMode)
-	log.Info("Starting kubefirst API...")
+	log.Info().Msg("Starting kubefirst API...")
 	r := gin.New()
 
 	// CORS

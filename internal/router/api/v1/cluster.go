@@ -31,7 +31,7 @@ import (
 	digioceanruntime "github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	vultrruntime "github.com/kubefirst/runtime/pkg/vultr"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 )
 
 // DeleteCluster godoc
@@ -86,13 +86,13 @@ func DeleteCluster(c *gin.Context) {
 	if rec.LastCondition != "" {
 		err = db.Client.UpdateCluster(rec.ClusterName, "last_condition", "")
 		if err != nil {
-			log.Warnf("error updating cluster last_condition field: %s", err)
+			log.Warn().Msgf("error updating cluster last_condition field: %s", err)
 		}
 	}
 	if rec.Status == constants.ClusterStatusError {
 		err = db.Client.UpdateCluster(rec.ClusterName, "status", constants.ClusterStatusDeleting)
 		if err != nil {
-			log.Warnf("error updating cluster status field: %s", err)
+			log.Warn().Msgf("error updating cluster status field: %s", err)
 		}
 	}
 
@@ -101,7 +101,7 @@ func DeleteCluster(c *gin.Context) {
 		go func() {
 			err := aws.DeleteAWSCluster(&rec, telemetryEvent)
 			if err != nil {
-				log.Errorf(err.Error())
+				log.Error().Msgf(err.Error())
 			}
 		}()
 
@@ -112,7 +112,7 @@ func DeleteCluster(c *gin.Context) {
 		go func() {
 			err := civo.DeleteCivoCluster(&rec, telemetryEvent)
 			if err != nil {
-				log.Errorf(err.Error())
+				log.Error().Msgf(err.Error())
 			}
 		}()
 
@@ -123,7 +123,7 @@ func DeleteCluster(c *gin.Context) {
 		go func() {
 			err := digitalocean.DeleteDigitaloceanCluster(&rec, telemetryEvent)
 			if err != nil {
-				log.Errorf(err.Error())
+				log.Error().Msgf(err.Error())
 			}
 		}()
 
@@ -134,7 +134,7 @@ func DeleteCluster(c *gin.Context) {
 		go func() {
 			err := vultr.DeleteVultrCluster(&rec, telemetryEvent)
 			if err != nil {
-				log.Errorf(err.Error())
+				log.Error().Msgf(err.Error())
 			}
 		}()
 
@@ -145,7 +145,7 @@ func DeleteCluster(c *gin.Context) {
 		go func() {
 			err := google.DeleteGoogleCluster(&rec, telemetryEvent)
 			if err != nil {
-				log.Errorf(err.Error())
+				log.Error().Msgf(err.Error())
 			}
 		}()
 
@@ -250,7 +250,7 @@ func PostCreateCluster(c *gin.Context) {
 	// Retrieve cluster info
 	cluster, err := db.Client.GetCluster(clusterName)
 	if err != nil {
-		log.Infof("cluster %s does not exist, continuing", clusterName)
+		log.Info().Msgf("cluster %s does not exist, continuing", clusterName)
 	} else {
 		if cluster.InProgress {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -261,13 +261,13 @@ func PostCreateCluster(c *gin.Context) {
 		if cluster.LastCondition != "" {
 			err = db.Client.UpdateCluster(cluster.ClusterName, "last_condition", "")
 			if err != nil {
-				log.Warnf("error updating cluster last_condition field: %s", err)
+				log.Warn().Msgf("error updating cluster last_condition field: %s", err)
 			}
 		}
 		if cluster.Status == constants.ClusterStatusError {
 			err = db.Client.UpdateCluster(cluster.ClusterName, "status", constants.ClusterStatusProvisioning)
 			if err != nil {
-				log.Warnf("error updating cluster status field: %s", err)
+				log.Warn().Msgf("error updating cluster status field: %s", err)
 			}
 		}
 	}
@@ -298,9 +298,9 @@ func PostCreateCluster(c *gin.Context) {
 		kcfg := k8s.CreateKubeConfig(inCluster, "")
 		k1AuthSecret, err := k8s.ReadSecretV2(kcfg.Clientset, constants.KubefirstNamespace, constants.KubefirstAuthSecretName)
 		if err != nil {
-			log.Warnf("authentication secret does not exist, continuing: %s", err)
+			log.Warn().Msgf("authentication secret does not exist, continuing: %s", err)
 		} else {
-			log.Info("authentication secret exists, checking contents")
+			log.Info().Msg("authentication secret exists, checking contents")
 			if k1AuthSecret == nil {
 				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 					Message: "authentication secret found but contains no data, please check and try again",
@@ -339,7 +339,7 @@ func PostCreateCluster(c *gin.Context) {
 		go func() {
 			err = aws.CreateAWSCluster(&clusterDefinition)
 			if err != nil {
-				log.Errorf(err.Error())
+				log.Error().Msgf(err.Error())
 			}
 		}()
 
@@ -369,7 +369,7 @@ func PostCreateCluster(c *gin.Context) {
 		go func() {
 			err = civo.CreateCivoCluster(&clusterDefinition)
 			if err != nil {
-				log.Errorf(err.Error())
+				log.Error().Msgf(err.Error())
 			}
 		}()
 
@@ -403,7 +403,7 @@ func PostCreateCluster(c *gin.Context) {
 		go func() {
 			err = digitalocean.CreateDigitaloceanCluster(&clusterDefinition)
 			if err != nil {
-				log.Errorf(err.Error())
+				log.Error().Msgf(err.Error())
 			}
 		}()
 
@@ -433,7 +433,7 @@ func PostCreateCluster(c *gin.Context) {
 		go func() {
 			err = vultr.CreateVultrCluster(&clusterDefinition)
 			if err != nil {
-				log.Errorf(err.Error())
+				log.Error().Msgf(err.Error())
 			}
 		}()
 
@@ -464,7 +464,7 @@ func PostCreateCluster(c *gin.Context) {
 		go func() {
 			err = google.CreateGoogleCluster(&clusterDefinition)
 			if err != nil {
-				log.Errorf(err.Error())
+				log.Error().Msgf(err.Error())
 			}
 		}()
 
@@ -627,15 +627,15 @@ func PostImportCluster(c *gin.Context) {
 	}
 
 	// Create default service entries
-	log.Info("Adding default services")
+	log.Info().Msg("Adding default services")
 	err = services.AddDefaultServices(&cluster)
 	if err != nil {
-		log.Errorf("error adding default service entries for cluster %s: %s", cluster.ClusterName, err)
+		log.Error().Msgf("error adding default service entries for cluster %s: %s", cluster.ClusterName, err)
 	}
 
 	err = gitShim.PrepareMgmtCluster(cluster)
 	if err != nil {
-		log.Fatalf("error cloning repository: %s", err)
+		log.Fatal().Msgf("error cloning repository: %s", err)
 	}
 
 	if err != nil {

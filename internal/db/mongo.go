@@ -15,7 +15,7 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/env"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/k8s"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -39,7 +39,7 @@ func Connect() *MongoDBClient {
 	env, getEnvError := env.GetEnv(constants.SilenceGetEnv)
 
 	if getEnvError != nil {
-		log.Fatal(getEnvError.Error())
+		log.Fatal().Msg(getEnvError.Error())
 	}
 
 	var connString string
@@ -67,7 +67,7 @@ func Connect() *MongoDBClient {
 
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
-		log.Fatalf("could not create mongodb client: %s", err)
+		log.Fatal().Msgf("could not create mongodb client: %s", err)
 	}
 
 	cl := MongoDBClient{
@@ -86,12 +86,12 @@ func Connect() *MongoDBClient {
 func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
 	err := mdbcl.Client.Database("admin").RunCommand(mdbcl.Context, bson.D{{Key: "ping", Value: 1}}).Err()
 	if err != nil {
-		log.Fatalf("error connecting to mongodb: %s", err)
+		log.Fatal().Msgf("error connecting to mongodb: %s", err)
 	}
 	if !silent {
 		env, _ := env.GetEnv(constants.SilenceGetEnv)
 
-		log.Infof("connected to mongodb host %s", env.MongoDBHost)
+		log.Info().Msgf("connected to mongodb host %s", env.MongoDBHost)
 	}
 
 	return nil
@@ -101,11 +101,14 @@ func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
 func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster, error) {
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
+	// ToDo: Verify Logs
+	// log.SetFormatter(&log.TextFormatter{
+	// 	FullTimestamp:   true,
+	// 	TimestampFormat: "",
+	// })
+	// log.SetReportCaller(false)
+	// log.SetOutput(os.Stdout)
+	// log.Logger.Output(os.Stdout)
 
 	// find the secret in mgmt cluster's kubefirst namespace and read import payload and clustername
 	var kcfg *k8s.KubernetesClient
@@ -116,13 +119,13 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster,
 	}
 
 	if isClusterZero {
-		log.Info("IS_CLUSTER_ZERO is set to true, skipping import cluster logic.")
+		log.Info().Msg("IS_CLUSTER_ZERO is set to true, skipping import cluster logic.")
 		return pkgtypes.Cluster{}, nil
 	}
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatalf("error getting home path: %s", err)
+		log.Fatal().Msgf("error getting home path: %s", err)
 	}
 	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, "")
 
@@ -133,15 +136,15 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster,
 
 	kcfg = k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
 
-	log.Infof("reading secret mongo-state to determine if import is needed")
+	log.Info().Msg("reading secret mongo-state to determine if import is needed")
 	secData, err := k8s.ReadSecretV2(kcfg.Clientset, "kubefirst", "mongodb-state")
 	if err != nil {
-		log.Infof("error reading secret mongodb-state. %s", err)
+		log.Info().Msgf("error reading secret mongodb-state. %s", err)
 		return pkgtypes.Cluster{}, err
 	}
 	clusterName := secData["cluster-name"]
 	importPayload := secData["cluster-0"]
-	log.Infof("import cluster secret discovered for cluster %s", clusterName)
+	log.Info().Msgf("import cluster secret discovered for cluster %s", clusterName)
 
 	// if you find a record bail
 	// otherwise read the payload, import to db, bail
@@ -153,12 +156,12 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster,
 	err = mdbcl.ClustersCollection.FindOne(mdbcl.Context, filter).Decode(&clusterFromSecret)
 	if err != nil {
 		// This error means your query did not match any documents.
-		log.Infof("did not find preexisting record for cluster %s. importing record.", clusterName)
+		log.Info().Stack().Msgf("did not find preexisting record for cluster %s. importing record.", clusterName)
 		// clusterFromSecret := pkgtypes.Cluster{}
 		unmarshalErr := bson.UnmarshalExtJSON([]byte(importPayload), true, &clusterFromSecret)
 		if unmarshalErr != nil {
-			log.Info("error encountered unmarshaling secret data")
-			log.Error(unmarshalErr)
+			log.Info().Msg("error encountered unmarshaling secret data")
+			log.Error().Msg(unmarshalErr.Error())
 		}
 		if err == mongo.ErrNoDocuments {
 			// Create if entry does not exist
@@ -167,14 +170,14 @@ func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster,
 				return pkgtypes.Cluster{}, fmt.Errorf("error inserting cluster %v: %s", clusterFromSecret, err)
 			}
 			// log clusterFromSecret
-			log.Infof("inserted cluster record to db. adding default services. %s", clusterFromSecret.ClusterName)
+			log.Info().Msgf("inserted cluster record to db. adding default services. %s", clusterFromSecret.ClusterName)
 
 			return clusterFromSecret, nil
 		} else {
 			return pkgtypes.Cluster{}, fmt.Errorf("error inserting record: %s", err)
 		}
 	} else {
-		log.Infof("cluster record for %s already exists - skipping", clusterName)
+		log.Info().Msgf("cluster record for %s already exists - skipping", clusterName)
 	}
 
 	return pkgtypes.Cluster{}, nil
@@ -200,7 +203,7 @@ func (mdbcl *MongoDBClient) EstablishMongoConnection(args EstablishConnectArgs) 
 		}
 
 		if !args.Silent {
-			log.Infof("connected to mongodb host %s", env.MongoDBHost)
+			log.Info().Msgf("connected to mongodb host %s", env.MongoDBHost)
 		}
 
 		return nil

@@ -17,7 +17,7 @@ import (
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/ssl"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 )
 
 // CreateDigitaloceanCluster
@@ -100,10 +100,10 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 	}
 
 	//* check for ssl restore
-	log.Info("checking for tls secrets to restore")
+	log.Info().Msg("checking for tls secrets to restore")
 	secretsFilesToRestore, err := os.ReadDir(ctrl.ProviderConfig.SSLBackupDir + "/secrets")
 	if err != nil {
-		log.Infof("%s", err)
+		log.Info().Msg(err.Error())
 	}
 	if len(secretsFilesToRestore) != 0 {
 		// todo would like these but requires CRD's and is not currently supported
@@ -111,10 +111,10 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 		// https://raw.githubusercontent.com/cert-manager/cert-manager/v1.11.0/deploy/crds/crd-clusterissuers.yaml
 		// https://raw.githubusercontent.com/cert-manager/cert-manager/v1.11.0/deploy/crds/crd-certificates.yaml
 		// add certificates, and clusterissuers
-		log.Infof("found %d tls secrets to restore", len(secretsFilesToRestore))
+		log.Info().Msgf("found %d tls secrets to restore", len(secretsFilesToRestore))
 		ssl.Restore(ctrl.ProviderConfig.SSLBackupDir, ctrl.DomainName, ctrl.ProviderConfig.Kubeconfig)
 	} else {
-		log.Info("no files found in secrets directory, continuing")
+		log.Info().Msg("no files found in secrets directory, continuing")
 	}
 
 	err = ctrl.InstallArgoCD()
@@ -186,11 +186,11 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	log.Info("waiting for applications to create, looking up crossplane in 5 minutes")
+	log.Info().Msg("waiting for applications to create, looking up crossplane in 5 minutes")
 	time.Sleep(time.Minute * 5)
 
 	// Wait for last sync wave app transition to Running
-	log.Info("waiting for final sync wave Deployment to transition to Running")
+	log.Info().Msg("waiting for final sync wave Deployment to transition to Running")
 	crossplaneDeployment, err := k8s.ReturnDeploymentObject(
 		kcfg.Clientset,
 		"app.kubernetes.io/instance",
@@ -199,14 +199,14 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 		3600,
 	)
 	if err != nil {
-		log.Errorf("Error finding crossplane Deployment: %s", err)
+		log.Error().Msgf("Error finding crossplane Deployment: %s", err)
 		ctrl.HandleError(err.Error())
 		return err
 	}
-	log.Infof("waiting on dns, tls certificates from letsencrypt and remaining sync waves.\n this may take up to 60 minutes but regularly completes in under 20 minutes")
+	log.Info().Msg("waiting on dns, tls certificates from letsencrypt and remaining sync waves.\n this may take up to 60 minutes but regularly completes in under 20 minutes")
 	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, crossplaneDeployment, 3600)
 	if err != nil {
-		log.Errorf("Error waiting for all Apps to sync ready state: %s", err)
+		log.Error().Msgf("Error waiting for all Apps to sync ready state: %s", err)
 
 		ctrl.HandleError(err.Error())
 		return err
@@ -215,7 +215,7 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 	//* export and import cluster
 	err = ctrl.ExportClusterRecord()
 	if err != nil {
-		log.Errorf("Error exporting cluster record: %s", err)
+		log.Error().Msgf("Error exporting cluster record: %s", err)
 		return err
 	} else {
 		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "status", constants.ClusterStatusProvisioned)
@@ -228,17 +228,17 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 			return err
 		}
 
-		log.Info("cluster creation complete")
+		log.Info().Msg("cluster creation complete")
 
 		// Create default service entries
 		cl, _ := db.Client.GetCluster(ctrl.ClusterName)
 		err = services.AddDefaultServices(&cl)
 		if err != nil {
-			log.Errorf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
+			log.Error().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
 		}
 	}
 
-	log.Info("waiting for kubefirst-api Deployment to transition to Running")
+	log.Info().Msg("waiting for kubefirst-api Deployment to transition to Running")
 	kubefirstAPI, err := k8s.ReturnDeploymentObject(
 		kcfg.Clientset,
 		"app.kubernetes.io/name",
@@ -247,19 +247,19 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 		1200,
 	)
 	if err != nil {
-		log.Errorf("Error finding kubefirst api Deployment: %s", err)
+		log.Error().Msgf("Error finding kubefirst api Deployment: %s", err)
 		ctrl.HandleError(err.Error())
 		return err
 	}
 	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, kubefirstAPI, 300)
 	if err != nil {
-		log.Errorf("Error waiting for kubefirst-api to transition to Running: %s", err)
+		log.Error().Msgf("Error waiting for kubefirst-api to transition to Running: %s", err)
 
 		ctrl.HandleError(err.Error())
 		return err
 	}
 
-	log.Info("cluster creation complete")
+	log.Info().Msg("cluster creation complete")
 
 	return nil
 }

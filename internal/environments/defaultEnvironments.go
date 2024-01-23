@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -21,7 +20,7 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/kubefirst/kubefirst-api/pkg/types"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -38,12 +37,15 @@ func CreateDefaultEnvironments(mgmtCluster types.Cluster) error {
 
 	// Logging handler
 	// Logs to stdout to maintain compatibility with event streaming
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
-	log.SetOutput(os.Stdout)
+
+	// ToDo: Verify Logs
+	// log.SetFormatter(&log.TextFormatter{
+	// 	FullTimestamp:   true,
+	// 	TimestampFormat: "",
+	// })
+	// log.SetReportCaller(false)
+	// log.SetOutput(os.Stdout)
+	// log.Logger.Output(os.Stdout)
 
 	defaultClusterNames := []string{"development", "staging", "production"}
 
@@ -86,7 +88,7 @@ func CreateDefaultEnvironments(mgmtCluster types.Cluster) error {
 		var err error
 		vcluster.Environment, err = NewEnvironment(vcluster.Environment)
 		if err != nil {
-			log.Errorf("error creating default environment in db for env %s", err)
+			log.Error().Msgf("error creating default environment in db for env %s", err)
 		}
 		defaultClusters = append(defaultClusters, vcluster)
 	}
@@ -108,7 +110,7 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 
 	for i, cluster := range goPayload.Clusters {
 
-		log.Infof("creating cluster %s for %s", strconv.Itoa(i), cluster.ClusterName)
+		log.Info().Msgf("creating cluster %s for %s", strconv.Itoa(i), cluster.ClusterName)
 		payload, err := json.Marshal(cluster)
 		if err != nil {
 			return err
@@ -117,7 +119,7 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 		req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/v1/cluster/%s", env.EnterpriseApiUrl, env.ClusterId), bytes.NewReader(payload))
 
 		if err != nil {
-			log.Errorf("error creating http request %s", err)
+			log.Error().Msgf("error creating http request %s", err)
 			return err
 		}
 		req.Header.Add("Content-Type", "application/json")
@@ -127,7 +129,7 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 		timer := 0
 		for err != nil {
 			if timer > 12 {
-				log.Errorf("error in http call to api ee: api url (%s) did not come up within 2 minutes %s", req.URL, err.Error())
+				log.Error().Msgf("error in http call to api ee: api url (%s) did not come up within 2 minutes %s", req.URL, err.Error())
 			} else {
 				res, err = httpClient.Do(req)
 			}
@@ -136,7 +138,7 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 		}
 
 		if res.StatusCode != http.StatusAccepted {
-			log.Errorf("unable to create default workload clusters and default environments %s: \n request: %s", res.Status, res.Request.URL)
+			log.Error().Msgf("unable to create default workload clusters and default environments %s: \n request: %s", res.Status, res.Request.URL)
 			return err
 		}
 
@@ -145,7 +147,7 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 			return err
 		}
 
-		log.Infof("cluster %s created. result: %s", cluster.ClusterName, string(body))
+		log.Info().Msgf("cluster %s created. result: %s", cluster.ClusterName, string(body))
 		time.Sleep(20 * time.Second)
 
 	}

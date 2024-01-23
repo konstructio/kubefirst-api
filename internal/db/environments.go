@@ -5,7 +5,7 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -77,7 +77,7 @@ func (mdbcl *MongoDBClient) InsertEnvironment(env pkgtypes.Environment) (pkgtype
 				return pkgtypes.Environment{}, fmt.Errorf("error inserting environment %v: %s", env.Name, err)
 			}
 
-			log.Info(insert)
+			log.Info().Msgf("%s", insert)
 		}
 	} else {
 		return pkgtypes.Environment{}, fmt.Errorf("environment %v already exists", env.Name)
@@ -104,7 +104,7 @@ func (mdbcl *MongoDBClient) DeleteEnvironment(envId string) error {
 		return fmt.Errorf("error deleting environment with provided id %v: %s", envId, err)
 	}
 
-	log.Info("environment deleted")
+	log.Info().Msg("environment deleted")
 
 	return nil
 }

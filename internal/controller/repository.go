@@ -8,7 +8,6 @@ package controller
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/go-git/go-git/v5"
@@ -20,19 +19,19 @@ import (
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/vultr"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 )
 
 // RepositoryPrep
 func (clctrl *ClusterController) RepositoryPrep() error {
 	// Logging handler
 	// Logs to stdout to maintain compatibility with event streaming
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
-	log.SetOutput(os.Stdout)
+	// log.SetFormatter(&log.TextFormatter{
+	// 	FullTimestamp:   true,
+	// 	TimestampFormat: "",
+	// })
+	// log.SetReportCaller(false)
+	// log.SetOutput(os.Stdout)
 
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
@@ -47,7 +46,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 	//TODO Implement an interface so we can call GetDomainApexContent on the clustercotroller
 
 	if !cl.GitopsReadyCheck {
-		log.Info("initializing the gitops repository - this may take several minutes")
+		log.Info().Msg("initializing the gitops repository - this may take several minutes")
 
 		switch clctrl.CloudProvider {
 		case "aws":
@@ -167,7 +166,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 			return err
 		}
 
-		log.Info("gitops repository initialized")
+		log.Info().Msg("gitops repository initialized")
 	}
 
 	return nil
@@ -177,12 +176,12 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 func (clctrl *ClusterController) RepositoryPush() error {
 	// Logging handler
 	// Logs to stdout to maintain compatibility with event streaming
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
-	log.SetOutput(os.Stdout)
+	// log.SetFormatter(&log.TextFormatter{
+	// 	FullTimestamp:   true,
+	// 	TimestampFormat: "",
+	// })
+	// log.SetReportCaller(false)
+	// log.SetOutput(os.Stdout)
 
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
@@ -197,12 +196,12 @@ func (clctrl *ClusterController) RepositoryPush() error {
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.GitopsRepoPushStarted, "")
 		gitopsRepo, err := git.PlainOpen(gitopsDir)
 		if err != nil {
-			log.Infof("error opening repo at: %s", gitopsDir)
+			log.Info().Msgf("error opening repo at: %s", gitopsDir)
 		}
 
 		metaphorRepo, err := git.PlainOpen(metaphorDir)
 		if err != nil {
-			log.Infof("error opening repo at: %s", metaphorDir)
+			log.Info().Msgf("error opening repo at: %s", metaphorDir)
 		}
 
 		// For GitLab, we currently need to add an ssh key to the authenticating user
@@ -214,7 +213,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 
 			keys, err := gitlabClient.GetUserSSHKeys()
 			if err != nil {
-				log.Errorf("unable to check for ssh keys in gitlab: %s", err.Error())
+				log.Error().Msgf("unable to check for ssh keys in gitlab: %s", err.Error())
 			}
 
 			var keyName = "kbot-ssh-key"
@@ -222,18 +221,18 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			for _, key := range keys {
 				if key.Title == keyName {
 					if strings.Contains(key.Key, strings.TrimSuffix(clctrl.GitAuth.PublicKey, "\n")) {
-						log.Infof("ssh key %s already exists and key is up to date, continuing", keyName)
+						log.Info().Msgf("ssh key %s already exists and key is up to date, continuing", keyName)
 						keyFound = true
 					} else {
-						log.Errorf("ssh key %s already exists and key data has drifted - please remove before continuing", keyName)
+						log.Error().Msgf("ssh key %s already exists and key data has drifted - please remove before continuing", keyName)
 					}
 				}
 			}
 			if !keyFound {
-				log.Infof("creating ssh key %s...", keyName)
+				log.Info().Msgf("creating ssh key %s...", keyName)
 				err := gitlabClient.AddUserSSHKey(keyName, clctrl.GitAuth.PublicKey)
 				if err != nil {
-					log.Errorf("error adding ssh key %s: %s", keyName, err.Error())
+					log.Error().Msgf("error adding ssh key %s: %s", keyName, err.Error())
 				}
 			}
 		}
@@ -270,7 +269,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			return fmt.Errorf(msg)
 		}
 
-		log.Infof("successfully pushed gitops and metaphor repositories to git@%s/%s", clctrl.GitHost, clctrl.GitAuth.Owner)
+		log.Info().Msgf("successfully pushed gitops and metaphor repositories to git@%s/%s", clctrl.GitHost, clctrl.GitAuth.Owner)
 		// todo delete the local gitops repo and re-clone it
 		// todo that way we can stop worrying about which origin we're going to push to
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.GitopsRepoPushCompleted, "")

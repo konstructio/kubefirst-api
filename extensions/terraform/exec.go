@@ -12,7 +12,7 @@ import (
 	"os/exec"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 )
 
 // ExecShellWithVars Exec shell actions supporting:
@@ -21,12 +21,14 @@ import (
 func ExecShellWithVars(osvars map[string]string, command string, args ...string) error {
 	// Logging handler
 	// Logs to stdout to maintain compatibility with event streaming
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
-	log.SetOutput(os.Stdout)
+	// ToDo: Verify Terraform Logs
+	// log.SetFormatter(&log.TextFormatter{
+	// 	FullTimestamp:   true,
+	// 	TimestampFormat: "",
+	// })
+	// log.SetReportCaller(false)
+	// log.SetOutput(os.Stdout)
+	// log.Logger.Output(os.Stdout)
 
 	for k, v := range osvars {
 		os.Setenv(k, v)

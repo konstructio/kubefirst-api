@@ -11,7 +11,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -28,7 +27,7 @@ import (
 	"github.com/kubefirst/runtime/pkg/argocd"
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 )
 
 // DeleteGoogleCluster
@@ -36,12 +35,12 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 
 	// Logging handler
 	// Logs to stdout to maintain compatibility with event streaming
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
-	log.SetOutput(os.Stdout)
+	// log.SetFormatter(&log.TextFormatter{
+	// 	FullTimestamp:   true,
+	// 	TimestampFormat: "",
+	// })
+	// log.SetReportCaller(false)
+	// log.SetOutput(os.Stdout)
 
 	telemetry.SendEvent(telemetryEvent, telemetry.ClusterDeleteStarted, "")
 
@@ -56,7 +55,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 	switch cl.GitProvider {
 	case "github":
 		if cl.GitTerraformApplyCheck {
-			log.Info("destroying github resources with terraform")
+			log.Info().Msg("destroying github resources with terraform")
 
 			tfEntrypoint := config.GitopsDir + "/terraform/github"
 			tfEnvs := map[string]string{}
@@ -64,11 +63,11 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 			tfEnvs = googleext.GetGithubTerraformEnvs(tfEnvs, cl)
 			err := terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
-				log.Errorf("error executing terraform destroy %s", tfEntrypoint)
+				log.Error().Msgf("error executing terraform destroy %s", tfEntrypoint)
 				errors.HandleClusterError(cl, err.Error())
 				return err
 			}
-			log.Info("github resources terraform destroyed")
+			log.Info().Msg("github resources terraform destroyed")
 
 			err = db.Client.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
 			if err != nil {
@@ -77,7 +76,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 		}
 	case "gitlab":
 		if cl.GitTerraformApplyCheck {
-			log.Info("destroying gitlab resources with terraform")
+			log.Info().Msg("destroying gitlab resources with terraform")
 			gitlabClient, err := gitlab.NewGitLabClient(cl.GitAuth.Token, cl.GitAuth.Owner)
 			if err != nil {
 				return err
@@ -89,26 +88,26 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 			for _, project := range projectsForDeletion {
 				projectExists, err := gitlabClient.CheckProjectExists(project)
 				if err != nil {
-					log.Errorf("could not check for existence of project %s: %s", project, err)
+					log.Error().Msgf("could not check for existence of project %s: %s", project, err)
 				}
 				if projectExists {
-					log.Infof("checking project %s for container registries...", project)
+					log.Info().Msgf("checking project %s for container registries...", project)
 					crr, err := gitlabClient.GetProjectContainerRegistryRepositories(project)
 					if err != nil {
-						log.Errorf("could not retrieve container registry repositories: %s", err)
+						log.Error().Msgf("could not retrieve container registry repositories: %s", err)
 					}
 					if len(crr) > 0 {
 						for _, cr := range crr {
 							err := gitlabClient.DeleteContainerRegistryRepository(project, cr.ID)
 							if err != nil {
-								log.Errorf("error deleting container registry repository: %s", err)
+								log.Error().Msgf("error deleting container registry repository: %s", err)
 							}
 						}
 					} else {
-						log.Infof("project %s does not have any container registries, skipping", project)
+						log.Info().Msgf("project %s does not have any container registries, skipping", project)
 					}
 				} else {
-					log.Infof("project %s does not exist, skipping", project)
+					log.Info().Msgf("project %s does not exist, skipping", project)
 				}
 			}
 
@@ -118,12 +117,12 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 			tfEnvs = googleext.GetGitlabTerraformEnvs(tfEnvs, gitlabClient.ParentGroupID, cl)
 			err = terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
-				log.Errorf("error executing terraform destroy %s", tfEntrypoint)
+				log.Error().Msgf("error executing terraform destroy %s", tfEntrypoint)
 				errors.HandleClusterError(cl, err.Error())
 				return err
 			}
 
-			log.Info("gitlab resources terraform destroyed")
+			log.Info().Msg("gitlab resources terraform destroyed")
 
 			err = db.Client.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
 			if err != nil {
@@ -141,17 +140,17 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 			}
 			kcfg, err := googleConf.GetContainerClusterAuth(cl.ClusterName, []byte(cl.GoogleAuth.KeyFile))
 
-			log.Info("destroying google resources with terraform")
+			log.Info().Msg("destroying google resources with terraform")
 
 			// Only port-forward to ArgoCD and delete registry if ArgoCD was installed
 			if cl.ArgoCDInstallCheck {
 				removeArgoCDApps := []string{"ingress-nginx-components", "ingress-nginx"}
 				err = argocd.ArgoCDApplicationCleanup(kcfg.Clientset, removeArgoCDApps)
 				if err != nil {
-					log.Errorf("encountered error during argocd application cleanup: %s", err)
+					log.Error().Msgf("encountered error during argocd application cleanup: %s", err)
 				}
 
-				log.Info("opening argocd port forward")
+				log.Info().Msg("opening argocd port forward")
 				//* ArgoCD port-forward
 				argoCDStopChannel := make(chan struct{}, 1)
 				defer func() {
@@ -167,7 +166,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 					argoCDStopChannel,
 				)
 
-				log.Info("getting new auth token for argocd")
+				log.Info().Msg("getting new auth token for argocd")
 
 				secData, err := k8s.ReadSecretV2(kcfg.Clientset, "argocd", "argocd-initial-admin-secret")
 				if err != nil {
@@ -180,22 +179,22 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 					return err
 				}
 
-				log.Infof("port-forward to argocd is available at %s", providerConfigs.ArgocdPortForwardURL)
+				log.Info().Msgf("port-forward to argocd is available at %s", providerConfigs.ArgocdPortForwardURL)
 
 				customTransport := http.DefaultTransport.(*http.Transport).Clone()
 				customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 				argocdHttpClient := http.Client{Transport: customTransport}
-				log.Info("deleting the registry application")
+				log.Info().Msg("deleting the registry application")
 				httpCode, _, err := argocd.DeleteApplication(&argocdHttpClient, config.RegistryAppName, argocdAuthToken, "true")
 				if err != nil {
 					errors.HandleClusterError(cl, err.Error())
 					return err
 				}
-				log.Infof("http status code %d", httpCode)
+				log.Info().Msgf("http status code %d", httpCode)
 			}
 
 			// Pause before cluster destroy to prevent a race condition
-			log.Info("waiting for google Kubernetes cluster resource removal to finish...")
+			log.Info().Msg("waiting for google Kubernetes cluster resource removal to finish...")
 			time.Sleep(time.Second * 10)
 
 			err = db.Client.UpdateCluster(cl.ClusterName, "argocd_delete_registry_check", true)
@@ -204,7 +203,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 			}
 		}
 
-		log.Info("destroying google cloud resources")
+		log.Info().Msg("destroying google cloud resources")
 		tfEntrypoint := config.GitopsDir + fmt.Sprintf("/terraform/%s", cl.CloudProvider)
 		tfEnvs := map[string]string{}
 		tfEnvs = googleext.GetGoogleTerraformEnvs(tfEnvs, cl)
@@ -222,11 +221,11 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 		}
 		err = terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
-			log.Errorf("error executing terraform destroy %s", tfEntrypoint)
+			log.Error().Msgf("error executing terraform destroy %s", tfEntrypoint)
 			errors.HandleClusterError(cl, err.Error())
 			return err
 		}
-		log.Info("google resources terraform destroyed")
+		log.Info().Msg("google resources terraform destroyed")
 
 		err = db.Client.UpdateCluster(cl.ClusterName, "cloud_terraform_apply_check", false)
 		if err != nil {
@@ -245,10 +244,10 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 		if err != nil {
 			return err
 		}
-		log.Info("attempting to delete managed ssh key...")
+		log.Info().Msgf("attempting to delete managed ssh key...")
 		err = gitlabClient.DeleteUserSSHKey("kbot-ssh-key")
 		if err != nil {
-			log.Warn(err.Error())
+			log.Warn().Msg(err.Error())
 		}
 	}
 
