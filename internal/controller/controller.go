@@ -117,6 +117,8 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	// Create k1 dir if it doesn't exist
 	utils.CreateK1Directory(def.ClusterName)
 
+	utils.InitializeLogs()
+
 	// Database controller
 	clctrl.MdbCl = db.Client
 
