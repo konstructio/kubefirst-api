@@ -25,7 +25,7 @@ COPY --from=builder /build/kubefirst-api /
 COPY --from=builder /build/docs /docs
 
 RUN apk update && \
-  apk add git openssh 
+  apk add git openssh aws-cli
 
 RUN mkdir -p /root/.ssh
 RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
