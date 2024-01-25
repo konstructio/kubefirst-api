@@ -8,12 +8,10 @@ package api
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
-	log "github.com/sirupsen/logrus"
 )
 
 // getHealth godoc
@@ -25,15 +23,6 @@ import (
 // @Router /health [get]
 // @Param Authorization header string true "API key" default(Bearer <API key>)
 func GetHealth(c *gin.Context) {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
-	log.SetOutput(os.Stdout)
-
 	// Verify database connectivity
 	err := db.Client.TestDatabaseConnection(true)
 	if err != nil {

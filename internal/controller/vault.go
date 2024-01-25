@@ -26,22 +26,13 @@ import (
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	vault "github.com/kubefirst/runtime/pkg/vault"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // InitializeVault
 func (clctrl *ClusterController) GetUserPassword(user string) error {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
-	log.SetOutput(os.Stdout)
-
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
@@ -65,15 +56,6 @@ func (clctrl *ClusterController) GetUserPassword(user string) error {
 
 // InitializeVault
 func (clctrl *ClusterController) InitializeVault() error {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
-	log.SetOutput(os.Stdout)
-
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
@@ -152,7 +134,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 			if err != nil {
 				msg := fmt.Sprintf("could not run vault unseal job: %s", err)
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.VaultInitializationFailed, err.Error())
-				log.Error(msg)
+				log.Error().Msg(msg)
 			}
 		}
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.VaultInitializationCompleted, "")
@@ -168,15 +150,6 @@ func (clctrl *ClusterController) InitializeVault() error {
 
 // RunVaultTerraform
 func (clctrl *ClusterController) RunVaultTerraform() error {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
-	log.SetOutput(os.Stdout)
-
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
@@ -248,21 +221,21 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		tfEntrypoint := clctrl.ProviderConfig.GitopsDir + "/terraform/vault"
 		terraformClient := clctrl.ProviderConfig.TerraformClient
 
-		log.Info("configuring vault with terraform")
+		log.Info().Msg("configuring vault with terraform")
 		err = terraformext.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
-			log.Errorf("error applying vault terraform: %s", err)
-			log.Info("sleeping 10 seconds before retrying terraform execution once more")
+			log.Error().Msgf("error applying vault terraform: %s", err)
+			log.Info().Msg("sleeping 10 seconds before retrying terraform execution once more")
 			time.Sleep(10 * time.Second)
 			err = terraformext.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
-				log.Errorf("error applying vault terraform: %s", err)
+				log.Error().Msgf("error applying vault terraform: %s", err)
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.VaultTerraformApplyFailed, err.Error())
 				return err
 			}
 		}
 
-		log.Info("vault terraform executed successfully")
+		log.Info().Msg("vault terraform executed successfully")
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.VaultTerraformApplyCompleted, "")
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "vault_terraform_apply_check", true)
@@ -275,15 +248,6 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 }
 
 func (clctrl *ClusterController) WriteVaultSecrets() error {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
-	log.SetOutput(os.Stdout)
-
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
@@ -295,7 +259,7 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 		Address: vaultAddr,
 	})
 	if err != nil {
-		log.Errorf("error creating vault client: %s", err)
+		log.Error().Msgf("error creating vault client: %s", err)
 		return err
 	}
 
@@ -334,7 +298,7 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 	var vaultRootToken string
 	vaultUnsealSecretData, err := k8s.ReadSecretV2(clientset, "vault", "vault-unseal-secret")
 	if err != nil {
-		log.Errorf("error reading vault-unseal-secret: %s", err)
+		log.Error().Msgf("error reading vault-unseal-secret: %s", err)
 	}
 	if len(vaultUnsealSecretData) != 0 {
 		vaultRootToken = vaultUnsealSecretData["root-token"]
@@ -350,35 +314,26 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 	})
 
 	if cl.CloudProvider == "google" {
-		log.Info("writing google specific secrets to vault secret store")
+		log.Info().Msg("writing google specific secrets to vault secret store")
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
-			log.Fatalf("error getting home path: %s", err)
+			log.Fatal().Msgf("error getting home path: %s", err)
 		}
 		writeGoogleSecrets(homeDir, vaultClient)
-		log.Info("successfully wrote google specific secrets to vault")
+		log.Info().Msg("successfully wrote google specific secrets to vault")
 	}
 
 	if err != nil {
-		log.Errorf("error writing secret to vault: %s", err)
+		log.Error().Msgf("error writing secret to vault: %s", err)
 		return err
 	}
 
-	log.Info("successfully wrote platform secrets to vault secret store")
+	log.Info().Msg("successfully wrote platform secrets to vault secret store")
 	return nil
 }
 
 // WaitForVault
 func (clctrl *ClusterController) WaitForVault() error {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
-	log.SetOutput(os.Stdout)
-
 	var kcfg *k8s.KubernetesClient
 
 	switch clctrl.CloudProvider {
@@ -402,12 +357,12 @@ func (clctrl *ClusterController) WaitForVault() error {
 		1200,
 	)
 	if err != nil {
-		log.Errorf("error finding Vault StatefulSet: %s", err)
+		log.Error().Msgf("error finding Vault StatefulSet: %s", err)
 		return err
 	}
 	_, err = k8s.WaitForStatefulSetReady(kcfg.Clientset, vaultStatefulSet, 300, true)
 	if err != nil {
-		log.Errorf("error waiting for Vault StatefulSet ready state: %s", err)
+		log.Error().Msgf("error waiting for Vault StatefulSet ready state: %s", err)
 		return err
 	}
 
@@ -419,7 +374,7 @@ func writeGoogleSecrets(homeDir string, vaultClient *vaultapi.Client) error {
 	// vault path - gcp/application-default-credentials
 	adcJSON, err := os.ReadFile(fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir))
 	if err != nil {
-		log.Error("error: reading google json credentials file")
+		log.Error().Msg("error: reading google json credentials file")
 		return err
 	}
 

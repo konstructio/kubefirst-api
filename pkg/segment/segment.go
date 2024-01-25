@@ -6,8 +6,8 @@ import (
 	"github.com/denisbrodbeck/machineid"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 
+	log "github.com/rs/zerolog/log"
 	"github.com/segmentio/analytics-go"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -18,7 +18,7 @@ func InitClient() *telemetry.SegmentClient {
 
 	machineID, err := machineid.ID()
 	if err != nil {
-		log.Info("machine id FAILED")
+		log.Info().Msg("machine id FAILED")
 	}
 	sc := analytics.New(telemetry.SegmentIOWriteKey)
 

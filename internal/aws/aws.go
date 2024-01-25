@@ -21,7 +21,7 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 )
 
 const (
@@ -44,7 +44,7 @@ func NewAws() aws.Config {
 		config.WithSharedConfigProfile(env.AWSProfile),
 	)
 	if err != nil {
-		log.Errorf("Could not create AWS config: %s", err.Error())
+		log.Error().Msgf("Could not create AWS config: %s", err.Error())
 	}
 
 	return awsClient
@@ -69,13 +69,13 @@ func (conf *AWSConfiguration) GetHostedZoneID(domain string) (string, error) {
 func (conf *AWSConfiguration) Route53AlterResourceRecord(r *AWSRoute53AlterResourceRecord) (*route53.ChangeResourceRecordSetsOutput, error) {
 	route53Client := route53.NewFromConfig(conf.Config)
 
-	log.Infof("validating hostedZoneId %s", r.hostedZoneID)
-	log.Infof("validating route53RecordName %s", r.route53RecordName)
+	log.Info().Msgf("validating hostedZoneId %s", r.hostedZoneID)
+	log.Info().Msgf("validating route53RecordName %s", r.route53RecordName)
 	record, err := route53Client.ChangeResourceRecordSets(
 		context.Background(),
 		r.input)
 	if err != nil {
-		log.Warnf("%s", err)
+		log.Warn().Msgf("%s", err)
 		return &route53.ChangeResourceRecordSetsOutput{}, err
 	}
 	return record, nil
@@ -119,7 +119,7 @@ func (conf *AWSConfiguration) Route53ListTXTRecords(hostedZoneId string) ([]AWST
 	}
 	var txtRecords []AWSTXTRecord
 	for _, recordSet := range recordSets.ResourceRecordSets {
-		log.Debugf("Record Name: %s", *recordSet.Name)
+		log.Debug().Msgf("Record Name: %s", *recordSet.Name)
 		if recordSet.Type == route53Types.RRTypeTxt {
 			for _, resourceRecord := range recordSet.ResourceRecords {
 				if recordSet.SetIdentifier != nil && recordSet.Weight != nil {
@@ -172,10 +172,10 @@ func (conf *AWSConfiguration) TestHostedZoneLiveness(hostedZoneName string) (boo
 	// Determine whether or not the record exists, create if it doesn't
 	switch utils.FindStringInSlice(foundRecordNames, route53RecordName) {
 	case true:
-		log.Infof("record %s exists - zone validated", route53RecordName)
+		log.Info().Msgf("record %s exists - zone validated", route53RecordName)
 		return true, nil
 	case false:
-		log.Infof("record %s does not exist, creating...", route53RecordName)
+		log.Info().Msgf("record %s does not exist, creating...", route53RecordName)
 
 		// Construct resource record alter and create record
 		alt := AWSRoute53AlterResourceRecord{
@@ -210,14 +210,14 @@ func (conf *AWSConfiguration) TestHostedZoneLiveness(hostedZoneName string) (boo
 		if err != nil {
 			return false, err
 		}
-		log.Infof("record created and is in state: %s", record.ChangeInfo.Status)
+		log.Info().Msgf("record created and is in state: %s", record.ChangeInfo.Status)
 
 		// Wait for record
 		ch := make(chan bool, 1)
 		retries := 10
 		retryInterval := 10
 		duration := (retries * retryInterval)
-		log.Infof("waiting on %s domain validation record creation for %v seconds...", route53RecordName, duration)
+		log.Info().Msgf("waiting on %s domain validation record creation for %v seconds...", route53RecordName, duration)
 		go func() {
 			for i := 1; i < retries; i++ {
 				ips, err := net.LookupTXT(route53RecordName)
@@ -225,12 +225,12 @@ func (conf *AWSConfiguration) TestHostedZoneLiveness(hostedZoneName string) (boo
 					ips, err = utils.BackupResolver.LookupTXT(context.Background(), route53RecordName)
 				}
 				if err != nil {
-					log.Warnf("attempt %v of %v resolving %s, retrying in %vs", i, retries, route53RecordName, retryInterval)
+					log.Warn().Msgf("attempt %v of %v resolving %s, retrying in %vs", i, retries, route53RecordName, retryInterval)
 					time.Sleep(time.Duration(int32(retryInterval)) * time.Second)
 				} else {
 					for _, ip := range ips {
 						// todo check ip against route53RecordValue in some capacity so we can pivot the value for testing
-						log.Infof("%s. in TXT record value: %s", route53RecordName, ip)
+						log.Info().Msgf("%s. in TXT record value: %s", route53RecordName, ip)
 						ch <- true
 					}
 				}

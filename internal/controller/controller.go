@@ -28,7 +28,7 @@ import (
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/services"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -125,8 +125,15 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	rec, err := clctrl.MdbCl.GetCluster(def.ClusterName)
 	if err != nil {
 		recordExists = false
-		log.Info("cluster record doesn't exist, continuing")
+		log.Info().Msg("cluster record doesn't exist, continuing")
 	}
+
+	logFileName := def.LogFileName
+	if recordExists {
+		logFileName = rec.LogFileName
+	}
+
+	utils.InitializeLogs(logFileName)
 
 	// If record exists but status is deleted, entry should be deleted
 	// and process should start fresh
@@ -306,6 +313,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		CloudflareAuth:        clctrl.CloudflareAuth,
 		NodeType:              clctrl.NodeType,
 		NodeCount:             clctrl.NodeCount,
+		LogFileName:           def.LogFileName,
 	}
 	err = clctrl.MdbCl.InsertCluster(cl)
 	if err != nil {

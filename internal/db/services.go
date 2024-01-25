@@ -11,7 +11,7 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -34,7 +34,7 @@ func (mdbcl *MongoDBClient) CreateClusterServiceList(cl *pkgtypes.Cluster) error
 			}
 		}
 	} else {
-		log.Infof("cluster service list record for %s already exists - skipping", cl.ClusterName)
+		log.Info().Msgf("cluster service list record for %s already exists - skipping", cl.ClusterName)
 	}
 
 	return nil
@@ -52,7 +52,7 @@ func (mdbcl *MongoDBClient) DeleteClusterServiceListEntry(clusterName string, de
 		return fmt.Errorf("error updating cluster service list for cluster %s: %s", clusterName, err)
 	}
 
-	log.Infof("cluster service list updated: %v", resp.ModifiedCount)
+	log.Info().Msgf("cluster service list updated: %v", resp.ModifiedCount)
 
 	return nil
 }

@@ -9,7 +9,6 @@ package controller
 import (
 	"context"
 	"fmt"
-	"os"
 
 	argocdapi "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
@@ -17,21 +16,12 @@ import (
 	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
 	"github.com/kubefirst/runtime/pkg/k8s"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // InstallArgoCD
 func (clctrl *ClusterController) InstallArgoCD() error {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
-	log.SetOutput(os.Stdout)
-
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
@@ -54,7 +44,7 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 		}
 
 		argoCDInstallPath := fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
-		log.Infof("installing argocd")
+		log.Info().Msg("installing argocd")
 
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.ArgoCDInstallStarted, "")
 		err = argocd.ApplyArgoCDKustomize(kcfg.Clientset, argoCDInstallPath)
@@ -68,7 +58,7 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 		// Wait for ArgoCD to be ready
 		_, err = k8s.VerifyArgoCDReadiness(kcfg.Clientset, true, 300)
 		if err != nil {
-			log.Errorf("error waiting for ArgoCD to become ready: %s", err)
+			log.Error().Msgf("error waiting for ArgoCD to become ready: %s", err)
 			return err
 		}
 
@@ -83,15 +73,6 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 
 // InitializeArgoCD
 func (clctrl *ClusterController) InitializeArgoCD() error {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
-	log.SetOutput(os.Stdout)
-
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
@@ -113,7 +94,7 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 			}
 		}
 
-		log.Info("Setting argocd username and password credentials")
+		log.Info().Msg("Setting argocd username and password credentials")
 
 		argocd.ArgocdSecretClient = kcfg.Clientset.CoreV1().Secrets("argocd")
 
@@ -122,8 +103,8 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 			return fmt.Errorf("argocd password not found in secret")
 		}
 
-		log.Info("argocd username and password credentials set successfully")
-		log.Info("getting an argocd auth token")
+		log.Info().Msg("argocd username and password credentials set successfully")
+		log.Info().Msg("getting an argocd auth token")
 
 		var argoCDToken string
 
@@ -150,7 +131,7 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 			}
 		}
 
-		log.Info("argocd admin auth token set")
+		log.Info().Msg("argocd admin auth token set")
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "argocd_password", argocdPassword)
 		if err != nil {
@@ -198,7 +179,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			return err
 		}
 
-		log.Info("applying the registry application to argocd")
+		log.Info().Msg("applying the registry application to argocd")
 
 		registryURL, err := clctrl.GetRepoURL()
 		if err != nil {

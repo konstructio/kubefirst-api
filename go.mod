@@ -29,9 +29,9 @@ require (
 	github.com/kubefirst/metrics-client v0.3.0
 	github.com/kubefirst/runtime v0.3.35
 	github.com/minio/minio-go/v7 v7.0.49
+	github.com/nxadm/tail v1.4.8
 	github.com/otiai10/copy v1.7.0
 	github.com/rs/zerolog v1.29.1
-	github.com/sirupsen/logrus v1.9.0
 	github.com/swaggo/files v1.0.0
 	github.com/swaggo/gin-swagger v1.5.3
 	github.com/swaggo/swag v1.16.1
@@ -45,6 +45,11 @@ require (
 	k8s.io/apimachinery v0.27.1
 	k8s.io/client-go v11.0.1-0.20190816222228-6d55c1b1f1ca+incompatible
 	sigs.k8s.io/aws-iam-authenticator v0.6.7
+)
+
+require (
+	github.com/sirupsen/logrus v1.9.0 // indirect
+	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 )
 
 replace (
@@ -101,6 +106,7 @@ require (
 	github.com/cloudflare/circl v1.1.0 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/digitalocean/godo v1.98.0 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
@@ -212,11 +218,11 @@ require (
 	github.com/rs/xid v1.4.0 // indirect
 	github.com/russross/blackfriday v1.5.2 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
-	github.com/segmentio/analytics-go v3.1.0+incompatible // indirect
+	github.com/segmentio/analytics-go v3.1.0+incompatible
 	github.com/segmentio/backo-go v1.0.1 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/skeema/knownhosts v1.1.0 // indirect
-	github.com/spf13/afero v1.9.3 // indirect
+	github.com/spf13/afero v1.9.3
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/cobra v1.7.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect

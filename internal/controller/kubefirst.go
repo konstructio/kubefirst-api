@@ -14,7 +14,7 @@ import (
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	"github.com/kubefirst/runtime/pkg/k8s"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 	v1secret "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -34,7 +34,7 @@ func readKubefirstAPITokenFromSecret(clientset *kubernetes.Clientset) string {
 func (clctrl *ClusterController) ExportClusterRecord() error {
 	cluster, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
-		log.Errorf("Error exporting cluster record: %s", err)
+		log.Error().Msgf("Error exporting cluster record: %s", err)
 		clctrl.HandleError(err.Error())
 		return err
 	}

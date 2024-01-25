@@ -30,21 +30,12 @@ import (
 	"github.com/kubefirst/runtime/pkg/gitClient"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/vault"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // CreateService
 func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.GitopsCatalogApp, req *types.GitopsCatalogAppCreateRequest) error {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
-	log.SetOutput(os.Stdout)
-
 	switch cl.Status {
 	case constants.ClusterStatusDeleted, constants.ClusterStatusDeleting, constants.ClusterStatusError, constants.ClusterStatusProvisioning:
 		return fmt.Errorf("cluster %s - unable to deploy service %s to cluster: cannot deploy services to a cluster in %s state", cl.ClusterName, serviceName, cl.Status)
@@ -56,13 +47,13 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 	// Remove gitops dir
 	err = os.RemoveAll(tmpGitopsDir)
 	if err != nil {
-		log.Fatalf("error removing gitops dir %s: %s", tmpGitopsDir, err)
+		log.Fatal().Msgf("error removing gitops dir %s: %s", tmpGitopsDir, err)
 		return err
 	}
 
 	err = gitShim.PrepareGitEnvironment(cl, tmpGitopsDir)
 	if err != nil {
-		log.Fatalf("an error ocurred preparing git environment %s %s", tmpGitopsDir, err)
+		log.Fatal().Msgf("an error ocurred preparing git environment %s %s", tmpGitopsDir, err)
 	}
 
 	gitopsRepo, _ := git.PlainOpen(tmpGitopsDir)
@@ -113,7 +104,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 
 	// If there are secret values, create a vault secret
 	if len(req.SecretKeys) > 0 {
-		log.Infof("cluster %s - application %s has secrets, creating vault values", cl.ClusterName, appDef.Name)
+		log.Info().Msgf("cluster %s - application %s has secrets, creating vault values", cl.ClusterName, appDef.Name)
 
 		s := make(map[string]interface{}, 0)
 
@@ -141,7 +132,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 			return fmt.Errorf("cluster %s - error putting vault secret: %s", cl.ClusterName, err)
 		}
 
-		log.Infof("cluster %s - created vault secret data for application %s %s", cl.ClusterName, appDef.Name, resp.VersionMetadata.CreatedTime)
+		log.Info().Msgf("cluster %s - created vault secret data for application %s %s", cl.ClusterName, appDef.Name, resp.VersionMetadata.CreatedTime)
 	}
 
 	// Create service files in gitops dir
@@ -155,7 +146,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 		},
 	)
 	if err != nil {
-		log.Warnf("cluster %s - error pulling gitops repo: %s", cl.ClusterName, err)
+		log.Warn().Msgf("cluster %s - error pulling gitops repo: %s", cl.ClusterName, err)
 	}
 	files, err := gitopsCatalog.ReadApplicationDirectory(serviceName)
 	if err != nil {
@@ -222,12 +213,12 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 	httpClient := http.Client{Timeout: time.Second * 10}
 	argoCDToken, err := argocd.GetArgocdTokenV2(&httpClient, argoCDHost, "admin", cl.ArgoCDPassword)
 	if err != nil {
-		log.Warnf("error getting argocd token: %s", err)
+		log.Warn().Msgf("error getting argocd token: %s", err)
 		return err
 	}
 	err = argocd.RefreshRegistryApplication(argoCDHost, argoCDToken)
 	if err != nil {
-		log.Warnf("error refreshing registry application: %s", err)
+		log.Warn().Msgf("error refreshing registry application: %s", err)
 		return err
 	}
 
@@ -235,7 +226,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 	for i := 0; i < 50; i++ {
 		_, err := argocdClient.ArgoprojV1alpha1().Applications("argocd").Get(context.Background(), serviceName, v1.GetOptions{})
 		if err != nil {
-			log.Infof("cluster %s - waiting for app %s to be created", cl.ClusterName, serviceName)
+			log.Info().Msgf("cluster %s - waiting for app %s to be created", cl.ClusterName, serviceName)
 			time.Sleep(time.Second * 10)
 		} else {
 			break
@@ -255,10 +246,10 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 			return fmt.Errorf("cluster %s - error getting argocd application %s: %s", cl.ClusterName, serviceName, err)
 		}
 		if app.Status.Sync.Status == v1alpha1.SyncStatusCodeSynced && app.Status.Health.Status == health.HealthStatusHealthy {
-			log.Infof("cluster %s - app %s synchronized", cl.ClusterName, serviceName)
+			log.Info().Msgf("cluster %s - app %s synchronized", cl.ClusterName, serviceName)
 			break
 		}
-		log.Infof("cluster %s - waiting for app %s to sync", cl.ClusterName, serviceName)
+		log.Info().Msgf("cluster %s - waiting for app %s to sync", cl.ClusterName, serviceName)
 		time.Sleep(time.Second * 10)
 	}
 
@@ -271,7 +262,7 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string) error {
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatalf("error getting home path: %s", err)
+		log.Fatal().Msgf("error getting home path: %s", err)
 	}
 	gitopsDir := fmt.Sprintf("%s/.k1/%s/gitops", homeDir, cl.ClusterName)
 	gitopsRepo, _ = git.PlainOpen(gitopsDir)
@@ -310,7 +301,7 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string) error {
 		},
 	)
 	if err != nil {
-		log.Warnf("cluster %s - error pulling gitops repo: %s", cl.ClusterName, err)
+		log.Warn().Msgf("cluster %s - error pulling gitops repo: %s", cl.ClusterName, err)
 	}
 	_, err = os.Stat(serviceFile)
 	if err != nil {

@@ -3,7 +3,7 @@ package env
 import (
 	env "github.com/caarlos0/env/v10"
 	"github.com/joho/godotenv"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 )
 
 type Env struct {
@@ -34,7 +34,7 @@ func GetEnv(silent bool) (Env, error) {
 	err := godotenv.Load(".env")
 
 	if err != nil && !silent {
-		log.Info("error loading .env file, using local environment variables")
+		log.Info().Msg("error loading .env file, using local environment variables")
 	}
 
 	environment := Env{}
