@@ -34,19 +34,6 @@ func NewEnvironment(envDef types.Environment) (types.Environment, error) {
 }
 
 func CreateDefaultEnvironments(mgmtCluster types.Cluster) error {
-
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-
-	// ToDo: Verify Logs
-	// log.SetFormatter(&log.TextFormatter{
-	// 	FullTimestamp:   true,
-	// 	TimestampFormat: "",
-	// })
-	// log.SetReportCaller(false)
-	// log.SetOutput(os.Stdout)
-	// log.Logger.Output(os.Stdout)
-
 	defaultClusterNames := []string{"development", "staging", "production"}
 
 	defaultVclusterTemplate := types.WorkloadCluster{

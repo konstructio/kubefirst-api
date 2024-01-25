@@ -20,15 +20,6 @@ import (
 // This obviously doesn't work in an api-based environment.
 // It's included for testing and development.
 func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-	// log.SetFormatter(&log.TextFormatter{
-	// 	FullTimestamp:   true,
-	// 	TimestampFormat: "",
-	// })
-	// log.SetReportCaller(false)
-	// log.SetOutput(os.Stdout)
-
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err

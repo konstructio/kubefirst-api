@@ -33,17 +33,6 @@ import (
 // DeleteGoogleCluster
 func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEvent) error {
 
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-	// log.SetFormatter(&log.TextFormatter{
-	// 	FullTimestamp:   true,
-	// 	TimestampFormat: "",
-	// })
-	// log.SetReportCaller(false)
-	// log.SetOutput(os.Stdout)
-
-	telemetry.SendEvent(telemetryEvent, telemetry.ClusterDeleteStarted, "")
-
 	// Instantiate google config
 	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.Token, "")
 

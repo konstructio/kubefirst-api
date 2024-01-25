@@ -14,18 +14,6 @@ import (
 
 // InitializeBot
 func (clctrl *ClusterController) InitializeBot() error {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-
-	// ToDo: Verify Logs
-	// log.SetFormatter(&log.TextFormatter{
-	// 	FullTimestamp:   true,
-	// 	TimestampFormat: "",
-	// })
-	// log.SetReportCaller(false)
-	// log.SetOutput(os.Stdout)
-	// log.Logger.Output(os.Stdout)
-
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err

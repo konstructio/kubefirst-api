@@ -101,15 +101,6 @@ func (mdbcl *MongoDBClient) TestDatabaseConnection(silent bool) error {
 func (mdbcl *MongoDBClient) ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster, error) {
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
-	// ToDo: Verify Logs
-	// log.SetFormatter(&log.TextFormatter{
-	// 	FullTimestamp:   true,
-	// 	TimestampFormat: "",
-	// })
-	// log.SetReportCaller(false)
-	// log.SetOutput(os.Stdout)
-	// log.Logger.Output(os.Stdout)
-
 	// find the secret in mgmt cluster's kubefirst namespace and read import payload and clustername
 	var kcfg *k8s.KubernetesClient
 

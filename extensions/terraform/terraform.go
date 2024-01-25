@@ -14,18 +14,6 @@ import (
 )
 
 func initActionAutoApprove(terraformClientPath string, tfAction, tfEntrypoint string, tfEnvs map[string]string) error {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-
-	// ToDo: Verify Terraform Logs
-	// log.SetFormatter(&log.TextFormatter{
-	// 	FullTimestamp:   true,
-	// 	TimestampFormat: "",
-	// })
-	// log.SetReportCaller(false)
-	// log.SetOutput(os.Stdout)
-	// log.Logger.Output(os.Stdout)
-
 	log.Printf("initActionAutoApprove - action: %s entrypoint: %s", tfAction, tfEntrypoint)
 
 	err := os.Chdir(tfEntrypoint)

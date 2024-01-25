@@ -33,15 +33,6 @@ import (
 
 // InitializeVault
 func (clctrl *ClusterController) GetUserPassword(user string) error {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-	// log.SetFormatter(&log.TextFormatter{
-	// 	FullTimestamp:   true,
-	// 	TimestampFormat: "",
-	// })
-	// log.SetReportCaller(false)
-	// log.SetOutput(os.Stdout)
-
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
@@ -65,15 +56,6 @@ func (clctrl *ClusterController) GetUserPassword(user string) error {
 
 // InitializeVault
 func (clctrl *ClusterController) InitializeVault() error {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-	// log.SetFormatter(&log.TextFormatter{
-	// 	FullTimestamp:   true,
-	// 	TimestampFormat: "",
-	// })
-	// log.SetReportCaller(false)
-	// log.SetOutput(os.Stdout)
-
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
@@ -168,15 +150,6 @@ func (clctrl *ClusterController) InitializeVault() error {
 
 // RunVaultTerraform
 func (clctrl *ClusterController) RunVaultTerraform() error {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-	// log.SetFormatter(&log.TextFormatter{
-	// 	FullTimestamp:   true,
-	// 	TimestampFormat: "",
-	// })
-	// log.SetReportCaller(false)
-	// log.SetOutput(os.Stdout)
-
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
@@ -275,15 +248,6 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 }
 
 func (clctrl *ClusterController) WriteVaultSecrets() error {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-	// log.SetFormatter(&log.TextFormatter{
-	// 	FullTimestamp:   true,
-	// 	TimestampFormat: "",
-	// })
-	// log.SetReportCaller(false)
-	// log.SetOutput(os.Stdout)
-
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
@@ -370,15 +334,6 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 
 // WaitForVault
 func (clctrl *ClusterController) WaitForVault() error {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-	// log.SetFormatter(&log.TextFormatter{
-	// 	FullTimestamp:   true,
-	// 	TimestampFormat: "",
-	// })
-	// log.SetReportCaller(false)
-	// log.SetOutput(os.Stdout)
-
 	var kcfg *k8s.KubernetesClient
 
 	switch clctrl.CloudProvider {

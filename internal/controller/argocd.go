@@ -22,18 +22,6 @@ import (
 
 // InstallArgoCD
 func (clctrl *ClusterController) InstallArgoCD() error {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-
-	// ToDo: Verify Logs
-	// log.SetFormatter(&log.TextFormatter{
-	// 	FullTimestamp:   true,
-	// 	TimestampFormat: "",
-	// })
-	// log.SetReportCaller(false)
-	// log.SetOutput(os.Stdout)
-	// log.Logger.Output(os.Stdout)
-
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
@@ -85,18 +73,6 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 
 // InitializeArgoCD
 func (clctrl *ClusterController) InitializeArgoCD() error {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-
-	// ToDo: Verify Logs
-	// log.SetFormatter(&log.TextFormatter{
-	// 	FullTimestamp:   true,
-	// 	TimestampFormat: "",
-	// })
-	// log.SetReportCaller(false)
-	// log.SetOutput(os.Stdout)
-	// log.Logger.Output(os.Stdout)
-
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err

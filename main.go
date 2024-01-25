@@ -38,12 +38,6 @@ func main() {
 		log.Fatal().Msg(err.Error())
 	}
 
-	// log.SetFormatter(&log.TextFormatter{
-	// 	FullTimestamp:   true,
-	// 	TimestampFormat: "",
-	// })
-	// log.SetReportCaller(false)
-
 	// Verify database connectivity
 	err = db.Client.EstablishMongoConnection(db.EstablishConnectArgs{
 		Tries:  20,
