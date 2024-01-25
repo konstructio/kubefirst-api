@@ -117,8 +117,6 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	// Create k1 dir if it doesn't exist
 	utils.CreateK1Directory(def.ClusterName)
 
-	utils.InitializeLogs()
-
 	// Database controller
 	clctrl.MdbCl = db.Client
 
@@ -129,6 +127,13 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		recordExists = false
 		log.Info().Msg("cluster record doesn't exist, continuing")
 	}
+
+	logFileName := def.LogFileName
+	if recordExists {
+		logFileName = rec.LogFileName
+	}
+
+	utils.InitializeLogs(logFileName)
 
 	// If record exists but status is deleted, entry should be deleted
 	// and process should start fresh
@@ -308,6 +313,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		CloudflareAuth:        clctrl.CloudflareAuth,
 		NodeType:              clctrl.NodeType,
 		NodeCount:             clctrl.NodeCount,
+		LogFileName:           def.LogFileName,
 	}
 	err = clctrl.MdbCl.InsertCluster(cl)
 	if err != nil {

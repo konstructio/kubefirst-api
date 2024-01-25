@@ -43,7 +43,6 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	return nil
 	err = ctrl.StateStoreCredentials()
 	if err != nil {
 		ctrl.HandleError(err.Error())

@@ -43,6 +43,7 @@ type ClusterDefinition struct {
 	CloudflareAuth   CloudflareAuth   `json:"cloudflare_auth,omitempty"`
 	GoogleAuth       GoogleAuth       `json:"google_auth,omitempty"`
 	GitAuth          GitAuth          `json:"git_auth,omitempty"`
+	LogFileName      string           `bson:"log_file,omitempty" json:"log_file,omitempty"`
 }
 
 // Cluster describes the configuration storage for a Kubefirst cluster object
@@ -88,6 +89,7 @@ type Cluster struct {
 	KubefirstTeam         string `bson:"kubefirst_team" json:"kubefirst_team"`
 	NodeType              string `bson:"node_type" json:"node_type" binding:"required"`
 	NodeCount             int    `bson:"node_count" json:"node_count" binding:"required"`
+	LogFileName           string `bson:"log_file,omitempty" json:"log_file,omitempty"`
 
 	StateStoreCredentials StateStoreCredentials `bson:"state_store_credentials,omitempty" json:"state_store_credentials,omitempty"`
 	StateStoreDetails     StateStoreDetails     `bson:"state_store_details,omitempty" json:"state_store_details,omitempty"`

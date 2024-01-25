@@ -29,6 +29,7 @@ require (
 	github.com/kubefirst/metrics-client v0.3.0
 	github.com/kubefirst/runtime v0.3.35
 	github.com/minio/minio-go/v7 v7.0.49
+	github.com/nxadm/tail v1.4.8
 	github.com/otiai10/copy v1.7.0
 	github.com/rs/zerolog v1.29.1
 	github.com/swaggo/files v1.0.0
@@ -46,7 +47,10 @@ require (
 	sigs.k8s.io/aws-iam-authenticator v0.6.7
 )
 
-require github.com/sirupsen/logrus v1.9.0 // indirect
+require (
+	github.com/sirupsen/logrus v1.9.0 // indirect
+	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
+)
 
 replace (
 	sigs.k8s.io/kustomize/api => sigs.k8s.io/kustomize/api v0.12.1
