@@ -1,5 +1,36 @@
 {{- $clusterId := randAlphaNum 6 | quote -}}
 ---
+{{- if .Values.includeVolume }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: k1-volume
+  labels:
+    type: local
+spec:
+  storageClassName: local-path
+  capacity:
+    storage: 512Mi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/.k1"
+{{- end }}
+---
+{{- if .Values.includeVolume }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: k1-pv-claim
+spec:
+  storageClassName: local-path
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 512Mi
+{{- end }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -46,6 +77,11 @@ spec:
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
+          {{- if .Values.includeVolume }}
+          volumeMounts:
+          - mountPath: "/.k1"
+            name: k1-pv-storage
+        {{- end }}
           env:
             {{- if not .Values.atlasDbHost }}
             - name: MONGODB_HOST
@@ -146,6 +182,12 @@ spec:
       {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.includeVolume }}
+      volumes:
+        - name: k1-pv-storage
+          persistentVolumeClaim:
+            claimName: k1-pv-claim
       {{- end }}
 ---
 apiVersion: batch/v1
