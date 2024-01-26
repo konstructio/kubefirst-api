@@ -79,7 +79,7 @@ spec:
         - name: {{ .Chart.Name }}
           {{- if .Values.includeVolume }}
           volumeMounts:
-          - mountPath: "/.k1"
+          - mountPath: "/root/.k1"
             name: k1-pv-storage
         {{- end }}
           env:
