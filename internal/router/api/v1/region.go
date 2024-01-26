@@ -10,9 +10,11 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/pkg/aws"
 	"github.com/kubefirst/kubefirst-api/pkg/google"
 	awsinternal "github.com/kubefirst/runtime/pkg/aws"
 	"github.com/kubefirst/runtime/pkg/civo"
@@ -63,13 +65,21 @@ func PostRegions(c *gin.Context) {
 			})
 			return
 		}
-		awsConf := &awsinternal.AWSConfiguration{
-			Config: awsinternal.NewAwsV3(
-				regionListRequest.CloudRegion,
-				regionListRequest.AWSAuth.AccessKeyID,
-				regionListRequest.AWSAuth.SecretAccessKey,
-				regionListRequest.AWSAuth.SessionToken,
-			),
+		var awsConf *awsinternal.AWSConfiguration
+		if os.Getenv("IS_CLUSTER_ZERO") == "false" {
+			awsConf = &awsinternal.AWSConfiguration{
+				Config: aws.NewEKSServiceAccountClientV1(),
+			}
+		} else {
+			awsConf = &awsinternal.AWSConfiguration{
+				Config: awsinternal.NewAwsV3(
+					regionListRequest.CloudRegion,
+					regionListRequest.AWSAuth.AccessKeyID,
+					regionListRequest.AWSAuth.SecretAccessKey,
+					regionListRequest.AWSAuth.SessionToken,
+				),
+			}
+
 		}
 
 		regions, err := awsConf.GetRegions(regionListRequest.CloudRegion)

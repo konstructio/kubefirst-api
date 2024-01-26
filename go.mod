@@ -12,6 +12,8 @@ require (
 	github.com/atotto/clipboard v0.1.4
 	github.com/aws/aws-sdk-go-v2 v1.17.8
 	github.com/aws/aws-sdk-go-v2/config v1.18.19
+	github.com/aws/aws-sdk-go-v2/credentials v1.13.18
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.91.0
 	github.com/aws/aws-sdk-go-v2/service/eks v1.27.10
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.27.5
 	github.com/caarlos0/env/v10 v10.0.0
@@ -20,6 +22,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.8.0
 	github.com/civo/civogo v0.3.53
 	github.com/cloudflare/cloudflare-go v0.73.0
+	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.8.2
 	github.com/go-git/go-git/v5 v5.6.1
@@ -31,6 +34,7 @@ require (
 	github.com/minio/minio-go/v7 v7.0.49
 	github.com/otiai10/copy v1.7.0
 	github.com/rs/zerolog v1.29.1
+	github.com/segmentio/analytics-go v3.1.0+incompatible
 	github.com/sirupsen/logrus v1.9.0
 	github.com/swaggo/files v1.0.0
 	github.com/swaggo/gin-swagger v1.5.3
@@ -68,13 +72,11 @@ require (
 	github.com/argoproj/pkg v0.13.7-0.20221221191914-44694015343d // indirect
 	github.com/aws/aws-sdk-go v1.44.230 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.10 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.13.18 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.1 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.32 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.26 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.32 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.0.23 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.91.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.18.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.15.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.19.8 // indirect
@@ -212,7 +214,6 @@ require (
 	github.com/rs/xid v1.4.0 // indirect
 	github.com/russross/blackfriday v1.5.2 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
-	github.com/segmentio/analytics-go v3.1.0+incompatible // indirect
 	github.com/segmentio/backo-go v1.0.1 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/skeema/knownhosts v1.1.0 // indirect
