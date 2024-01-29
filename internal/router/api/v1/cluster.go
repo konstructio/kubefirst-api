@@ -9,6 +9,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"net/http"
 
@@ -508,14 +509,7 @@ func GetExportCluster(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, cluster)
 }
 
-func GetClusterKubeconfig(c *gin.Context) {
-	clusterName, param := c.Params.Get("cluster_name")
-	if !param {
-		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: ":cluster_name not provided",
-		})
-		return
-	}
+func GetClusterKubeConfig(c *gin.Context) {
 
 	cloudProvider, param := c.Params.Get("cloud_provider")
 	if !param {
@@ -525,8 +519,8 @@ func GetClusterKubeconfig(c *gin.Context) {
 		return
 	}
 
-	var instanceSizesRequest types.InstanceSizesRequest
-	err := c.Bind(&instanceSizesRequest)
+	var kubeConfigRequest types.KubeconfigRequest
+	err := c.Bind(&kubeConfigRequest)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -534,30 +528,104 @@ func GetClusterKubeconfig(c *gin.Context) {
 		return
 	}
 
-	switch cloudProvider {
-	case "civo":
-		civoConfig := civoruntime.CivoConfiguration{
-			Client:  civoruntime.NewCivo(instanceSizesRequest.CivoAuth.Token, instanceSizesRequest.CloudRegion),
-			Context: context.Background(),
-		}
+	VCluster := false
+	if kubeConfigRequest.VCluster {
+		VCluster = true
+	}
 
-		kubeConfig, cfgError := civoConfig.GetKubeconfig(clusterName)
+	// Handle virtual cluster kubeconfig
+	if VCluster {
+
+		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-				Message: cfgError.Error(),
+				Message: "error finding home directory",
 			})
 			return
 		}
 
-		c.IndentedJSON(http.StatusOK, kubeConfig)
+		if kubeConfigRequest.ManagClusterName == "" {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: "missing man_cluster_name",
+			})
+			return
+		}
 
-	case "digitalocean":
-		digitaloceanConf := digioceanruntime.DigitaloceanConfiguration{
-			Client:  digioceanruntime.NewDigitalocean(instanceSizesRequest.DigitaloceanAuth.Token),
+		clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, kubeConfigRequest.ManagClusterName)
+
+		env, _ := env.GetEnv(constants.SilenceGetEnv)
+
+		var inCluster bool = false
+		if env.InCluster == "true" {
+			inCluster = true
+		}
+
+		kcfg := k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
+		internalSecret, err := k8s.ReadSecretV2(kcfg.Clientset, kubeConfigRequest.ClusterName, fmt.Sprintf("vc-%v", kubeConfigRequest.ClusterName))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+
+		config, exists := internalSecret["config"]
+
+		if !exists {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: "Unable to locate kubeconfig",
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, types.KubeconfigResponse{
+			Config: config,
+		})
+		return
+	}
+
+	// handle management cluster kubeconfig
+	switch cloudProvider {
+	case "civo":
+
+		if kubeConfigRequest.CivoAuth.Token == "" {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: "missing civo auth token",
+			})
+			return
+		}
+
+		if kubeConfigRequest.CloudRegion == "" {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: "missing cloud region",
+			})
+			return
+		}
+
+		civoConfig := civoruntime.CivoConfiguration{
+			Client:  civoruntime.NewCivo(kubeConfigRequest.CivoAuth.Token, kubeConfigRequest.CloudRegion),
 			Context: context.Background(),
 		}
 
-		kubeConfig, err := digitaloceanConf.GetKubeconfig(clusterName)
+		config, err := civoConfig.GetKubeconfig(kubeConfigRequest.ClusterName)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, types.KubeconfigResponse{
+			Config: config,
+		})
+
+	case "digitalocean":
+		digitaloceanConf := digioceanruntime.DigitaloceanConfiguration{
+			Client:  digioceanruntime.NewDigitalocean(kubeConfigRequest.DigitaloceanAuth.Token),
+			Context: context.Background(),
+		}
+
+		config, err := digitaloceanConf.GetKubeconfig(kubeConfigRequest.ClusterName)
 
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -566,16 +634,18 @@ func GetClusterKubeconfig(c *gin.Context) {
 			return
 		}
 
-		c.IndentedJSON(http.StatusOK, kubeConfig)
+		c.JSON(http.StatusOK, types.KubeconfigResponse{
+			Config: string(config),
+		})
 
 	case "vultr":
 
 		vultrConf := vultrruntime.VultrConfiguration{
-			Client:  vultrruntime.NewVultr(instanceSizesRequest.VultrAuth.Token),
+			Client:  vultrruntime.NewVultr(kubeConfigRequest.VultrAuth.Token),
 			Context: context.Background(),
 		}
 
-		kubeConfig, err := vultrConf.GetKubeconfig(clusterName)
+		config, err := vultrConf.GetKubeconfig(kubeConfigRequest.ClusterName)
 
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -584,7 +654,9 @@ func GetClusterKubeconfig(c *gin.Context) {
 			return
 		}
 
-		c.IndentedJSON(http.StatusOK, kubeConfig)
+		c.JSON(http.StatusOK, types.KubeconfigResponse{
+			Config: config,
+		})
 
 	default:
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{

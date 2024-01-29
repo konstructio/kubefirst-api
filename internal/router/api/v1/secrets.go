@@ -12,6 +12,8 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/kubefirst/kubefirst-api/internal/constants"
+	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/kubefirst-api/pkg/k8s"
 )
@@ -43,7 +45,14 @@ func GetClusterSecret(c *gin.Context) {
 
 	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, clusterName)
 
-	kcfg := k8s.CreateKubeConfig(false, fmt.Sprintf("%s/kubeconfig", clusterDir))
+	env, _ := env.GetEnv(constants.SilenceGetEnv)
+
+	var inCluster bool = false
+	if env.InCluster == "true" {
+		inCluster = true
+	}
+
+	kcfg := k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
 
 	secrets, err := k8s.ReadSecretV2(kcfg.Clientset, "kubefirst", secret)
 	if err != nil {
