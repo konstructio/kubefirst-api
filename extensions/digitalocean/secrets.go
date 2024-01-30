@@ -93,6 +93,12 @@ func BootstrapDigitaloceanMgmtCluster(clientset *kubernetes.Clientset, cl *pkgty
 				"origin-ca-api-key": []byte(cl.CloudflareAuth.OriginCaIssuerKey),
 			},
 		},
+		{
+			ObjectMeta: metav1.ObjectMeta{Name: "kubefirst-state", Namespace: "kubefirst"},
+			Data: map[string][]byte{
+				"console-tour": []byte("false"),
+			},
+		},
 	}
 	for _, secret := range createSecrets {
 		_, err := clientset.CoreV1().Secrets(secret.ObjectMeta.Namespace).Get(context.TODO(), secret.ObjectMeta.Name, metav1.GetOptions{})

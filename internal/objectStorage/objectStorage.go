@@ -15,7 +15,7 @@ import (
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 )
 
 // PutBucketObject
@@ -46,7 +46,7 @@ func PutBucketObject(cr *pkgtypes.StateStoreCredentials, d *pkgtypes.StateStoreD
 	if err != nil {
 		return err
 	}
-	log.Info("uploaded", obj.LocalFilePath, " of size: ", n, "successfully")
+	log.Info().Msgf("uploaded", obj.LocalFilePath, " of size: ", n, "successfully")
 
 	return nil
 }
@@ -88,7 +88,7 @@ func PutClusterObject(cr *pkgtypes.StateStoreCredentials, d *pkgtypes.StateStore
 	if err != nil {
 		return fmt.Errorf("error during object put: %s", err)
 	}
-	log.Infof("uploaded cluster object %s to state store bucket %s successfully", obj.LocalFilePath, d.Name)
+	log.Info().Msgf("uploaded cluster object %s to state store bucket %s successfully", obj.LocalFilePath, d.Name)
 
 	return nil
 }
@@ -108,14 +108,14 @@ func GetClusterObject(cr *pkgtypes.StateStoreCredentials, d *pkgtypes.StateStore
 
 	_, err = minioClient.BucketExists(ctx, d.Name)
 	if err != nil {
-		log.Info(err)
+		log.Info().Msg(err.Error())
 		return err
 	}
 
 	// Get object from bucket
 	reader, err := minioClient.GetObject(ctx, d.Name, remoteFilePath, minio.GetObjectOptions{})
 	if err != nil {
-		log.Info(err)
+		log.Info().Msg(err.Error())
 		return fmt.Errorf("error retrieving cluster object from bucket: %s", err)
 	}
 	defer reader.Close()

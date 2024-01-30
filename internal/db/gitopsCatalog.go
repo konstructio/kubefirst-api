@@ -11,7 +11,7 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/gitopsCatalog"
 	"github.com/kubefirst/kubefirst-api/internal/types"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -32,7 +32,7 @@ func (mdbcl *MongoDBClient) GetGitopsCatalogApps() (types.GitopsCatalogApps, err
 func (mdbcl *MongoDBClient) UpdateGitopsCatalogApps() error {
 	mpapps, err := gitopsCatalog.ReadActiveApplications()
 	if err != nil {
-		log.Errorf("error reading gitops catalog apps at startup: %s", err)
+		log.Error().Msgf("error reading gitops catalog apps at startup: %s", err)
 	}
 
 	filter := bson.D{{Key: "name", Value: "gitops_catalog_application_list"}}
@@ -43,7 +43,7 @@ func (mdbcl *MongoDBClient) UpdateGitopsCatalogApps() error {
 	if err != nil {
 		return fmt.Errorf("error updating gitops catalog app list in database: %s", err)
 	}
-	log.Info("updated gitops catalog application directory")
+	log.Info().Msg("updated gitops catalog application directory")
 
 	return nil
 }

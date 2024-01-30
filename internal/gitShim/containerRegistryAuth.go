@@ -12,7 +12,7 @@ import (
 
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -58,7 +58,7 @@ func CreateContainerRegistrySecret(obj *ContainerRegistryAuth) (string, error) {
 		}
 		err := k8s.CreateSecretV2(obj.Clientset, argoDeployTokenSecret)
 		if err != nil {
-			log.Errorf("error while creating secret for container registry auth: %s", err)
+			log.Error().Msgf("error while creating secret for container registry auth: %s", err)
 		}
 
 	// GitLab Deploy Tokens
@@ -78,7 +78,7 @@ func CreateContainerRegistrySecret(obj *ContainerRegistryAuth) (string, error) {
 		}
 		token, err := gitlabClient.CreateGroupDeployToken(0, &p)
 		if err != nil {
-			log.Errorf("error while creating secret for container registry auth: %s", err)
+			log.Error().Msgf("error while creating secret for container registry auth: %s", err)
 		}
 
 		return token, nil

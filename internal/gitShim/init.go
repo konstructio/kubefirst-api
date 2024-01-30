@@ -11,7 +11,7 @@ import (
 
 	"github.com/kubefirst/runtime/pkg/github"
 	"github.com/kubefirst/runtime/pkg/gitlab"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 )
 
 type GitInitParameters struct {
@@ -42,11 +42,11 @@ func InitializeGitProvider(p *GitInitParameters) error {
 			repositoryDoesNotExistStatusCode := 404
 
 			if responseStatusCode == repositoryExistsStatusCode {
-				log.Infof("repository https://github.com/%s/%s exists", p.GithubOrg, repositoryName)
+				log.Info().Msgf("repository https://github.com/%s/%s exists", p.GithubOrg, repositoryName)
 				errorMsg = errorMsg + fmt.Sprintf("https://github.com/%s/%s\n\t", p.GithubOrg, repositoryName)
 				newRepositoryExists = true
 			} else if responseStatusCode == repositoryDoesNotExistStatusCode {
-				log.Infof("repository https://github.com/%s/%s does not exist, continuing", p.GithubOrg, repositoryName)
+				log.Info().Msgf("repository https://github.com/%s/%s does not exist, continuing", p.GithubOrg, repositoryName)
 			}
 		}
 		if newRepositoryExists {
@@ -64,11 +64,11 @@ func InitializeGitProvider(p *GitInitParameters) error {
 			teamDoesNotExistStatusCode := 404
 
 			if responseStatusCode == teamExistsStatusCode {
-				log.Infof("team https://github.com/%s/%s exists", p.GithubOrg, teamName)
+				log.Info().Msgf("team https://github.com/%s/%s exists", p.GithubOrg, teamName)
 				errorMsg = errorMsg + fmt.Sprintf("https://github.com/orgs/%s/teams/%s\n\t", p.GithubOrg, teamName)
 				newTeamExists = true
 			} else if responseStatusCode == teamDoesNotExistStatusCode {
-				log.Infof("https://github.com/orgs/%s/teams/%s does not exist, continuing", p.GithubOrg, teamName)
+				log.Info().Msgf("https://github.com/orgs/%s/teams/%s does not exist, continuing", p.GithubOrg, teamName)
 			}
 		}
 		if newTeamExists {
@@ -83,7 +83,7 @@ func InitializeGitProvider(p *GitInitParameters) error {
 		// Check for existing base projects
 		projects, err := gitlabClient.GetProjects()
 		if err != nil {
-			log.Errorf("couldn't get gitlab projects: %s", err)
+			log.Error().Msgf("couldn't get gitlab projects: %s", err)
 		}
 		for _, repositoryName := range p.Repositories {
 			for _, project := range projects {
@@ -97,7 +97,7 @@ func InitializeGitProvider(p *GitInitParameters) error {
 		// Save for detokenize
 		subgroups, err := gitlabClient.GetSubGroups()
 		if err != nil {
-			log.Errorf("couldn't get gitlab subgroups for group %s: %s", p.GitOwner, err)
+			log.Error().Msgf("couldn't get gitlab subgroups for group %s: %s", p.GitOwner, err)
 		}
 		for _, teamName := range p.Repositories {
 			for _, sg := range subgroups {

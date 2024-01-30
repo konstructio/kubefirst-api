@@ -10,7 +10,7 @@ import (
 	"fmt"
 
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -31,7 +31,7 @@ func (mdbcl *MongoDBClient) DeleteCluster(clusterName string) error {
 		return fmt.Errorf("error deleting cluster %s: %s", clusterName, err)
 	}
 
-	log.Infof("cluster deleted: %v", resp.DeletedCount)
+	log.Info().Msgf("cluster deleted: %v", resp.DeletedCount)
 
 	return nil
 }
@@ -93,10 +93,10 @@ func (mdbcl *MongoDBClient) InsertCluster(cl pkgtypes.Cluster) error {
 			if err != nil {
 				return fmt.Errorf("error inserting cluster %s: %s", cl.ClusterName, err)
 			}
-			log.Info(insert)
+			log.Info().Msgf("%s", insert)
 		}
 	} else {
-		log.Infof("cluster record for %s already exists - skipping", cl.ClusterName)
+		log.Info().Msgf("cluster record for %s already exists - skipping", cl.ClusterName)
 	}
 
 	return nil

@@ -15,7 +15,7 @@ import (
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/vault"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 	"k8s.io/client-go/kubernetes"
 )
 

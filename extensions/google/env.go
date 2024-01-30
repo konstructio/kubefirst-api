@@ -16,7 +16,7 @@ import (
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/vault"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -34,7 +34,7 @@ func GetGoogleTerraformEnvs(envs map[string]string, cl *pkgtypes.Cluster) map[st
 	envs["TF_VAR_project"] = cl.GoogleAuth.ProjectId
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatalf("error getting home path: %s", err)
+		log.Fatal().Msgf("error getting home path: %s", err)
 	}
 	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir)
 
@@ -48,7 +48,7 @@ func GetGithubTerraformEnvs(envs map[string]string, cl *pkgtypes.Cluster) map[st
 	envs["TF_VAR_kbot_ssh_public_key"] = cl.GitAuth.PublicKey
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatalf("error getting home path: %s", err)
+		log.Fatal().Msgf("error getting home path: %s", err)
 	}
 	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir)
 
@@ -65,7 +65,7 @@ func GetGitlabTerraformEnvs(envs map[string]string, gid int, cl *pkgtypes.Cluste
 	envs["TF_VAR_gitlab_owner"] = cl.GitAuth.Owner
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatalf("error getting home path: %s", err)
+		log.Fatal().Msgf("error getting home path: %s", err)
 	}
 	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir)
 
@@ -79,7 +79,7 @@ func GetUsersTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster
 	envs[fmt.Sprintf("%s_OWNER", strings.ToUpper(cl.GitProvider))] = cl.GitAuth.Owner
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatalf("error getting home path: %s", err)
+		log.Fatal().Msgf("error getting home path: %s", err)
 	}
 	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir)
 
@@ -104,7 +104,7 @@ func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster
 	envs["TF_VAR_cloudflare_api_key"] = cl.CloudflareAuth.Token
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatalf("error getting home path: %s", err)
+		log.Fatal().Msgf("error getting home path: %s", err)
 	}
 	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir)
 

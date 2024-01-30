@@ -15,7 +15,8 @@ import (
 	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/db"
-	log "github.com/sirupsen/logrus"
+
+	log "github.com/rs/zerolog/log"
 )
 
 // CreateK1Directory
@@ -23,13 +24,13 @@ func CreateK1Directory(clusterName string) {
 	// Create k1 dir if it doesn't exist
 	homePath, err := os.UserHomeDir()
 	if err != nil {
-		log.Info(err.Error())
+		log.Info().Msg(err.Error())
 	}
 	k1Dir := fmt.Sprintf("%s/.k1/%s", homePath, clusterName)
 	if _, err := os.Stat(k1Dir); os.IsNotExist(err) {
 		err := os.MkdirAll(k1Dir, os.ModePerm)
 		if err != nil {
-			log.Infof("%s directory already exists, continuing", k1Dir)
+			log.Info().Msgf("%s directory already exists, continuing", k1Dir)
 		}
 	}
 }
@@ -59,7 +60,7 @@ func ReadFileContentType(filePath string) (string, error) {
 	// Open File
 	f, err := os.Open(filePath)
 	if err != nil {
-		log.Error(err)
+		log.Error().Msg(err.Error())
 	}
 	defer f.Close()
 
@@ -99,12 +100,12 @@ var BackupResolver = &net.Resolver{
 func ScheduledGitopsCatalogUpdate() {
 	err := db.Client.UpdateGitopsCatalogApps()
 	if err != nil {
-		log.Warn(err)
+		log.Warn().Msg(err.Error())
 	}
 	for range time.Tick(time.Minute * 30) {
 		err := db.Client.UpdateGitopsCatalogApps()
 		if err != nil {
-			log.Warn(err)
+			log.Warn().Msg(err.Error())
 		}
 	}
 }
