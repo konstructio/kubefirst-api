@@ -13,11 +13,9 @@ import (
 )
 
 func NewEKSServiceAccountClientV1() aws.Config {
-
+	// variables are automatically available in the pod through EKS
 	region := os.Getenv("AWS_REGION")
-
 	roleArn := os.Getenv("AWS_ROLE_ARN")
-
 	tokenFilePath := os.Getenv("AWS_WEB_IDENTITY_TOKEN_FILE")
 
 	token, err := ioutil.ReadFile(tokenFilePath)
