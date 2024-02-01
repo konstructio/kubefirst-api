@@ -14,17 +14,18 @@ type GitopsCatalogApps struct {
 
 // GitopsCatalogApp describes a Kubefirst gitops catalog application
 type GitopsCatalogApp struct {
-	Name        string                      `bson:"name" json:"name" yaml:"name"`
-	DisplayName string                      `bson:"display_name" json:"display_name" yaml:"displayName"`
-	SecretKeys  []GitopsCatalogAppSecretKey `bson:"secret_keys" json:"secret_keys" yaml:"secretKeys"`
-	ImageURL    string                      `bson:"image_url" json:"image_url" yaml:"imageUrl"`
-	Description string                      `bson:"description" json:"description" yaml:"description"`
-	Categories  []string                    `bson:"categories" json:"categories" yaml:"categories"`
+	Name        string                 `bson:"name" json:"name" yaml:"name"`
+	DisplayName string                 `bson:"display_name" json:"display_name" yaml:"displayName"`
+	SecretKeys  []GitopsCatalogAppKeys `bson:"secret_keys" json:"secret_keys" yaml:"secretKeys"`
+	ConfigKeys  []GitopsCatalogAppKeys `bson:"config_keys" json:"config_keys" yaml:"configKeys"`
+	ImageURL    string                 `bson:"image_url" json:"image_url" yaml:"imageUrl"`
+	Description string                 `bson:"description" json:"description" yaml:"description"`
+	Categories  []string               `bson:"categories" json:"categories" yaml:"categories"`
 }
 
 // GitopsCatalogAppSecretKey describes a required secret value when creating a
 // service based on a gitops catalog app
-type GitopsCatalogAppSecretKey struct {
+type GitopsCatalogAppKeys struct {
 	Name  string `bson:"name" json:"name" yaml:"name"`
 	Label string `bson:"label,omitempty" json:"label,omitempty" yaml:"label,omitempty"`
 	Value string `bson:"value,omitempty" json:"value,omitempty" yaml:"value,omitempty"`
@@ -33,5 +34,6 @@ type GitopsCatalogAppSecretKey struct {
 // GitopsCatalogAppCreateRequest describes a request to create a service for a cluster
 // based on a gitops catalog app
 type GitopsCatalogAppCreateRequest struct {
-	SecretKeys []GitopsCatalogAppSecretKey `bson:"secret_keys,omitempty" json:"secret_keys,omitempty"`
+	SecretKeys []GitopsCatalogAppKeys `bson:"secret_keys,omitempty" json:"secret_keys,omitempty"`
+	ConfigKeys []GitopsCatalogAppKeys `bson:"config_keys,omitempty" json:"config_keys,omitempty"`
 }
