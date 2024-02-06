@@ -40,6 +40,7 @@ type GitopsDirectoryValues struct {
 	VaultIngressNoHTTPSURL         string
 	VaultDataBucketName            string
 	VouchIngressURL                string
+	RegistryPath                   string
 
 	AwsIamArnAccountRoot string
 	AwsKmsKeyId          string
