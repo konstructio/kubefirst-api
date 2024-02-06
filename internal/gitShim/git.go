@@ -18,6 +18,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// const (
+// 	KubefirstGitHubOrganization      = "kubefirst"
+// 	KubefirstGitopsCatalogRepository = "gitops-catalog"
+// )
+
 // PullWithAuth
 func PullWithAuth(repo *git.Repository, remote string, branch string, auth transport.AuthMethod) error {
 	w, _ := repo.Worktree()
@@ -76,6 +81,18 @@ func PrepareGitEnvironment(cluster *pkgtypes.Cluster, gitopsDir string) error {
 
 	repoUrl := fmt.Sprintf("https://%s/%s/gitops", cluster.GitHost, cluster.GitAuth.Owner)
 	_, err := gitClient.ClonePrivateRepo("main", gitopsDir, repoUrl, cluster.GitAuth.User, cluster.GitAuth.Token)
+	if err != nil {
+		log.Fatal().Msgf("error cloning repository: %s", err)
+
+		return err
+	}
+
+	return nil
+}
+
+func PrepareGitOpsCatalog(cluster *pkgtypes.Cluster, gitopsCatalogDir string) error {
+	repoUrl := fmt.Sprintf("https://github.com/%s/%s", KubefirstGitHubOrganization, KubefirstGitopsCatalogRepository)
+	_, err := gitClient.ClonePrivateRepo("main", gitopsCatalogDir, repoUrl, cluster.GitAuth.User, cluster.GitAuth.Token)
 	if err != nil {
 		log.Fatal().Msgf("error cloning repository: %s", err)
 

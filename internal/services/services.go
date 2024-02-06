@@ -27,7 +27,6 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/kubefirst/kubefirst-api/internal/gitShim"
-	"github.com/kubefirst/kubefirst-api/internal/gitopsCatalog"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
@@ -35,6 +34,7 @@ import (
 	"github.com/kubefirst/runtime/pkg/gitClient"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/vault"
+	cp "github.com/otiai10/copy"
 	log "github.com/rs/zerolog/log"
 	"github.com/thanhpk/randstr"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -49,6 +49,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 
 	homeDir, err := os.UserHomeDir()
 	tmpGitopsDir := fmt.Sprintf("%s/.k1/%s/%s/gitops", homeDir, cl.ClusterName, serviceName)
+	tmpGitopsCatalogDir := fmt.Sprintf("%s/.k1/%s/%s/gitops-catalog", homeDir, cl.ClusterName, serviceName)
 
 	// Remove gitops dir
 	err = os.RemoveAll(tmpGitopsDir)
@@ -57,9 +58,21 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 		return err
 	}
 
+	// Remove gitops catalog dir
+	err = os.RemoveAll(tmpGitopsCatalogDir)
+	if err != nil {
+		log.Fatal().Msgf("error removing gitops dir %s: %s", tmpGitopsCatalogDir, err)
+		return err
+	}
+
 	err = gitShim.PrepareGitEnvironment(cl, tmpGitopsDir)
 	if err != nil {
 		log.Fatal().Msgf("an error ocurred preparing git environment %s %s", tmpGitopsDir, err)
+	}
+
+	err = gitShim.PrepareGitOpsCatalog(cl, tmpGitopsCatalogDir)
+	if err != nil {
+		log.Fatal().Msgf("an error ocurred preparing gitops catalog environment %s %s", tmpGitopsDir, err)
 	}
 
 	gitopsRepo, _ := git.PlainOpen(tmpGitopsDir)
@@ -88,7 +101,9 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 	} else {
 		registryPath = fmt.Sprintf("registry/%s", cl.ClusterName)
 	}
-	serviceFile := fmt.Sprintf("%s/%s/%s.yaml", tmpGitopsDir, registryPath, serviceName)
+
+	clusterRegistryPath := fmt.Sprintf("%s/%s", tmpGitopsDir, registryPath)
+	catalogServiceFolder := fmt.Sprintf("%s/%s", tmpGitopsCatalogDir, serviceName)
 
 	var kcfg *k8s.KubernetesClient
 
@@ -154,40 +169,26 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 	if err != nil {
 		log.Warn().Msgf("cluster %s - error pulling gitops repo: %s", cl.ClusterName, err)
 	}
-	files, err := gitopsCatalog.ReadApplicationDirectory(serviceName)
-	if err != nil {
-		return err
-	}
-	_, err = os.Create(serviceFile)
-	if err != nil {
-		return fmt.Errorf("cluster %s - error creating file: %s", cl.ClusterName, err)
-	}
-	f, err := os.OpenFile(serviceFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return fmt.Errorf("cluster %s - error opening file: %s", cl.ClusterName, err)
-	}
-	// Regardless of how many files there are, loop over them and create a single yaml file
-	for _, c := range files {
-		_, err = f.WriteString(fmt.Sprintf("---\n%s\n", c))
-		if err != nil {
-			return err
-		}
-	}
-	defer f.Close()
 
 	//Create Tokens
-	gitopsKubefirstTokens := CreateTokensFromDatabaseRecord(cl)
+	gitopsKubefirstTokens := CreateTokensFromDatabaseRecord(cl, registryPath)
 
 	//Detokenize App Template
-	err = providerConfigs.DetokenizeGitGitops(serviceFile, gitopsKubefirstTokens, cl.GitProtocol, cl.CloudflareAuth.OriginCaIssuerKey != "")
+	err = providerConfigs.DetokenizeGitGitops(catalogServiceFolder, gitopsKubefirstTokens, cl.GitProtocol, cl.CloudflareAuth.OriginCaIssuerKey != "")
 	if err != nil {
 		return fmt.Errorf("cluster %s - error opening file: %s", cl.ClusterName, err)
 	}
 
 	//Detokenize Config Keys
-	err = DetokenizeConfigKeys(serviceFile, req.ConfigKeys)
+	err = DetokenizeConfigKeys(catalogServiceFolder, req.ConfigKeys)
 	if err != nil {
 		return fmt.Errorf("cluster %s - error opening file: %s", cl.ClusterName, err)
+	}
+
+	err = cp.Copy(catalogServiceFolder, clusterRegistryPath, cp.Options{})
+	if err != nil {
+		log.Error().Msgf("Error populating gitops repository with catalog components content: %s. error: %s", serviceName, err.Error())
+		return err
 	}
 
 	// Commit to gitops repository
@@ -441,7 +442,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 	return nil
 }
 
-func CreateTokensFromDatabaseRecord(cl *pkgtypes.Cluster) *providerConfigs.GitopsDirectoryValues {
+func CreateTokensFromDatabaseRecord(cl *pkgtypes.Cluster, registryPath string) *providerConfigs.GitopsDirectoryValues {
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
 	fullDomainName := ""
@@ -512,6 +513,7 @@ func CreateTokensFromDatabaseRecord(cl *pkgtypes.Cluster) *providerConfigs.Gitop
 		VaultIngressURL:                fmt.Sprintf("https://vault.%s", fullDomainName),
 		VaultIngressNoHTTPSURL:         fmt.Sprintf("vault.%s", fullDomainName),
 		VouchIngressURL:                fmt.Sprintf("https://vouch.%s", fullDomainName),
+		RegistryPath:                   registryPath,
 
 		GitDescription:       fmt.Sprintf("%s hosted git", cl.GitProvider),
 		GitNamespace:         "N/A",
