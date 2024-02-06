@@ -88,7 +88,7 @@ func CreateClusterSecret(c *gin.Context) {
 		return
 	}
 
-	var secretValues []interface{}
+	var secretValues map[string]interface{}
 	err := c.Bind(&secretValues)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
