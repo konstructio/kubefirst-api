@@ -333,10 +333,8 @@ definitions:
     type: object
   types.GitopsCatalogApp:
     properties:
-      categories:
-        items:
-          type: string
-        type: array
+      category:
+        type: string
       description:
         type: string
       display_name:

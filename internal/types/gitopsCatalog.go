@@ -20,7 +20,7 @@ type GitopsCatalogApp struct {
 	ConfigKeys  []GitopsCatalogAppKeys `bson:"config_keys" json:"config_keys" yaml:"configKeys"`
 	ImageURL    string                 `bson:"image_url" json:"image_url" yaml:"imageUrl"`
 	Description string                 `bson:"description" json:"description" yaml:"description"`
-	Categories  []string               `bson:"categories" json:"categories" yaml:"categories"`
+	Category    string                 `bson:"category" json:"category" yaml:"category"`
 }
 
 // GitopsCatalogAppSecretKey describes a required secret value when creating a
