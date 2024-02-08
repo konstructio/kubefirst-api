@@ -1372,11 +1372,8 @@ const docTemplate = `{
         "types.GitopsCatalogApp": {
             "type": "object",
             "properties": {
-                "categories": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "category": {
+                    "type": "string"
                 },
                 "description": {
                     "type": "string"
