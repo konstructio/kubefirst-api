@@ -123,6 +123,12 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 		fullDomainName = cl.DomainName
 	}
 
+	vaultUrl := fmt.Sprintf("https://vault.%s", fullDomainName)
+
+	if cl.CloudProvider == "k3d" {
+		vaultUrl = "http://vault.vault.svc:8200"
+	}
+
 	// If there are secret values, create a vault secret
 	if len(req.SecretKeys) > 0 {
 		log.Info().Msgf("cluster %s - application %s has secrets, creating vault values", cl.ClusterName, appDef.Name)
@@ -140,7 +146,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 		}
 
 		vaultClient, err := vaultapi.NewClient(&vaultapi.Config{
-			Address: fmt.Sprintf("https://vault.%s", fullDomainName),
+			Address: vaultUrl,
 		})
 		if err != nil {
 			return fmt.Errorf("cluster %s - error initializing vault client: %s", cl.ClusterName, err)
