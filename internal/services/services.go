@@ -41,7 +41,7 @@ import (
 )
 
 // CreateService
-func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.GitopsCatalogApp, req *types.GitopsCatalogAppCreateRequest) error {
+func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.GitopsCatalogApp, req *pkgtypes.GitopsCatalogAppCreateRequest, excludeArgoSync bool) error {
 	switch cl.Status {
 	case constants.ClusterStatusDeleted, constants.ClusterStatusDeleting, constants.ClusterStatusError, constants.ClusterStatusProvisioning:
 		return fmt.Errorf("cluster %s - unable to deploy service %s to cluster: cannot deploy services to a cluster in %s state", cl.ClusterName, serviceName, cl.Status)
@@ -208,6 +208,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 			Username: cl.GitAuth.User,
 			Password: cl.GitAuth.Token,
 		},
+		Force: true,
 	})
 	if err != nil {
 		return fmt.Errorf("cluster %s - error pushing commit for service file: %s", cl.ClusterName, err)
@@ -224,6 +225,10 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *types.Gitop
 	})
 	if err != nil {
 		return err
+	}
+
+	if excludeArgoSync {
+		return nil
 	}
 
 	// Wait for ArgoCD application sync
@@ -573,7 +578,7 @@ func CreateTokensFromDatabaseRecord(cl *pkgtypes.Cluster, registryPath string) *
 	return gitopsTemplateTokens
 }
 
-func DetokenizeConfigKeys(serviceFilePath string, configKeys []types.GitopsCatalogAppKeys) error {
+func DetokenizeConfigKeys(serviceFilePath string, configKeys []pkgtypes.GitopsCatalogAppKeys) error {
 	return filepath.Walk(serviceFilePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
