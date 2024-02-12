@@ -29,6 +29,7 @@ type GitopsCatalogAppKeys struct {
 	Name  string `bson:"name" json:"name" yaml:"name"`
 	Label string `bson:"label,omitempty" json:"label,omitempty" yaml:"label,omitempty"`
 	Value string `bson:"value,omitempty" json:"value,omitempty" yaml:"value,omitempty"`
+	Env   string `bson:"env,omitempty" json:"env,omitempty" yaml:"env,omitempty"`
 }
 
 // GitopsCatalogAppCreateRequest describes a request to create a service for a cluster
