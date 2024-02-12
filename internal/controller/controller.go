@@ -49,18 +49,19 @@ type ClusterController struct {
 	AlertsEmail               string
 
 	// auth
-	AWSAuth            pkgtypes.AWSAuth
-	CivoAuth           pkgtypes.CivoAuth
-	DigitaloceanAuth   pkgtypes.DigitaloceanAuth
-	VultrAuth          pkgtypes.VultrAuth
-	CloudflareAuth     pkgtypes.CloudflareAuth
-	GitAuth            pkgtypes.GitAuth
-	VaultAuth          pkgtypes.VaultAuth
-	GoogleAuth         pkgtypes.GoogleAuth
-	AwsAccessKeyID     string
-	AwsSecretAccessKey string
-	NodeType           string
-	NodeCount          int
+	AWSAuth                pkgtypes.AWSAuth
+	CivoAuth               pkgtypes.CivoAuth
+	DigitaloceanAuth       pkgtypes.DigitaloceanAuth
+	VultrAuth              pkgtypes.VultrAuth
+	CloudflareAuth         pkgtypes.CloudflareAuth
+	GitAuth                pkgtypes.GitAuth
+	VaultAuth              pkgtypes.VaultAuth
+	GoogleAuth             pkgtypes.GoogleAuth
+	AwsAccessKeyID         string
+	AwsSecretAccessKey     string
+	NodeType               string
+	NodeCount              int
+	PostInstallCatalogApps []pkgtypes.GitopsCatalogApp
 
 	// configs
 	ProviderConfig providerConfigs.ProviderConfig
@@ -185,6 +186,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	clctrl.HttpClient = http.DefaultClient
 	clctrl.NodeType = def.NodeType
 	clctrl.NodeCount = def.NodeCount
+	clctrl.PostInstallCatalogApps = def.PostInstallCatalogApps
 
 	clctrl.AWSAuth = def.AWSAuth
 	clctrl.CivoAuth = def.CivoAuth

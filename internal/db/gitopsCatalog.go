@@ -10,7 +10,7 @@ import (
 	"fmt"
 
 	"github.com/kubefirst/kubefirst-api/internal/gitopsCatalog"
-	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/pkg/types"
 	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"

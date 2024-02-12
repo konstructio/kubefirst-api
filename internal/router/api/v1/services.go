@@ -14,6 +14,8 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 )
 
@@ -99,7 +101,7 @@ func PostAddServiceToCluster(c *gin.Context) {
 		return
 	}
 	valid, hasKeys := false, false
-	var appDef types.GitopsCatalogApp
+	var appDef pkgtypes.GitopsCatalogApp
 	for _, app := range apps.Apps {
 		if app.Name == serviceName {
 			valid = true
@@ -117,7 +119,7 @@ func PostAddServiceToCluster(c *gin.Context) {
 	}
 
 	// Bind to variable as application/json, handle error
-	var serviceDefinition types.GitopsCatalogAppCreateRequest
+	var serviceDefinition pkgtypes.GitopsCatalogAppCreateRequest
 	err = c.Bind(&serviceDefinition)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -170,7 +172,7 @@ func PostAddServiceToCluster(c *gin.Context) {
 		return
 	}
 
-	err = services.CreateService(&cl, serviceName, &appDef, &serviceDefinition)
+	err = services.CreateService(&cl, serviceName, &appDef, &serviceDefinition, false)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),

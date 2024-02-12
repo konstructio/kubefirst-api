@@ -101,7 +101,14 @@ func UpdateClusterSecret(c *gin.Context) {
 
 	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, clusterName)
 
-	kcfg := k8s.CreateKubeConfig(false, fmt.Sprintf("%s/kubeconfig", clusterDir))
+	env, _ := env.GetEnv(constants.SilenceGetEnv)
+
+	var inCluster bool = false
+	if env.InCluster == "true" {
+		inCluster = true
+	}
+
+	kcfg := k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
 
 	err = k8s.UpdateSecretV2(kcfg.Clientset, "kubefirst", secret, clusterSecretUpdates)
 	if err != nil {
