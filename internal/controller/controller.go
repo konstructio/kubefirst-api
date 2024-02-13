@@ -316,7 +316,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		NodeType:               clctrl.NodeType,
 		NodeCount:              clctrl.NodeCount,
 		LogFileName:            def.LogFileName,
-		PostInstallCatalogApps: def.PostInstallCatalogApps,
+		PostInstallCatalogApps: clctrl.PostInstallCatalogApps,
 	}
 	err = clctrl.MdbCl.InsertCluster(cl)
 	if err != nil {
