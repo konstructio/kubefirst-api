@@ -437,7 +437,10 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Links:       []string{fmt.Sprintf("https://atlantis.%s", fullDomainName)},
 			Status:      "",
 		},
-		{
+	}
+
+	if cl.CloudProvider == "k3d" {
+		defaults = append(defaults, types.Service{
 			Name:        "Metaphor",
 			Default:     true,
 			Description: "A multi-environment demonstration space for frontend application best practices that's easy to apply to other projects.",
@@ -446,7 +449,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 				fmt.Sprintf("https://metaphor-staging.%s", fullDomainName),
 				fmt.Sprintf("https://metaphor-production.%s", fullDomainName)},
 			Status: "",
-		},
+		})
 	}
 
 	for _, svc := range defaults {
