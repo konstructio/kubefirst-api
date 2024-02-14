@@ -82,8 +82,6 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				newContents = strings.Replace(newContents, "<KUBEFIRST_STATE_STORE_BUCKET_HOSTNAME>", tokens.StateStoreBucketHostname, -1)
 				newContents = strings.Replace(newContents, "<WORKLOAD_CLUSTER_TERRAFORM_MODULE_URL>", tokens.WorkloadClusterTerraformModuleURL, -1)
 				newContents = strings.Replace(newContents, "<WORKLOAD_CLUSTER_BOOTSTRAP_TERRAFORM_MODULE_URL>", tokens.WorkloadClusterBootstrapTerraformModuleURL, -1)
-				newContents = strings.Replace(newContents, "<REGISTRY_PATH>", tokens.RegistryPath, -1)
-
 				newContents = strings.Replace(newContents, "<NODE_TYPE>", tokens.NodeType, -1)
 				newContents = strings.Replace(newContents, "<NODE_COUNT>", fmt.Sprint(tokens.NodeCount), -1)
 
@@ -142,6 +140,10 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				newContents = strings.Replace(newContents, "<EXTERNAL_DNS_PROVIDER_SECRET_NAME>", tokens.ExternalDNSProviderSecretName, -1)
 				newContents = strings.Replace(newContents, "<EXTERNAL_DNS_PROVIDER_SECRET_KEY>", tokens.ExternalDNSProviderSecretKey, -1)
 				newContents = strings.Replace(newContents, "<EXTERNAL_DNS_DOMAIN_NAME>", tokens.DomainName, -1)
+
+				// Catalog
+				newContents = strings.Replace(newContents, "<REGISTRY_PATH>", tokens.RegistryPath, -1)
+				newContents = strings.Replace(newContents, "<SECRET_STORE_REF>", tokens.SecretStoreRef, -1)
 
 				//origin issuer defines which annotations should be on ingresses
 				if useCloudflareOriginIssuer {

@@ -18,7 +18,7 @@ import (
 	"github.com/thanhpk/randstr"
 )
 
-func CreateTokensFromDatabaseRecord(cl *pkgtypes.Cluster, registryPath string) *providerConfigs.GitopsDirectoryValues {
+func CreateTokensFromDatabaseRecord(cl *pkgtypes.Cluster, registryPath string, secretStoreRef string) *providerConfigs.GitopsDirectoryValues {
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
 	fullDomainName := ""
@@ -90,6 +90,7 @@ func CreateTokensFromDatabaseRecord(cl *pkgtypes.Cluster, registryPath string) *
 		VaultIngressNoHTTPSURL:         fmt.Sprintf("vault.%s", fullDomainName),
 		VouchIngressURL:                fmt.Sprintf("https://vouch.%s", fullDomainName),
 		RegistryPath:                   registryPath,
+		SecretStoreRef:                 secretStoreRef,
 
 		GitDescription:       fmt.Sprintf("%s hosted git", cl.GitProvider),
 		GitNamespace:         "N/A",
