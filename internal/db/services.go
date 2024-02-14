@@ -17,8 +17,8 @@ import (
 )
 
 // CreateClusterServiceList adds an entry for a cluster to the service list
-func (mdbcl *MongoDBClient) CreateClusterServiceList(cl *pkgtypes.Cluster) error {
-	filter := bson.D{{Key: "cluster_name", Value: cl.ClusterName}}
+func (mdbcl *MongoDBClient) CreateClusterServiceList(clusterName string) error {
+	filter := bson.D{{Key: "cluster_name", Value: clusterName}}
 	var result pkgtypes.Cluster
 	err := mdbcl.ServicesCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {
@@ -26,15 +26,15 @@ func (mdbcl *MongoDBClient) CreateClusterServiceList(cl *pkgtypes.Cluster) error
 		if err == mongo.ErrNoDocuments {
 			// Create if entry does not exist
 			_, err := mdbcl.ServicesCollection.InsertOne(mdbcl.Context, types.ClusterServiceList{
-				ClusterName: cl.ClusterName,
+				ClusterName: clusterName,
 				Services:    []types.Service{},
 			})
 			if err != nil {
-				return fmt.Errorf("error inserting cluster service list for cluster %s: %s", cl.ClusterName, err)
+				return fmt.Errorf("error inserting cluster service list for cluster %s: %s", clusterName, err)
 			}
 		}
 	} else {
-		log.Info().Msgf("cluster service list record for %s already exists - skipping", cl.ClusterName)
+		log.Info().Msgf("cluster service list record for %s already exists - skipping", clusterName)
 	}
 
 	return nil

@@ -13,7 +13,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -30,13 +29,13 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	utils "github.com/kubefirst/kubefirst-api/pkg/utils"
 	"github.com/kubefirst/runtime/pkg/argocd"
 	"github.com/kubefirst/runtime/pkg/gitClient"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/vault"
 	cp "github.com/otiai10/copy"
 	log "github.com/rs/zerolog/log"
-	"github.com/thanhpk/randstr"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -77,30 +76,13 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 
 	gitopsRepo, _ := git.PlainOpen(tmpGitopsDir)
 
-	var registryPath string
-	if cl.CloudProvider == "civo" && cl.GitProvider == "github" {
-		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
-	} else if cl.CloudProvider == "civo" && cl.GitProvider == "gitlab" {
-		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
-	} else if cl.CloudProvider == "aws" && cl.GitProvider == "github" {
-		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
-	} else if cl.CloudProvider == "aws" && cl.GitProvider == "gitlab" {
-		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
-	} else if cl.CloudProvider == "google" && cl.GitProvider == "github" {
-		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
-	} else if cl.CloudProvider == "google" && cl.GitProvider == "gitlab" {
-		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
-	} else if cl.CloudProvider == "digitalocean" && cl.GitProvider == "github" {
-		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
-	} else if cl.CloudProvider == "digitalocean" && cl.GitProvider == "gitlab" {
-		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
-	} else if cl.CloudProvider == "vultr" && cl.GitProvider == "github" {
-		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
-	} else if cl.CloudProvider == "vultr" && cl.GitProvider == "gitlab" {
-		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
-	} else {
-		registryPath = fmt.Sprintf("registry/%s", cl.ClusterName)
+	clusterName := cl.ClusterName
+
+	if req.WorkloadClusterName != "" {
+		clusterName = req.WorkloadClusterName
 	}
+
+	registryPath := getRegistryPath(clusterName, cl.CloudProvider, req.IsTemplate)
 
 	clusterRegistryPath := fmt.Sprintf("%s/%s", tmpGitopsDir, registryPath)
 	catalogServiceFolder := fmt.Sprintf("%s/%s", tmpGitopsCatalogDir, serviceName)
@@ -131,7 +113,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 
 	// If there are secret values, create a vault secret
 	if len(req.SecretKeys) > 0 {
-		log.Info().Msgf("cluster %s - application %s has secrets, creating vault values", cl.ClusterName, appDef.Name)
+		log.Info().Msgf("cluster %s - application %s has secrets, creating vault values", clusterName, appDef.Name)
 
 		s := make(map[string]interface{}, 0)
 
@@ -142,24 +124,24 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 		// Get token
 		existingKubernetesSecret, err := k8s.ReadSecretV2(kcfg.Clientset, vault.VaultNamespace, vault.VaultSecretName)
 		if err != nil || existingKubernetesSecret == nil {
-			return fmt.Errorf("cluster %s - error getting vault token: %s", cl.ClusterName, err)
+			return fmt.Errorf("cluster %s - error getting vault token: %s", clusterName, err)
 		}
 
 		vaultClient, err := vaultapi.NewClient(&vaultapi.Config{
 			Address: vaultUrl,
 		})
 		if err != nil {
-			return fmt.Errorf("cluster %s - error initializing vault client: %s", cl.ClusterName, err)
+			return fmt.Errorf("cluster %s - error initializing vault client: %s", clusterName, err)
 		}
 
 		vaultClient.SetToken(existingKubernetesSecret["root-token"])
 
 		resp, err := vaultClient.KVv2("secret").Put(context.Background(), appDef.Name, s)
 		if err != nil {
-			return fmt.Errorf("cluster %s - error putting vault secret: %s", cl.ClusterName, err)
+			return fmt.Errorf("cluster %s - error putting vault secret: %s", clusterName, err)
 		}
 
-		log.Info().Msgf("cluster %s - created vault secret data for application %s %s", cl.ClusterName, appDef.Name, resp.VersionMetadata.CreatedTime)
+		log.Info().Msgf("cluster %s - created vault secret data for application %s %s", clusterName, appDef.Name, resp.VersionMetadata.CreatedTime)
 	}
 
 	// Create service files in gitops dir
@@ -173,22 +155,24 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 		},
 	)
 	if err != nil {
-		log.Warn().Msgf("cluster %s - error pulling gitops repo: %s", cl.ClusterName, err)
+		log.Warn().Msgf("cluster %s - error pulling gitops repo: %s", clusterName, err)
 	}
 
-	//Create Tokens
-	gitopsKubefirstTokens := CreateTokensFromDatabaseRecord(cl, registryPath)
+	if !req.IsTemplate {
+		//Create Tokens
+		gitopsKubefirstTokens := utils.CreateTokensFromDatabaseRecord(cl, registryPath)
 
-	//Detokenize App Template
-	err = providerConfigs.DetokenizeGitGitops(catalogServiceFolder, gitopsKubefirstTokens, cl.GitProtocol, cl.CloudflareAuth.OriginCaIssuerKey != "")
-	if err != nil {
-		return fmt.Errorf("cluster %s - error opening file: %s", cl.ClusterName, err)
-	}
+		//Detokenize App Template
+		err = providerConfigs.DetokenizeGitGitops(catalogServiceFolder, gitopsKubefirstTokens, cl.GitProtocol, cl.CloudflareAuth.OriginCaIssuerKey != "")
+		if err != nil {
+			return fmt.Errorf("cluster %s - error opening file: %s", clusterName, err)
+		}
 
-	//Detokenize Config Keys
-	err = DetokenizeConfigKeys(catalogServiceFolder, req.ConfigKeys)
-	if err != nil {
-		return fmt.Errorf("cluster %s - error opening file: %s", cl.ClusterName, err)
+		//Detokenize Config Keys
+		err = DetokenizeConfigKeys(catalogServiceFolder, req.ConfigKeys)
+		if err != nil {
+			return fmt.Errorf("cluster %s - error opening file: %s", clusterName, err)
+		}
 	}
 
 	err = cp.Copy(catalogServiceFolder, clusterRegistryPath, cp.Options{})
@@ -200,7 +184,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 	// Commit to gitops repository
 	err = gitClient.Commit(gitopsRepo, fmt.Sprintf("committing files for service %s", serviceName))
 	if err != nil {
-		return fmt.Errorf("cluster %s - error committing service file: %s", cl.ClusterName, err)
+		return fmt.Errorf("cluster %s - error committing service file: %s", clusterName, err)
 	}
 	err = gitopsRepo.Push(&git.PushOptions{
 		RemoteName: "origin",
@@ -211,11 +195,21 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 		Force: true,
 	})
 	if err != nil {
-		return fmt.Errorf("cluster %s - error pushing commit for service file: %s", cl.ClusterName, err)
+		return fmt.Errorf("cluster %s - error pushing commit for service file: %s", clusterName, err)
 	}
 
-	// Add to list
-	err = db.Client.InsertClusterServiceListEntry(cl.ClusterName, &types.Service{
+	existingService, err := db.Client.GetServices(clusterName)
+
+	if existingService.ClusterName == "" {
+		// Add to list
+		err = db.Client.CreateClusterServiceList(clusterName)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Update list
+	err = db.Client.InsertClusterServiceListEntry(clusterName, &types.Service{
 		Name:        serviceName,
 		Default:     false,
 		Description: appDef.Description,
@@ -259,30 +253,30 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 	for i := 0; i < 50; i++ {
 		_, err := argocdClient.ArgoprojV1alpha1().Applications("argocd").Get(context.Background(), serviceName, v1.GetOptions{})
 		if err != nil {
-			log.Info().Msgf("cluster %s - waiting for app %s to be created", cl.ClusterName, serviceName)
+			log.Info().Msgf("cluster %s - waiting for app %s to be created", clusterName, serviceName)
 			time.Sleep(time.Second * 10)
 		} else {
 			break
 		}
 		if i == 50 {
-			return fmt.Errorf("cluster %s - error waiting for app %s to be created: %s", cl.ClusterName, serviceName, err)
+			return fmt.Errorf("cluster %s - error waiting for app %s to be created: %s", clusterName, serviceName, err)
 		}
 	}
 
 	// Wait for app to be synchronized and healthy
 	for i := 0; i < 50; i++ {
 		if i == 50 {
-			return fmt.Errorf("cluster %s - error waiting for app %s to synchronize: %s", cl.ClusterName, serviceName, err)
+			return fmt.Errorf("cluster %s - error waiting for app %s to synchronize: %s", clusterName, serviceName, err)
 		}
 		app, err := argocdClient.ArgoprojV1alpha1().Applications("argocd").Get(context.Background(), serviceName, v1.GetOptions{})
 		if err != nil {
-			return fmt.Errorf("cluster %s - error getting argocd application %s: %s", cl.ClusterName, serviceName, err)
+			return fmt.Errorf("cluster %s - error getting argocd application %s: %s", clusterName, serviceName, err)
 		}
 		if app.Status.Sync.Status == v1alpha1.SyncStatusCodeSynced && app.Status.Health.Status == health.HealthStatusHealthy {
-			log.Info().Msgf("cluster %s - app %s synchronized", cl.ClusterName, serviceName)
+			log.Info().Msgf("cluster %s - app %s synchronized", clusterName, serviceName)
 			break
 		}
-		log.Info().Msgf("cluster %s - waiting for app %s to sync", cl.ClusterName, serviceName)
+		log.Info().Msgf("cluster %s - waiting for app %s to sync", clusterName, serviceName)
 		time.Sleep(time.Second * 10)
 	}
 
@@ -290,40 +284,43 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 }
 
 // DeleteService
-func DeleteService(cl *pkgtypes.Cluster, serviceName string) error {
+func DeleteService(cl *pkgtypes.Cluster, serviceName string, def pkgtypes.GitopsCatalogAppDeleteRequest) error {
 	var gitopsRepo *git.Repository
 
-	homeDir, err := os.UserHomeDir()
+	clusterName := cl.ClusterName
+
+	if def.WorkloadClusterName != "" {
+		clusterName = def.WorkloadClusterName
+	}
+
+	// Remove from list
+	svc, err := db.Client.GetService(clusterName, serviceName)
 	if err != nil {
-		log.Fatal().Msgf("error getting home path: %s", err)
-	}
-	gitopsDir := fmt.Sprintf("%s/.k1/%s/gitops", homeDir, cl.ClusterName)
-	gitopsRepo, _ = git.PlainOpen(gitopsDir)
-
-	var registryPath string
-	if cl.CloudProvider == "civo" && cl.GitProvider == "github" {
-		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
-	} else if cl.CloudProvider == "civo" && cl.GitProvider == "gitlab" {
-		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
-	} else if cl.CloudProvider == "aws" && cl.GitProvider == "github" {
-		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
-	} else if cl.CloudProvider == "aws" && cl.GitProvider == "gitlab" {
-		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
-	} else if cl.CloudProvider == "google" && cl.GitProvider == "github" {
-		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
-	} else if cl.CloudProvider == "google" && cl.GitProvider == "gitlab" {
-		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
-	} else if cl.CloudProvider == "vultr" && cl.GitProvider == "github" {
-		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
-	} else if cl.CloudProvider == "vultr" && cl.GitProvider == "gitlab" {
-		registryPath = fmt.Sprintf("registry/clusters/%s", cl.ClusterName)
-	} else {
-		registryPath = fmt.Sprintf("registry/%s", cl.ClusterName)
+		return fmt.Errorf("cluster %s - error finding service: %s", clusterName, err)
 	}
 
-	serviceFile := fmt.Sprintf("%s/%s/%s/%s.yaml", gitopsDir, registryPath, cl.ClusterName, serviceName)
+	homeDir, err := os.UserHomeDir()
+	tmpGitopsDir := fmt.Sprintf("%s/.k1/%s/%s/gitops", homeDir, cl.ClusterName, serviceName)
 
-	// Delete service files from gitops dir
+	// Remove gitops dir
+	err = os.RemoveAll(tmpGitopsDir)
+	if err != nil {
+		log.Fatal().Msgf("error removing gitops dir %s: %s", tmpGitopsDir, err)
+		return err
+	}
+
+	err = gitShim.PrepareGitEnvironment(cl, tmpGitopsDir)
+	if err != nil {
+		log.Fatal().Msgf("an error ocurred preparing git environment %s %s", tmpGitopsDir, err)
+	}
+
+	gitopsRepo, _ = git.PlainOpen(tmpGitopsDir)
+
+	registryPath := getRegistryPath(clusterName, cl.CloudProvider, def.IsTemplate)
+
+	serviceFile := fmt.Sprintf("%s/%s/%s.yaml", tmpGitopsDir, registryPath, serviceName)
+	componentsServiceFolder := fmt.Sprintf("%s/%s/components/%s", tmpGitopsDir, registryPath, serviceName)
+
 	err = gitShim.PullWithAuth(
 		gitopsRepo,
 		cl.GitProvider,
@@ -333,41 +330,51 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string) error {
 			Password: cl.GitAuth.Token,
 		},
 	)
+
 	if err != nil {
-		log.Warn().Msgf("cluster %s - error pulling gitops repo: %s", cl.ClusterName, err)
+		log.Warn().Msgf("cluster %s - error pulling gitops repo: %s", clusterName, err)
 	}
+
+	// removing registry service file
 	_, err = os.Stat(serviceFile)
 	if err != nil {
 		return fmt.Errorf("file %s does not exist in repository", serviceFile)
 	} else {
 		err := os.Remove(serviceFile)
 		if err != nil {
-			return fmt.Errorf("cluster %s - error deleting file: %s", cl.ClusterName, err)
+			return fmt.Errorf("cluster %s - error deleting file: %s", clusterName, err)
+		}
+	}
+
+	// removing componentes service folder
+	_, err = os.Stat(componentsServiceFolder)
+	if err != nil {
+		return fmt.Errorf("folder %s does not exist in repository", componentsServiceFolder)
+	} else {
+		err := os.RemoveAll(componentsServiceFolder)
+		if err != nil {
+			return fmt.Errorf("cluster %s - error deleting components folder: %s", clusterName, err)
 		}
 	}
 
 	// Commit to gitops repository
 	err = gitClient.Commit(gitopsRepo, fmt.Sprintf("deleting files for service %s", serviceName))
 	if err != nil {
-		return fmt.Errorf("cluster %s - error deleting service file: %s", cl.ClusterName, err)
+		return fmt.Errorf("cluster %s - error deleting service file: %s", clusterName, err)
 	}
 	err = gitopsRepo.Push(&git.PushOptions{
-		RemoteName: cl.GitProvider,
+		RemoteName: "origin",
 		Auth: &githttps.BasicAuth{
 			Username: cl.GitAuth.User,
 			Password: cl.GitAuth.Token,
 		},
 	})
+
 	if err != nil {
-		return fmt.Errorf("cluster %s - error pushing commit for service file: %s", cl.ClusterName, err)
+		return fmt.Errorf("cluster %s - error pushing commit for service file: %s", clusterName, err)
 	}
 
-	// Remove from list
-	svc, err := db.Client.GetService(cl.ClusterName, serviceName)
-	if err != nil {
-		return fmt.Errorf("cluster %s - error finding service: %s", cl.ClusterName, err)
-	}
-	err = db.Client.DeleteClusterServiceListEntry(cl.ClusterName, &svc)
+	err = db.Client.DeleteClusterServiceListEntry(clusterName, &svc)
 	if err != nil {
 		return err
 	}
@@ -377,7 +384,7 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string) error {
 
 // AddDefaultServices
 func AddDefaultServices(cl *pkgtypes.Cluster) error {
-	err := db.Client.CreateClusterServiceList(cl)
+	err := db.Client.CreateClusterServiceList(cl.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -431,7 +438,10 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Links:       []string{fmt.Sprintf("https://atlantis.%s", fullDomainName)},
 			Status:      "",
 		},
-		{
+	}
+
+	if cl.CloudProvider == "k3d" {
+		defaults = append(defaults, types.Service{
 			Name:        "Metaphor",
 			Default:     true,
 			Description: "A multi-environment demonstration space for frontend application best practices that's easy to apply to other projects.",
@@ -440,7 +450,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 				fmt.Sprintf("https://metaphor-staging.%s", fullDomainName),
 				fmt.Sprintf("https://metaphor-production.%s", fullDomainName)},
 			Status: "",
-		},
+		})
 	}
 
 	for _, svc := range defaults {
@@ -451,131 +461,6 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 	}
 
 	return nil
-}
-
-func CreateTokensFromDatabaseRecord(cl *pkgtypes.Cluster, registryPath string) *providerConfigs.GitopsDirectoryValues {
-	env, _ := env.GetEnv(constants.SilenceGetEnv)
-
-	fullDomainName := ""
-
-	if cl.SubdomainName != "" {
-		fullDomainName = fmt.Sprintf("%s.%s", cl.SubdomainName, cl.DomainName)
-	} else {
-		fullDomainName = cl.DomainName
-	}
-
-	destinationGitopsRepoURL := fmt.Sprintf("https://%s/%s/gitops.git", cl.GitHost, cl.GitAuth.Owner)
-
-	if cl.GitProtocol == "ssh" {
-		destinationGitopsRepoURL = fmt.Sprintf("git@%s:%s/gitops.git", cl.GitHost, cl.GitAuth.Owner)
-	}
-
-	var externalDNSProviderTokenEnvName, externalDNSProviderSecretKey string
-	if cl.DnsProvider == "cloudflare" {
-		externalDNSProviderTokenEnvName = "CF_API_TOKEN"
-		externalDNSProviderSecretKey = "cf-api-token"
-	} else {
-		switch cl.CloudProvider {
-		// provider auth secret gets mapped to these values
-		case "aws":
-			externalDNSProviderTokenEnvName = "not-used-uses-service-account"
-		case "google":
-			// Normally this would be GOOGLE_APPLICATION_CREDENTIALS but we are using a service account instead and
-			// if you set externalDNSProviderTokenEnvName to GOOGLE_APPLICATION_CREDENTIALS then externaldns will overlook the service account
-			// if you want to use the provided keyfile instead of a service account then set the var accordingly
-			externalDNSProviderTokenEnvName = fmt.Sprintf("%s_auth", strings.ToUpper(cl.CloudProvider))
-		case "civo":
-			externalDNSProviderTokenEnvName = fmt.Sprintf("%s_TOKEN", strings.ToUpper(cl.CloudProvider))
-		case "vultr":
-			externalDNSProviderTokenEnvName = fmt.Sprintf("%s_API_KEY", strings.ToUpper(cl.CloudProvider))
-		case "digitalocean":
-			externalDNSProviderTokenEnvName = "DO_TOKEN"
-		}
-		externalDNSProviderSecretKey = fmt.Sprintf("%s-auth", cl.CloudProvider)
-	}
-
-	containerRegistryHost := "ghcr.io"
-
-	if cl.GitProvider == "gitlab" {
-		containerRegistryHost = "registry.gitlab.com"
-	}
-
-	// Default gitopsTemplateTokens
-	gitopsTemplateTokens := &providerConfigs.GitopsDirectoryValues{
-		AlertsEmail:                    cl.AlertsEmail,
-		AtlantisAllowList:              fmt.Sprintf("%s/%s/*", cl.GitHost, cl.GitAuth.Owner),
-		CloudProvider:                  cl.CloudProvider,
-		CloudRegion:                    cl.CloudRegion,
-		ClusterName:                    cl.ClusterName,
-		ClusterType:                    cl.ClusterType,
-		DomainName:                     cl.DomainName,
-		SubdomainName:                  cl.SubdomainName,
-		KubefirstTeam:                  cl.KubefirstTeam,
-		NodeType:                       cl.NodeType,
-		NodeCount:                      cl.NodeCount,
-		KubefirstVersion:               env.KubefirstVersion,
-		ArgoCDIngressURL:               fmt.Sprintf("https://argocd.%s", fullDomainName),
-		ArgoCDIngressNoHTTPSURL:        fmt.Sprintf("argocd.%s", fullDomainName),
-		ArgoWorkflowsIngressURL:        fmt.Sprintf("https://argo.%s", fullDomainName),
-		ArgoWorkflowsIngressNoHTTPSURL: fmt.Sprintf("argo.%s", fullDomainName),
-		AtlantisIngressURL:             fmt.Sprintf("https://atlantis.%s", fullDomainName),
-		AtlantisIngressNoHTTPSURL:      fmt.Sprintf("atlantis.%s", fullDomainName),
-		ChartMuseumIngressURL:          fmt.Sprintf("https://chartmuseum.%s", fullDomainName),
-		VaultIngressURL:                fmt.Sprintf("https://vault.%s", fullDomainName),
-		VaultIngressNoHTTPSURL:         fmt.Sprintf("vault.%s", fullDomainName),
-		VouchIngressURL:                fmt.Sprintf("https://vouch.%s", fullDomainName),
-		RegistryPath:                   registryPath,
-
-		GitDescription:       fmt.Sprintf("%s hosted git", cl.GitProvider),
-		GitNamespace:         "N/A",
-		GitProvider:          cl.GitProvider,
-		GitRunner:            fmt.Sprintf("%s Runner", cl.GitProvider),
-		GitRunnerDescription: fmt.Sprintf("Self Hosted %s Runner", cl.GitProvider),
-		GitRunnerNS:          fmt.Sprintf("%s-runner", cl.GitProvider),
-		GitURL:               cl.GitopsTemplateURL,
-		GitopsRepoURL:        destinationGitopsRepoURL,
-
-		GitHubHost:  fmt.Sprintf("https://github.com/%s/gitops.git", cl.GitAuth.Owner),
-		GitHubOwner: cl.GitAuth.Owner,
-		GitHubUser:  cl.GitAuth.User,
-
-		GitlabHost:         cl.GitHost,
-		GitlabOwner:        cl.GitAuth.Owner,
-		GitlabOwnerGroupID: cl.GitlabOwnerGroupID,
-		GitlabUser:         cl.GitAuth.User,
-
-		GitopsRepoAtlantisWebhookURL:               cl.AtlantisWebhookURL,
-		GitopsRepoNoHTTPSURL:                       fmt.Sprintf("%s/%s/gitops.git", cl.GitHost, cl.GitAuth.Owner),
-		WorkloadClusterTerraformModuleURL:          fmt.Sprintf("git::https://%s/%s/gitops.git//terraform/%s/modules/workload-cluster?ref=main", cl.GitHost, cl.GitAuth.Owner, cl.CloudProvider),
-		WorkloadClusterBootstrapTerraformModuleURL: fmt.Sprintf("git::https://%s/%s/gitops.git//terraform/%s/modules/bootstrap?ref=main", cl.GitHost, cl.GitAuth.Owner, cl.CloudProvider),
-		ClusterId: cl.ClusterID,
-
-		// external-dns optionality to provide cloudflare support regardless of cloud provider
-		ExternalDNSProviderName:         cl.DnsProvider,
-		ExternalDNSProviderTokenEnvName: externalDNSProviderTokenEnvName,
-		ExternalDNSProviderSecretName:   fmt.Sprintf("%s-auth", cl.CloudProvider),
-		ExternalDNSProviderSecretKey:    externalDNSProviderSecretKey,
-
-		ContainerRegistryURL: fmt.Sprintf("%s/%s", containerRegistryHost, cl.GitAuth.Owner), // Not Supported for AWS ECR
-	}
-
-	//Handle provider specific tokens
-	switch cl.CloudProvider {
-	case "vultr":
-		gitopsTemplateTokens.StateStoreBucketHostname = cl.StateStoreDetails.Hostname
-	case "google":
-		gitopsTemplateTokens.GoogleAuth = cl.GoogleAuth.KeyFile
-		gitopsTemplateTokens.GoogleProject = cl.GoogleAuth.ProjectId
-		gitopsTemplateTokens.GoogleUniqueness = strings.ToLower(randstr.String(5))
-		gitopsTemplateTokens.ForceDestroy = strconv.FormatBool(true) //TODO make this optional
-		gitopsTemplateTokens.KubefirstArtifactsBucket = cl.StateStoreDetails.Name
-		gitopsTemplateTokens.VaultDataBucketName = fmt.Sprintf("%s-vault-data-%s", cl.GoogleAuth.ProjectId, cl.ClusterName)
-	case "aws":
-		gitopsTemplateTokens.KubefirstArtifactsBucket = cl.StateStoreDetails.Name
-		gitopsTemplateTokens.AtlantisWebhookURL = cl.AtlantisWebhookURL
-	}
-
-	return gitopsTemplateTokens
 }
 
 func DetokenizeConfigKeys(serviceFilePath string, configKeys []pkgtypes.GitopsCatalogAppKeys) error {
@@ -601,4 +486,17 @@ func DetokenizeConfigKeys(serviceFilePath string, configKeys []pkgtypes.GitopsCa
 		}
 		return nil
 	})
+}
+
+func getRegistryPath(clusterName string, cloudProvider string, isTemplate bool) string {
+	if isTemplate && cloudProvider != "k3d" {
+		return fmt.Sprintf("templates/%s", clusterName)
+	}
+
+	if cloudProvider == "k3d" {
+		return fmt.Sprintf("registry/%s", clusterName)
+	} else {
+		return fmt.Sprintf("registry/clusters/%s", clusterName)
+	}
+
 }

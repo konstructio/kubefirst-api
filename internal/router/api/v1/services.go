@@ -179,6 +179,10 @@ func PostAddServiceToCluster(c *gin.Context) {
 		})
 		return
 	}
+
+	c.JSON(http.StatusOK, types.JSONSuccessResponse{
+		Message: fmt.Sprintf("service %s has been created", serviceName),
+	})
 }
 
 // DeleteServiceFromCluster godoc
@@ -241,11 +245,25 @@ func DeleteServiceFromCluster(c *gin.Context) {
 		return
 	}
 
-	err = services.DeleteService(&cl, serviceName)
+	// Bind to variable as application/json, handle error
+	var serviceDefinition pkgtypes.GitopsCatalogAppDeleteRequest
+	err = c.Bind(&serviceDefinition)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
 		})
 		return
 	}
+
+	err = services.DeleteService(&cl, serviceName, serviceDefinition)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, types.JSONSuccessResponse{
+		Message: fmt.Sprintf("service %s has been deleted", serviceName),
+	})
 }
