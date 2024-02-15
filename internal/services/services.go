@@ -26,7 +26,6 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/kubefirst/kubefirst-api/internal/gitShim"
-	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	utils "github.com/kubefirst/kubefirst-api/pkg/utils"
@@ -211,7 +210,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 	}
 
 	// Update list
-	err = db.Client.InsertClusterServiceListEntry(clusterName, &types.Service{
+	err = db.Client.InsertClusterServiceListEntry(clusterName, &pkgtypes.Service{
 		Name:        serviceName,
 		Default:     false,
 		Description: appDef.Description,
@@ -400,7 +399,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 		fullDomainName = cl.DomainName
 	}
 
-	defaults := []types.Service{
+	defaults := []pkgtypes.Service{
 		{
 			Name:        cl.GitProvider,
 			Default:     true,
@@ -450,7 +449,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 	}
 
 	if cl.CloudProvider == "k3d" {
-		defaults = append(defaults, types.Service{
+		defaults = append(defaults, pkgtypes.Service{
 			Name:        "Metaphor",
 			Default:     true,
 			Description: "A multi-environment demonstration space for frontend application best practices that's easy to apply to other projects.",

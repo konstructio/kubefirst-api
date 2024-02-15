@@ -19,7 +19,6 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/env"
-	internalTypes "github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/kubefirst-api/pkg/types"
 
 	log "github.com/rs/zerolog/log"
@@ -101,7 +100,7 @@ func CreateDefaultEnvironments(mgmtCluster types.Cluster) error {
 		}
 
 		// Update list
-		err = db.Client.InsertClusterServiceListEntry(clusterName, &internalTypes.Service{
+		err = db.Client.InsertClusterServiceListEntry(clusterName, &types.Service{
 			Name:        "Metaphor",
 			Default:     true,
 			Description: "A multi-environment demonstration space for frontend application best practices that's easy to apply to other projects.",
