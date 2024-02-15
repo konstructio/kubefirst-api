@@ -9,8 +9,7 @@ package db
 import (
 	"fmt"
 
-	"github.com/kubefirst/kubefirst-api/internal/types"
-	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/kubefirst/kubefirst-api/pkg/types"
 	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -19,7 +18,7 @@ import (
 // CreateClusterServiceList adds an entry for a cluster to the service list
 func (mdbcl *MongoDBClient) CreateClusterServiceList(clusterName string) error {
 	filter := bson.D{{Key: "cluster_name", Value: clusterName}}
-	var result pkgtypes.Cluster
+	var result types.Cluster
 	err := mdbcl.ServicesCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {
 		// This error means your query did not match any documents.
