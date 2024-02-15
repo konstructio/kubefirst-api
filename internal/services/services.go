@@ -184,7 +184,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 	}
 
 	// Commit to gitops repository
-	err = gitClient.Commit(gitopsRepo, fmt.Sprintf("committing files for service %s", serviceName))
+	err = gitClient.Commit(gitopsRepo, fmt.Sprintf("adding %s to the cluster %s on behalf of %s", serviceName, clusterName, req.User))
 	if err != nil {
 		return fmt.Errorf("cluster %s - error committing service file: %s", clusterName, err)
 	}
@@ -218,6 +218,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 		Image:       appDef.ImageURL,
 		Links:       []string{},
 		Status:      "",
+		CreatedBy:   req.User,
 	})
 	if err != nil {
 		return err
@@ -360,10 +361,11 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string, def pkgtypes.Gitops
 	}
 
 	// Commit to gitops repository
-	err = gitClient.Commit(gitopsRepo, fmt.Sprintf("deleting files for service %s", serviceName))
+	err = gitClient.Commit(gitopsRepo, fmt.Sprintf("removing %s from the cluster %s on behalf of %s", serviceName, clusterName, def.User))
 	if err != nil {
 		return fmt.Errorf("cluster %s - error deleting service file: %s", clusterName, err)
 	}
+
 	err = gitopsRepo.Push(&git.PushOptions{
 		RemoteName: "origin",
 		Auth: &githttps.BasicAuth{
@@ -406,7 +408,8 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Image:       fmt.Sprintf("https://assets.kubefirst.com/console/%s.svg", cl.GitProvider),
 			Links: []string{fmt.Sprintf("https://%s/%s/gitops", cl.GitHost, cl.GitAuth.Owner),
 				fmt.Sprintf("https://%s/%s/metaphor", cl.GitHost, cl.GitAuth.Owner)},
-			Status: "",
+			Status:    "",
+			CreatedBy: "kbot",
 		},
 		{
 			Name:        "Vault",
@@ -415,6 +418,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Image:       "https://assets.kubefirst.com/console/vault.svg",
 			Links:       []string{fmt.Sprintf("https://vault.%s", fullDomainName)},
 			Status:      "",
+			CreatedBy:   "kbot",
 		},
 		{
 			Name:        "Argo CD",
@@ -423,6 +427,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Image:       "https://assets.kubefirst.com/console/argocd.svg",
 			Links:       []string{fmt.Sprintf("https://argocd.%s", fullDomainName)},
 			Status:      "",
+			CreatedBy:   "kbot",
 		},
 		{
 			Name:        "Argo Workflows",
@@ -431,6 +436,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Image:       "https://assets.kubefirst.com/console/argocd.svg",
 			Links:       []string{fmt.Sprintf("https://argo.%s/workflows", fullDomainName)},
 			Status:      "",
+			CreatedBy:   "kbot",
 		},
 		{
 			Name:        "Atlantis",
@@ -439,6 +445,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Image:       "https://assets.kubefirst.com/console/atlantis.svg",
 			Links:       []string{fmt.Sprintf("https://atlantis.%s", fullDomainName)},
 			Status:      "",
+			CreatedBy:   "kbot",
 		},
 	}
 
@@ -451,7 +458,8 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Links: []string{fmt.Sprintf("https://metaphor-development.%s", fullDomainName),
 				fmt.Sprintf("https://metaphor-staging.%s", fullDomainName),
 				fmt.Sprintf("https://metaphor-production.%s", fullDomainName)},
-			Status: "",
+			Status:    "",
+			CreatedBy: "kbot",
 		})
 	}
 

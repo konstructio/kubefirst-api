@@ -36,13 +36,15 @@ type GitopsCatalogAppKeys struct {
 // GitopsCatalogAppCreateRequest describes a request to create a service for a cluster
 // based on a gitops catalog app
 type GitopsCatalogAppCreateRequest struct {
-	WorkloadClusterName string                 `bson:"workload_cluster_name" json:"workload_cluster_name"`
 	IsTemplate          bool                   `bson:"is_template" json:"is_template"`
+	User                string                 `bson:"user" json:"user"`
 	SecretKeys          []GitopsCatalogAppKeys `bson:"secret_keys,omitempty" json:"secret_keys,omitempty"`
 	ConfigKeys          []GitopsCatalogAppKeys `bson:"config_keys,omitempty" json:"config_keys,omitempty"`
+	WorkloadClusterName string                 `bson:"workload_cluster_name" json:"workload_cluster_name"`
 }
 
 type GitopsCatalogAppDeleteRequest struct {
-	WorkloadClusterName string `bson:"workload_cluster_name" json:"workload_cluster_name"`
+	User                string `bson:"user" json:"user"`
 	IsTemplate          bool   `bson:"is_template" json:"is_template"`
+	WorkloadClusterName string `bson:"workload_cluster_name" json:"workload_cluster_name"`
 }
