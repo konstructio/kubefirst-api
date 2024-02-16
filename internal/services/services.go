@@ -77,10 +77,14 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 
 	clusterName := cl.ClusterName
 	secretStoreRef := "vault-kv-secret"
+	project := "default"
+	clusterDestination := "in-cluster"
 
 	if req.WorkloadClusterName != "" {
 		clusterName = req.WorkloadClusterName
 		secretStoreRef = fmt.Sprintf("%s-vault-kv-secret", req.WorkloadClusterName)
+		project = clusterName
+		clusterDestination = clusterName
 	}
 
 	registryPath := getRegistryPath(clusterName, cl.CloudProvider, req.IsTemplate)
@@ -161,7 +165,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 
 	if !req.IsTemplate {
 		//Create Tokens
-		gitopsKubefirstTokens := utils.CreateTokensFromDatabaseRecord(cl, registryPath, secretStoreRef)
+		gitopsKubefirstTokens := utils.CreateTokensFromDatabaseRecord(cl, registryPath, secretStoreRef, project, clusterDestination)
 
 		//Detokenize App Template
 		err = providerConfigs.DetokenizeGitGitops(catalogServiceFolder, gitopsKubefirstTokens, cl.GitProtocol, cl.CloudflareAuth.OriginCaIssuerKey != "")
