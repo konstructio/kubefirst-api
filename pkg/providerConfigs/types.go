@@ -42,6 +42,8 @@ type GitopsDirectoryValues struct {
 	VouchIngressURL                string
 	RegistryPath                   string
 	SecretStoreRef                 string
+	Project                        string
+	ClusterDestination             string
 
 	AwsIamArnAccountRoot string
 	AwsKmsKeyId          string
