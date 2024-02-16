@@ -68,6 +68,7 @@ func main() {
 					log.Info().Msgf("installing catalog application %s", catalogApp.Name)
 
 					request := &types.GitopsCatalogAppCreateRequest{
+						User:       "kbot",
 						SecretKeys: catalogApp.SecretKeys,
 						ConfigKeys: catalogApp.ConfigKeys,
 					}
