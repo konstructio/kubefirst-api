@@ -41,6 +41,7 @@ type GitopsCatalogAppCreateRequest struct {
 	SecretKeys          []GitopsCatalogAppKeys `bson:"secret_keys,omitempty" json:"secret_keys,omitempty"`
 	ConfigKeys          []GitopsCatalogAppKeys `bson:"config_keys,omitempty" json:"config_keys,omitempty"`
 	WorkloadClusterName string                 `bson:"workload_cluster_name" json:"workload_cluster_name"`
+	Environment         string                 `bson:"environment" json:"environment"`
 }
 
 type GitopsCatalogAppDeleteRequest struct {

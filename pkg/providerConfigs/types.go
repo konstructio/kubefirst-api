@@ -44,6 +44,7 @@ type GitopsDirectoryValues struct {
 	SecretStoreRef                 string
 	Project                        string
 	ClusterDestination             string
+	Environment                    string
 
 	AwsIamArnAccountRoot string
 	AwsKmsKeyId          string
