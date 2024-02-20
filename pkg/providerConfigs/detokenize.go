@@ -146,6 +146,7 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				newContents = strings.Replace(newContents, "<SECRET_STORE_REF>", tokens.SecretStoreRef, -1)
 				newContents = strings.Replace(newContents, "<PROJECT>", tokens.Project, -1)
 				newContents = strings.Replace(newContents, "<CLUSTER_DESTINATION>", tokens.ClusterDestination, -1)
+				newContents = strings.Replace(newContents, "<ENVIRONMENT>", tokens.Environment, -1)
 
 				//origin issuer defines which annotations should be on ingresses
 				if useCloudflareOriginIssuer {

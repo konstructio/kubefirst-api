@@ -79,12 +79,14 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 	secretStoreRef := "vault-kv-secret"
 	project := "default"
 	clusterDestination := "in-cluster"
+	environment := "mgmt"
 
 	if req.WorkloadClusterName != "" {
 		clusterName = req.WorkloadClusterName
 		secretStoreRef = fmt.Sprintf("%s-vault-kv-secret", req.WorkloadClusterName)
 		project = clusterName
 		clusterDestination = clusterName
+		environment = req.Environment
 	}
 
 	registryPath := getRegistryPath(clusterName, cl.CloudProvider, req.IsTemplate)
@@ -165,7 +167,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 
 	if !req.IsTemplate {
 		//Create Tokens
-		gitopsKubefirstTokens := utils.CreateTokensFromDatabaseRecord(cl, registryPath, secretStoreRef, project, clusterDestination)
+		gitopsKubefirstTokens := utils.CreateTokensFromDatabaseRecord(cl, registryPath, secretStoreRef, project, clusterDestination, environment)
 
 		//Detokenize App Template
 		err = providerConfigs.DetokenizeGitGitops(catalogServiceFolder, gitopsKubefirstTokens, cl.GitProtocol, cl.CloudflareAuth.OriginCaIssuerKey != "")
@@ -227,7 +229,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 		return err
 	}
 
-	if excludeArgoSync {
+	if excludeArgoSync || req.IsTemplate {
 		return nil
 	}
 
