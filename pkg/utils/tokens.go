@@ -18,7 +18,7 @@ import (
 	"github.com/thanhpk/randstr"
 )
 
-func CreateTokensFromDatabaseRecord(cl *pkgtypes.Cluster, registryPath string, secretStoreRef string, project string, clusterDestination string, environment string) *providerConfigs.GitopsDirectoryValues {
+func CreateTokensFromDatabaseRecord(cl *pkgtypes.Cluster, registryPath string, secretStoreRef string, project string, clusterDestination string, environment string, clusterName string) *providerConfigs.GitopsDirectoryValues {
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
 	fullDomainName := ""
@@ -65,13 +65,20 @@ func CreateTokensFromDatabaseRecord(cl *pkgtypes.Cluster, registryPath string, s
 		containerRegistryHost = "registry.gitlab.com"
 	}
 
+	// Updating cluster name for workload clusters
+	clusterNameToken := cl.ClusterName
+
+	if clusterName != "" {
+		clusterNameToken = clusterName
+	}
+
 	// Default gitopsTemplateTokens
 	gitopsTemplateTokens := &providerConfigs.GitopsDirectoryValues{
 		AlertsEmail:                    cl.AlertsEmail,
 		AtlantisAllowList:              fmt.Sprintf("%s/%s/*", cl.GitHost, cl.GitAuth.Owner),
 		CloudProvider:                  cl.CloudProvider,
 		CloudRegion:                    cl.CloudRegion,
-		ClusterName:                    cl.ClusterName,
+		ClusterName:                    clusterNameToken,
 		ClusterType:                    cl.ClusterType,
 		DomainName:                     cl.DomainName,
 		SubdomainName:                  cl.SubdomainName,

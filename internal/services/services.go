@@ -167,7 +167,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 
 	if !req.IsTemplate {
 		//Create Tokens
-		gitopsKubefirstTokens := utils.CreateTokensFromDatabaseRecord(cl, registryPath, secretStoreRef, project, clusterDestination, environment)
+		gitopsKubefirstTokens := utils.CreateTokensFromDatabaseRecord(cl, registryPath, secretStoreRef, project, clusterDestination, environment, clusterName)
 
 		//Detokenize App Template
 		err = providerConfigs.DetokenizeGitGitops(catalogServiceFolder, gitopsKubefirstTokens, cl.GitProtocol, cl.CloudflareAuth.OriginCaIssuerKey != "")
