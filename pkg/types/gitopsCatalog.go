@@ -14,14 +14,16 @@ type GitopsCatalogApps struct {
 
 // GitopsCatalogApp describes a Kubefirst gitops catalog application
 type GitopsCatalogApp struct {
-	Category    string                 `bson:"category" json:"category" yaml:"category"`
-	ConfigKeys  []GitopsCatalogAppKeys `bson:"config_keys" json:"config_keys" yaml:"configKeys"`
-	Description string                 `bson:"description" json:"description" yaml:"description"`
-	DisplayName string                 `bson:"display_name" json:"display_name" yaml:"displayName"`
-	ImageURL    string                 `bson:"image_url" json:"image_url" yaml:"imageUrl"`
-	IsTemplate  bool                   `bson:"is_template" json:"is_template" yaml:"is_template"`
-	Name        string                 `bson:"name" json:"name" yaml:"name"`
-	SecretKeys  []GitopsCatalogAppKeys `bson:"secret_keys" json:"secret_keys" yaml:"secretKeys"`
+	Category      string                 `bson:"category" json:"category" yaml:"category"`
+	ConfigKeys    []GitopsCatalogAppKeys `bson:"config_keys" json:"config_keys" yaml:"configKeys"`
+	Description   string                 `bson:"description" json:"description" yaml:"description"`
+	DisplayName   string                 `bson:"display_name" json:"display_name" yaml:"displayName"`
+	ImageURL      string                 `bson:"image_url" json:"image_url" yaml:"imageUrl"`
+	IsTemplate    bool                   `bson:"is_template" json:"is_template" yaml:"is_template"`
+	Name          string                 `bson:"name" json:"name" yaml:"name"`
+	SecretKeys    []GitopsCatalogAppKeys `bson:"secret_keys" json:"secret_keys" yaml:"secretKeys"`
+	CloudDenylist []string               `bson:"cloudDenylist" json:"cloudDenylist" yaml:"cloudDenylist"`
+	GitDenylist   []string               `bson:"gitDenylist" json:"gitDenylist" yaml:"gitDenylist"`
 }
 
 // GitopsCatalogAppSecretKey describes a required secret value when creating a

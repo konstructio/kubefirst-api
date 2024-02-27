@@ -26,6 +26,7 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/kubefirst/kubefirst-api/internal/gitShim"
+	"github.com/kubefirst/kubefirst-api/pkg/common"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	utils "github.com/kubefirst/kubefirst-api/pkg/utils"
@@ -182,6 +183,9 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 		}
 	}
 
+	// Get Ingress links
+	links := common.GetIngressLinks(catalogServiceFolder, fullDomainName)
+
 	err = cp.Copy(catalogServiceFolder, clusterRegistryPath, cp.Options{})
 	if err != nil {
 		log.Error().Msgf("Error populating gitops repository with catalog components content: %s. error: %s", serviceName, err.Error())
@@ -221,7 +225,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 		Default:     false,
 		Description: appDef.Description,
 		Image:       appDef.ImageURL,
-		Links:       []string{},
+		Links:       links,
 		Status:      "",
 		CreatedBy:   req.User,
 	})

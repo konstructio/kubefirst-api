@@ -14,6 +14,7 @@ import (
 	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"golang.org/x/exp/slices"
 )
 
 // GetGitopsCatalogApps
@@ -24,6 +25,29 @@ func (mdbcl *MongoDBClient) GetGitopsCatalogApps() (types.GitopsCatalogApps, err
 	if err != nil {
 		return types.GitopsCatalogApps{}, fmt.Errorf("error getting gitops catalog apps: %s", err)
 	}
+
+	return result, nil
+}
+
+// GetGitopsCatalogAppsByCloudProvider
+func (mdbcl *MongoDBClient) GetGitopsCatalogAppsByCloudProvider(cloudProvider string, gitProvider string) (types.GitopsCatalogApps, error) {
+	// Find
+	var result types.GitopsCatalogApps
+
+	err := mdbcl.GitopsCatalogCollection.FindOne(mdbcl.Context, bson.D{}).Decode(&result)
+	if err != nil {
+		return types.GitopsCatalogApps{}, fmt.Errorf("error getting gitops catalog apps: %s", err)
+	}
+
+	filteredApps := []types.GitopsCatalogApp{}
+
+	for _, app := range result.Apps {
+		if !slices.Contains(app.CloudDenylist, cloudProvider) && !slices.Contains(app.GitDenylist, gitProvider) {
+			filteredApps = append(filteredApps, app)
+		}
+	}
+
+	result.Apps = filteredApps
 
 	return result, nil
 }
