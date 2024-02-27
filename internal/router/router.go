@@ -62,7 +62,7 @@ func SetupRouter() *gin.Engine {
 		v1.POST("/secret/:cluster_name/:secret", router.UpdateClusterSecret)
 
 		// Gitops Catalog
-		v1.GET("/gitops-catalog/apps", middleware.ValidateAPIKey(), router.GetGitopsCatalogApps)
+		v1.GET("/gitops-catalog/:cluster_name/:cloud_provider/apps", middleware.ValidateAPIKey(), router.GetGitopsCatalogApps)
 		v1.GET("/gitops-catalog/apps/update", middleware.ValidateAPIKey(), router.UpdateGitopsCatalogApps)
 
 		// Services
