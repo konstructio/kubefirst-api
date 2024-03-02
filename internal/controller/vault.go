@@ -353,6 +353,11 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 		"origin-ca-api-key": cl.CloudflareAuth.OriginCaIssuerKey,
 	})
 
+	_, err = vaultClient.KVv2("secret").Put(context.Background(), "crossplane", map[string]interface{}{
+		"username": cl.GitAuth.User,
+		"password": cl.GitAuth.Token,
+	})
+
 	if cl.CloudProvider == "google" {
 		log.Info("writing google specific secrets to vault secret store")
 		homeDir, err := os.UserHomeDir()

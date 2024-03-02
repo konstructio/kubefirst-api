@@ -92,6 +92,13 @@ func BootstrapK3sMgmtCluster(clientset *kubernetes.Clientset, cl *pkgtypes.Clust
 				"origin-ca-api-key": []byte(cl.CloudflareAuth.OriginCaIssuerKey),
 			},
 		},
+		{
+			ObjectMeta: metav1.ObjectMeta{Name: "crossplane-secrets", Namespace: "crossplane-system"},
+			Data: map[string][]byte{
+				"username": []byte(cl.GitAuth.User),
+				"password": []byte(cl.GitAuth.Token),
+			},
+		},
 	}
 	for _, secret := range createSecrets {
 		_, err := clientset.CoreV1().Secrets(secret.ObjectMeta.Namespace).Get(context.TODO(), secret.ObjectMeta.Name, metav1.GetOptions{})
