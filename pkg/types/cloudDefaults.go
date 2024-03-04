@@ -6,6 +6,7 @@ type CloudDefault struct {
 }
 
 type CloudProviderDefaults struct {
+	Akamai       CloudDefault `json:"akamai"`
 	Aws          CloudDefault `json:"aws"`
 	Civo         CloudDefault `json:"civo"`
 	DigitalOcean CloudDefault `json:"do"`

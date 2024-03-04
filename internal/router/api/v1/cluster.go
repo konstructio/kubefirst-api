@@ -22,6 +22,7 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/kubefirst/kubefirst-api/providers/akamai"
 	"github.com/kubefirst/kubefirst-api/providers/aws"
 	"github.com/kubefirst/kubefirst-api/providers/civo"
 	"github.com/kubefirst/kubefirst-api/providers/digitalocean"
@@ -276,6 +277,7 @@ func PostCreateCluster(c *gin.Context) {
 	//Retry mechanism
 	if cluster.ClusterName != "" {
 		//Assign cloud and git credentials
+		clusterDefinition.AkamaiAuth = cluster.AkamaiAuth
 		clusterDefinition.AWSAuth = cluster.AWSAuth
 		clusterDefinition.CivoAuth = cluster.CivoAuth
 		clusterDefinition.VultrAuth = cluster.VultrAuth
@@ -313,6 +315,36 @@ func PostCreateCluster(c *gin.Context) {
 	}
 
 	switch clusterDefinition.CloudProvider {
+	case "akamai":
+		if useSecretForAuth {
+			err := utils.ValidateAuthenticationFields(k1AuthSecret)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: fmt.Sprintf("error checking akamai auth: %s", err),
+				})
+				return
+			}
+			clusterDefinition.AkamaiAuth = pkgtypes.AkamaiAuth{
+				Token: k1AuthSecret["akamai-token"],
+			}
+		} else {
+			if clusterDefinition.AkamaiAuth.Token == "" {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: "missing authentication credentials in request, please check and try again",
+				})
+				return
+			}
+		}
+		go func() {
+			err = akamai.CreateAkamaiCluster(&clusterDefinition)
+			if err != nil {
+				log.Error().Msgf(err.Error())
+			}
+		}()
+
+		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
+			Message: "cluster create enqueued",
+		})
 	case "aws":
 		if useSecretForAuth {
 			err := utils.ValidateAuthenticationFields(k1AuthSecret)

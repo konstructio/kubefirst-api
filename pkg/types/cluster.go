@@ -15,7 +15,7 @@ type ClusterDefinition struct {
 
 	//Cluster
 	AdminEmail             string             `json:"admin_email" binding:"required"`
-	CloudProvider          string             `json:"cloud_provider" binding:"required,oneof=aws civo digitalocean vultr google"`
+	CloudProvider          string             `json:"cloud_provider" binding:"required,oneof=akamai aws civo digitalocean vultr google"`
 	CloudRegion            string             `json:"cloud_region" binding:"required"`
 	ClusterName            string             `json:"cluster_name,omitempty"`
 	DomainName             string             `json:"domain_name" binding:"required"`
@@ -37,6 +37,7 @@ type ClusterDefinition struct {
 	ECR bool `json:"ecr,omitempty"`
 
 	//Auth
+	AkamaiAuth       AkamaiAuth       `json:"akamai_auth,omitempty"`
 	AWSAuth          AWSAuth          `json:"aws_auth,omitempty"`
 	CivoAuth         CivoAuth         `json:"civo_auth,omitempty"`
 	DigitaloceanAuth DigitaloceanAuth `json:"do_auth,omitempty"`
@@ -70,6 +71,7 @@ type Cluster struct {
 	PostInstallCatalogApps []GitopsCatalogApp `bson:"post_install_catalog_apps,omitempty" json:"post_install_catalog_apps,omitempty"`
 
 	// Auth
+	AkamaiAuth       AkamaiAuth       `json:"akamai_auth,omitempty"`
 	AWSAuth          AWSAuth          `bson:"aws_auth,omitempty" json:"aws_auth,omitempty"`
 	CivoAuth         CivoAuth         `bson:"civo_auth,omitempty" json:"civo_auth,omitempty"`
 	DigitaloceanAuth DigitaloceanAuth `bson:"do_auth,omitempty" json:"do_auth,omitempty"`
