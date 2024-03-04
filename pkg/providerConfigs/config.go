@@ -14,6 +14,7 @@ import (
 )
 
 type ProviderConfig struct {
+	AkamaiToken                      string
 	CivoToken                        string
 	DigitaloceanToken                string
 	GoogleAuth                       string

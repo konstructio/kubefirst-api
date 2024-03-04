@@ -71,7 +71,7 @@ type Cluster struct {
 	PostInstallCatalogApps []GitopsCatalogApp `bson:"post_install_catalog_apps,omitempty" json:"post_install_catalog_apps,omitempty"`
 
 	// Auth
-	AkamaiAuth       AkamaiAuth       `json:"akamai_auth,omitempty"`
+	AkamaiAuth       AkamaiAuth       `bson:"akamai_auth,omitempty json:"akamai_auth,omitempty""`
 	AWSAuth          AWSAuth          `bson:"aws_auth,omitempty" json:"aws_auth,omitempty"`
 	CivoAuth         CivoAuth         `bson:"civo_auth,omitempty" json:"civo_auth,omitempty"`
 	DigitaloceanAuth DigitaloceanAuth `bson:"do_auth,omitempty" json:"do_auth,omitempty"`

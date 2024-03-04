@@ -9,6 +9,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
@@ -32,6 +33,35 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 
 	if !cl.StateStoreCredsCheck {
 		switch clctrl.CloudProvider {
+		case "akamai":
+
+			// tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: cl.AkamaiAuth.Token})
+
+			// oauth2Client := &http.Client{
+			// 	Transport: &oauth2.Transport{
+			// 		Source: tokenSource,
+			// 	},
+			// }
+
+			// akamaiConf := akamai.AkamaiConfiguration{
+			// 	Client:  linodego.NewClient(oauth2Client),
+			// 	Context: context.Background(),
+			// }
+
+			// creds, err := civoConf.GetAccessCredentials(clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
+			// if err != nil {
+			// 	telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCredentialsCreateFailed, err.Error())
+			// 	log.Error().Msg(err.Error())
+			// }
+			fmt.Println("acces credentials check")
+			os.Exit(1)
+
+			// stateStoreData = pkgtypes.StateStoreCredentials{
+			// 	AccessKeyID:     creds.AccessKeyID,
+			// 	SecretAccessKey: creds.SecretAccessKeyID,
+			// 	Name:            creds.Name,
+			// 	ID:              creds.ID,
+			// }
 		case "aws":
 			kubefirstStateStoreBucket, err := clctrl.AwsClient.CreateBucket(clctrl.KubefirstStateStoreBucketName)
 			if err != nil {

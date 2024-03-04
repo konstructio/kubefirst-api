@@ -7,6 +7,8 @@ See the LICENSE file for more details.
 package akamai
 
 import (
+	"os"
+
 	"github.com/kubefirst/kubefirst-api/internal/controller"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	log "github.com/rs/zerolog/log"
@@ -36,37 +38,37 @@ func CreateAkamaiCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	// err = ctrl.StateStoreCredentials()
-	// if err != nil {
-	// 	ctrl.HandleError(err.Error())
-	// 	return err
-	// }
+	err = ctrl.StateStoreCredentials()
+	if err != nil {
+		ctrl.HandleError(err.Error())
+		return err
+	}
 
-	// err = ctrl.StateStoreCreate()
-	// if err != nil {
-	// 	ctrl.HandleError(err.Error())
-	// 	return err
-	// }
+	err = ctrl.StateStoreCreate()
+	if err != nil {
+		ctrl.HandleError(err.Error())
+		return err
+	}
 
-	// err = ctrl.GitInit()
-	// if err != nil {
-	// 	ctrl.HandleError(err.Error())
-	// 	return err
-	// }
+	err = ctrl.GitInit()
+	if err != nil {
+		ctrl.HandleError(err.Error())
+		return err
+	}
 
-	// err = ctrl.InitializeBot()
-	// if err != nil {
-	// 	ctrl.HandleError(err.Error())
-	// 	return err
-	// }
+	err = ctrl.InitializeBot()
+	if err != nil {
+		ctrl.HandleError(err.Error())
+		return err
+	}
 
-	// err = ctrl.RepositoryPrep()
-	// if err != nil {
-	// 	ctrl.HandleError(err.Error())
-	// 	return err
-	// }
+	err = ctrl.RepositoryPrep()
+	if err != nil {
+		ctrl.HandleError(err.Error())
+		return err
+	}
 
-	// // os.Exit(1) //TODO: DO NOT MERGE WITH THIS LINE
+	os.Exit(1) //TODO: DO NOT MERGE WITH THIS LINE
 
 	// err = ctrl.RunGitTerraform()
 	// if err != nil {
