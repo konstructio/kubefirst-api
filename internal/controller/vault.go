@@ -17,6 +17,7 @@ import (
 	"time"
 
 	vaultapi "github.com/hashicorp/vault/api"
+	akamaiext "github.com/kubefirst/kubefirst-api/extensions/akamai"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
@@ -68,7 +69,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 		switch clctrl.CloudProvider {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-		case "civo", "digitalocean", "vultr":
+		case "akamai", "civo", "digitalocean", "vultr":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 			vaultHandlerPath = "github.com:kubefirst/manifests.git/vault-handler/replicas-3"
 		case "google":
@@ -109,7 +110,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 			if err != nil {
 				return err
 			}
-		case "civo", "digitalocean", "vultr":
+		case "akamai", "civo", "digitalocean", "vultr":
 			// Initialize and unseal Vault
 			// Build and apply manifests
 			yamlData, err := kcfg.KustomizeBuild(vaultHandlerPath)
@@ -161,7 +162,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		switch clctrl.CloudProvider {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-		case "civo", "digitalocean", "vultr":
+		case "akamai", "civo", "digitalocean", "vultr":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 		case "google":
 			var err error
@@ -200,10 +201,12 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 
 		//Specific TfEnvs
 		switch clctrl.CloudProvider {
+		case "akamai":
+			tfEnvs = akamaiext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEnvs = akamaiext.GetAkamaiTerraformEnvs(tfEnvs, &cl)
 		case "aws":
 			tfEnvs = awsext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, &cl)
-
 		case "civo":
 			tfEnvs = civoext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, &cl)
@@ -265,6 +268,8 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 
 	var externalDnsToken string
 	switch cl.DnsProvider {
+	case "akamai":
+		externalDnsToken = cl.AkamaiAuth.Token
 	case "civo":
 		externalDnsToken = cl.CivoAuth.Token
 	case "vultr":
@@ -283,7 +288,7 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 	switch clctrl.CloudProvider {
 	case "aws":
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-	case "civo", "digitalocean", "vultr":
+	case "akamai", "civo", "digitalocean", "vultr":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 	case "google":
 		var err error
@@ -339,7 +344,7 @@ func (clctrl *ClusterController) WaitForVault() error {
 	switch clctrl.CloudProvider {
 	case "aws":
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-	case "civo", "digitalocean", "vultr":
+	case "akamai", "civo", "digitalocean", "vultr":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 	case "google":
 		var err error

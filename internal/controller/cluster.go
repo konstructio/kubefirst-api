@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	akamaiext "github.com/kubefirst/kubefirst-api/extensions/akamai"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
@@ -48,6 +49,8 @@ func (clctrl *ClusterController) CreateCluster() error {
 		log.Info().Msgf("creating %s cluster", clctrl.CloudProvider)
 
 		switch clctrl.CloudProvider {
+		case "akamai":
+			tfEnvs = akamaiext.GetAkamaiTerraformEnvs(tfEnvs, &cl)
 		case "aws":
 			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, &cl)
 			iamCaller, err := clctrl.AwsClient.GetCallerIdentity()
@@ -284,7 +287,7 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 	switch clctrl.CloudProvider {
 	case "aws":
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-	case "civo", "digitalocean", "vultr":
+	case "akamai", "civo", "digitalocean", "vultr":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 	case "google":
 		var err error
@@ -309,6 +312,12 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 	//TODO Remove specific ext bootstrap functions.
 	if !cl.ClusterSecretsCreatedCheck {
 		switch clctrl.CloudProvider {
+		case "akamai":
+			err := akamaiext.BootstrapAkamaiMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
+			if err != nil {
+				log.Error().Msgf("error adding kubernetes secrets for bootstrap: %s", err)
+				return err
+			}
 		case "aws":
 			err := awsext.BootstrapAWSMgmtCluster(
 				clientSet,

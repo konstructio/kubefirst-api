@@ -547,6 +547,56 @@ func AdjustMetaphorRepo(
 		},
 	}
 
+	AKAMAI_GITHUB := "akamai-github"
+
+	if strings.ToLower(fmt.Sprintf("akamai-%s", gitProvider)) != AKAMAI_GITHUB {
+		os.RemoveAll(metaphorDir + "/.argo")
+		os.RemoveAll(metaphorDir + "/.github")
+	}
+
+	//todo implement repo, err :- createMetaphor() which returns the metaphor repoository object, removes content from
+	// gitops and then allows gitops to commit during its sequence of ops
+	if strings.ToLower(fmt.Sprintf("akamai-%s", gitProvider)) == AKAMAI_GITHUB {
+		//* metaphor app source
+		metaphorContent := fmt.Sprintf("%s/metaphor", gitopsRepoDir)
+		err = cp.Copy(metaphorContent, metaphorDir, opt)
+		if err != nil {
+			log.Info().Msgf("Error populating metaphor content with %s. error: %s", metaphorContent, err.Error())
+			return err
+		}
+
+		// Remove metaphor content from gitops repository directory
+		os.RemoveAll(fmt.Sprintf("%s/metaphor", gitopsRepoDir))
+
+		err = gitClient.Commit(metaphorRepo, "init commit pre ref change")
+		if err != nil {
+			return err
+		}
+
+		metaphorRepo, err = gitClient.SetRefToMainBranch(metaphorRepo)
+		if err != nil {
+			return err
+		}
+
+		// remove old git ref
+		err = metaphorRepo.Storer.RemoveReference(plumbing.NewBranchReferenceName("master"))
+		if err != nil {
+			return fmt.Errorf("error removing previous git ref: %s", err)
+		}
+
+		// create remote
+		_, err = metaphorRepo.CreateRemote(&config.RemoteConfig{
+			Name: "origin",
+			URLs: []string{destinationMetaphorRepoURL},
+		})
+		if err != nil {
+			return fmt.Errorf("error creating remote for metaphor repository: %s", err)
+		}
+
+		return nil
+
+	}
+
 	AWS_GITHUB := "aws-github"
 
 	if strings.ToLower(fmt.Sprintf("aws-%s", gitProvider)) != AWS_GITHUB {

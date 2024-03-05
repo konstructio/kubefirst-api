@@ -9,6 +9,7 @@ package controller
 import (
 	"time"
 
+	akamaiext "github.com/kubefirst/kubefirst-api/extensions/akamai"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
@@ -33,7 +34,7 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		switch clctrl.CloudProvider {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-		case "civo", "digitalocean", "vultr":
+		case "akamai", "civo", "digitalocean", "vultr":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 		case "google":
 			var err error
@@ -50,6 +51,9 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		var tfEntrypoint, terraformClient string
 
 		switch clctrl.CloudProvider {
+		case "akamai":
+			tfEnvs = akamaiext.GetAkamaiTerraformEnvs(tfEnvs, &cl)
+			tfEnvs = akamaiext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 		case "aws":
 			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, &cl)
 			tfEnvs = awsext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
