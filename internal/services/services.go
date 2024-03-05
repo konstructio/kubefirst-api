@@ -24,6 +24,7 @@ import (
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/pkg/common"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
@@ -96,14 +97,14 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 
 	var kcfg *k8s.KubernetesClient
 
-	// env, _ := env.GetEnv(constants.SilenceGetEnv)
+	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
-	// var inCluster bool = false
-	// if env.InCluster == "true" {
-	// 	inCluster = true
-	// }
+	var inCluster bool = false
+	if env.InCluster == "true" {
+		inCluster = true
+	}
 
-	// kcfg = k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", tmpGitopsDir))
+	kcfg = k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", tmpGitopsDir))
 
 	var fullDomainName string
 	if cl.SubdomainName != "" {
