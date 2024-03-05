@@ -73,8 +73,6 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	// os.Exit(1) //TODO: DO NOT MERGE WITH THIS LINE
-
 	err = ctrl.RunGitTerraform()
 	if err != nil {
 		ctrl.HandleError(err.Error())

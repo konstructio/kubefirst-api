@@ -1,41 +1,55 @@
 package akamai
 
-// GetAccessCredentials creates object store access credentials if they do not exist and returns them if they do
-// func (c *AkamaiConfiguration) GetAccessCredentials(credentialName string, region string) (linodego.ObjectStorageKeyBucketAccess, error) {
-func (c *AkamaiConfiguration) GetAccessCredentials(credentialName string, region string) (string, error) {
+import (
+	"context"
 
+	"github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/linode/linodego"
+)
+
+// CreateObjectStorageBucketAndKeys creates object store and access credentials
+func (c *AkamaiConfiguration) CreateObjectStorageBucketAndKeys(clusterName string) (AkamaiBucketAndKeysConfiguration, error) {
+
+	// todo get rid of hardcode default
+	// this also has implications on the state store url in the gitops template. see tf state configurations
+	DEFAULT_CLUSTER := "us-east-1"
+	// todo look at this
 	// creds, err := c.checkKubefirstCredentials(credentialName, region)
 	// if err != nil {
 	// 	log.Info().Msg(err.Error())
 	// }
 
-	// if creds == (civogo.ObjectStoreCredential{}) {
-	// 	log.Info().Msgf("credential name: %s not found, creating", credentialName)
-	// 	creds, err = c.createAccessCredentials(credentialName, region)
-	// 	if err != nil {
-	// 		return civogo.ObjectStoreCredential{}, err
-	// 	}
+	bucket, err := c.Client.CreateObjectStorageBucket(context.TODO(), linodego.ObjectStorageBucketCreateOptions{
+		Cluster: DEFAULT_CLUSTER,
+		Label:   clusterName,
+	})
+	if err != nil {
+		return AkamaiBucketAndKeysConfiguration{}, err
+	}
 
-	// 	for i := 0; i < 12; i++ {
-	// 		creds, err = c.getAccessCredentials(creds.ID, region)
-	// 		if err != nil {
-	// 			return civogo.ObjectStoreCredential{}, err
-	// 		}
-	// 		if creds.AccessKeyID != "" && creds.ID != "" && creds.Name != "" && creds.SecretAccessKeyID != "" {
-	// 			break
-	// 		}
-	// 		log.Warn().Msg("waiting for civo credentials creation")
-	// 		time.Sleep(time.Second * 10)
-	// 	}
+	creds, err := c.Client.CreateObjectStorageKey(context.TODO(), linodego.ObjectStorageKeyCreateOptions{
+		Label: "clusterName",
+		BucketAccess: &[]linodego.ObjectStorageKeyBucketAccess{
+			{
+				BucketName:  clusterName,
+				Cluster:     DEFAULT_CLUSTER,
+				Permissions: "read_write",
+			},
+		},
+	})
 
-	// 	if creds.AccessKeyID == "" || creds.ID == "" || creds.Name == "" || creds.SecretAccessKeyID == "" {
-	// 		log.Error().Msg("Civo credentials for state bucket in object storage could not be fetched, please try to run again")
-	// 		os.Exit(1)
-	// 	}
-	// 	log.Info().Msgf("created object storage credential %s", credentialName)
+	// todo add validation
+	stateStoreData := types.StateStoreDetails{
+		Name:     bucket.Label,
+		ID:       bucket.Hostname,
+		Hostname: bucket.Hostname,
+	}
 
-	// 	return creds, nil
-	// }
+	stateStoreCredentialsData := types.StateStoreCredentials{
+		AccessKeyID:     creds.AccessKey,
+		SecretAccessKey: creds.SecretKey,
+		Name:            bucket.Label,
+	}
 
-	return "creds", nil
+	return AkamaiBucketAndKeysConfiguration{stateStoreData, stateStoreCredentialsData}, nil
 }

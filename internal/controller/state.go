@@ -9,15 +9,18 @@ package controller
 import (
 	"context"
 	"fmt"
-	"os"
+	"net/http"
 	"strings"
 
+	"github.com/kubefirst/kubefirst-api/pkg/akamai"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/vultr"
+	"github.com/linode/linodego"
 	log "github.com/rs/zerolog/log"
+	"golang.org/x/oauth2"
 )
 
 // StateStoreCredentials
@@ -34,34 +37,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 	if !cl.StateStoreCredsCheck {
 		switch clctrl.CloudProvider {
 		case "akamai":
-
-			// tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: cl.AkamaiAuth.Token})
-
-			// oauth2Client := &http.Client{
-			// 	Transport: &oauth2.Transport{
-			// 		Source: tokenSource,
-			// 	},
-			// }
-
-			// akamaiConf := akamai.AkamaiConfiguration{
-			// 	Client:  linodego.NewClient(oauth2Client),
-			// 	Context: context.Background(),
-			// }
-
-			// creds, err := civoConf.GetAccessCredentials(clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
-			// if err != nil {
-			// 	telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCredentialsCreateFailed, err.Error())
-			// 	log.Error().Msg(err.Error())
-			// }
-			fmt.Println("acces credentials check")
-			os.Exit(1)
-
-			// stateStoreData = pkgtypes.StateStoreCredentials{
-			// 	AccessKeyID:     creds.AccessKeyID,
-			// 	SecretAccessKey: creds.SecretAccessKeyID,
-			// 	Name:            creds.Name,
-			// 	ID:              creds.ID,
-			// }
+			log.Info().Msg("object storage credentials created during bucket create")
 		case "aws":
 			kubefirstStateStoreBucket, err := clctrl.AwsClient.CreateBucket(clctrl.KubefirstStateStoreBucketName)
 			if err != nil {
@@ -219,6 +195,57 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 
 	if !cl.StateStoreCreateCheck {
 		switch clctrl.CloudProvider {
+		case "akamai":
+
+			tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: cl.AkamaiAuth.Token})
+
+			oauth2Client := &http.Client{
+				Transport: &oauth2.Transport{
+					Source: tokenSource,
+				},
+			}
+
+			linodego.NewClient(oauth2Client)
+
+			akamaiConf := akamai.AkamaiConfiguration{
+				Client:  linodego.NewClient(oauth2Client),
+				Context: context.Background(),
+			}
+
+			telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateStarted, "")
+
+			bucketAndCreds, err := akamaiConf.CreateObjectStorageBucketAndKeys(cl.ClusterName)
+			if err != nil {
+				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, err.Error())
+				log.Error().Msg(err.Error())
+				return err
+			}
+
+			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_details", pkgtypes.StateStoreDetails{
+				Name:     bucketAndCreds.StateStoreDetails.Name,
+				Hostname: bucketAndCreds.StateStoreDetails.Hostname,
+			})
+			if err != nil {
+				return err
+			}
+
+			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_create_check", true)
+			if err != nil {
+				return err
+			}
+
+			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_credentials", bucketAndCreds.StateStoreCredentials)
+			if err != nil {
+				return err
+			}
+
+			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_creds_check", true)
+			if err != nil {
+				return err
+			}
+
+			telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateCompleted, "")
+			log.Info().Msgf("%s state store bucket created", clctrl.CloudProvider)
 		case "civo":
 
 			civoConf := civo.CivoConfiguration{
