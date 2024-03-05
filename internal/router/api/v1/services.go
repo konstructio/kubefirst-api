@@ -185,6 +185,100 @@ func PostAddServiceToCluster(c *gin.Context) {
 	})
 }
 
+// PostValidateService godoc
+// @Summary Validate gitops catalog application
+// @Description Validate a gitops catalog application so it can be deleted
+// @Tags services
+// @Accept json
+// @Produce json
+// @Param	cluster_name	path	string	true	"Cluster name"
+// @Param	service_name	path	string	true	"Service name to be validated"
+// @Param	definition	body	types.GitopsCatalogAppCreateRequest	true	"Service create request in JSON format"
+// @Success 202 {object} types.GitopsCatalogAppValidateRequest
+// @Failure 400 {object} types.JSONFailureResponse
+// @Router /services/:cluster_name/:service_name/validate [post]
+// @Param Authorization header string true "API key" default(Bearer <API key>)
+// PostValidateService handles a request to add a service to a cluster based on a gitops catalog app
+func PostValidateService(c *gin.Context) {
+	clusterName, param := c.Params.Get("cluster_name")
+	if !param {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: ":cluster_name not provided",
+		})
+		return
+	}
+
+	serviceName, param := c.Params.Get("service_name")
+	if !param {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: ":service_name not provided",
+		})
+		return
+	}
+
+	// Verify cluster exists
+	_, err := db.Client.GetCluster(clusterName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: "cluster not found",
+		})
+		return
+	}
+
+	// Verify service is a valid option and determine if it requires secrets
+	apps, err := db.Client.GetGitopsCatalogApps()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+	valid := false
+	for _, app := range apps.Apps {
+		if app.Name == serviceName {
+			valid = true
+		}
+	}
+
+	if !valid {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: fmt.Sprintf("service %s is not valid", serviceName),
+		})
+		return
+	}
+
+	// Bind to variable as application/json, handle error
+	var serviceDefinition pkgtypes.GitopsCatalogAppCreateRequest
+	err = c.Bind(&serviceDefinition)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+
+	// Generate and apply
+	cl, err := db.Client.GetCluster(clusterName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+
+	err, canDeleteService := services.ValidateService(&cl, serviceName, &serviceDefinition)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, pkgtypes.GitopsCatalogAppValidateRequest{
+		CanDeleteService: canDeleteService,
+	})
+}
+
 // DeleteServiceFromCluster godoc
 // @Summary Remove a gitops catalog application from a cluster
 // @Description Remove a gitops catalog application from a cluster

@@ -68,6 +68,7 @@ func SetupRouter() *gin.Engine {
 		// Services
 		v1.GET("/services/:cluster_name", middleware.ValidateAPIKey(), router.GetServices)
 		v1.POST("/services/:cluster_name/:service_name", middleware.ValidateAPIKey(), router.PostAddServiceToCluster)
+		v1.POST("/services/:cluster_name/:service_name/validate", middleware.ValidateAPIKey(), router.PostValidateService)
 		v1.DELETE("/services/:cluster_name/:service_name", middleware.ValidateAPIKey(), router.DeleteServiceFromCluster)
 
 		// Domains
