@@ -8,6 +8,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/kubefirst/kubefirst-api/docs"
 	"github.com/kubefirst/kubefirst-api/internal/db"
@@ -17,6 +18,7 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	apitelemetry "github.com/kubefirst/kubefirst-api/internal/telemetry"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
+	"github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 
 	log "github.com/rs/zerolog/log"
@@ -38,16 +40,6 @@ func main() {
 		log.Fatal().Msg(err.Error())
 	}
 
-	// Verify database connectivity
-	err = db.Client.EstablishMongoConnection(db.EstablishConnectArgs{
-		Tries:  20,
-		Silent: false,
-	})
-	if err != nil {
-		log.Fatal().Msg(err.Error())
-
-	}
-
 	log.Info().Msg("checking for cluster import secret for management cluster")
 	// Import if needed
 	importedCluster, err := db.Client.ImportClusterIfEmpty(false)
@@ -60,8 +52,30 @@ func main() {
 		log.Info().Msgf("adding default services for cluster %s", importedCluster.ClusterName)
 		services.AddDefaultServices(&importedCluster)
 
+		if importedCluster.PostInstallCatalogApps != nil {
+			go func() {
+				for _, catalogApp := range importedCluster.PostInstallCatalogApps {
+					log.Info().Msgf("installing catalog application %s", catalogApp.Name)
+
+					request := &types.GitopsCatalogAppCreateRequest{
+						User:       "kbot",
+						SecretKeys: catalogApp.SecretKeys,
+						ConfigKeys: catalogApp.ConfigKeys,
+					}
+
+					err = services.CreateService(&importedCluster, catalogApp.Name, &catalogApp, request, true)
+					if err != nil {
+						log.Info().Msgf("Error creating default environments %s", err.Error())
+					}
+				}
+			}()
+		}
+
 		if importedCluster.CloudProvider != "k3d" {
 			go func() {
+				log.Info().Msgf("Waiting for services to be created  %s", importedCluster.ClusterName)
+				time.Sleep(time.Second * 30)
+
 				log.Info().Msgf("adding default environments for cluster %s", importedCluster.ClusterName)
 				err := environments.CreateDefaultEnvironments(importedCluster)
 				if err != nil {

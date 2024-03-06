@@ -21,6 +21,7 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/env"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
@@ -32,7 +33,7 @@ import (
 
 // CreateCluster
 func (clctrl *ClusterController) CreateCluster() error {
-	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -57,7 +58,8 @@ func (clctrl *ClusterController) CreateCluster() error {
 			tfEnvs["TF_VAR_aws_account_id"] = *iamCaller.Account
 			tfEnvs["TF_VAR_use_ecr"] = strconv.FormatBool(clctrl.ECR) //Flag out the ecr terraform
 
-			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "aws_account_id", *iamCaller.Account)
+			clctrl.Cluster.AWSAccountId = *iamCaller.Account
+			err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 			if err != nil {
 				return err
 			}
@@ -81,7 +83,8 @@ func (clctrl *ClusterController) CreateCluster() error {
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.CloudTerraformApplyFailed, err.Error())
 				msg := fmt.Sprintf("error creating %s resources with terraform %s: %s", clctrl.CloudProvider, tfEntrypoint, err)
 				log.Error().Msg(msg)
-				err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", true)
+				clctrl.Cluster.CloudTerraformApplyFailedCheck = true
+				err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 				if err != nil {
 					telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.CloudTerraformApplyFailed, err.Error())
 					return err
@@ -93,12 +96,10 @@ func (clctrl *ClusterController) CreateCluster() error {
 		log.Info().Msgf("created %s cloud resources", clctrl.CloudProvider)
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.CloudTerraformApplyCompleted, "")
 
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_failed_check", false)
-		if err != nil {
-			return err
-		}
+		clctrl.Cluster.CloudTerraformApplyCheck = true
+		clctrl.Cluster.CloudTerraformApplyFailedCheck = false
+		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cloud_terraform_apply_check", true)
 		if err != nil {
 			return err
 		}
@@ -109,7 +110,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 
 // CreateTokens
 func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
-	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -274,7 +275,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 
 // ClusterSecretsBootstrap
 func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
-	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -356,7 +357,8 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 			return err
 		}
 
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "cluster_secrets_created_check", true)
+		clctrl.Cluster.ClusterSecretsCreatedCheck = true
+		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
 			return err
 		}

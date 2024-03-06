@@ -20,6 +20,7 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/kubefirst/kubefirst-api/pkg/types"
+
 	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -82,6 +83,35 @@ func CreateDefaultEnvironments(mgmtCluster types.Cluster) error {
 
 	defaultEnvironmentSet := types.WorkloadClusterSet{
 		Clusters: defaultClusters,
+	}
+
+	var fullDomainName string
+	if mgmtCluster.SubdomainName != "" {
+		fullDomainName = fmt.Sprintf("%s.%s", mgmtCluster.SubdomainName, mgmtCluster.DomainName)
+	} else {
+		fullDomainName = mgmtCluster.DomainName
+	}
+
+	for _, clusterName := range defaultClusterNames {
+		// Add to list
+		err := db.Client.CreateClusterServiceList(clusterName)
+		if err != nil {
+			return err
+		}
+
+		// Update list
+		err = db.Client.InsertClusterServiceListEntry(clusterName, &types.Service{
+			Name:        "Metaphor",
+			Default:     true,
+			Description: "A multi-environment demonstration space for frontend application best practices that's easy to apply to other projects.",
+			Image:       "https://assets.kubefirst.com/console/metaphor.svg",
+			Links:       []string{fmt.Sprintf("https://metaphor-%s.%s", clusterName, fullDomainName)},
+			Status:      "",
+		})
+
+		if err != nil {
+			return err
+		}
 	}
 
 	// call api-ee to create clusters

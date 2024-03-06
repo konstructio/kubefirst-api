@@ -15,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/env"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/kubefirst-api/pkg/k8s"
 	v1 "k8s.io/api/core/v1"
@@ -57,9 +58,9 @@ func GetClusterSecret(c *gin.Context) {
 
 	kcfg := k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
 
-	secrets, err := k8s.ReadSecretV2(kcfg.Clientset, "kubefirst", secret)
+	kubefirstSecrets, err := k8s.ReadSecretV2(kcfg.Clientset, "kubefirst", secret)
 
-	jsonString, err := mapToStructuredJSON(secrets)
+	jsonString, err := secrets.MapToStructuredJSON(kubefirstSecrets)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -124,7 +125,7 @@ func CreateClusterSecret(c *gin.Context) {
 		return
 	}
 
-	secretValuesMap, err := parseJSONToMap(string(bytes))
+	secretValuesMap, err := secrets.ParseJSONToMap(string(bytes))
 
 	secretToCreate := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -200,7 +201,7 @@ func UpdateClusterSecret(c *gin.Context) {
 		return
 	}
 
-	secretValuesMap, err := parseJSONToMap(string(bytes))
+	secretValuesMap, _ := secrets.ParseJSONToMap(string(bytes))
 	err = k8s.UpdateSecretV2(kcfg.Clientset, "kubefirst", secret, secretValuesMap)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -212,65 +213,4 @@ func UpdateClusterSecret(c *gin.Context) {
 	c.JSON(http.StatusOK, types.JSONSuccessResponse{
 		Message: "cluster secret updated",
 	})
-}
-
-func parseJSONToMap(jsonStr string) (map[string][]byte, error) {
-	var result map[string]interface{}
-	err := json.Unmarshal([]byte(jsonStr), &result)
-	if err != nil {
-		return nil, err
-	}
-
-	secretData := make(map[string][]byte)
-	for key, value := range result {
-		switch v := value.(type) {
-		case map[string]interface{}, []interface{}: // For nested structures, marshal back to JSON
-			bytes, err := json.Marshal(v)
-			if err != nil {
-				return nil, err
-			}
-			secretData[key] = bytes
-		default:
-			bytes, err := json.Marshal(v)
-			if err != nil {
-				return nil, err
-			}
-			secretData[key] = bytes
-		}
-	}
-
-	return secretData, nil
-}
-
-// mapToStructuredJSON takes a map[string]interface{} as input, where some values may be JSON strings,
-// and returns an interface{} that represents the structured JSON object.
-func mapToStructuredJSON(input map[string]interface{}) (interface{}, error) {
-	// Create a result map to hold our structured data.
-	result := make(map[string]interface{})
-
-	for key, value := range input {
-		switch v := value.(type) {
-		case string:
-			// Attempt to unmarshal the string into a map if it's JSON.
-			// This covers cases where the string is actually a JSON object or array.
-			var jsonVal interface{}
-			err := json.Unmarshal([]byte(v), &jsonVal)
-			if err == nil {
-				// If successful, use the unmarshaled value.
-				result[key] = jsonVal
-			} else {
-				// If the string is not JSON, remove surrounding quotes if present and use the string directly.
-				if len(v) > 1 && v[0] == '"' && v[len(v)-1] == '"' {
-					result[key] = v[1 : len(v)-1]
-				} else {
-					result[key] = v
-				}
-			}
-		default:
-			// For all other types, use the value directly.
-			result[key] = value
-		}
-	}
-
-	return result, nil
 }

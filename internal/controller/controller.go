@@ -10,15 +10,17 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
-	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/env"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 	google "github.com/kubefirst/kubefirst-api/pkg/google"
 	"github.com/kubefirst/kubefirst-api/pkg/handlers"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	"github.com/kubefirst/kubefirst-api/pkg/types"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	runtime "github.com/kubefirst/runtime/pkg"
@@ -27,13 +29,14 @@ import (
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/services"
+	"k8s.io/client-go/kubernetes"
 
 	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const (
-	gitopsTemplateVersion = "v2.3.7"
+	gitopsTemplateVersion = "v2.3.8"
 )
 
 type ClusterController struct {
@@ -49,18 +52,19 @@ type ClusterController struct {
 	AlertsEmail               string
 
 	// auth
-	AWSAuth            pkgtypes.AWSAuth
-	CivoAuth           pkgtypes.CivoAuth
-	DigitaloceanAuth   pkgtypes.DigitaloceanAuth
-	VultrAuth          pkgtypes.VultrAuth
-	CloudflareAuth     pkgtypes.CloudflareAuth
-	GitAuth            pkgtypes.GitAuth
-	VaultAuth          pkgtypes.VaultAuth
-	GoogleAuth         pkgtypes.GoogleAuth
-	AwsAccessKeyID     string
-	AwsSecretAccessKey string
-	NodeType           string
-	NodeCount          int
+	AWSAuth                pkgtypes.AWSAuth
+	CivoAuth               pkgtypes.CivoAuth
+	DigitaloceanAuth       pkgtypes.DigitaloceanAuth
+	VultrAuth              pkgtypes.VultrAuth
+	CloudflareAuth         pkgtypes.CloudflareAuth
+	GitAuth                pkgtypes.GitAuth
+	VaultAuth              pkgtypes.VaultAuth
+	GoogleAuth             pkgtypes.GoogleAuth
+	AwsAccessKeyID         string
+	AwsSecretAccessKey     string
+	NodeType               string
+	NodeCount              int
+	PostInstallCatalogApps []pkgtypes.GitopsCatalogApp
 
 	// configs
 	ProviderConfig providerConfigs.ProviderConfig
@@ -100,8 +104,7 @@ type ClusterController struct {
 	KubefirstStateStoreBucketName string
 	KubefirstArtifactsBucketName  string
 
-	// Database Controller
-	MdbCl *db.MongoDBClient
+	KubernetesClient *kubernetes.Clientset
 
 	// Telemetry
 	TelemetryEvent telemetry.TelemetryEvent
@@ -110,6 +113,7 @@ type ClusterController struct {
 	AwsClient    *awsinternal.AWSConfiguration
 	GoogleClient google.GoogleConfiguration
 	Kcfg         *k8s.KubernetesClient
+	Cluster      types.Cluster
 }
 
 // InitController
@@ -117,12 +121,24 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	// Create k1 dir if it doesn't exist
 	utils.CreateK1Directory(def.ClusterName)
 
-	// Database controller
-	clctrl.MdbCl = db.Client
+	// Get Environment variables
+	env, _ := env.GetEnv(constants.SilenceGetEnv)
+
+	//Create Kubernetes Client Context
+	var inCluster bool = false
+	if env.InCluster == "true" {
+		inCluster = true
+	}
+
+	homeDir, err := os.UserHomeDir()
+	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, def.ClusterName)
+
+	kcfg := k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
+	clctrl.KubernetesClient = kcfg.Clientset
 
 	// Determine if record already exists
 	recordExists := true
-	rec, err := clctrl.MdbCl.GetCluster(def.ClusterName)
+	rec, err := secrets.GetCluster(clctrl.KubernetesClient, def.ClusterName)
 	if err != nil {
 		recordExists = false
 		log.Info().Msg("cluster record doesn't exist, continuing")
@@ -138,7 +154,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	// If record exists but status is deleted, entry should be deleted
 	// and process should start fresh
 	if recordExists && rec.Status == constants.ClusterStatusDeleted {
-		err = clctrl.MdbCl.DeleteCluster(def.ClusterName)
+		err = secrets.DeleteCluster(clctrl.KubernetesClient, def.ClusterName)
 		if err != nil {
 			return fmt.Errorf("could not delete existing cluster %s: %s", def.ClusterName, err)
 		}
@@ -150,8 +166,6 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	} else {
 		clusterID = runtime.GenerateClusterID()
 	}
-
-	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
 	telemetryEvent := telemetry.TelemetryEvent{
 		CliVersion:        env.KubefirstVersion,
@@ -185,6 +199,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	clctrl.HttpClient = http.DefaultClient
 	clctrl.NodeType = def.NodeType
 	clctrl.NodeCount = def.NodeCount
+	clctrl.PostInstallCatalogApps = def.PostInstallCatalogApps
 
 	clctrl.AWSAuth = def.AWSAuth
 	clctrl.CivoAuth = def.CivoAuth
@@ -281,41 +296,42 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	}
 
 	// Write cluster record if it doesn't exist
-	cl := pkgtypes.Cluster{
-		ID:                    primitive.NewObjectID(),
-		CreationTimestamp:     fmt.Sprintf("%v", primitive.NewDateTimeFromTime(time.Now().UTC())),
-		Status:                constants.ClusterStatusProvisioning,
-		AlertsEmail:           clctrl.AlertsEmail,
-		ClusterName:           clctrl.ClusterName,
-		CloudProvider:         clctrl.CloudProvider,
-		CloudRegion:           clctrl.CloudRegion,
-		DomainName:            clctrl.DomainName,
-		SubdomainName:         clctrl.SubdomainName,
-		DnsProvider:           clctrl.DnsProvider,
-		ClusterID:             clctrl.ClusterID,
-		ECR:                   clctrl.ECR,
-		ClusterType:           clctrl.ClusterType,
-		GitopsTemplateURL:     clctrl.GitopsTemplateURL,
-		GitopsTemplateBranch:  clctrl.GitopsTemplateBranch,
-		GitProvider:           clctrl.GitProvider,
-		GitProtocol:           clctrl.GitProtocol,
-		GitHost:               clctrl.GitHost,
-		GitAuth:               clctrl.GitAuth,
-		GitlabOwnerGroupID:    clctrl.GitlabOwnerGroupID,
-		AtlantisWebhookSecret: clctrl.AtlantisWebhookSecret,
-		AtlantisWebhookURL:    clctrl.AtlantisWebhookURL,
-		KubefirstTeam:         clctrl.KubefirstTeam,
-		AWSAuth:               clctrl.AWSAuth,
-		CivoAuth:              clctrl.CivoAuth,
-		GoogleAuth:            clctrl.GoogleAuth,
-		DigitaloceanAuth:      clctrl.DigitaloceanAuth,
-		VultrAuth:             clctrl.VultrAuth,
-		CloudflareAuth:        clctrl.CloudflareAuth,
-		NodeType:              clctrl.NodeType,
-		NodeCount:             clctrl.NodeCount,
-		LogFileName:           def.LogFileName,
+	clctrl.Cluster = pkgtypes.Cluster{
+		ID:                     primitive.NewObjectID(),
+		CreationTimestamp:      fmt.Sprintf("%v", primitive.NewDateTimeFromTime(time.Now().UTC())),
+		Status:                 constants.ClusterStatusProvisioning,
+		AlertsEmail:            clctrl.AlertsEmail,
+		ClusterName:            clctrl.ClusterName,
+		CloudProvider:          clctrl.CloudProvider,
+		CloudRegion:            clctrl.CloudRegion,
+		DomainName:             clctrl.DomainName,
+		SubdomainName:          clctrl.SubdomainName,
+		DnsProvider:            clctrl.DnsProvider,
+		ClusterID:              clctrl.ClusterID,
+		ECR:                    clctrl.ECR,
+		ClusterType:            clctrl.ClusterType,
+		GitopsTemplateURL:      clctrl.GitopsTemplateURL,
+		GitopsTemplateBranch:   clctrl.GitopsTemplateBranch,
+		GitProvider:            clctrl.GitProvider,
+		GitProtocol:            clctrl.GitProtocol,
+		GitHost:                clctrl.GitHost,
+		GitAuth:                clctrl.GitAuth,
+		GitlabOwnerGroupID:     clctrl.GitlabOwnerGroupID,
+		AtlantisWebhookSecret:  clctrl.AtlantisWebhookSecret,
+		AtlantisWebhookURL:     clctrl.AtlantisWebhookURL,
+		KubefirstTeam:          clctrl.KubefirstTeam,
+		AWSAuth:                clctrl.AWSAuth,
+		CivoAuth:               clctrl.CivoAuth,
+		GoogleAuth:             clctrl.GoogleAuth,
+		DigitaloceanAuth:       clctrl.DigitaloceanAuth,
+		VultrAuth:              clctrl.VultrAuth,
+		CloudflareAuth:         clctrl.CloudflareAuth,
+		NodeType:               clctrl.NodeType,
+		NodeCount:              clctrl.NodeCount,
+		LogFileName:            def.LogFileName,
+		PostInstallCatalogApps: clctrl.PostInstallCatalogApps,
 	}
-	err = clctrl.MdbCl.InsertCluster(cl)
+	err = secrets.InsertCluster(clctrl.KubernetesClient, clctrl.Cluster)
 	if err != nil {
 		return err
 	}
@@ -372,7 +388,7 @@ func (clctrl *ClusterController) SetGitTokens(def pkgtypes.ClusterDefinition) er
 
 // GetCurrentClusterRecord will return an active cluster's record if it exists
 func (clctrl *ClusterController) GetCurrentClusterRecord() (pkgtypes.Cluster, error) {
-	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return pkgtypes.Cluster{}, err
 	}
@@ -382,15 +398,12 @@ func (clctrl *ClusterController) GetCurrentClusterRecord() (pkgtypes.Cluster, er
 
 // HandleError implements an error handler for cluster controller objects
 func (clctrl *ClusterController) HandleError(condition string) error {
-	err := clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "in_progress", false)
-	if err != nil {
-		return err
-	}
-	err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "status", constants.ClusterStatusError)
-	if err != nil {
-		return err
-	}
-	err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "last_condition", condition)
+	clctrl.Cluster.InProgress = false
+	clctrl.Cluster.Status = constants.ClusterStatusError
+	clctrl.Cluster.LastCondition = condition
+
+	err := secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
+
 	if err != nil {
 		return err
 	}

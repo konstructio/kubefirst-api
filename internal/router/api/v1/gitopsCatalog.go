@@ -22,11 +22,35 @@ import (
 // @Produce json
 // @Success 200 {object} types.GitopsCatalogApps
 // @Failure 400 {object} types.JSONFailureResponse
-// @Router /gitops-catalog/apps [get]
+// @Router /gitops-catalog/:cluster_name/:cloud_provider/apps [get]
 // @Param Authorization header string true "API key" default(Bearer <API key>)
 // GetGitopsCatalogApps returns a list of available Kubefirst gitops catalog applications
 func GetGitopsCatalogApps(c *gin.Context) {
-	apps, err := db.Client.GetGitopsCatalogApps()
+	cloudProvider, param := c.Params.Get("cloud_provider")
+	if !param {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: ":cloud_provider not provided",
+		})
+		return
+	}
+
+	clusterName, param := c.Params.Get("cluster_name")
+	if !param {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: ":cluster_name not provided",
+		})
+		return
+	}
+
+	cluster, err := db.Client.GetCluster(clusterName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: "cluster not found",
+		})
+		return
+	}
+
+	apps, err := db.Client.GetGitopsCatalogAppsByCloudProvider(cloudProvider, cluster.GitProvider)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
