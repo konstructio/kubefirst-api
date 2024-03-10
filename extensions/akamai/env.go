@@ -96,7 +96,8 @@ func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster
 	envs[fmt.Sprintf("TF_VAR_%s_token", cl.GitProvider)] = cl.GitAuth.Token
 	envs["VAULT_ADDR"] = providerConfigs.VaultPortForwardURL
 	envs["VAULT_TOKEN"] = readVaultTokenFromSecret(clientset)
-	envs["TF_VAR_LINODE_TOKEN"] = cl.AkamaiAuth.Token
+	envs["TF_VAR_akamai_token"] = cl.AkamaiAuth.Token
+	envs["LINODE_TOKEN"] = cl.AkamaiAuth.Token
 	envs["TF_VAR_atlantis_repo_webhook_secret"] = cl.AtlantisWebhookSecret
 	envs["TF_VAR_atlantis_repo_webhook_url"] = cl.AtlantisWebhookURL
 	envs["TF_VAR_kbot_ssh_private_key"] = cl.GitAuth.PrivateKey
