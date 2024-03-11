@@ -56,6 +56,12 @@ type GitopsDirectoryValues struct {
 	GoogleUniqueness string
 	ForceDestroy     string
 
+	K3sServersPrivateIps []string
+	K3sServersPublicIps  []string
+	K3sServersArgs       []string
+	SshUser              string
+	SshPrivateKey        string
+
 	GitDescription       string
 	GitNamespace         string
 	GitProvider          string

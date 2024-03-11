@@ -13,6 +13,7 @@ import (
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
 	googleext "github.com/kubefirst/kubefirst-api/extensions/google"
+	k3sext "github.com/kubefirst/kubefirst-api/extensions/k3s"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
@@ -33,7 +34,7 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		switch clctrl.CloudProvider {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-		case "civo", "digitalocean", "vultr":
+		case "civo", "digitalocean", "vultr", "k3s":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 		case "google":
 			var err error
@@ -65,6 +66,9 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		case "vultr":
 			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
 			tfEnvs = vultrext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+		case "k3s":
+			tfEnvs = k3sext.GetK3sTerraformEnvs(tfEnvs, &cl)
+			tfEnvs = k3sext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 		}
 		tfEntrypoint = clctrl.ProviderConfig.GitopsDir + "/terraform/users"
 		terraformClient = clctrl.ProviderConfig.TerraformClient

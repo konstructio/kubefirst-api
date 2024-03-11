@@ -18,6 +18,11 @@ type ProviderConfig struct {
 	DigitaloceanToken                string
 	GoogleAuth                       string
 	GoogleProject                    string
+	K3sServersPrivateIps             []string
+	K3sServersPublicIps              []string
+	K3sSshPrivateKey                 string
+	K3sServersArgs                   []string
+	K3sSshUser                       string
 	VultrToken                       string
 	CloudflareAPIToken               string
 	CloudflareOriginCaIssuerAPIToken string

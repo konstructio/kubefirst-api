@@ -16,6 +16,7 @@ import (
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
 	googleext "github.com/kubefirst/kubefirst-api/extensions/google"
+	k3sext "github.com/kubefirst/kubefirst-api/extensions/k3s"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
@@ -55,7 +56,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 				return err
 			}
 			tfEnvs["TF_VAR_aws_account_id"] = *iamCaller.Account
-			tfEnvs["TF_VAR_use_ecr"] = strconv.FormatBool(clctrl.ECR) //Flag out the ecr terraform
+			tfEnvs["TF_VAR_use_ecr"] = strconv.FormatBool(clctrl.ECR) // Flag out the ecr terraform
 
 			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "aws_account_id", *iamCaller.Account)
 			if err != nil {
@@ -69,6 +70,8 @@ func (clctrl *ClusterController) CreateCluster() error {
 			tfEnvs = googleext.GetGoogleTerraformEnvs(tfEnvs, &cl)
 		case "vultr":
 			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
+		case "k3s":
+			tfEnvs = k3sext.GetK3sTerraformEnvs(tfEnvs, &cl)
 		}
 
 		err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.TerraformClient, tfEntrypoint, tfEnvs)
@@ -122,9 +125,9 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 		fullDomainName = clctrl.DomainName
 	}
 
-	//handle set gitops tokens/values
+	// handle set gitops tokens/values
 	switch kind {
-	case "gitops": //repo name
+	case "gitops": // repo name
 
 		var externalDNSProviderTokenEnvName, externalDNSProviderSecretKey string
 		if clctrl.DnsProvider == "cloudflare" {
@@ -173,8 +176,8 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			NodeType:                  clctrl.NodeType,
 			NodeCount:                 clctrl.NodeCount,
 			KubefirstVersion:          env.KubefirstVersion,
-			Kubeconfig:                clctrl.ProviderConfig.Kubeconfig, //AWS
-			KubeconfigPath:            clctrl.ProviderConfig.Kubeconfig, //Not AWS
+			Kubeconfig:                clctrl.ProviderConfig.Kubeconfig, // AWS
+			KubeconfigPath:            clctrl.ProviderConfig.Kubeconfig, // Not AWS
 
 			ArgoCDIngressURL:               fmt.Sprintf("https://argocd.%s", fullDomainName),
 			ArgoCDIngressNoHTTPSURL:        fmt.Sprintf("argocd.%s", fullDomainName),
@@ -220,7 +223,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			ContainerRegistryURL: fmt.Sprintf("%s/%s", clctrl.ContainerRegistryHost, clctrl.GitAuth.Owner),
 		}
 
-		//Handle provider specific tokens
+		// Handle provider specific tokens
 		switch clctrl.CloudProvider {
 		case "vultr":
 			gitopsTemplateTokens.StateStoreBucketHostname = cl.StateStoreDetails.Hostname
@@ -228,7 +231,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			gitopsTemplateTokens.GoogleAuth = clctrl.GoogleAuth.KeyFile
 			gitopsTemplateTokens.GoogleProject = clctrl.GoogleAuth.ProjectId
 			gitopsTemplateTokens.GoogleUniqueness = strings.ToLower(randstr.String(5))
-			gitopsTemplateTokens.ForceDestroy = strconv.FormatBool(true) //TODO make this optional
+			gitopsTemplateTokens.ForceDestroy = strconv.FormatBool(true) // TODO make this optional
 			gitopsTemplateTokens.KubefirstArtifactsBucket = clctrl.KubefirstStateStoreBucketName
 			gitopsTemplateTokens.VaultDataBucketName = fmt.Sprintf("%s-vault-data-%s", clctrl.GoogleAuth.ProjectId, clctrl.ClusterName)
 		case "aws":
@@ -237,7 +240,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				return err
 			}
 
-			//to be added to general tokens struct
+			// to be added to general tokens struct
 			gitopsTemplateTokens.AwsIamArnAccountRoot = fmt.Sprintf("arn:aws:iam::%s:root", *iamCaller.Account)
 			gitopsTemplateTokens.AwsNodeCapacityType = "ON_DEMAND" // todo adopt cli flag
 			gitopsTemplateTokens.AwsAccountID = *iamCaller.Account
@@ -253,10 +256,16 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				// gitopsTemplateTokens.ContainerRegistryURL = fmt.Sprintf("%s/%s", clctrl.ContainerRegistryHost, clctrl.GitAuth.Owner)
 				log.Info().Msgf("NOT using ECR but instead %s URL %s", clctrl.GitProvider, gitopsTemplateTokens.ContainerRegistryURL)
 			}
+		case "k3s":
+			gitopsTemplateTokens.K3sServersPrivateIps = clctrl.K3sAuth.K3sServersPrivateIps
+			gitopsTemplateTokens.K3sServersPublicIps = clctrl.K3sAuth.K3sServersPublicIps
+			gitopsTemplateTokens.SshUser = clctrl.K3sAuth.K3sSshUser
+			gitopsTemplateTokens.SshPrivateKey = clctrl.K3sAuth.K3sSshPrivateKey
+			gitopsTemplateTokens.K3sServersArgs = clctrl.K3sAuth.K3sServersArgs
 		}
 
 		return gitopsTemplateTokens
-	case "metaphor": //repo name
+	case "metaphor": // repo name
 		metaphorTemplateTokens := &providerConfigs.MetaphorTokenValues{
 			ClusterName:                   clctrl.ClusterName,
 			CloudRegion:                   clctrl.CloudRegion,
@@ -284,7 +293,7 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 	switch clctrl.CloudProvider {
 	case "aws":
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-	case "civo", "digitalocean", "vultr":
+	case "civo", "digitalocean", "vultr", "k3s":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 	case "google":
 		var err error
@@ -295,7 +304,7 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 	}
 	clientSet := kcfg.Clientset
 
-	//create namespaces
+	// create namespaces
 	err = providerConfigs.K8sNamespaces(clientSet)
 	if err != nil {
 		return err
@@ -306,7 +315,7 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 		return err
 	}
 
-	//TODO Remove specific ext bootstrap functions.
+	// TODO Remove specific ext bootstrap functions.
 	if !cl.ClusterSecretsCreatedCheck {
 		switch clctrl.CloudProvider {
 		case "aws":
@@ -344,9 +353,15 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 				log.Error().Msgf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
+		case "k3s":
+			err := k3sext.BootstrapK3sMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
+			if err != nil {
+				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
+				return err
+			}
 		}
 
-		//create service accounts
+		// create service accounts
 		var token string
 		if (clctrl.CloudflareAuth != pkgtypes.CloudflareAuth{}) {
 			token = clctrl.CloudflareAuth.APIToken
@@ -390,7 +405,7 @@ func (clctrl *ClusterController) ContainerRegistryAuth() (string, error) {
 		}
 
 		return containerRegistryAuthToken, nil
-	case "civo", "digitalocean", "vultr":
+	case "civo", "digitalocean", "vultr", "k3s":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 	case "google":
 		var err error
@@ -426,7 +441,7 @@ func (clctrl *ClusterController) WaitForClusterReady() error {
 	switch clctrl.CloudProvider {
 	case "aws":
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-	case "civo", "digitalocean", "vultr":
+	case "civo", "digitalocean", "vultr", "k3s":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 	case "google":
 		var err error
@@ -439,7 +454,7 @@ func (clctrl *ClusterController) WaitForClusterReady() error {
 	var dnsDeployment *v1.Deployment
 	var err error
 	switch clctrl.CloudProvider {
-	case "aws", "civo", "digitalocean", "vultr":
+	case "aws", "civo", "digitalocean", "vultr", "k3s":
 		dnsDeployment, err = k8s.ReturnDeploymentObject(
 			kcfg.Clientset,
 			"kubernetes.io/name",
