@@ -46,6 +46,16 @@ func ReadSecretV2(clientset *kubernetes.Clientset, namespace string, secretName 
 	return parsedSecretData, nil
 }
 
+// DeleteSecretV2 reads the content of a Kubernetes Secret
+func DeleteSecretV2(clientset *kubernetes.Clientset, namespace string, secretName string) error {
+	err := clientset.CoreV1().Secrets(namespace).Delete(context.Background(), secretName, metav1.DeleteOptions{})
+	if err != nil {
+		log.Error().Msgf("error deleting secret: %s\n", err)
+		return err
+	}
+	return nil
+}
+
 // UpdateSecretV2 updates the key value pairs of a Kubernetes Secret
 func UpdateSecretV2(clientset *kubernetes.Clientset, namespace string, secretName string, secretValues map[string][]byte) error {
 	currentSecret, err := clientset.CoreV1().Secrets(namespace).Get(context.Background(), secretName, metav1.GetOptions{})

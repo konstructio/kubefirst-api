@@ -11,7 +11,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
@@ -40,8 +40,10 @@ func GetServices(c *gin.Context) {
 		return
 	}
 
+	kcfg := utils.GetKubernetesClient(clusterName)
+
 	// Retrieve all services info
-	allServices, err := db.Client.GetServices(clusterName)
+	allServices, err := secrets.GetServices(kcfg.Clientset, clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -83,8 +85,10 @@ func PostAddServiceToCluster(c *gin.Context) {
 		return
 	}
 
+	kcfg := utils.GetKubernetesClient(clusterName)
+
 	// Verify cluster exists
-	_, err := db.Client.GetCluster(clusterName)
+	_, err := secrets.GetCluster(kcfg.Clientset, clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: "cluster not found",
@@ -93,7 +97,7 @@ func PostAddServiceToCluster(c *gin.Context) {
 	}
 
 	// Verify service is a valid option and determine if it requires secrets
-	apps, err := db.Client.GetGitopsCatalogApps()
+	apps, err := secrets.GetGitopsCatalogApps(kcfg.Clientset)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -164,7 +168,7 @@ func PostAddServiceToCluster(c *gin.Context) {
 	}
 
 	// Generate and apply
-	cl, err := db.Client.GetCluster(clusterName)
+	cl, err := secrets.GetCluster(kcfg.Clientset, clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -216,8 +220,10 @@ func PostValidateService(c *gin.Context) {
 		return
 	}
 
+	kcfg := utils.GetKubernetesClient(clusterName)
+
 	// Verify cluster exists
-	_, err := db.Client.GetCluster(clusterName)
+	_, err := secrets.GetCluster(kcfg.Clientset, clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: "cluster not found",
@@ -226,7 +232,7 @@ func PostValidateService(c *gin.Context) {
 	}
 
 	// Verify service is a valid option and determine if it requires secrets
-	apps, err := db.Client.GetGitopsCatalogApps()
+	apps, err := secrets.GetGitopsCatalogApps(kcfg.Clientset)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -258,7 +264,7 @@ func PostValidateService(c *gin.Context) {
 	}
 
 	// Generate and apply
-	cl, err := db.Client.GetCluster(clusterName)
+	cl, err := secrets.GetCluster(kcfg.Clientset, clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -309,8 +315,10 @@ func DeleteServiceFromCluster(c *gin.Context) {
 		return
 	}
 
+	kcfg := utils.GetKubernetesClient(clusterName)
+
 	// Verify cluster exists
-	cl, err := db.Client.GetCluster(clusterName)
+	cl, err := secrets.GetCluster(kcfg.Clientset, clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: "cluster not found",
@@ -319,7 +327,7 @@ func DeleteServiceFromCluster(c *gin.Context) {
 	}
 
 	// Verify service is a valid option and determine if it requires secrets
-	apps, err := db.Client.GetGitopsCatalogApps()
+	apps, err := secrets.GetGitopsCatalogApps(kcfg.Clientset)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),

@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package controller
 
 import (
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	awsinternal "github.com/kubefirst/kubefirst-api/pkg/aws"
 	google "github.com/kubefirst/kubefirst-api/pkg/google"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
@@ -20,7 +21,7 @@ import (
 // This obviously doesn't work in an api-based environment.
 // It's included for testing and development.
 func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
-	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -94,7 +95,8 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 		}
 		log.Info().Msg("dependency downloads complete")
 
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "install_tools_check", true)
+		clctrl.Cluster.InstallToolsCheck = true
+		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
 			return err
 		}

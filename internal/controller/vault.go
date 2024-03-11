@@ -23,6 +23,7 @@ import (
 	googleext "github.com/kubefirst/kubefirst-api/extensions/google"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	vault "github.com/kubefirst/runtime/pkg/vault"
@@ -33,7 +34,7 @@ import (
 
 // InitializeVault
 func (clctrl *ClusterController) GetUserPassword(user string) error {
-	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -46,7 +47,8 @@ func (clctrl *ClusterController) GetUserPassword(user string) error {
 		return err
 	}
 
-	err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "vault_auth.kbot_password", clctrl.VaultAuth.KbotPassword)
+	clctrl.Cluster.VaultAuth.KbotPassword = clctrl.VaultAuth.KbotPassword
+	err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 	if err != nil {
 		return err
 	}
@@ -56,7 +58,7 @@ func (clctrl *ClusterController) GetUserPassword(user string) error {
 
 // InitializeVault
 func (clctrl *ClusterController) InitializeVault() error {
-	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -139,7 +141,8 @@ func (clctrl *ClusterController) InitializeVault() error {
 		}
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.VaultInitializationCompleted, "")
 
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "vault_initialized_check", true)
+		clctrl.Cluster.VaultInitializedCheck = true
+		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
 			return err
 		}
@@ -150,7 +153,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 
 // RunVaultTerraform
 func (clctrl *ClusterController) RunVaultTerraform() error {
-	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -238,7 +241,8 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		log.Info().Msg("vault terraform executed successfully")
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.VaultTerraformApplyCompleted, "")
 
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "vault_terraform_apply_check", true)
+		clctrl.Cluster.VaultTerraformApplyCheck = true
+		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
 			return err
 		}
@@ -248,7 +252,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 }
 
 func (clctrl *ClusterController) WriteVaultSecrets() error {
-	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return err
 	}

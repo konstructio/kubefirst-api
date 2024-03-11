@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/civo"
@@ -21,7 +22,7 @@ import (
 
 // StateStoreCredentials
 func (clctrl *ClusterController) StateStoreCredentials() error {
-	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -50,12 +51,14 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				Name:            clctrl.KubefirstStateStoreBucketName,
 			}
 
-			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_details", pkgtypes.StateStoreDetails{
+			clctrl.Cluster.StateStoreDetails = pkgtypes.StateStoreDetails{
 				AWSStateStoreBucket: strings.ReplaceAll(*kubefirstStateStoreBucket.Location, "/", ""),
 				AWSArtifactsBucket:  strings.ReplaceAll(*kubefirstArtifactsBucket.Location, "/", ""),
 				Hostname:            "s3.amazonaws.com",
 				Name:                clctrl.KubefirstStateStoreBucketName,
-			})
+			}
+			err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
+
 			if err != nil {
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCredentialsCreateFailed, err.Error())
 				return err
@@ -103,10 +106,12 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				Name:            clctrl.KubefirstStateStoreBucketName,
 			}
 
-			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_details", pkgtypes.StateStoreDetails{
+			clctrl.Cluster.StateStoreDetails = pkgtypes.StateStoreDetails{
 				Name:     clctrl.KubefirstStateStoreBucketName,
 				Hostname: creds.Endpoint,
-			})
+			}
+			err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
+
 			if err != nil {
 				return err
 			}
@@ -154,25 +159,26 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				ID:              objst.ID,
 			}
 
-			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_details", pkgtypes.StateStoreDetails{
+			clctrl.Cluster.StateStoreDetails = pkgtypes.StateStoreDetails{
 				Name:     objst.Label,
 				ID:       objst.ID,
 				Hostname: objst.S3Hostname,
-			})
+			}
+			err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
+
 			if err != nil {
 				return err
 			}
 		}
 
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_credentials", stateStoreData)
+		clctrl.Cluster.StateStoreCredentials = stateStoreData
+		clctrl.Cluster.StateStoreCredsCheck = true
+
+		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
 			return err
 		}
 
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_creds_check", true)
-		if err != nil {
-			return err
-		}
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.CloudCredentialsCheckCompleted, "")
 		log.Info().Msgf("%s object storage credentials created and set", clctrl.CloudProvider)
 	}
@@ -182,7 +188,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 
 // StateStoreCreate
 func (clctrl *ClusterController) StateStoreCreate() error {
-	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -213,12 +219,11 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 				ID:       bucket.ID,
 				Hostname: bucket.BucketURL,
 			}
-			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_details", stateStoreData)
-			if err != nil {
-				return err
-			}
 
-			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_create_check", true)
+			clctrl.Cluster.StateStoreDetails = stateStoreData
+			clctrl.Cluster.StateStoreCreateCheck = true
+
+			err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 			if err != nil {
 				return err
 			}

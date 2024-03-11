@@ -11,7 +11,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kubefirst/runtime/pkg/helpers"
 	log "github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"k8s.io/client-go/kubernetes"
@@ -48,15 +47,6 @@ func CreateKubeConfig(inCluster bool, kubeConfigPath string) *KubernetesClient {
 
 	// Set path to kubeconfig
 	kubeconfig := returnKubeConfigPath(kubeConfigPath)
-
-	// Check to make sure kubeconfig actually exists
-	// If it doesn't, go fetch it
-	if helpers.FileExists(fs, kubeconfig) {
-		log.Debug().Msg("kubeconfig exists, moving on.")
-	}
-
-	// Show what path was set for kubeconfig
-	log.Debug().Msgf("setting kubeconfig to: %s", kubeconfig)
 
 	// Build configuration instance from the provided config file
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)

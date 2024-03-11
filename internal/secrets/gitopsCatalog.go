@@ -15,18 +15,45 @@ import (
 	"github.com/kubefirst/kubefirst-api/pkg/types"
 	log "github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 const KUBEFIRST_CATALOG_SECRET_NAME = "kubefirst-catalog"
+
+// CreateGitopsCatalogApps
+func CreateGitopsCatalogApps(clientSet *kubernetes.Clientset, catalogApps types.GitopsCatalogApps) error {
+	bytes, _ := json.Marshal(catalogApps)
+	secretValuesMap, _ := ParseJSONToMap(string(bytes))
+
+	secretToCreate := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      KUBEFIRST_CATALOG_SECRET_NAME,
+			Namespace: "kubefirst",
+		},
+		Data: secretValuesMap,
+	}
+
+	err := k8s.CreateSecretV2(clientSet, secretToCreate)
+
+	if err != nil {
+		return fmt.Errorf("error creating gitops catalog secret: %s", err)
+	}
+
+	return nil
+}
 
 // GetGitopsCatalogApps
 func GetGitopsCatalogApps(clientSet *kubernetes.Clientset) (types.GitopsCatalogApps, error) {
 	catalogApps := types.GitopsCatalogApps{}
 
 	kubefirstSecrets, err := k8s.ReadSecretV2(clientSet, "kubefirst", KUBEFIRST_CATALOG_SECRET_NAME)
+	if err != nil {
+		return catalogApps, err
+	}
 
-	jsonString, err := MapToStructuredJSON(kubefirstSecrets)
+	jsonString, _ := MapToStructuredJSON(kubefirstSecrets)
 
 	jsonData, err := json.Marshal(jsonString)
 	if err != nil {
@@ -65,16 +92,24 @@ func UpdateGitopsCatalogApps(clientSet *kubernetes.Clientset) error {
 		log.Error().Msgf("error reading gitops catalog apps at startup: %s", err)
 	}
 
-	catalogApps, _ := GetGitopsCatalogApps(clientSet)
-	catalogApps.Apps = mpapps.Apps
-
-	bytes, _ := json.Marshal(catalogApps)
-	secretValuesMap, _ := ParseJSONToMap(string(bytes))
-
-	err = k8s.UpdateSecretV2(clientSet, "kubefirst", KUBEFIRST_CATALOG_SECRET_NAME, secretValuesMap)
-
+	catalogApps, err := GetGitopsCatalogApps(clientSet)
 	if err != nil {
-		return fmt.Errorf("error creating kubernetes secret: %s", err)
+		err = CreateGitopsCatalogApps(clientSet, mpapps)
+		if err != nil {
+			log.Error().Msgf("error creating gitops catalog apps secret: %s", err)
+			return fmt.Errorf("error creating gitops catalog apps secret: %s", err)
+		}
+	} else {
+		catalogApps.Apps = mpapps.Apps
+
+		bytes, _ := json.Marshal(catalogApps)
+		secretValuesMap, _ := ParseJSONToMap(string(bytes))
+
+		err = k8s.UpdateSecretV2(clientSet, "kubefirst", KUBEFIRST_CATALOG_SECRET_NAME, secretValuesMap)
+
+		if err != nil {
+			return fmt.Errorf("error creating kubernetes secret: %s", err)
+		}
 	}
 
 	return nil

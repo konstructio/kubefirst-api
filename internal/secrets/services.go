@@ -13,33 +13,41 @@ import (
 	"github.com/kubefirst/kubefirst-api/pkg/k8s"
 	"github.com/kubefirst/kubefirst-api/pkg/types"
 	log "github.com/rs/zerolog/log"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-const KUBEFIRST_SERVICES_SECRET_NAME = "kubefirst-services"
+const KUBEFIRST_SERVICES_PREFIX = "kubefirst-service"
 
 // CreateClusterServiceList adds an entry for a cluster to the service list
 func CreateClusterServiceList(clientSet *kubernetes.Clientset, clusterName string) error {
-	filter := bson.D{{Key: "cluster_name", Value: clusterName}}
-	var result types.Cluster
-	err := mdbcl.ServicesCollection.FindOne(mdbcl.Context, filter).Decode(&result)
-	if err != nil {
-		// This error means your query did not match any documents.
-		if err == mongo.ErrNoDocuments {
-			// Create if entry does not exist
-			_, err := mdbcl.ServicesCollection.InsertOne(mdbcl.Context, types.ClusterServiceList{
-				ClusterName: clusterName,
-				Services:    []types.Service{},
-			})
-			if err != nil {
-				return fmt.Errorf("error inserting cluster service list for cluster %s: %s", clusterName, err)
-			}
+	clusterServices, _ := GetServices(clientSet, clusterName)
+
+	if clusterServices.ClusterName == "" {
+		clusterServices = types.ClusterServiceList{
+			ClusterName: clusterName,
+			Services:    []types.Service{},
 		}
-	} else {
-		log.Info().Msgf("cluster service list record for %s already exists - skipping", clusterName)
+
+		bytes, _ := json.Marshal(clusterServices)
+		secretValuesMap, _ := ParseJSONToMap(string(bytes))
+
+		secretToCreate := &v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      fmt.Sprintf("%s-%s", KUBEFIRST_SERVICES_PREFIX, clusterName),
+				Namespace: "kubefirst",
+			},
+			Data: secretValuesMap,
+		}
+
+		err := k8s.CreateSecretV2(clientSet, secretToCreate)
+		if err != nil {
+			return fmt.Errorf("error creating kubernetes service secret: %s", err)
+		}
 	}
+
+	log.Info().Msgf("cluster service list record for %s already exists - skipping", clusterName)
 
 	return nil
 }
@@ -56,10 +64,12 @@ func DeleteClusterServiceListEntry(clientSet *kubernetes.Clientset, clusterName 
 		}
 	}
 
-	bytes, err := json.Marshal(filteredServiceList)
+	clusterServices.Services = filteredServiceList
+
+	bytes, err := json.Marshal(clusterServices)
 	secretValuesMap, _ := ParseJSONToMap(string(bytes))
 
-	err = k8s.UpdateSecretV2(clientSet, "kubefirst", KUBEFIRST_SERVICES_SECRET_NAME, secretValuesMap)
+	err = k8s.UpdateSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_SERVICES_PREFIX, clusterName), secretValuesMap)
 	if err != nil {
 		return fmt.Errorf("error deleting service list entry %s: %s", def.Name, err)
 	}
@@ -87,7 +97,7 @@ func GetService(clientSet *kubernetes.Clientset, clusterName string, serviceName
 func GetServices(clientSet *kubernetes.Clientset, clusterName string) (types.ClusterServiceList, error) {
 	clusterServices := types.ClusterServiceList{}
 
-	kubefirstSecrets, err := k8s.ReadSecretV2(clientSet, "kubefirst", KUBEFIRST_SERVICES_SECRET_NAME)
+	kubefirstSecrets, err := k8s.ReadSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_SERVICES_PREFIX, clusterName))
 
 	jsonString, err := MapToStructuredJSON(kubefirstSecrets)
 
@@ -113,7 +123,7 @@ func InsertClusterServiceListEntry(clientSet *kubernetes.Clientset, clusterName 
 	bytes, err := json.Marshal(clusterServices)
 	secretValuesMap, _ := ParseJSONToMap(string(bytes))
 
-	err = k8s.UpdateSecretV2(clientSet, "kubefirst", KUBEFIRST_SERVICES_SECRET_NAME, secretValuesMap)
+	err = k8s.UpdateSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_SERVICES_PREFIX, clusterName), secretValuesMap)
 	if err != nil {
 		return fmt.Errorf("error adding service list entry %s: %s", def.Name, err)
 	}

@@ -9,15 +9,14 @@ package api
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
-	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/kubefirst/kubefirst-api/internal/gitShim"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
@@ -56,8 +55,10 @@ func DeleteCluster(c *gin.Context) {
 		return
 	}
 
+	kcfg := utils.GetKubernetesClient(clusterName)
+
 	// Delete cluster
-	rec, err := db.Client.GetCluster(clusterName)
+	rec, err := secrets.GetCluster(kcfg.Clientset, clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -85,13 +86,15 @@ func DeleteCluster(c *gin.Context) {
 	}
 
 	if rec.LastCondition != "" {
-		err = db.Client.UpdateCluster(rec.ClusterName, "last_condition", "")
+		rec.LastCondition = ""
+		err = secrets.UpdateCluster(kcfg.Clientset, rec)
 		if err != nil {
 			log.Warn().Msgf("error updating cluster last_condition field: %s", err)
 		}
 	}
 	if rec.Status == constants.ClusterStatusError {
-		err = db.Client.UpdateCluster(rec.ClusterName, "status", constants.ClusterStatusDeleting)
+		rec.Status = constants.ClusterStatusDeleting
+		err = secrets.UpdateCluster(kcfg.Clientset, rec)
 		if err != nil {
 			log.Warn().Msgf("error updating cluster status field: %s", err)
 		}
@@ -177,8 +180,10 @@ func GetCluster(c *gin.Context) {
 		return
 	}
 
+	kcfg := utils.GetKubernetesClient(clusterName)
+
 	// Retrieve cluster info
-	cluster, err := db.Client.GetCluster(clusterName)
+	cluster, err := secrets.GetCluster(kcfg.Clientset, clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: "cluster not found",
@@ -201,8 +206,10 @@ func GetCluster(c *gin.Context) {
 // @Param Authorization header string true "API key" default(Bearer <API key>)
 // GetClusters returns all known configured clusters
 func GetClusters(c *gin.Context) {
+	kcfg := utils.GetKubernetesClient("TODO: SECRETS")
+
 	// Retrieve all clusters info
-	allClusters, err := db.Client.GetClusters()
+	allClusters, err := secrets.GetClusters(kcfg.Clientset)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -246,10 +253,12 @@ func PostCreateCluster(c *gin.Context) {
 	}
 	clusterDefinition.ClusterName = clusterName
 
+	kcfg := utils.GetKubernetesClient(clusterName)
+
 	// Create
 	// If create is in progress, return error
 	// Retrieve cluster info
-	cluster, err := db.Client.GetCluster(clusterName)
+	cluster, err := secrets.GetCluster(kcfg.Clientset, clusterName)
 	if err != nil {
 		log.Info().Msgf("cluster %s does not exist, continuing", clusterName)
 	} else {
@@ -260,13 +269,15 @@ func PostCreateCluster(c *gin.Context) {
 			return
 		}
 		if cluster.LastCondition != "" {
-			err = db.Client.UpdateCluster(cluster.ClusterName, "last_condition", "")
+			cluster.LastCondition = ""
+			err = secrets.UpdateCluster(kcfg.Clientset, cluster)
 			if err != nil {
 				log.Warn().Msgf("error updating cluster last_condition field: %s", err)
 			}
 		}
 		if cluster.Status == constants.ClusterStatusError {
-			err = db.Client.UpdateCluster(cluster.ClusterName, "status", constants.ClusterStatusProvisioning)
+			cluster.Status = constants.ClusterStatusProvisioning
+			err = secrets.UpdateCluster(kcfg.Clientset, cluster)
 			if err != nil {
 				log.Warn().Msgf("error updating cluster status field: %s", err)
 			}
@@ -296,7 +307,7 @@ func PostCreateCluster(c *gin.Context) {
 	}
 
 	if inCluster {
-		kcfg := k8s.CreateKubeConfig(inCluster, "")
+		kcfg := utils.GetKubernetesClient("")
 		k1AuthSecret, err := k8s.ReadSecretV2(kcfg.Clientset, constants.KubefirstNamespace, constants.KubefirstAuthSecretName)
 		if err != nil {
 			log.Warn().Msgf("authentication secret does not exist, continuing: %s", err)
@@ -496,8 +507,10 @@ func GetExportCluster(c *gin.Context) {
 		return
 	}
 
+	kcfg := utils.GetKubernetesClient(clusterName)
+
 	// get cluster object
-	cluster, err := db.Client.GetCluster(clusterName)
+	cluster, err := secrets.GetCluster(kcfg.Clientset, clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -535,8 +548,6 @@ func GetClusterKubeConfig(c *gin.Context) {
 
 	// Handle virtual cluster kubeconfig
 	if VCluster {
-
-		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: "error finding home directory",
@@ -551,16 +562,7 @@ func GetClusterKubeConfig(c *gin.Context) {
 			return
 		}
 
-		clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, kubeConfigRequest.ManagClusterName)
-
-		env, _ := env.GetEnv(constants.SilenceGetEnv)
-
-		var inCluster bool = false
-		if env.InCluster == "true" {
-			inCluster = true
-		}
-
-		kcfg := k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
+		kcfg := utils.GetKubernetesClient(kubeConfigRequest.ClusterName)
 		internalSecret, err := k8s.ReadSecretV2(kcfg.Clientset, kubeConfigRequest.ClusterName, fmt.Sprintf("vc-%v", kubeConfigRequest.ClusterName))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -689,8 +691,10 @@ func PostImportCluster(c *gin.Context) {
 		return
 	}
 
+	kcfg := utils.GetKubernetesClient(cluster.ClusterName)
+
 	// Insert the cluster into the target database
-	err = db.Client.InsertCluster(cluster)
+	err = secrets.InsertCluster(kcfg.Clientset, cluster)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -718,7 +722,8 @@ func PostImportCluster(c *gin.Context) {
 	}
 
 	// Update cluster status in database
-	err = db.Client.UpdateCluster(cluster.ClusterName, "in_progress", false)
+	cluster.InProgress = false
+	err = secrets.UpdateCluster(kcfg.Clientset, cluster)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -752,8 +757,13 @@ func PostResetClusterProgress(c *gin.Context) {
 		return
 	}
 
+	kcfg := utils.GetKubernetesClient(clusterName)
+	// Get Cluster
+
+	cluster, _ := secrets.GetCluster(kcfg.Clientset, clusterName)
 	// Reset
-	err := db.Client.UpdateCluster(clusterName, "in_progress", false)
+	cluster.InProgress = false
+	err := secrets.UpdateCluster(kcfg.Clientset, cluster)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: fmt.Sprintf("error updating cluster %s: %s", clusterName, err),

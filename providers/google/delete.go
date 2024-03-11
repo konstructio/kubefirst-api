@@ -17,8 +17,9 @@ import (
 	googleext "github.com/kubefirst/kubefirst-api/extensions/google"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
-	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/errors"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
+	"github.com/kubefirst/kubefirst-api/internal/utils"
 	"github.com/kubefirst/kubefirst-api/pkg/google"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
@@ -36,7 +37,10 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 	// Instantiate google config
 	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.Token, "")
 
-	err := db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleting)
+	kcfg := utils.GetKubernetesClient(cl.ClusterName)
+
+	cl.Status = constants.ClusterStatusDeleting
+	err := secrets.UpdateCluster(kcfg.Clientset, *cl)
 	if err != nil {
 		return err
 	}
@@ -58,7 +62,8 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 			}
 			log.Info().Msg("github resources terraform destroyed")
 
-			err = db.Client.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
+			cl.GitTerraformApplyCheck = false
+			err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 			if err != nil {
 				return err
 			}
@@ -113,7 +118,8 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 
 			log.Info().Msg("gitlab resources terraform destroyed")
 
-			err = db.Client.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
+			cl.GitTerraformApplyCheck = false
+			err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 			if err != nil {
 				return err
 			}
@@ -127,7 +133,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 				Project: cl.GoogleAuth.ProjectId,
 				Region:  cl.CloudRegion,
 			}
-			kcfg, err := googleConf.GetContainerClusterAuth(cl.ClusterName, []byte(cl.GoogleAuth.KeyFile))
+			kcfg, _ := googleConf.GetContainerClusterAuth(cl.ClusterName, []byte(cl.GoogleAuth.KeyFile))
 
 			log.Info().Msg("destroying google resources with terraform")
 
@@ -186,7 +192,8 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 			log.Info().Msg("waiting for google Kubernetes cluster resource removal to finish...")
 			time.Sleep(time.Second * 10)
 
-			err = db.Client.UpdateCluster(cl.ClusterName, "argocd_delete_registry_check", true)
+			cl.ArgoCDDeleteRegistryCheck = true
+			err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 			if err != nil {
 				return err
 			}
@@ -216,12 +223,10 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 		}
 		log.Info().Msg("google resources terraform destroyed")
 
-		err = db.Client.UpdateCluster(cl.ClusterName, "cloud_terraform_apply_check", false)
-		if err != nil {
-			return err
-		}
+		cl.CloudTerraformApplyCheck = false
+		cl.CloudTerraformApplyFailedCheck = false
+		err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 
-		err = db.Client.UpdateCluster(cl.ClusterName, "cloud_terraform_apply_failed_check", false)
 		if err != nil {
 			return err
 		}
@@ -242,7 +247,8 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 
 	telemetry.SendEvent(telemetryEvent, telemetry.ClusterDeleteCompleted, "")
 
-	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleted)
+	cl.Status = constants.ClusterStatusDeleted
+	err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 	if err != nil {
 		return err
 	}

@@ -17,8 +17,9 @@ import (
 	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
-	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/env"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
+	"github.com/kubefirst/kubefirst-api/internal/utils"
 	"github.com/kubefirst/kubefirst-api/pkg/types"
 
 	log "github.com/rs/zerolog/log"
@@ -29,7 +30,8 @@ func NewEnvironment(envDef types.Environment) (types.Environment, error) {
 	// Create new environment
 	envDef.CreationTimestamp = fmt.Sprintf("%v", primitive.NewDateTimeFromTime(time.Now().UTC()))
 
-	newEnv, err := db.Client.InsertEnvironment(envDef)
+	kcfg := utils.GetKubernetesClient("TODO: Secrets")
+	newEnv, err := secrets.InsertEnvironment(kcfg.Clientset, envDef)
 
 	return newEnv, err
 }
@@ -57,6 +59,8 @@ func CreateDefaultEnvironments(mgmtCluster types.Cluster) error {
 	}
 
 	defaultClusters := []types.WorkloadCluster{}
+
+	kcfg := utils.GetKubernetesClient("TODO: Secrets")
 
 	for _, clusterName := range defaultClusterNames {
 		vcluster := defaultVclusterTemplate
@@ -94,13 +98,13 @@ func CreateDefaultEnvironments(mgmtCluster types.Cluster) error {
 
 	for _, clusterName := range defaultClusterNames {
 		// Add to list
-		err := db.Client.CreateClusterServiceList(clusterName)
+		err := secrets.CreateClusterServiceList(kcfg.Clientset, clusterName)
 		if err != nil {
 			return err
 		}
 
 		// Update list
-		err = db.Client.InsertClusterServiceListEntry(clusterName, &types.Service{
+		err = secrets.InsertClusterServiceListEntry(kcfg.Clientset, clusterName, &types.Service{
 			Name:        "Metaphor",
 			Default:     true,
 			Description: "A multi-environment demonstration space for frontend application best practices that's easy to apply to other projects.",

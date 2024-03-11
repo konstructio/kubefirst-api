@@ -8,15 +8,12 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kubefirst/kubefirst-api/internal/constants"
-	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/internal/utils"
 	"github.com/kubefirst/kubefirst-api/pkg/k8s"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,26 +36,8 @@ func GetClusterSecret(c *gin.Context) {
 		return
 	}
 
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: "error finding home directory",
-		})
-		return
-	}
-
-	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, clusterName)
-
-	env, _ := env.GetEnv(constants.SilenceGetEnv)
-
-	var inCluster bool = false
-	if env.InCluster == "true" {
-		inCluster = true
-	}
-
-	kcfg := k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
-
-	kubefirstSecrets, err := k8s.ReadSecretV2(kcfg.Clientset, "kubefirst", secret)
+	kcfg := utils.GetKubernetesClient(clusterName)
+	kubefirstSecrets, _ := k8s.ReadSecretV2(kcfg.Clientset, "kubefirst", secret)
 
 	jsonString, err := secrets.MapToStructuredJSON(kubefirstSecrets)
 
@@ -98,25 +77,7 @@ func CreateClusterSecret(c *gin.Context) {
 		return
 	}
 
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: "error finding home directory",
-		})
-		return
-	}
-
-	env, _ := env.GetEnv(constants.SilenceGetEnv)
-
-	var inCluster bool = false
-	if env.InCluster == "true" {
-		inCluster = true
-	}
-
-	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, clusterName)
-
-	kcfg := k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
-
+	kcfg := utils.GetKubernetesClient(clusterName)
 	bytes, err := json.Marshal(secretValues)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -125,7 +86,7 @@ func CreateClusterSecret(c *gin.Context) {
 		return
 	}
 
-	secretValuesMap, err := secrets.ParseJSONToMap(string(bytes))
+	secretValuesMap, _ := secrets.ParseJSONToMap(string(bytes))
 
 	secretToCreate := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -174,24 +135,7 @@ func UpdateClusterSecret(c *gin.Context) {
 		return
 	}
 
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: "error finding home directory",
-		})
-		return
-	}
-
-	env, _ := env.GetEnv(constants.SilenceGetEnv)
-
-	var inCluster bool = false
-	if env.InCluster == "true" {
-		inCluster = true
-	}
-
-	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, clusterName)
-
-	kcfg := k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
+	kcfg := utils.GetKubernetesClient(clusterName)
 
 	bytes, err := json.Marshal(secretValues)
 	if err != nil {

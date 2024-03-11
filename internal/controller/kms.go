@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	githttps "github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/gitClient"
 )
@@ -35,7 +36,9 @@ func (clctrl *ClusterController) DetokenizeKMSKeyID() error {
 				return err
 			}
 
-			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "aws_kms_key_id", awsKmsKeyId)
+			clctrl.Cluster.AWSKMSKeyId = awsKmsKeyId
+			err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
+
 			if err != nil {
 				return err
 			}
@@ -89,7 +92,9 @@ func (clctrl *ClusterController) DetokenizeKMSKeyID() error {
 				return err
 			}
 
-			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "aws_kms_key_detokenized_check", true)
+			clctrl.Cluster.AWSKMSKeyDetokenizedCheck = true
+			err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
+
 			if err != nil {
 				return err
 			}

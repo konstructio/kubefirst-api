@@ -14,7 +14,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/internal/constants"
+	"github.com/kubefirst/kubefirst-api/internal/env"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
+	"github.com/kubefirst/kubefirst-api/pkg/k8s"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 
 	log "github.com/rs/zerolog/log"
 )
@@ -98,12 +104,14 @@ var BackupResolver = &net.Resolver{
 
 // ScheduledGitopsCatalogUpdate
 func ScheduledGitopsCatalogUpdate() {
-	err := db.Client.UpdateGitopsCatalogApps()
+	kcfg := GetKubernetesClient("")
+
+	err := secrets.UpdateGitopsCatalogApps(kcfg.Clientset)
 	if err != nil {
 		log.Warn().Msg(err.Error())
 	}
 	for range time.Tick(time.Minute * 30) {
-		err := db.Client.UpdateGitopsCatalogApps()
+		err := secrets.UpdateGitopsCatalogApps(kcfg.Clientset)
 		if err != nil {
 			log.Warn().Msg(err.Error())
 		}
@@ -118,5 +126,46 @@ func ValidateAuthenticationFields(s map[string]string) error {
 			return fmt.Errorf("field %s cannot be blank", key)
 		}
 	}
+	return nil
+}
+
+// GetKubernetesClient for cluster zero and existing cluster
+func GetKubernetesClient(clusterName string) *k8s.KubernetesClient {
+	// Get Environment variables
+	env, _ := env.GetEnv(constants.SilenceGetEnv)
+
+	//Create Kubernetes Client Context
+	var inCluster bool = false
+	if env.InCluster == "true" {
+		inCluster = true
+	}
+
+	homeDir, _ := os.UserHomeDir()
+	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, clusterName)
+	kubeconfigPath := fmt.Sprintf("%s/kubeconfig", clusterDir)
+
+	if env.K1LocalDebug == "true" {
+		kubeconfigPath = env.K1LocalKubeconfigPath
+	}
+
+	kcfg := k8s.CreateKubeConfig(inCluster, kubeconfigPath)
+
+	return kcfg
+}
+
+func CreateKubefirstNamespace(clientSet *kubernetes.Clientset) error {
+	_, err := clientSet.CoreV1().Namespaces().Get(context.TODO(), "kubefirst", metav1.GetOptions{})
+	if err != nil {
+		namespace := &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "kubefirst"}}
+		_, err = clientSet.CoreV1().Namespaces().Create(context.TODO(), namespace, metav1.CreateOptions{})
+		if err != nil {
+			log.Error().Err(err).Msg("")
+			return fmt.Errorf("error creating namespace %s: %s", "kubefirst", err)
+		}
+		log.Info().Msgf("namespace created: %s", "kubefirst")
+	} else {
+		log.Warn().Msgf("namespace %s already exists - skipping", "kubefirst")
+	}
+
 	return nil
 }

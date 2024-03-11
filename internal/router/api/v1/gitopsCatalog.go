@@ -10,8 +10,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kubefirst/kubefirst-api/internal/db"
+
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/internal/utils"
 )
 
 // GetGitopsCatalogApps godoc
@@ -42,7 +44,8 @@ func GetGitopsCatalogApps(c *gin.Context) {
 		return
 	}
 
-	cluster, err := db.Client.GetCluster(clusterName)
+	kcfg := utils.GetKubernetesClient(clusterName)
+	cluster, err := secrets.GetCluster(kcfg.Clientset, clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: "cluster not found",
@@ -50,7 +53,7 @@ func GetGitopsCatalogApps(c *gin.Context) {
 		return
 	}
 
-	apps, err := db.Client.GetGitopsCatalogAppsByCloudProvider(cloudProvider, cluster.GitProvider)
+	apps, err := secrets.GetGitopsCatalogAppsByCloudProvider(kcfg.Clientset, cloudProvider, cluster.GitProvider)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -73,7 +76,8 @@ func GetGitopsCatalogApps(c *gin.Context) {
 // @Param Authorization header string true "API key" default(Bearer <API key>)
 // UpdateGitopsCatalogApps updates the list of available Kubefirst gitops catalog applications
 func UpdateGitopsCatalogApps(c *gin.Context) {
-	err := db.Client.UpdateGitopsCatalogApps()
+	kcfg := utils.GetKubernetesClient("TODO: Secrets")
+	err := secrets.UpdateGitopsCatalogApps(kcfg.Clientset)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),

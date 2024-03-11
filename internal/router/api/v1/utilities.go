@@ -10,7 +10,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 )
 
@@ -23,14 +22,6 @@ import (
 // @Router /health [get]
 // @Param Authorization header string true "API key" default(Bearer <API key>)
 func GetHealth(c *gin.Context) {
-	// Verify database connectivity
-	err := db.Client.TestDatabaseConnection(true)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, types.JSONHealthResponse{
-			Status: "database connection failed",
-		})
-	}
-
 	c.JSON(http.StatusOK, types.JSONHealthResponse{
 		Status: "healthz",
 	})

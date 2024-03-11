@@ -118,7 +118,9 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 			}
 		}
 
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "domain_liveness_check", true)
+		clctrl.Cluster.DomainLivenessCheck = true
+		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
+
 		if err != nil {
 			return err
 		}

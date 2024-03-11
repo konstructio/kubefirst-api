@@ -19,24 +19,18 @@ import (
 )
 
 const KUBEFIRST_CLUSTERS_SECRET_NAME = "kubefirst-clusters"
+const KUBEFIRST_CLUSTER_PREFIX = "kubefirst-cluster"
 
 // DeleteCluster
 func DeleteCluster(clientSet *kubernetes.Clientset, clusterName string) error {
-	clusterList, err := GetClusters(clientSet)
-	filteredClusterList := []pkgtypes.Cluster{}
-
-	for _, cluster := range clusterList {
-		if cluster.ClusterName != clusterName {
-			filteredClusterList = append(filteredClusterList, cluster)
-		}
+	err := DeleteSecretReference(clientSet, KUBEFIRST_CLUSTERS_SECRET_NAME, clusterName)
+	if err != nil {
+		return fmt.Errorf("error deleting cluster %s reference", clusterName)
 	}
 
-	bytes, err := json.Marshal(filteredClusterList)
-	secretValuesMap, _ := ParseJSONToMap(string(bytes))
-
-	err = k8s.UpdateSecretV2(clientSet, "kubefirst", KUBEFIRST_CLUSTERS_SECRET_NAME, secretValuesMap)
+	err = k8s.DeleteSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_CLUSTER_PREFIX, clusterName))
 	if err != nil {
-		return fmt.Errorf("error updating clusters %s: %s", clusterName, err)
+		return fmt.Errorf("error deleting cluster %s: %s", clusterName, err)
 	}
 
 	log.Info().Msgf("cluster deleted: %v", clusterName)
@@ -46,12 +40,22 @@ func DeleteCluster(clientSet *kubernetes.Clientset, clusterName string) error {
 
 // GetCluster
 func GetCluster(clientSet *kubernetes.Clientset, clusterName string) (pkgtypes.Cluster, error) {
-	clusterList, _ := GetClusters(clientSet)
 	cluster := pkgtypes.Cluster{}
-	for _, clusterItem := range clusterList {
-		if clusterItem.ClusterName == clusterName {
-			cluster = clusterItem
-		}
+
+	clusterSecret, err := k8s.ReadSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_CLUSTER_PREFIX, clusterName))
+	if err != nil {
+		return cluster, fmt.Errorf("secret not found: %s", err)
+	}
+	jsonString, _ := MapToStructuredJSON(clusterSecret)
+
+	jsonData, err := json.Marshal(jsonString)
+	if err != nil {
+		return cluster, fmt.Errorf("error marshalling json: %s", err)
+	}
+
+	err = json.Unmarshal([]byte(jsonData), &cluster)
+	if err != nil {
+		return cluster, fmt.Errorf("unable to cast cluster: %s", err)
 	}
 
 	return cluster, nil
@@ -60,19 +64,13 @@ func GetCluster(clientSet *kubernetes.Clientset, clusterName string) (pkgtypes.C
 // GetCluster
 func GetClusters(clientSet *kubernetes.Clientset) ([]pkgtypes.Cluster, error) {
 	clusterList := []pkgtypes.Cluster{}
+	clusterReferenceList, _ := GetSecretReference(clientSet, KUBEFIRST_CLUSTERS_SECRET_NAME)
+	for _, clusterName := range clusterReferenceList.List {
+		cluster, _ := GetCluster(clientSet, clusterName)
 
-	kubefirstSecrets, err := k8s.ReadSecretV2(clientSet, "kubefirst", KUBEFIRST_CLUSTERS_SECRET_NAME)
-
-	jsonString, err := MapToStructuredJSON(kubefirstSecrets)
-
-	jsonData, err := json.Marshal(jsonString)
-	if err != nil {
-		return clusterList, fmt.Errorf("error marshalling json: %s", err)
-	}
-
-	err = json.Unmarshal([]byte(jsonData), &clusterList)
-	if err != nil {
-		return clusterList, fmt.Errorf("unable to cast cluster: %s", err)
+		if cluster.ClusterName != "" {
+			clusterList = append(clusterList, cluster)
+		}
 	}
 
 	return clusterList, nil
@@ -80,35 +78,32 @@ func GetClusters(clientSet *kubernetes.Clientset) ([]pkgtypes.Cluster, error) {
 
 // InsertCluster
 func InsertCluster(clientSet *kubernetes.Clientset, cl pkgtypes.Cluster) error {
-	clusters, _ := GetClusters(clientSet)
+	_, err := GetSecretReference(clientSet, KUBEFIRST_CLUSTERS_SECRET_NAME)
 
-	if len(clusters) == 0 {
-		clusters = append(clusters, cl)
-		bytes, _ := json.Marshal(clusters)
-		secretValuesMap, _ := ParseJSONToMap(string(bytes))
-
-		secretToCreate := &v1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      KUBEFIRST_CLUSTERS_SECRET_NAME,
-				Namespace: "kubefirst",
-			},
-			Data: secretValuesMap,
-		}
-
-		err := k8s.CreateSecretV2(clientSet, secretToCreate)
-
+	if err != nil {
+		CreateSecretReference(clientSet, KUBEFIRST_CLUSTERS_SECRET_NAME, pkgtypes.SecretListReference{
+			Name: "clusters",
+			List: []string{cl.ClusterName},
+		})
+	} else {
+		err = AddSecretReferenceItem(clientSet, KUBEFIRST_CLUSTERS_SECRET_NAME, cl.ClusterName)
 		if err != nil {
-			return fmt.Errorf("error creating kubernetes secret: %s", err)
+			return err
 		}
-
-		return nil
 	}
 
-	clusterList := append(clusters, cl)
-	bytes, _ := json.Marshal(clusterList)
+	bytes, _ := json.Marshal(cl)
 	secretValuesMap, _ := ParseJSONToMap(string(bytes))
 
-	err := k8s.UpdateSecretV2(clientSet, "kubefirst", KUBEFIRST_CLUSTERS_SECRET_NAME, secretValuesMap)
+	secretToCreate := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("%s-%s", KUBEFIRST_CLUSTER_PREFIX, cl.ClusterName),
+			Namespace: "kubefirst",
+		},
+		Data: secretValuesMap,
+	}
+
+	err = k8s.CreateSecretV2(clientSet, secretToCreate)
 
 	if err != nil {
 		return fmt.Errorf("error creating kubernetes secret: %s", err)
@@ -119,21 +114,13 @@ func InsertCluster(clientSet *kubernetes.Clientset, cl pkgtypes.Cluster) error {
 
 // UpdateCluster
 func UpdateCluster(clientSet *kubernetes.Clientset, cluster pkgtypes.Cluster) error {
-	clusters, _ := GetClusters(clientSet)
-
-	for _, clusterItem := range clusters {
-		if clusterItem.ClusterName == cluster.ClusterName {
-			clusterItem = cluster
-		}
-	}
-
-	bytes, _ := json.Marshal(clusters)
+	bytes, _ := json.Marshal(cluster)
 	secretValuesMap, _ := ParseJSONToMap(string(bytes))
 
-	err := k8s.UpdateSecretV2(clientSet, "kubefirst", KUBEFIRST_CLUSTERS_SECRET_NAME, secretValuesMap)
+	err := k8s.UpdateSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_CLUSTER_PREFIX, cluster.ClusterName), secretValuesMap)
 
 	if err != nil {
-		return fmt.Errorf("error creating kubernetes secret: %s", err)
+		return fmt.Errorf("error updating kubernetes secret: %s", err)
 	}
 
 	return nil

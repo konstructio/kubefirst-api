@@ -10,7 +10,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
@@ -124,22 +123,13 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	// Get Environment variables
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
-	//Create Kubernetes Client Context
-	var inCluster bool = false
-	if env.InCluster == "true" {
-		inCluster = true
-	}
-
-	homeDir, err := os.UserHomeDir()
-	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, def.ClusterName)
-
-	kcfg := k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
+	kcfg := utils.GetKubernetesClient(def.ClusterName)
 	clctrl.KubernetesClient = kcfg.Clientset
 
 	// Determine if record already exists
 	recordExists := true
 	rec, err := secrets.GetCluster(clctrl.KubernetesClient, def.ClusterName)
-	if err != nil {
+	if rec.ClusterID == "" && err != nil {
 		recordExists = false
 		log.Info().Msg("cluster record doesn't exist, continuing")
 	}
@@ -331,9 +321,19 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		LogFileName:            def.LogFileName,
 		PostInstallCatalogApps: clctrl.PostInstallCatalogApps,
 	}
-	err = secrets.InsertCluster(clctrl.KubernetesClient, clctrl.Cluster)
-	if err != nil {
-		return err
+
+	if !recordExists {
+		err = utils.CreateKubefirstNamespace(clctrl.KubernetesClient)
+		if err != nil {
+			return err
+		}
+
+		err = secrets.InsertCluster(clctrl.KubernetesClient, clctrl.Cluster)
+		if err != nil {
+			return err
+		}
+	} else {
+		clctrl.Cluster = rec
 	}
 
 	return nil
