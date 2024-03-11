@@ -46,8 +46,14 @@ type GitopsCatalogAppCreateRequest struct {
 	Environment         string                 `bson:"environment" json:"environment"`
 }
 
+// GitopsCatalogAppValidateRequest
+type GitopsCatalogAppValidateRequest struct {
+	CanDeleteService bool `bson:"can_delete_service" json:"can_delete_service"`
+}
+
 type GitopsCatalogAppDeleteRequest struct {
 	User                string `bson:"user" json:"user"`
 	IsTemplate          bool   `bson:"is_template" json:"is_template"`
 	WorkloadClusterName string `bson:"workload_cluster_name" json:"workload_cluster_name"`
+	SkipFiles           bool   `bson:"skip_files" json:"skip_files"`
 }

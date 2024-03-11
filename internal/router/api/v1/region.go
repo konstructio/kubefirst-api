@@ -172,6 +172,10 @@ func PostRegions(c *gin.Context) {
 			return
 		}
 		regionListResponse.Regions = regions
+
+	case "k3s":
+		regionListResponse.Regions = []string{"on-premise (compatibilty-mode)"}
+
 	default:
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: fmt.Sprintf("unsupported provider: %s", cloudProvider),

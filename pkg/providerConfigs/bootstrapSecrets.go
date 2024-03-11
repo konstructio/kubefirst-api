@@ -153,6 +153,7 @@ func K8sNamespaces(clientset *kubernetes.Clientset) error {
 		"atlantis",
 		"chartmuseum",
 		"cert-manager",
+		"crossplane-system",
 		"kubefirst",
 		"external-dns",
 		"external-secrets-operator",

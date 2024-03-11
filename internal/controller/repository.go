@@ -29,12 +29,12 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 		return err
 	}
 
-	var useCloudflareOriginIssuer = false
+	useCloudflareOriginIssuer := false
 	if cl.CloudflareAuth.OriginCaIssuerKey != "" {
 		useCloudflareOriginIssuer = true
 	}
 
-	//TODO Implement an interface so we can call GetDomainApexContent on the clustercotroller
+	// TODO Implement an interface so we can call GetDomainApexContent on the clustercotroller
 
 	if !cl.GitopsReadyCheck {
 		log.Info().Msg("initializing the gitops repository - this may take several minutes")
@@ -74,9 +74,9 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.GitopsTemplateURL,
 				clctrl.ProviderConfig.DestinationMetaphorRepoURL,
 				clctrl.ProviderConfig.K1Dir,
-				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), //tokens created on the fly
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), // tokens created on the fly
 				clctrl.ProviderConfig.MetaphorDir,
-				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), //tokens created on the fly
+				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), // tokens created on the fly
 				true,
 				cl.GitProtocol,
 				useCloudflareOriginIssuer,
@@ -96,9 +96,9 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.GitopsTemplateURL,
 				clctrl.ProviderConfig.DestinationMetaphorRepoURL,
 				clctrl.ProviderConfig.K1Dir,
-				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), //tokens created on the fly
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), // tokens created on the fly
 				clctrl.ProviderConfig.MetaphorDir,
-				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), //tokens created on the fly
+				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), // tokens created on the fly
 				civo.GetDomainApexContent(clctrl.DomainName),
 				cl.GitProtocol,
 				useCloudflareOriginIssuer,
@@ -118,9 +118,9 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.GitopsTemplateURL,
 				clctrl.ProviderConfig.DestinationMetaphorRepoURL,
 				clctrl.ProviderConfig.K1Dir,
-				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), //tokens created on the fly
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), // tokens created on the fly
 				clctrl.ProviderConfig.MetaphorDir,
-				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), //tokens created on the fly
+				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), // tokens created on the fly
 				google.GetDomainApexContent(clctrl.DomainName),
 				cl.GitProtocol,
 				useCloudflareOriginIssuer,
@@ -140,9 +140,9 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.GitopsTemplateURL,
 				clctrl.ProviderConfig.DestinationMetaphorRepoURL,
 				clctrl.ProviderConfig.K1Dir,
-				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), //tokens created on the fly
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), // tokens created on the fly
 				clctrl.ProviderConfig.MetaphorDir,
-				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), //tokens created on the fly
+				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), // tokens created on the fly
 				digitalocean.GetDomainApexContent(clctrl.DomainName),
 				cl.GitProtocol,
 				useCloudflareOriginIssuer,
@@ -162,9 +162,32 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.GitopsTemplateURL,
 				clctrl.ProviderConfig.DestinationMetaphorRepoURL,
 				clctrl.ProviderConfig.K1Dir,
-				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), //tokens created on the fly
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), // tokens created on the fly
 				clctrl.ProviderConfig.MetaphorDir,
-				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), //tokens created on the fly
+				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), // tokens created on the fly
+				vultr.GetDomainApexContent(clctrl.DomainName),
+				cl.GitProtocol,
+				useCloudflareOriginIssuer,
+			)
+			if err != nil {
+				return err
+			}
+
+		case "k3s":
+			err = providerConfigs.PrepareGitRepositories(
+				clctrl.CloudProvider,
+				clctrl.GitProvider,
+				clctrl.ClusterName,
+				clctrl.ClusterType,
+				clctrl.ProviderConfig.DestinationGitopsRepoURL,
+				clctrl.ProviderConfig.GitopsDir,
+				clctrl.GitopsTemplateBranch,
+				clctrl.GitopsTemplateURL,
+				clctrl.ProviderConfig.DestinationMetaphorRepoURL,
+				clctrl.ProviderConfig.K1Dir,
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), // tokens created on the fly
+				clctrl.ProviderConfig.MetaphorDir,
+				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), // tokens created on the fly
 				vultr.GetDomainApexContent(clctrl.DomainName),
 				cl.GitProtocol,
 				useCloudflareOriginIssuer,
@@ -173,7 +196,6 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				return err
 			}
 		}
-
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "gitops_ready_check", true)
 		if err != nil {
 			return err
@@ -220,7 +242,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 				log.Error().Msgf("unable to check for ssh keys in gitlab: %s", err.Error())
 			}
 
-			var keyName = "kbot-ssh-key"
+			keyName := "kbot-ssh-key"
 			var keyFound bool = false
 			for _, key := range keys {
 				if key.Title == keyName {

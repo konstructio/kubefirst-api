@@ -46,12 +46,12 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 		return fmt.Errorf("cluster %s - unable to deploy service %s to cluster: cannot deploy services to a cluster in %s state", cl.ClusterName, serviceName, cl.Status)
 	}
 
-	homeDir, err := os.UserHomeDir()
+	homeDir, _ := os.UserHomeDir()
 	tmpGitopsDir := fmt.Sprintf("%s/.k1/%s/%s/gitops", homeDir, cl.ClusterName, serviceName)
 	tmpGitopsCatalogDir := fmt.Sprintf("%s/.k1/%s/%s/gitops-catalog", homeDir, cl.ClusterName, serviceName)
 
 	// Remove gitops dir
-	err = os.RemoveAll(tmpGitopsDir)
+	err := os.RemoveAll(tmpGitopsDir)
 	if err != nil {
 		log.Fatal().Msgf("error removing gitops dir %s: %s", tmpGitopsDir, err)
 		return err
@@ -209,7 +209,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 		return fmt.Errorf("cluster %s - error pushing commit for service file: %s", clusterName, err)
 	}
 
-	existingService, err := db.Client.GetServices(clusterName)
+	existingService, _ := db.Client.GetServices(clusterName)
 
 	if existingService.ClusterName == "" {
 		// Add to list
@@ -311,14 +311,112 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string, def pkgtypes.Gitops
 		return fmt.Errorf("cluster %s - error finding service: %s", clusterName, err)
 	}
 
-	homeDir, err := os.UserHomeDir()
+	if !def.SkipFiles {
+		homeDir, _ := os.UserHomeDir()
+		tmpGitopsDir := fmt.Sprintf("%s/.k1/%s/%s/gitops", homeDir, cl.ClusterName, serviceName)
+
+		// Remove gitops dir
+		err = os.RemoveAll(tmpGitopsDir)
+		if err != nil {
+			log.Fatal().Msgf("error removing gitops dir %s: %s", tmpGitopsDir, err)
+			return err
+		}
+
+		err = gitShim.PrepareGitEnvironment(cl, tmpGitopsDir)
+		if err != nil {
+			log.Fatal().Msgf("an error ocurred preparing git environment %s %s", tmpGitopsDir, err)
+		}
+
+		gitopsRepo, _ = git.PlainOpen(tmpGitopsDir)
+
+		registryPath := getRegistryPath(clusterName, cl.CloudProvider, def.IsTemplate)
+
+		serviceFile := fmt.Sprintf("%s/%s/%s.yaml", tmpGitopsDir, registryPath, serviceName)
+		componentsServiceFolder := fmt.Sprintf("%s/%s/components/%s", tmpGitopsDir, registryPath, serviceName)
+
+		err = gitShim.PullWithAuth(
+			gitopsRepo,
+			cl.GitProvider,
+			"main",
+			&githttps.BasicAuth{
+				Username: cl.GitAuth.User,
+				Password: cl.GitAuth.Token,
+			},
+		)
+
+		if err != nil {
+			log.Warn().Msgf("cluster %s - error pulling gitops repo: %s", clusterName, err)
+		}
+
+		// removing registry service file
+		_, err = os.Stat(serviceFile)
+		if err != nil {
+			return fmt.Errorf("file %s does not exist in repository", serviceFile)
+		} else {
+			err := os.Remove(serviceFile)
+			if err != nil {
+				return fmt.Errorf("cluster %s - error deleting file: %s", clusterName, err)
+			}
+		}
+
+		// removing componentes service folder
+		_, err = os.Stat(componentsServiceFolder)
+		if err != nil {
+			return fmt.Errorf("folder %s does not exist in repository", componentsServiceFolder)
+		} else {
+			err := os.RemoveAll(componentsServiceFolder)
+			if err != nil {
+				return fmt.Errorf("cluster %s - error deleting components folder: %s", clusterName, err)
+			}
+		}
+
+		// Commit to gitops repository
+		err = gitClient.Commit(gitopsRepo, fmt.Sprintf("removing %s from the cluster %s on behalf of %s", serviceName, clusterName, def.User))
+		if err != nil {
+			return fmt.Errorf("cluster %s - error deleting service file: %s", clusterName, err)
+		}
+
+		err = gitopsRepo.Push(&git.PushOptions{
+			RemoteName: "origin",
+			Auth: &githttps.BasicAuth{
+				Username: cl.GitAuth.User,
+				Password: cl.GitAuth.Token,
+			},
+		})
+
+		if err != nil {
+			return fmt.Errorf("cluster %s - error pushing commit for service file: %s", clusterName, err)
+		}
+	}
+
+	err = db.Client.DeleteClusterServiceListEntry(clusterName, &svc)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ValidateService
+func ValidateService(cl *pkgtypes.Cluster, serviceName string, def *pkgtypes.GitopsCatalogAppCreateRequest) (error, bool) {
+	canDeleleteService := true
+
+	var gitopsRepo *git.Repository
+
+	clusterName := cl.ClusterName
+
+	if def.WorkloadClusterName != "" {
+		clusterName = def.WorkloadClusterName
+	}
+
+	homeDir, _ := os.UserHomeDir()
 	tmpGitopsDir := fmt.Sprintf("%s/.k1/%s/%s/gitops", homeDir, cl.ClusterName, serviceName)
 
 	// Remove gitops dir
-	err = os.RemoveAll(tmpGitopsDir)
+	err := os.RemoveAll(tmpGitopsDir)
 	if err != nil {
 		log.Fatal().Msgf("error removing gitops dir %s: %s", tmpGitopsDir, err)
-		return err
+		return err, false
 	}
 
 	err = gitShim.PrepareGitEnvironment(cl, tmpGitopsDir)
@@ -331,7 +429,6 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string, def pkgtypes.Gitops
 	registryPath := getRegistryPath(clusterName, cl.CloudProvider, def.IsTemplate)
 
 	serviceFile := fmt.Sprintf("%s/%s/%s.yaml", tmpGitopsDir, registryPath, serviceName)
-	componentsServiceFolder := fmt.Sprintf("%s/%s/components/%s", tmpGitopsDir, registryPath, serviceName)
 
 	err = gitShim.PullWithAuth(
 		gitopsRepo,
@@ -350,49 +447,10 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string, def pkgtypes.Gitops
 	// removing registry service file
 	_, err = os.Stat(serviceFile)
 	if err != nil {
-		return fmt.Errorf("file %s does not exist in repository", serviceFile)
-	} else {
-		err := os.Remove(serviceFile)
-		if err != nil {
-			return fmt.Errorf("cluster %s - error deleting file: %s", clusterName, err)
-		}
+		canDeleleteService = false
 	}
 
-	// removing componentes service folder
-	_, err = os.Stat(componentsServiceFolder)
-	if err != nil {
-		return fmt.Errorf("folder %s does not exist in repository", componentsServiceFolder)
-	} else {
-		err := os.RemoveAll(componentsServiceFolder)
-		if err != nil {
-			return fmt.Errorf("cluster %s - error deleting components folder: %s", clusterName, err)
-		}
-	}
-
-	// Commit to gitops repository
-	err = gitClient.Commit(gitopsRepo, fmt.Sprintf("removing %s from the cluster %s on behalf of %s", serviceName, clusterName, def.User))
-	if err != nil {
-		return fmt.Errorf("cluster %s - error deleting service file: %s", clusterName, err)
-	}
-
-	err = gitopsRepo.Push(&git.PushOptions{
-		RemoteName: "origin",
-		Auth: &githttps.BasicAuth{
-			Username: cl.GitAuth.User,
-			Password: cl.GitAuth.Token,
-		},
-	})
-
-	if err != nil {
-		return fmt.Errorf("cluster %s - error pushing commit for service file: %s", clusterName, err)
-	}
-
-	err = db.Client.DeleteClusterServiceListEntry(clusterName, &svc)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return nil, canDeleleteService
 }
 
 // AddDefaultServices
