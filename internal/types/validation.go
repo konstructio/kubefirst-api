@@ -26,9 +26,17 @@ type CivoDomainValidationResponse struct {
 	Validated bool `json:"validated"`
 }
 
+type CloudflareDomainValidationRequest struct {
+	Token string `json:"token"`
+}
+
+type CloudflareDomainValidationResponse struct {
+	Validated bool `json:"validated"`
+}
+
 // DigitalOceanDomainValidationRequest /digitalocean/domain/validate required parameters
 type DigitalOceanDomainValidationRequest struct {
-	CloudRegion string `json:"cloud_region"`
+	Token string `json:"token"`
 }
 
 // DigitalOceanDomainValidationResponse is the response for the /digitalocean/domain/validate route
@@ -54,4 +62,8 @@ type GoogleDomainValidationRequest struct {
 // GoogleDomainValidationResponse is the response for the /google/domain/validate route
 type GoogleDomainValidationResponse struct {
 	Validated bool `json:"validated"`
+}
+
+type ClusterSecretUpdateRequest struct {
+	ConsoleTour bool `json:"console-tour"`
 }

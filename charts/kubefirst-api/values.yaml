@@ -104,6 +104,7 @@ mongodbUsername: ''
 initContainer:
   enabled: false
 
+includeVolume: false
 
 global:
   kubefirstVersion: ''

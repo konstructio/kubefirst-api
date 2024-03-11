@@ -9,32 +9,31 @@ package db
 import (
 	"fmt"
 
-	"github.com/kubefirst/kubefirst-api/internal/types"
-	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
-	log "github.com/sirupsen/logrus"
+	"github.com/kubefirst/kubefirst-api/pkg/types"
+	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // CreateClusterServiceList adds an entry for a cluster to the service list
-func (mdbcl *MongoDBClient) CreateClusterServiceList(cl *pkgtypes.Cluster) error {
-	filter := bson.D{{Key: "cluster_name", Value: cl.ClusterName}}
-	var result pkgtypes.Cluster
+func (mdbcl *MongoDBClient) CreateClusterServiceList(clusterName string) error {
+	filter := bson.D{{Key: "cluster_name", Value: clusterName}}
+	var result types.Cluster
 	err := mdbcl.ServicesCollection.FindOne(mdbcl.Context, filter).Decode(&result)
 	if err != nil {
 		// This error means your query did not match any documents.
 		if err == mongo.ErrNoDocuments {
 			// Create if entry does not exist
 			_, err := mdbcl.ServicesCollection.InsertOne(mdbcl.Context, types.ClusterServiceList{
-				ClusterName: cl.ClusterName,
+				ClusterName: clusterName,
 				Services:    []types.Service{},
 			})
 			if err != nil {
-				return fmt.Errorf("error inserting cluster service list for cluster %s: %s", cl.ClusterName, err)
+				return fmt.Errorf("error inserting cluster service list for cluster %s: %s", clusterName, err)
 			}
 		}
 	} else {
-		log.Infof("cluster service list record for %s already exists - skipping", cl.ClusterName)
+		log.Info().Msgf("cluster service list record for %s already exists - skipping", clusterName)
 	}
 
 	return nil
@@ -52,7 +51,7 @@ func (mdbcl *MongoDBClient) DeleteClusterServiceListEntry(clusterName string, de
 		return fmt.Errorf("error updating cluster service list for cluster %s: %s", clusterName, err)
 	}
 
-	log.Infof("cluster service list updated: %v", resp.ModifiedCount)
+	log.Info().Msgf("cluster service list updated: %v", resp.ModifiedCount)
 
 	return nil
 }

@@ -1097,7 +1097,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "node_count": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "node_type": {
                     "type": "string"
@@ -1241,7 +1241,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/types.GoogleAuth"
                 },
                 "node_count": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "node_type": {
                     "type": "string"
@@ -1372,11 +1372,8 @@ const docTemplate = `{
         "types.GitopsCatalogApp": {
             "type": "object",
             "properties": {
-                "categories": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "category": {
+                    "type": "string"
                 },
                 "description": {
                     "type": "string"

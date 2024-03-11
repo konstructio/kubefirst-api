@@ -8,7 +8,6 @@ package controller
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
@@ -21,7 +20,7 @@ import (
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/gitlab"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 )
 
 // GitInit
@@ -59,15 +58,6 @@ func (clctrl *ClusterController) GitInit() error {
 
 // RunGitTerraform
 func (clctrl *ClusterController) RunGitTerraform() error {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
-	log.SetOutput(os.Stdout)
-
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
@@ -77,7 +67,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 
 	telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.GitTerraformApplyStarted, "")
 
-	log.Infof("Creating %s resources with terraform", clctrl.GitProvider)
+	log.Info().Msgf("Creating %s resources with terraform", clctrl.GitProvider)
 
 	tfEntrypoint := clctrl.ProviderConfig.GitopsDir + fmt.Sprintf("/terraform/%s", clctrl.GitProvider)
 	tfEnvs := map[string]string{}
@@ -118,19 +108,19 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 
 		err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
-			log.Errorf("error applying git terraform: %s", err)
-			log.Info("sleeping 10 seconds before retrying terraform execution once more")
+			log.Error().Msgf("error applying git terraform: %s", err)
+			log.Info().Msg("sleeping 10 seconds before retrying terraform execution once more")
 			time.Sleep(10 * time.Second)
 			err = terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				msg := fmt.Sprintf("error creating %s resources with terraform %s: %s", clctrl.GitProvider, tfEntrypoint, err)
-				log.Error(msg)
+				log.Error().Msg(msg)
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.GitTerraformApplyFailed, err.Error())
 				return fmt.Errorf(msg)
 			}
 		}
 
-		log.Infof("created git projects and groups for %s.com/%s", clctrl.GitProvider, clctrl.GitAuth.Owner)
+		log.Info().Msgf("created git projects and groups for %s.com/%s", clctrl.GitProvider, clctrl.GitAuth.Owner)
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.GitTerraformApplyCompleted, "")
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "git_terraform_apply_check", true)

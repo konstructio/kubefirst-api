@@ -12,18 +12,19 @@ import (
 
 // ClusterDefinition describes an incoming request to create a cluster
 type ClusterDefinition struct {
-	// Cluster
-	AdminEmail    string `json:"admin_email" binding:"required"`
-	CloudProvider string `json:"cloud_provider" binding:"required,oneof=aws civo digitalocean vultr google k3s"`
-	CloudRegion   string `json:"cloud_region" binding:"required"`
-	ClusterName   string `json:"cluster_name,omitempty"`
-	DomainName    string `json:"domain_name" binding:"required"`
-	SubdomainName string `json:"subdomain_name,omitempty"`
-	DnsProvider   string `json:"dns_provider,omitempty" binding:"required"`
-	Type          string `json:"type" binding:"required,oneof=mgmt workload"`
-	ForceDestroy  bool   `bson:"force_destroy,omitempty" json:"force_destroy,omitempty"`
-	NodeType      string `json:"node_type" binding:"required"`
-	NodeCount     int    `json:"node_count" binding:"required"`
+	//Cluster
+	AdminEmail             string             `json:"admin_email" binding:"required"`
+	CloudProvider          string             `json:"cloud_provider" binding:"required,oneof=aws civo digitalocean vultr google"`
+	CloudRegion            string             `json:"cloud_region" binding:"required"`
+	ClusterName            string             `json:"cluster_name,omitempty"`
+	DomainName             string             `json:"domain_name" binding:"required"`
+	SubdomainName          string             `json:"subdomain_name,omitempty"`
+	DnsProvider            string             `json:"dns_provider,omitempty" binding:"required"`
+	Type                   string             `json:"type" binding:"required,oneof=mgmt workload"`
+	ForceDestroy           bool               `bson:"force_destroy,omitempty" json:"force_destroy,omitempty"`
+	NodeType               string             `json:"node_type" binding:"required"`
+	NodeCount              int                `json:"node_count" binding:"required"`
+	PostInstallCatalogApps []GitopsCatalogApp `bson:"post_install_catalog_apps,omitempty" json:"post_install_catalog_apps,omitempty"`
 
 	// Git
 
@@ -45,6 +46,7 @@ type ClusterDefinition struct {
 	GoogleAuth       GoogleAuth       `json:"google_auth,omitempty"`
 	K3sAuth          K3sAuth          `json:"k3s_auth,omitempty"`
 	GitAuth          GitAuth          `json:"git_auth,omitempty"`
+	LogFileName      string           `bson:"log_file,omitempty" json:"log_file,omitempty"`
 }
 
 // Cluster describes the configuration storage for a Kubefirst cluster object
@@ -58,15 +60,16 @@ type Cluster struct {
 	InProgress    bool   `bson:"in_progress" json:"in_progress"`
 
 	// Identifiers
-	AlertsEmail   string `bson:"alerts_email" json:"alerts_email"`
-	CloudProvider string `bson:"cloud_provider" json:"cloud_provider"`
-	CloudRegion   string `bson:"cloud_region" json:"cloud_region"`
-	ClusterName   string `bson:"cluster_name" json:"cluster_name"`
-	ClusterID     string `bson:"cluster_id" json:"cluster_id"`
-	ClusterType   string `bson:"cluster_type" json:"cluster_type"`
-	DomainName    string `bson:"domain_name" json:"domain_name"`
-	SubdomainName string `bson:"subdomain_name" json:"subdomain_name,omitempty"`
-	DnsProvider   string `bson:"dns_provider" json:"dns_provider"`
+	AlertsEmail            string             `bson:"alerts_email" json:"alerts_email"`
+	CloudProvider          string             `bson:"cloud_provider" json:"cloud_provider"`
+	CloudRegion            string             `bson:"cloud_region" json:"cloud_region"`
+	ClusterName            string             `bson:"cluster_name" json:"cluster_name"`
+	ClusterID              string             `bson:"cluster_id" json:"cluster_id"`
+	ClusterType            string             `bson:"cluster_type" json:"cluster_type"`
+	DomainName             string             `bson:"domain_name" json:"domain_name"`
+	SubdomainName          string             `bson:"subdomain_name" json:"subdomain_name,omitempty"`
+	DnsProvider            string             `bson:"dns_provider" json:"dns_provider"`
+	PostInstallCatalogApps []GitopsCatalogApp `bson:"post_install_catalog_apps,omitempty" json:"post_install_catalog_apps,omitempty"`
 
 	// Auth
 	AWSAuth          AWSAuth          `bson:"aws_auth,omitempty" json:"aws_auth,omitempty"`
@@ -91,6 +94,7 @@ type Cluster struct {
 	KubefirstTeam         string `bson:"kubefirst_team" json:"kubefirst_team"`
 	NodeType              string `bson:"node_type" json:"node_type" binding:"required"`
 	NodeCount             int    `bson:"node_count" json:"node_count" binding:"required"`
+	LogFileName           string `bson:"log_file,omitempty" json:"log_file,omitempty"`
 
 	StateStoreCredentials StateStoreCredentials `bson:"state_store_credentials,omitempty" json:"state_store_credentials,omitempty"`
 	StateStoreDetails     StateStoreDetails     `bson:"state_store_details,omitempty" json:"state_store_details,omitempty"`

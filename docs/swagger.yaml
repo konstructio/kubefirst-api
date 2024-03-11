@@ -144,7 +144,7 @@ definitions:
       last_condition:
         type: string
       node_count:
-        type: string
+        type: integer
       node_type:
         type: string
       state_store_create_check:
@@ -237,7 +237,7 @@ definitions:
       google_auth:
         $ref: '#/definitions/types.GoogleAuth'
       node_count:
-        type: string
+        type: integer
       node_type:
         type: string
       subdomain_name:
@@ -333,10 +333,8 @@ definitions:
     type: object
   types.GitopsCatalogApp:
     properties:
-      categories:
-        items:
-          type: string
-        type: array
+      category:
+        type: string
       description:
         type: string
       display_name:

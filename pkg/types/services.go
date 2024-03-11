@@ -14,6 +14,7 @@ type Service struct {
 	Image       string   `bson:"image" json:"image"`
 	Links       []string `bson:"links" json:"links"`
 	Status      string   `bson:"status" json:"status"`
+	CreatedBy   string   `bson:"created_by" json:"created_by"`
 }
 
 // ClusterServiceList tracks services per cluster

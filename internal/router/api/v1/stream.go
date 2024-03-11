@@ -7,13 +7,16 @@ See the LICENSE file for more details.
 package api
 
 import (
-	"bufio"
 	"fmt"
-	"io"
+	"net/http"
 	"os"
+	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/nxadm/tail"
+	log "github.com/rs/zerolog/log"
 )
 
 // setHeaders sets headers for the SSE response
@@ -29,18 +32,32 @@ func setHeaders(c *gin.Context) {
 // @Summary Stream API server logs
 // @Description Stream API server logs
 // @Tags logs
-// @Router /stream [get]
+// @Router /stream/file_name [get]
 // @Param Authorization header string true "API key" default(Bearer <API key>)
 // GetLogs
 func GetLogs(c *gin.Context) {
 	setHeaders(c)
+
+	var (
+		mu     sync.Mutex
+		buffer string
+	)
+
+	fileName, param := c.Params.Get("file_name")
+
+	if !param {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: ":file_name not provided",
+		})
+		return
+	}
 
 	// Stream logs
 	logs := make(chan types.LogMessage)
 	done := make(chan struct{})
 	errCh := make(chan error)
 	go func() {
-		err := StreamLogs(logs, errCh, done)
+		err := StreamLogs(fileName, logs, errCh, done, mu, buffer)
 		if err != nil {
 			errCh <- err
 		}
@@ -51,24 +68,43 @@ func GetLogs(c *gin.Context) {
 }
 
 // StreamLogs redirects stdout logs to the stream via SSE
-func StreamLogs(ch chan types.LogMessage, errCh chan error, done chan struct{}) error {
-	r, w, _ := os.Pipe()
-	os.Stdout = w
+func StreamLogs(fileName string, ch chan types.LogMessage, errCh chan error, done chan struct{}, mu sync.Mutex, buffer string) error {
+	homePath, err := os.UserHomeDir()
+	if err != nil {
+		log.Info().Msg(err.Error())
+	}
+	k1Dir := fmt.Sprintf("%s/.k1", homePath)
 
-	go func(reader io.Reader) {
-		scanner := bufio.NewScanner(reader)
-		for scanner.Scan() {
-			ch <- types.LogMessage{
-				Message: scanner.Text(),
+	//* create log directory
+	logsFolder := fmt.Sprintf("%s/logs", k1Dir)
+
+	logfile := fmt.Sprintf("%s/%s", logsFolder, fileName)
+
+	t, err := tail.TailFile(logfile, tail.Config{Follow: true, ReOpen: true})
+	if err != nil {
+		return fmt.Errorf("Error opening log file %s", err.Error())
+	}
+
+	// Continuously stream log lines to the client
+	for {
+		select {
+		case line, ok := <-t.Lines:
+			if !ok {
+				return err
 			}
-		}
-		if err := scanner.Err(); err != nil {
-			errCh <- fmt.Errorf("error during log stream")
+			mu.Lock()
+			buffer = line.Text
+			mu.Unlock()
 
-		}
-	}(r)
+			// Send the log line to the client as an event
+			ch <- types.LogMessage{
+				Message: line.Text,
+			}
 
-	return nil
+			// Sleep for a short time to avoid overwhelming the client
+			time.Sleep(100 * time.Millisecond)
+		}
+	}
 }
 
 // streamLogsToClient

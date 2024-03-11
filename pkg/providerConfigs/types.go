@@ -40,6 +40,11 @@ type GitopsDirectoryValues struct {
 	VaultIngressNoHTTPSURL         string
 	VaultDataBucketName            string
 	VouchIngressURL                string
+	RegistryPath                   string
+	SecretStoreRef                 string
+	Project                        string
+	ClusterDestination             string
+	Environment                    string
 
 	AwsIamArnAccountRoot string
 	AwsKmsKeyId          string
@@ -77,9 +82,10 @@ type GitopsDirectoryValues struct {
 	GitlabOwnerGroupID int
 	GitlabUser         string
 
-	GitopsRepoAtlantisWebhookURL      string
-	GitopsRepoNoHTTPSURL              string
-	WorkloadClusterTerraformModuleURL string
+	GitopsRepoAtlantisWebhookURL               string
+	GitopsRepoNoHTTPSURL                       string
+	WorkloadClusterTerraformModuleURL          string
+	WorkloadClusterBootstrapTerraformModuleURL string
 
 	ExternalDNSProviderName         string
 	ExternalDNSProviderTokenEnvName string

@@ -28,12 +28,12 @@ import (
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/services"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const (
-	gitopsTemplateVersion = "v2.3.7"
+	gitopsTemplateVersion = "v2.3.8"
 )
 
 type ClusterController struct {
@@ -49,19 +49,21 @@ type ClusterController struct {
 	AlertsEmail               string
 
 	// auth
-	AWSAuth            pkgtypes.AWSAuth
-	CivoAuth           pkgtypes.CivoAuth
-	DigitaloceanAuth   pkgtypes.DigitaloceanAuth
-	VultrAuth          pkgtypes.VultrAuth
-	CloudflareAuth     pkgtypes.CloudflareAuth
-	GitAuth            pkgtypes.GitAuth
-	VaultAuth          pkgtypes.VaultAuth
-	GoogleAuth         pkgtypes.GoogleAuth
-	K3sAuth            pkgtypes.K3sAuth
-	AwsAccessKeyID     string
-	AwsSecretAccessKey string
-	NodeType           string
-	NodeCount          int
+
+	AWSAuth                pkgtypes.AWSAuth
+	CivoAuth               pkgtypes.CivoAuth
+	DigitaloceanAuth       pkgtypes.DigitaloceanAuth
+	VultrAuth              pkgtypes.VultrAuth
+	CloudflareAuth         pkgtypes.CloudflareAuth
+	GitAuth                pkgtypes.GitAuth
+	VaultAuth              pkgtypes.VaultAuth
+	GoogleAuth             pkgtypes.GoogleAuth
+ 	K3sAuth                pkgtypes.K3sAuth
+	AwsAccessKeyID         string
+	AwsSecretAccessKey     string
+	NodeType               string
+	NodeCount              int
+	PostInstallCatalogApps []pkgtypes.GitopsCatalogApp
 
 	// configs
 	ProviderConfig providerConfigs.ProviderConfig
@@ -126,8 +128,15 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	rec, err := clctrl.MdbCl.GetCluster(def.ClusterName)
 	if err != nil {
 		recordExists = false
-		log.Info("cluster record doesn't exist, continuing")
+		log.Info().Msg("cluster record doesn't exist, continuing")
 	}
+
+	logFileName := def.LogFileName
+	if recordExists {
+		logFileName = rec.LogFileName
+	}
+
+	utils.InitializeLogs(logFileName)
 
 	// If record exists but status is deleted, entry should be deleted
 	// and process should start fresh
@@ -179,6 +188,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	clctrl.HttpClient = http.DefaultClient
 	clctrl.NodeType = def.NodeType
 	clctrl.NodeCount = def.NodeCount
+	clctrl.PostInstallCatalogApps = def.PostInstallCatalogApps
 
 	clctrl.AWSAuth = def.AWSAuth
 	clctrl.CivoAuth = def.CivoAuth
@@ -284,38 +294,40 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 
 	// Write cluster record if it doesn't exist
 	cl := pkgtypes.Cluster{
-		ID:                    primitive.NewObjectID(),
-		CreationTimestamp:     fmt.Sprintf("%v", primitive.NewDateTimeFromTime(time.Now().UTC())),
-		Status:                constants.ClusterStatusProvisioning,
-		AlertsEmail:           clctrl.AlertsEmail,
-		ClusterName:           clctrl.ClusterName,
-		CloudProvider:         clctrl.CloudProvider,
-		CloudRegion:           clctrl.CloudRegion,
-		DomainName:            clctrl.DomainName,
-		SubdomainName:         clctrl.SubdomainName,
-		DnsProvider:           clctrl.DnsProvider,
-		ClusterID:             clctrl.ClusterID,
-		ECR:                   clctrl.ECR,
-		ClusterType:           clctrl.ClusterType,
-		GitopsTemplateURL:     clctrl.GitopsTemplateURL,
-		GitopsTemplateBranch:  clctrl.GitopsTemplateBranch,
-		GitProvider:           clctrl.GitProvider,
-		GitProtocol:           clctrl.GitProtocol,
-		GitHost:               clctrl.GitHost,
-		GitAuth:               clctrl.GitAuth,
-		GitlabOwnerGroupID:    clctrl.GitlabOwnerGroupID,
-		AtlantisWebhookSecret: clctrl.AtlantisWebhookSecret,
-		AtlantisWebhookURL:    clctrl.AtlantisWebhookURL,
-		KubefirstTeam:         clctrl.KubefirstTeam,
-		AWSAuth:               clctrl.AWSAuth,
-		CivoAuth:              clctrl.CivoAuth,
-		GoogleAuth:            clctrl.GoogleAuth,
-		DigitaloceanAuth:      clctrl.DigitaloceanAuth,
-		VultrAuth:             clctrl.VultrAuth,
-		K3sAuth:               clctrl.K3sAuth,
-		CloudflareAuth:        clctrl.CloudflareAuth,
-		NodeType:              clctrl.NodeType,
-		NodeCount:             clctrl.NodeCount,
+		ID:                     primitive.NewObjectID(),
+		CreationTimestamp:      fmt.Sprintf("%v", primitive.NewDateTimeFromTime(time.Now().UTC())),
+		Status:                 constants.ClusterStatusProvisioning,
+		AlertsEmail:            clctrl.AlertsEmail,
+		ClusterName:            clctrl.ClusterName,
+		CloudProvider:          clctrl.CloudProvider,
+		CloudRegion:            clctrl.CloudRegion,
+		DomainName:             clctrl.DomainName,
+		SubdomainName:          clctrl.SubdomainName,
+		DnsProvider:            clctrl.DnsProvider,
+		ClusterID:              clctrl.ClusterID,
+		ECR:                    clctrl.ECR,
+		ClusterType:            clctrl.ClusterType,
+		GitopsTemplateURL:      clctrl.GitopsTemplateURL,
+		GitopsTemplateBranch:   clctrl.GitopsTemplateBranch,
+		GitProvider:            clctrl.GitProvider,
+		GitProtocol:            clctrl.GitProtocol,
+		GitHost:                clctrl.GitHost,
+		GitAuth:                clctrl.GitAuth,
+		GitlabOwnerGroupID:     clctrl.GitlabOwnerGroupID,
+		AtlantisWebhookSecret:  clctrl.AtlantisWebhookSecret,
+		AtlantisWebhookURL:     clctrl.AtlantisWebhookURL,
+		KubefirstTeam:          clctrl.KubefirstTeam,
+		AWSAuth:                clctrl.AWSAuth,
+		CivoAuth:               clctrl.CivoAuth,
+		GoogleAuth:             clctrl.GoogleAuth,
+		DigitaloceanAuth:       clctrl.DigitaloceanAuth,
+		VultrAuth:              clctrl.VultrAuth,
+		K3sAuth:                clctrl.K3sAuth,
+		CloudflareAuth:         clctrl.CloudflareAuth,
+		NodeType:               clctrl.NodeType,
+		NodeCount:              clctrl.NodeCount,
+		LogFileName:            def.LogFileName,
+		PostInstallCatalogApps: clctrl.PostInstallCatalogApps,
 	}
 	err = clctrl.MdbCl.InsertCluster(cl)
 	if err != nil {

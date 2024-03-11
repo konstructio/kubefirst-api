@@ -7,7 +7,6 @@ See the LICENSE file for more details.
 package controller
 
 import (
-	"os"
 	"time"
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
@@ -19,20 +18,11 @@ import (
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/k8s"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 )
 
 // RunUsersTerraform
 func (clctrl *ClusterController) RunUsersTerraform() error {
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
-	log.SetOutput(os.Stdout)
-
 	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
 	if err != nil {
 		return err
@@ -55,7 +45,7 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		}
 
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.UsersTerraformApplyStarted, "")
-		log.Info("applying users terraform")
+		log.Info().Msg("applying users terraform")
 
 		tfEnvs := map[string]string{}
 		var tfEntrypoint, terraformClient string
@@ -84,17 +74,17 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		terraformClient = clctrl.ProviderConfig.TerraformClient
 		err = terraformext.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
-			log.Errorf("error applying users terraform: %s", err)
-			log.Info("sleeping 10 seconds before retrying terraform execution once more")
+			log.Error().Msgf("error applying users terraform: %s", err)
+			log.Info().Msg("sleeping 10 seconds before retrying terraform execution once more")
 			time.Sleep(10 * time.Second)
 			err = terraformext.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
-				log.Errorf("error applying users terraform: %s", err)
+				log.Error().Msgf("error applying users terraform: %s", err)
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.UsersTerraformApplyFailed, err.Error())
 				return err
 			}
 		}
-		log.Info("executed users terraform successfully")
+		log.Info().Msg("executed users terraform successfully")
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.UsersTerraformApplyCompleted, "")
 
 		clctrl.VaultAuth.RootToken = tfEnvs["VAULT_TOKEN"]
@@ -106,7 +96,7 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		// Set kbot password in object
 		err = clctrl.GetUserPassword("kbot")
 		if err != nil {
-			log.Infof("error fetching kbot password: %s", err)
+			log.Info().Msgf("error fetching kbot password: %s", err)
 		}
 
 		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "users_terraform_apply_check", true)

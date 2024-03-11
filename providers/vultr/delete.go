@@ -11,7 +11,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -28,21 +27,11 @@ import (
 	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/vultr"
-	log "github.com/sirupsen/logrus"
+	log "github.com/rs/zerolog/log"
 )
 
 // DeleteVultrCluster
 func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEvent) error {
-
-	// Logging handler
-	// Logs to stdout to maintain compatibility with event streaming
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "",
-	})
-	log.SetReportCaller(false)
-	log.SetOutput(os.Stdout)
-
 	telemetry.SendEvent(telemetryEvent, telemetry.ClusterDeleteStarted, "")
 
 	// Instantiate vultr config
@@ -56,7 +45,7 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 	switch cl.GitProvider {
 	case "github":
 		if cl.GitTerraformApplyCheck {
-			log.Info("destroying github resources with terraform")
+			log.Info().Msg("destroying github resources with terraform")
 
 			tfEntrypoint := config.GitopsDir + "/terraform/github"
 			tfEnvs := map[string]string{}
@@ -68,7 +57,7 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 				errors.HandleClusterError(cl, err.Error())
 				return err
 			}
-			log.Info("github resources terraform destroyed")
+			log.Info().Msg("github resources terraform destroyed")
 
 			err = db.Client.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
 			if err != nil {
@@ -77,7 +66,7 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 		}
 	case "gitlab":
 		if cl.GitTerraformApplyCheck {
-			log.Info("destroying gitlab resources with terraform")
+			log.Info().Msg("destroying gitlab resources with terraform")
 			gitlabClient, err := gitlab.NewGitLabClient(cl.GitAuth.Token, cl.GitAuth.Owner)
 			if err != nil {
 				return err
@@ -89,26 +78,26 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 			for _, project := range projectsForDeletion {
 				projectExists, err := gitlabClient.CheckProjectExists(project)
 				if err != nil {
-					log.Errorf("could not check for existence of project %s: %s", project, err)
+					log.Error().Msgf("could not check for existence of project %s: %s", project, err)
 				}
 				if projectExists {
-					log.Infof("checking project %s for container registries...", project)
+					log.Info().Msgf("checking project %s for container registries...", project)
 					crr, err := gitlabClient.GetProjectContainerRegistryRepositories(project)
 					if err != nil {
-						log.Errorf("could not retrieve container registry repositories: %s", err)
+						log.Error().Msgf("could not retrieve container registry repositories: %s", err)
 					}
 					if len(crr) > 0 {
 						for _, cr := range crr {
 							err := gitlabClient.DeleteContainerRegistryRepository(project, cr.ID)
 							if err != nil {
-								log.Errorf("error deleting container registry repository: %s", err)
+								log.Error().Msgf("error deleting container registry repository: %s", err)
 							}
 						}
 					} else {
-						log.Infof("project %s does not have any container registries, skipping", project)
+						log.Info().Msgf("project %s does not have any container registries, skipping", project)
 					}
 				} else {
-					log.Infof("project %s does not exist, skipping", project)
+					log.Info().Msgf("project %s does not exist, skipping", project)
 				}
 			}
 
@@ -118,12 +107,12 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 			tfEnvs = vultrext.GetGitlabTerraformEnvs(tfEnvs, gitlabClient.ParentGroupID, cl)
 			err = terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
-				log.Infof("error executing terraform destroy %s", tfEntrypoint)
+				log.Info().Msgf("error executing terraform destroy %s", tfEntrypoint)
 				errors.HandleClusterError(cl, err.Error())
 				return err
 			}
 
-			log.Info("gitlab resources terraform destroyed")
+			log.Info().Msg("gitlab resources terraform destroyed")
 
 			err = db.Client.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
 			if err != nil {
@@ -148,10 +137,10 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 		}
 		err = argocd.ArgoCDApplicationCleanup(kcfg.Clientset, removeArgoCDApps)
 		if err != nil {
-			log.Errorf("encountered error during argocd application cleanup: %s", err)
+			log.Error().Msgf("encountered error during argocd application cleanup: %s", err)
 		}
 		// Pause before cluster destroy to prevent a race condition
-		log.Info("waiting for argocd application deletion to complete...")
+		log.Info().Msg("waiting for argocd application deletion to complete...")
 		time.Sleep(time.Second * 20)
 	}
 
@@ -169,11 +158,11 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 		if !cl.CloudTerraformApplyFailedCheck {
 			kcfg := k8s.CreateKubeConfig(false, config.Kubeconfig)
 
-			log.Info("destroying vultr resources with terraform")
+			log.Info().Msg("destroying vultr resources with terraform")
 
 			// Only port-forward to ArgoCD and delete registry if ArgoCD was installed
 			if !cl.ArgoCDDeleteRegistryCheck {
-				log.Info("opening argocd port forward")
+				log.Info().Msg("opening argocd port forward")
 				//* ArgoCD port-forward
 				argoCDStopChannel := make(chan struct{}, 1)
 				defer func() {
@@ -189,7 +178,7 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 					argoCDStopChannel,
 				)
 
-				log.Info("getting new auth token for argocd")
+				log.Info().Msg("getting new auth token for argocd")
 
 				secData, err := k8s.ReadSecretV2(kcfg.Clientset, "argocd", "argocd-initial-admin-secret")
 				if err != nil {
@@ -202,21 +191,21 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 					return err
 				}
 
-				log.Infof("port-forward to argocd is available at %s", providerConfigs.ArgocdPortForwardURL)
+				log.Info().Msgf("port-forward to argocd is available at %s", providerConfigs.ArgocdPortForwardURL)
 
 				customTransport := http.DefaultTransport.(*http.Transport).Clone()
 				customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 				argocdHttpClient := http.Client{Transport: customTransport}
-				log.Info("deleting the registry application")
+				log.Info().Msg("deleting the registry application")
 				httpCode, _, err := argocd.DeleteApplication(&argocdHttpClient, config.RegistryAppName, argocdAuthToken, "true")
 				if err != nil {
 					return err
 				}
-				log.Infof("http status code %d", httpCode)
+				log.Info().Msgf("http status code %d", httpCode)
 			}
 
 			// Pause before cluster destroy to prevent a race condition
-			log.Info("waiting for vultr kubernetes cluster resource removal to finish...")
+			log.Info().Msg("waiting for vultr kubernetes cluster resource removal to finish...")
 			time.Sleep(time.Second * 10)
 
 			err = db.Client.UpdateCluster(cl.ClusterName, "argocd_delete_registry_check", true)
@@ -225,7 +214,7 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 			}
 		}
 
-		log.Info("destroying vultr cloud resources")
+		log.Info().Msg("destroying vultr cloud resources")
 		tfEntrypoint := config.GitopsDir + fmt.Sprintf("/terraform/%s", cl.CloudProvider)
 		tfEnvs := map[string]string{}
 		tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, cl)
@@ -246,7 +235,7 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 			errors.HandleClusterError(cl, err.Error())
 			return err
 		}
-		log.Info("vultr resources terraform destroyed")
+		log.Info().Msg("vultr resources terraform destroyed")
 
 		err = db.Client.UpdateCluster(cl.ClusterName, "cloud_terraform_apply_check", false)
 		if err != nil {
@@ -273,10 +262,10 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 		if err != nil {
 			return err
 		}
-		log.Info("attempting to delete managed ssh key...")
+		log.Info().Msg("attempting to delete managed ssh key...")
 		err = gitlabClient.DeleteUserSSHKey("kbot-ssh-key")
 		if err != nil {
-			log.Warn(err.Error())
+			log.Warn().Msg(err.Error())
 		}
 	}
 
