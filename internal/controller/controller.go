@@ -217,8 +217,12 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	} else {
 		clctrl.GitopsTemplateURL = "https://github.com/kubefirst/gitops-template.git"
 	}
+	if def.CloudProvider == "akamai" {
+		clctrl.KubefirstStateStoreBucketName = clctrl.ClusterName
+	} else {
+		clctrl.KubefirstStateStoreBucketName = fmt.Sprintf("k1-state-store-%s-%s", clctrl.ClusterName, clusterID)
+	}
 
-	clctrl.KubefirstStateStoreBucketName = fmt.Sprintf("k1-state-store-%s-%s", clctrl.ClusterName, clusterID)
 	clctrl.KubefirstArtifactsBucketName = fmt.Sprintf("k1-artifacts-%s-%s", clctrl.ClusterName, clusterID)
 	clctrl.NodeType = def.NodeType
 	clctrl.NodeCount = def.NodeCount
