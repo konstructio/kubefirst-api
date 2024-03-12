@@ -97,37 +97,38 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				newContents = strings.Replace(newContents, "<TERRAFORM_FORCE_DESTROY>", tokens.ForceDestroy, -1)
 				newContents = strings.Replace(newContents, "<GOOGLE_UNIQUENESS>", tokens.GoogleUniqueness, -1)
 
-				// k3s
-				newContents = strings.Replace(newContents, "<K3S_ENDPOINT>", tokens.K3sServersPrivateIps[0], -1)
-				// TODO: this is a hack to get around
-				// need to be refactored into a single function with args
-				var terraformServersPrivateIpsList string
-				jsonBytes, err := json.Marshal(tokens.K3sServersPrivateIps)
-				if err != nil {
-					log.Fatal().Msgf("detokenise issue on %s", err)
+				if tokens.CloudProvider == "k3s" {
+					// k3s
+					newContents = strings.Replace(newContents, "<K3S_ENDPOINT>", tokens.K3sServersPrivateIps[0], -1)
+					// TODO: this is a hack to get around
+					// need to be refactored into a single function with args
+					var terraformServersPrivateIpsList string
+					jsonBytes, err := json.Marshal(tokens.K3sServersPrivateIps)
+					if err != nil {
+						log.Fatal().Msgf("detokenise issue on %s", err)
+					}
+					terraformServersPrivateIpsList = string(jsonBytes)
+					newContents = strings.Replace(newContents, "<K3S_SERVERS_PRIVATE_IPS>", terraformServersPrivateIpsList, -1)
+
+					var terraformServersPublicIpsList string
+					jsonBytes2, err := json.Marshal(tokens.K3sServersPublicIps)
+					if err != nil {
+						log.Fatal().Msgf("detokenise issue on %s", err)
+					}
+					terraformServersPublicIpsList = string(jsonBytes2)
+					newContents = strings.Replace(newContents, "<K3S_SERVERS_PUBLIC_IPS>", terraformServersPublicIpsList, -1)
+
+					var terraformServersArgsList string
+					jsonBytes3, err := json.Marshal(tokens.K3sServersArgs)
+					if err != nil {
+						log.Fatal().Msgf("detokenise issue on %s", err)
+					}
+					terraformServersArgsList = string(jsonBytes3)
+					newContents = strings.Replace(newContents, "<K3S_SERVERS_ARGS>", terraformServersArgsList, -1)
+
+					newContents = strings.Replace(newContents, "<SSH_USER>", tokens.SshUser, -1)
+					newContents = strings.Replace(newContents, "<SSH_PRIVATE_KEY_PATH>", tokens.SshPrivateKey, -1)
 				}
-				terraformServersPrivateIpsList = string(jsonBytes)
-				newContents = strings.Replace(newContents, "<K3S_SERVERS_PRIVATE_IPS>", terraformServersPrivateIpsList, -1)
-
-				var terraformServersPublicIpsList string
-				jsonBytes2, err := json.Marshal(tokens.K3sServersPublicIps)
-				if err != nil {
-					log.Fatal().Msgf("detokenise issue on %s", err)
-				}
-				terraformServersPublicIpsList = string(jsonBytes2)
-				newContents = strings.Replace(newContents, "<K3S_SERVERS_PUBLIC_IPS>", terraformServersPublicIpsList, -1)
-
-				var terraformServersArgsList string
-				jsonBytes3, err := json.Marshal(tokens.K3sServersArgs)
-				if err != nil {
-					log.Fatal().Msgf("detokenise issue on %s", err)
-				}
-				terraformServersArgsList = string(jsonBytes3)
-				newContents = strings.Replace(newContents, "<K3S_SERVERS_ARGS>", terraformServersArgsList, -1)
-
-				newContents = strings.Replace(newContents, "<SSH_USER>", tokens.SshUser, -1)
-				newContents = strings.Replace(newContents, "<SSH_PRIVATEKEY>", tokens.SshPrivateKey, -1)
-
 				newContents = strings.Replace(newContents, "<ARGOCD_INGRESS_URL>", tokens.ArgoCDIngressURL, -1)
 				newContents = strings.Replace(newContents, "<ARGOCD_INGRESS_NO_HTTP_URL>", tokens.ArgoCDIngressNoHTTPSURL, -1)
 				newContents = strings.Replace(newContents, "<ARGO_WORKFLOWS_INGRESS_URL>", tokens.ArgoWorkflowsIngressURL, -1)
