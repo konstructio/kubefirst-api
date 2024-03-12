@@ -36,7 +36,7 @@ func ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster, error) {
 	log.Info().Msg("reading secret kubefirst-initial-state to determine if import is needed")
 	secData, err := k8s.ReadSecretV2(kcfg.Clientset, "kubefirst", "kubefirst-initial-state")
 	if err != nil {
-		log.Info().Msgf("error reading secret mongodb-state. %s", err)
+		log.Info().Msgf("error reading secret kubefirst-initial-state. %s", err)
 		return cluster, err
 	}
 

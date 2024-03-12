@@ -10,10 +10,6 @@ import (
 func TestEnv(t *testing.T) {
 	os.Setenv("SERVER_PORT", "8081")
 	os.Setenv("K1_ACCESS_TOKEN", "k1_access_token")
-	os.Setenv("MONGODB_HOST", "mongodb_host")
-	os.Setenv("MONGODB_HOST_TYPE", "mongodb_host_type")
-	os.Setenv("MONGODB_USERNAME", "mongodb_username")
-	os.Setenv("MONGODB_PASSWORD", "mongodb_password")
 	os.Setenv("KUBEFIRST_VERSION", "development")
 	os.Setenv("CLOUD_PROVIDER", "cloud_provider")
 	os.Setenv("CLUSTER_ID", "cluster_id")
@@ -32,10 +28,6 @@ func TestEnv(t *testing.T) {
 	defer func() {
 		os.Unsetenv("SERVER_PORT")
 		os.Unsetenv("K1_ACCESS_TOKEN")
-		os.Unsetenv("MONGODB_HOST")
-		os.Unsetenv("MONGODB_HOST_TYPE")
-		os.Unsetenv("MONGODB_USERNAME")
-		os.Unsetenv("MONGODB_PASSWORD")
 		os.Unsetenv("KUBEFIRST_VERSION")
 		os.Unsetenv("CLOUD_PROVIDER")
 		os.Unsetenv("CLUSTER_ID")
@@ -64,22 +56,6 @@ func TestEnv(t *testing.T) {
 
 	if env.K1AccessToken != "k1_access_token" {
 		t.Errorf("expected K1AccessToken to be 'k1_access_token', but got '%s'", env.K1AccessToken)
-	}
-
-	if env.MongoDBHost != "mongodb_host" {
-		t.Errorf("expected MongoDBHost to be 'mongodb_host', but got '%s'", env.MongoDBHost)
-	}
-
-	if env.MongoDBHostType != "mongodb_host_type" {
-		t.Errorf("expected MongoDBHostType to be 'mongodb_host_type', but got '%s'", env.MongoDBHostType)
-	}
-
-	if env.MongoDBUsername != "mongodb_username" {
-		t.Errorf("expected MongoDBUsername to be 'mongodb_username', but got '%s'", env.MongoDBUsername)
-	}
-
-	if env.MongoDBPassword != "mongodb_password" {
-		t.Errorf("expected MongoDBPassword to be 'mongodb_password', but got '%s'", env.MongoDBPassword)
 	}
 
 	if env.KubefirstVersion != "development" {

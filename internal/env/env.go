@@ -9,10 +9,6 @@ import (
 type Env struct {
 	ServerPort            string `env:"SERVER_PORT" envDefault:"8081"`
 	K1AccessToken         string `env:"K1_ACCESS_TOKEN"`
-	MongoDBHost           string `env:"MONGODB_HOST,notEmpty"`
-	MongoDBHostType       string `env:"MONGODB_HOST_TYPE,notEmpty"`
-	MongoDBUsername       string `env:"MONGODB_USERNAME,notEmpty"`
-	MongoDBPassword       string `env:"MONGODB_PASSWORD,notEmpty"`
 	KubefirstVersion      string `env:"KUBEFIRST_VERSION" envDefault:"development"`
 	CloudProvider         string `env:"CLOUD_PROVIDER"`
 	ClusterId             string `env:"CLUSTER_ID"`
