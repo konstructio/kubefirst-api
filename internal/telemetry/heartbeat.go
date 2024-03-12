@@ -4,24 +4,33 @@ import (
 	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
-	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/internal/env"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
+	"github.com/kubefirst/kubefirst-api/internal/utils"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 )
 
-func Heartbeat(event telemetry.TelemetryEvent, dbClient *db.MongoDBClient) {
+func Heartbeat(event telemetry.TelemetryEvent) {
 
 	telemetry.SendEvent(event, telemetry.KubefirstHeartbeat, "")
-	HeartbeatWorkloadClusters(event, dbClient)
+	HeartbeatWorkloadClusters(event)
 
 	for range time.Tick(time.Second * 300) {
 		telemetry.SendEvent(event, telemetry.KubefirstHeartbeat, "")
-		HeartbeatWorkloadClusters(event, dbClient)
+		HeartbeatWorkloadClusters(event)
 	}
 }
 
-func HeartbeatWorkloadClusters(event telemetry.TelemetryEvent, dbClient *db.MongoDBClient) error {
+func HeartbeatWorkloadClusters(event telemetry.TelemetryEvent) error {
+	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
-	clusters, _ := dbClient.GetClusters()
+	if env.IsClusterZero == "true" {
+		return nil
+	}
+
+	kcfg := utils.GetKubernetesClient("")
+
+	clusters, _ := secrets.GetClusters(kcfg.Clientset)
 
 	for _, cluster := range clusters {
 		if cluster.Status == constants.ClusterStatusProvisioned {

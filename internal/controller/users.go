@@ -17,6 +17,7 @@ import (
 	k3sext "github.com/kubefirst/kubefirst-api/extensions/k3s"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/rs/zerolog/log"
@@ -24,7 +25,7 @@ import (
 
 // RunUsersTerraform
 func (clctrl *ClusterController) RunUsersTerraform() error {
-	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -92,7 +93,9 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.UsersTerraformApplyCompleted, "")
 
 		clctrl.VaultAuth.RootToken = tfEnvs["VAULT_TOKEN"]
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "vault_auth.root_token", clctrl.VaultAuth.RootToken)
+
+		clctrl.Cluster.VaultAuth.RootToken = clctrl.VaultAuth.RootToken
+		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
 			return err
 		}
@@ -103,7 +106,8 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 			log.Info().Msgf("error fetching kbot password: %s", err)
 		}
 
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "users_terraform_apply_check", true)
+		clctrl.Cluster.UsersTerraformApplyCheck = true
+		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
 			return err
 		}

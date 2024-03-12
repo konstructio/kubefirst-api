@@ -82,7 +82,7 @@ func StreamLogs(fileName string, ch chan types.LogMessage, errCh chan error, don
 
 	t, err := tail.TailFile(logfile, tail.Config{Follow: true, ReOpen: true})
 	if err != nil {
-		return fmt.Errorf("Error opening log file %s", err.Error())
+		return fmt.Errorf("error opening log file %s", err.Error())
 	}
 
 	// Continuously stream log lines to the client

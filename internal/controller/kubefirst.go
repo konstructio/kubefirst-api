@@ -13,6 +13,7 @@ import (
 	"time"
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/rs/zerolog/log"
 	v1secret "k8s.io/api/core/v1"
@@ -32,7 +33,8 @@ func readKubefirstAPITokenFromSecret(clientset *kubernetes.Clientset) string {
 // ExportClusterRecord will export cluster record to mgmt cluster
 // To be intiated by cluster 0
 func (clctrl *ClusterController) ExportClusterRecord() error {
-	cluster, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cluster, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
+
 	if err != nil {
 		log.Error().Msgf("Error exporting cluster record: %s", err)
 		clctrl.HandleError(err.Error())
@@ -59,18 +61,17 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 		}
 	}
 
-	payload, err := json.Marshal(cluster)
+	bytes, err := json.Marshal(cluster)
 	if err != nil {
 		clctrl.HandleError(err.Error())
 		return err
 	}
 
+	secretValuesMap, _ := secrets.ParseJSONToMap(string(bytes))
+
 	secret := &v1secret.Secret{
-		ObjectMeta: metav1.ObjectMeta{Name: "mongodb-state", Namespace: "kubefirst"},
-		Data: map[string][]byte{
-			"cluster-0":    []byte(payload),
-			"cluster-name": []byte(clctrl.ClusterName),
-		},
+		ObjectMeta: metav1.ObjectMeta{Name: "kubefirst-initial-state", Namespace: "kubefirst"},
+		Data:       secretValuesMap,
 	}
 
 	err = k8s.CreateSecretV2(kcfg.Clientset, secret)

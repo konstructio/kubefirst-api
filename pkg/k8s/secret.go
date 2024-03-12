@@ -7,7 +7,6 @@ See the LICENSE file for more details.
 package k8s
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 
@@ -32,14 +31,14 @@ func CreateSecretV2(clientset *kubernetes.Clientset, secret *v1.Secret) error {
 }
 
 // ReadSecretV2 reads the content of a Kubernetes Secret
-func ReadSecretV2(clientset *kubernetes.Clientset, namespace string, secretName string) (map[string]string, error) {
+func ReadSecretV2(clientset *kubernetes.Clientset, namespace string, secretName string) (map[string]interface{}, error) {
 	secret, err := clientset.CoreV1().Secrets(namespace).Get(context.Background(), secretName, metav1.GetOptions{})
 	if err != nil {
 		log.Error().Msgf("error getting secret: %s\n", err)
-		return map[string]string{}, err
+		return map[string]interface{}{}, err
 	}
 
-	parsedSecretData := make(map[string]string)
+	parsedSecretData := make(map[string]interface{})
 	for key, value := range secret.Data {
 		parsedSecretData[key] = string(value)
 	}
@@ -47,34 +46,24 @@ func ReadSecretV2(clientset *kubernetes.Clientset, namespace string, secretName 
 	return parsedSecretData, nil
 }
 
+// DeleteSecretV2 reads the content of a Kubernetes Secret
+func DeleteSecretV2(clientset *kubernetes.Clientset, namespace string, secretName string) error {
+	err := clientset.CoreV1().Secrets(namespace).Delete(context.Background(), secretName, metav1.DeleteOptions{})
+	if err != nil {
+		log.Error().Msgf("error deleting secret: %s\n", err)
+		return err
+	}
+	return nil
+}
+
 // UpdateSecretV2 updates the key value pairs of a Kubernetes Secret
-func UpdateSecretV2(clientset *kubernetes.Clientset, namespace string, secretName string, secretValues UpdateSecretArgs) error {
-	// decode into json
-	secretsToUpdate, err := json.Marshal(secretValues)
-	if err != nil {
-		return err
-	}
-
-	// create map to iterate over values to change
-	secretsToUpdateMap := make(map[string]string)
-	err = json.Unmarshal(secretsToUpdate, &secretsToUpdateMap)
-	if err != nil {
-		return err
-	}
-
+func UpdateSecretV2(clientset *kubernetes.Clientset, namespace string, secretName string, secretValues map[string][]byte) error {
 	currentSecret, err := clientset.CoreV1().Secrets(namespace).Get(context.Background(), secretName, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
 
-	for key, newValue := range secretsToUpdateMap {
-		curVal, exists := currentSecret.Data[key]
-		byteNewVal := []byte(newValue)
-
-		if exists && !bytes.Equal(curVal, byteNewVal) {
-			currentSecret.Data[key] = byteNewVal
-		}
-	}
+	currentSecret.Data = secretValues
 
 	_, err = clientset.CoreV1().Secrets(currentSecret.Namespace).Update(
 		context.Background(),
@@ -88,4 +77,12 @@ func UpdateSecretV2(clientset *kubernetes.Clientset, namespace string, secretNam
 
 	log.Info().Msgf("updated Secret %s in Namespace %s\n", currentSecret.Name, currentSecret.Namespace)
 	return nil
+}
+
+func mapToJSON(data map[string]interface{}) (string, error) {
+	jsonBytes, err := json.Marshal(data)
+	if err != nil {
+		return "", err // Handle error.
+	}
+	return string(jsonBytes), nil
 }

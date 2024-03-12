@@ -12,6 +12,7 @@ import (
 
 	argocdapi "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/argocd"
@@ -22,7 +23,7 @@ import (
 
 // InstallArgoCD
 func (clctrl *ClusterController) InstallArgoCD() error {
-	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -62,7 +63,8 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 			return err
 		}
 
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "argocd_install_check", true)
+		clctrl.Cluster.ArgoCDInstallCheck = true
+		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
 			return err
 		}
@@ -73,7 +75,7 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 
 // InitializeArgoCD
 func (clctrl *ClusterController) InitializeArgoCD() error {
-	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -133,15 +135,11 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 
 		log.Info().Msg("argocd admin auth token set")
 
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "argocd_password", argocdPassword)
-		if err != nil {
-			return err
-		}
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "argocd_auth_token", argoCDToken)
-		if err != nil {
-			return err
-		}
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "argocd_initialize_check", true)
+		clctrl.Cluster.ArgoCDPassword = argocdPassword
+		clctrl.Cluster.ArgoCDAuthToken = argoCDToken
+		clctrl.Cluster.ArgoCDInitializeCheck = true
+
+		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
 			return err
 		}
@@ -152,7 +150,7 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 
 // DeployRegistryApplication
 func (clctrl *ClusterController) DeployRegistryApplication() error {
-	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -202,7 +200,8 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.CreateRegistryCompleted, "")
 
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "argocd_create_registry_check", true)
+		clctrl.Cluster.ArgoCDCreateRegistryCheck = true
+		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
 			return err
 		}

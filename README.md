@@ -71,50 +71,30 @@ If you want to use your local API version with the CLI, you need to do two thing
 
 Be sure that you do not change the default port for the console (3000), and the default one for the API (8081) for this to work.
 
-## Prerequisites
+## Prerequisites for local development
 
-The API uses MongoDB for storing records.
+For local development, we need to have a k3d cluster where the kubefirst api can store information in secrets
 
-The best option is to use [MongoDB Atlas](https://www.mongodb.com/atlas). This is the recommended approach.
-
-For local development, you can install [MongoDB Community Edition](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-os-x/) - this is not production-quality.
-
-It is also recommended to install [MongoDB Compass](https://www.mongodb.com/try/download/atlascli).
-
-The host:port for MongoDB should be supplied as the environment variable `MONGODB_HOST`. When testing locally, use `localhost:27017`.
+- Download [k3d](https://k3d.io/)
+- Create a cluster ```k3d cluster create dev```
+- Dowload the kubeconfig ```k3d kubeconfig write dev```
+- Update the `K1_LOCAL_KUBECONFIG_PATH` environment variable with the kubeconfig location
+- Enjoy!
 
 ### Environment Variables
 
 Some variables are required, others are optional depending on deployment type.
 
-| Variable            | Description                                                                                                                                      | Required                       |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------ |
-| `MONGODB_HOST_TYPE` | Can be either `atlas` or `local`.                                                                                                                | Yes                            |
-| `MONGODB_HOST`      | The host to connect to. For Atlas, use only the portion of the string not containing username or password. For all other types, append the port. | Yes                            |
-| `MONGODB_USERNAME`  | Required when using Atlas/ Docker compose.                                                                                                       | If using Atlas/ Docker compose |
-| `MONGODB_PASSWORD`  | Required when using Atlas/ Docker compose.                                                                                                       | If using Atlas/ Docker compose |
-| `IN_CLUSTER`        | Specify whether or not the API is running inside a Kubernetes cluster. By default, this is assumed `false`.                                      | No                             |
-| `CLUSTER_ID`        | The ID of the cluster running API.                                                                                                               | Yes                            |
-| `CLUSTER_TYPE`      | Cluster type.                                                                                                                                    | Yes                            |
-| `INSTALL_METHOD`    | Description of the method through which the API was deployed. Example: `helm`                                                                    | Yes                            |
-| `K1_ACCESS_TOKEN`   | Access token in authorization header to prevent unsolicited in-cluster access                                                                    | Yes                            |
+| Variable                    | Description                                                                                                                                      | Required                       |
+| -------------------         | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------ |
+| `IN_CLUSTER`                | Specify whether or not the API is running inside a Kubernetes cluster. By default, this is assumed `false`.                                      | No                             |
+| `CLUSTER_ID`                | The ID of the cluster running API.                                                                                                               | Yes                            |
+| `CLUSTER_TYPE`              | Cluster type.                                                                                                                                    | Yes                            |
+| `INSTALL_METHOD`            | Description of the method through which the API was deployed. Example: `helm`                                                                    | Yes                            |
+| `K1_ACCESS_TOKEN`           | Access token in authorization header to prevent unsolicited in-cluster access                                                                    | Yes                            |
+| `K1_LOCAL_DEBUG`            | Identifies the api execution as local debug mode                                                                                                 | No                             |
+| `K1_LOCAL_KUBECONFIG_PATH`  | kubeconfig path location for k3d local cluster                                                                                                   | No                            |
 
-### To run locally
-
-```shell
-# optional local mongodb for kubefirst-api
-docker run -d --name k1-api-mongodb \
-  -e MONGO_INITDB_ROOT_USERNAME=root \
-  -e MONGO_INITDB_ROOT_PASSWORD=password \
-  -p 27017:27017 \
-  mongo
-```
-
-### Using Docker compose
-
-```bash
-  docker compose up
-```
 
 ## local environment variables
 

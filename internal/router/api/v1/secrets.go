@@ -7,15 +7,16 @@ See the LICENSE file for more details.
 package api
 
 import (
-	"fmt"
+	"encoding/json"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kubefirst/kubefirst-api/internal/constants"
-	"github.com/kubefirst/kubefirst-api/internal/env"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/internal/utils"
 	"github.com/kubefirst/kubefirst-api/pkg/k8s"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func GetClusterSecret(c *gin.Context) {
@@ -35,26 +36,11 @@ func GetClusterSecret(c *gin.Context) {
 		return
 	}
 
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: "error finding home directory",
-		})
-		return
-	}
+	kcfg := utils.GetKubernetesClient(clusterName)
+	kubefirstSecrets, _ := k8s.ReadSecretV2(kcfg.Clientset, "kubefirst", secret)
 
-	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, clusterName)
+	jsonString, err := secrets.MapToStructuredJSON(kubefirstSecrets)
 
-	env, _ := env.GetEnv(constants.SilenceGetEnv)
-
-	var inCluster bool = false
-	if env.InCluster == "true" {
-		inCluster = true
-	}
-
-	kcfg := k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
-
-	secrets, err := k8s.ReadSecretV2(kcfg.Clientset, "kubefirst", secret)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -62,7 +48,65 @@ func GetClusterSecret(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, secrets)
+	c.JSON(http.StatusOK, jsonString)
+}
+
+func CreateClusterSecret(c *gin.Context) {
+	clusterName, param := c.Params.Get("cluster_name")
+	if !param {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: ":cluster_name not provided",
+		})
+		return
+	}
+
+	secretName, param := c.Params.Get("secret")
+	if !param {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: ":secret not provided",
+		})
+		return
+	}
+
+	var secretValues map[string]interface{}
+	err := c.Bind(&secretValues)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+
+	kcfg := utils.GetKubernetesClient(clusterName)
+	bytes, err := json.Marshal(secretValues)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: "error stringifying object",
+		})
+		return
+	}
+
+	secretValuesMap, _ := secrets.ParseJSONToMap(string(bytes))
+
+	secretToCreate := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      secretName,
+			Namespace: "kubefirst",
+		},
+		Data: secretValuesMap,
+	}
+
+	err = k8s.CreateSecretV2(kcfg.Clientset, secretToCreate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, types.JSONSuccessResponse{
+		Message: "cluster secret created",
+	})
 }
 
 func UpdateClusterSecret(c *gin.Context) {
@@ -82,8 +126,8 @@ func UpdateClusterSecret(c *gin.Context) {
 		return
 	}
 
-	var clusterSecretUpdates k8s.UpdateSecretArgs
-	err := c.Bind(&clusterSecretUpdates)
+	var secretValues map[string]interface{}
+	err := c.Bind(&secretValues)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -91,26 +135,18 @@ func UpdateClusterSecret(c *gin.Context) {
 		return
 	}
 
-	homeDir, err := os.UserHomeDir()
+	kcfg := utils.GetKubernetesClient(clusterName)
+
+	bytes, err := json.Marshal(secretValues)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: "error finding home directory",
+			Message: "error stringifying object",
 		})
 		return
 	}
 
-	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, clusterName)
-
-	env, _ := env.GetEnv(constants.SilenceGetEnv)
-
-	var inCluster bool = false
-	if env.InCluster == "true" {
-		inCluster = true
-	}
-
-	kcfg := k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", clusterDir))
-
-	err = k8s.UpdateSecretV2(kcfg.Clientset, "kubefirst", secret, clusterSecretUpdates)
+	secretValuesMap, _ := secrets.ParseJSONToMap(string(bytes))
+	err = k8s.UpdateSecretV2(kcfg.Clientset, "kubefirst", secret, secretValuesMap)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),

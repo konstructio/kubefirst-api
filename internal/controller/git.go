@@ -19,6 +19,7 @@ import (
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	log "github.com/rs/zerolog/log"
@@ -26,7 +27,7 @@ import (
 
 // GitInit
 func (clctrl *ClusterController) GitInit() error {
-	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -48,7 +49,8 @@ func (clctrl *ClusterController) GitInit() error {
 			return err
 		}
 
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "git_init_check", true)
+		clctrl.Cluster.GitInitCheck = true
+		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
 			return err
 		}
@@ -59,7 +61,7 @@ func (clctrl *ClusterController) GitInit() error {
 
 // RunGitTerraform
 func (clctrl *ClusterController) RunGitTerraform() error {
-	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -128,7 +130,9 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 		log.Info().Msgf("created git projects and groups for %s.com/%s", clctrl.GitProvider, clctrl.GitAuth.Owner)
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.GitTerraformApplyCompleted, "")
 
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "git_terraform_apply_check", true)
+		clctrl.Cluster.GitTerraformApplyCheck = true
+		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
+
 		if err != nil {
 			return err
 		}

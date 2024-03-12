@@ -11,9 +11,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
-	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/env"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/internal/utils"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 )
 
@@ -36,9 +37,10 @@ func PostTelemetry(c *gin.Context) {
 		})
 		return
 	}
+	kcfg := utils.GetKubernetesClient(clusterName)
 
 	// Retrieve cluster info
-	cl, err := db.Client.GetCluster(clusterName)
+	cl, err := secrets.GetCluster(kcfg.Clientset, clusterName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: "cluster not found",

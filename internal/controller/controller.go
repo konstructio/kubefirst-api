@@ -13,12 +13,13 @@ import (
 	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
-	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/env"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 	google "github.com/kubefirst/kubefirst-api/pkg/google"
 	"github.com/kubefirst/kubefirst-api/pkg/handlers"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	"github.com/kubefirst/kubefirst-api/pkg/types"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	runtime "github.com/kubefirst/runtime/pkg"
@@ -27,6 +28,7 @@ import (
 	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	"github.com/kubefirst/runtime/pkg/services"
+	"k8s.io/client-go/kubernetes"
 
 	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -103,8 +105,7 @@ type ClusterController struct {
 	KubefirstStateStoreBucketName string
 	KubefirstArtifactsBucketName  string
 
-	// Database Controller
-	MdbCl *db.MongoDBClient
+	KubernetesClient *kubernetes.Clientset
 
 	// Telemetry
 	TelemetryEvent telemetry.TelemetryEvent
@@ -113,6 +114,7 @@ type ClusterController struct {
 	AwsClient    *awsinternal.AWSConfiguration
 	GoogleClient google.GoogleConfiguration
 	Kcfg         *k8s.KubernetesClient
+	Cluster      types.Cluster
 }
 
 // InitController
@@ -120,13 +122,16 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	// Create k1 dir if it doesn't exist
 	utils.CreateK1Directory(def.ClusterName)
 
-	// Database controller
-	clctrl.MdbCl = db.Client
+	// Get Environment variables
+	env, _ := env.GetEnv(constants.SilenceGetEnv)
+
+	kcfg := utils.GetKubernetesClient(def.ClusterName)
+	clctrl.KubernetesClient = kcfg.Clientset
 
 	// Determine if record already exists
 	recordExists := true
-	rec, err := clctrl.MdbCl.GetCluster(def.ClusterName)
-	if err != nil {
+	rec, err := secrets.GetCluster(clctrl.KubernetesClient, def.ClusterName)
+	if rec.ClusterID == "" && err != nil {
 		recordExists = false
 		log.Info().Msg("cluster record doesn't exist, continuing")
 	}
@@ -141,7 +146,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	// If record exists but status is deleted, entry should be deleted
 	// and process should start fresh
 	if recordExists && rec.Status == constants.ClusterStatusDeleted {
-		err = clctrl.MdbCl.DeleteCluster(def.ClusterName)
+		err = secrets.DeleteCluster(clctrl.KubernetesClient, def.ClusterName)
 		if err != nil {
 			return fmt.Errorf("could not delete existing cluster %s: %s", def.ClusterName, err)
 		}
@@ -153,8 +158,6 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	} else {
 		clusterID = runtime.GenerateClusterID()
 	}
-
-	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
 	telemetryEvent := telemetry.TelemetryEvent{
 		CliVersion:        env.KubefirstVersion,
@@ -301,7 +304,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	}
 
 	// Write cluster record if it doesn't exist
-	cl := pkgtypes.Cluster{
+	clctrl.Cluster = pkgtypes.Cluster{
 		ID:                     primitive.NewObjectID(),
 		CreationTimestamp:      fmt.Sprintf("%v", primitive.NewDateTimeFromTime(time.Now().UTC())),
 		Status:                 constants.ClusterStatusProvisioning,
@@ -338,9 +341,19 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		LogFileName:            def.LogFileName,
 		PostInstallCatalogApps: clctrl.PostInstallCatalogApps,
 	}
-	err = clctrl.MdbCl.InsertCluster(cl)
-	if err != nil {
-		return err
+
+	if !recordExists {
+		err = utils.CreateKubefirstNamespace(clctrl.KubernetesClient)
+		if err != nil {
+			return err
+		}
+
+		err = secrets.InsertCluster(clctrl.KubernetesClient, clctrl.Cluster)
+		if err != nil {
+			return err
+		}
+	} else {
+		clctrl.Cluster = rec
 	}
 
 	return nil
@@ -395,7 +408,7 @@ func (clctrl *ClusterController) SetGitTokens(def pkgtypes.ClusterDefinition) er
 
 // GetCurrentClusterRecord will return an active cluster's record if it exists
 func (clctrl *ClusterController) GetCurrentClusterRecord() (pkgtypes.Cluster, error) {
-	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return pkgtypes.Cluster{}, err
 	}
@@ -405,15 +418,12 @@ func (clctrl *ClusterController) GetCurrentClusterRecord() (pkgtypes.Cluster, er
 
 // HandleError implements an error handler for cluster controller objects
 func (clctrl *ClusterController) HandleError(condition string) error {
-	err := clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "in_progress", false)
-	if err != nil {
-		return err
-	}
-	err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "status", constants.ClusterStatusError)
-	if err != nil {
-		return err
-	}
-	err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "last_condition", condition)
+	clctrl.Cluster.InProgress = false
+	clctrl.Cluster.Status = constants.ClusterStatusError
+	clctrl.Cluster.LastCondition = condition
+
+	err := secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
+
 	if err != nil {
 		return err
 	}

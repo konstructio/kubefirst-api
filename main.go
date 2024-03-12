@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/kubefirst/kubefirst-api/docs"
-	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/kubefirst/kubefirst-api/internal/environments"
 	api "github.com/kubefirst/kubefirst-api/internal/router"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	apitelemetry "github.com/kubefirst/kubefirst-api/internal/telemetry"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
@@ -40,22 +40,12 @@ func main() {
 		log.Fatal().Msg(err.Error())
 	}
 
-	// Verify database connectivity
-	err = db.Client.EstablishMongoConnection(db.EstablishConnectArgs{
-		Tries:  20,
-		Silent: false,
-	})
-	if err != nil {
-		log.Fatal().Msg(err.Error())
-
-	}
-
 	log.Info().Msg("checking for cluster import secret for management cluster")
 	// Import if needed
-	importedCluster, err := db.Client.ImportClusterIfEmpty(false)
+	//TODO: SECRETS
+	importedCluster, err := secrets.ImportClusterIfEmpty(true)
 	if err != nil {
 		log.Fatal().Msg(err.Error())
-
 	}
 
 	if importedCluster.ClusterName != "" {
@@ -94,7 +84,6 @@ func main() {
 			}()
 		}
 	}
-	defer db.Client.Client.Disconnect(db.Client.Context)
 
 	// Programmatically set swagger info
 	docs.SwaggerInfo.Title = "Kubefirst API"
@@ -122,11 +111,11 @@ func main() {
 		ParentClusterId:   env.ParentClusterId,
 		UserId:            env.ClusterId,
 	}
-
-	// Subroutine to automatically update gitops catalog
-	go utils.ScheduledGitopsCatalogUpdate()
-
-	go apitelemetry.Heartbeat(telemetryEvent, db.Client)
+	if env.IsClusterZero != "true" {
+		// Subroutine to automatically update gitops catalog
+		go utils.ScheduledGitopsCatalogUpdate()
+	}
+	go apitelemetry.Heartbeat(telemetryEvent)
 
 	// API
 	r := api.SetupRouter()

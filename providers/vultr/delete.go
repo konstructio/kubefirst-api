@@ -17,8 +17,9 @@ import (
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
-	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/errors"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
+	"github.com/kubefirst/kubefirst-api/internal/utils"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
@@ -37,7 +38,10 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 	// Instantiate vultr config
 	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.Token, "")
 
-	err := db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleting)
+	kcfg := utils.GetKubernetesClient(cl.ClusterName)
+
+	cl.Status = constants.ClusterStatusDeleting
+	err := secrets.UpdateCluster(kcfg.Clientset, *cl)
 	if err != nil {
 		return err
 	}
@@ -59,7 +63,8 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 			}
 			log.Info().Msg("github resources terraform destroyed")
 
-			err = db.Client.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
+			cl.GitTerraformApplyCheck = false
+			err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 			if err != nil {
 				return err
 			}
@@ -114,7 +119,8 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 
 			log.Info().Msg("gitlab resources terraform destroyed")
 
-			err = db.Client.UpdateCluster(cl.ClusterName, "git_terraform_apply_check", false)
+			cl.GitTerraformApplyCheck = false
+			err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 			if err != nil {
 				return err
 			}
@@ -208,7 +214,8 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 			log.Info().Msg("waiting for vultr kubernetes cluster resource removal to finish...")
 			time.Sleep(time.Second * 10)
 
-			err = db.Client.UpdateCluster(cl.ClusterName, "argocd_delete_registry_check", true)
+			cl.ArgoCDDeleteRegistryCheck = true
+			err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 			if err != nil {
 				return err
 			}
@@ -237,12 +244,9 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 		}
 		log.Info().Msg("vultr resources terraform destroyed")
 
-		err = db.Client.UpdateCluster(cl.ClusterName, "cloud_terraform_apply_check", false)
-		if err != nil {
-			return err
-		}
-
-		err = db.Client.UpdateCluster(cl.ClusterName, "cloud_terraform_apply_failed_check", false)
+		cl.CloudTerraformApplyCheck = false
+		cl.CloudTerraformApplyFailedCheck = false
+		err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 		if err != nil {
 			return err
 		}
@@ -271,7 +275,8 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 
 	telemetry.SendEvent(telemetryEvent, telemetry.ClusterDeleteCompleted, "")
 
-	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusDeleted)
+	cl.Status = constants.ClusterStatusDeleted
+	err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 	if err != nil {
 		return err
 	}

@@ -23,13 +23,14 @@ import (
 	githttps "github.com/go-git/go-git/v5/plumbing/transport/http"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
-	"github.com/kubefirst/kubefirst-api/internal/db"
-	"github.com/kubefirst/kubefirst-api/internal/env"
 	"github.com/kubefirst/kubefirst-api/internal/gitShim"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
+	internalutils "github.com/kubefirst/kubefirst-api/internal/utils"
 	"github.com/kubefirst/kubefirst-api/pkg/common"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	utils "github.com/kubefirst/kubefirst-api/pkg/utils"
+
 	"github.com/kubefirst/runtime/pkg/argocd"
 	"github.com/kubefirst/runtime/pkg/gitClient"
 	"github.com/kubefirst/runtime/pkg/k8s"
@@ -95,16 +96,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 	clusterRegistryPath := fmt.Sprintf("%s/%s", tmpGitopsDir, registryPath)
 	catalogServiceFolder := fmt.Sprintf("%s/%s", tmpGitopsCatalogDir, serviceName)
 
-	var kcfg *k8s.KubernetesClient
-
-	env, _ := env.GetEnv(constants.SilenceGetEnv)
-
-	var inCluster bool = false
-	if env.InCluster == "true" {
-		inCluster = true
-	}
-
-	kcfg = k8s.CreateKubeConfig(inCluster, fmt.Sprintf("%s/kubeconfig", tmpGitopsDir))
+	kcfg := internalutils.GetKubernetesClient(cl.ClusterName)
 
 	var fullDomainName string
 	if cl.SubdomainName != "" {
@@ -209,18 +201,18 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 		return fmt.Errorf("cluster %s - error pushing commit for service file: %s", clusterName, err)
 	}
 
-	existingService, _ := db.Client.GetServices(clusterName)
+	existingService, _ := secrets.GetServices(kcfg.Clientset, clusterName)
 
 	if existingService.ClusterName == "" {
 		// Add to list
-		err = db.Client.CreateClusterServiceList(clusterName)
+		err = secrets.CreateClusterServiceList(kcfg.Clientset, clusterName)
 		if err != nil {
 			return err
 		}
 	}
 
 	// Update list
-	err = db.Client.InsertClusterServiceListEntry(clusterName, &pkgtypes.Service{
+	err = secrets.InsertClusterServiceListEntry(kcfg.Clientset, clusterName, &pkgtypes.Service{
 		Name:        serviceName,
 		Default:     false,
 		Description: appDef.Description,
@@ -305,8 +297,10 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string, def pkgtypes.Gitops
 		clusterName = def.WorkloadClusterName
 	}
 
+	kcfg := internalutils.GetKubernetesClient(clusterName)
+
 	// Remove from list
-	svc, err := db.Client.GetService(clusterName, serviceName)
+	svc, err := secrets.GetService(kcfg.Clientset, clusterName, serviceName)
 	if err != nil {
 		return fmt.Errorf("cluster %s - error finding service: %s", clusterName, err)
 	}
@@ -389,7 +383,7 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string, def pkgtypes.Gitops
 		}
 	}
 
-	err = db.Client.DeleteClusterServiceListEntry(clusterName, &svc)
+	err = secrets.DeleteClusterServiceListEntry(kcfg.Clientset, clusterName, &svc)
 	if err != nil {
 		return err
 	}
@@ -455,7 +449,9 @@ func ValidateService(cl *pkgtypes.Cluster, serviceName string, def *pkgtypes.Git
 
 // AddDefaultServices
 func AddDefaultServices(cl *pkgtypes.Cluster) error {
-	err := db.Client.CreateClusterServiceList(cl.ClusterName)
+	kcfg := internalutils.GetKubernetesClient(cl.ClusterName)
+
+	err := secrets.CreateClusterServiceList(kcfg.Clientset, cl.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -531,7 +527,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 	}
 
 	for _, svc := range defaults {
-		err := db.Client.InsertClusterServiceListEntry(cl.ClusterName, &svc)
+		err := secrets.InsertClusterServiceListEntry(kcfg.Clientset, cl.ClusterName, &svc)
 		if err != nil {
 			return err
 		}

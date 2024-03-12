@@ -11,7 +11,7 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
-	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/k8s"
@@ -27,7 +27,8 @@ func CreateVultrCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", true)
+	ctrl.Cluster.InProgress = true
+	err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
 	if err != nil {
 		return err
 	}
@@ -213,12 +214,9 @@ func CreateVultrCluster(definition *pkgtypes.ClusterDefinition) error {
 		log.Error().Msgf("Error exporting cluster record: %s", err)
 		return err
 	} else {
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "status", constants.ClusterStatusProvisioned)
-		if err != nil {
-			return err
-		}
-
-		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
+		ctrl.Cluster.Status = constants.ClusterStatusProvisioned
+		ctrl.Cluster.InProgress = false
+		err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
 		if err != nil {
 			return err
 		}
@@ -226,7 +224,7 @@ func CreateVultrCluster(definition *pkgtypes.ClusterDefinition) error {
 		log.Info().Msg("cluster creation complete")
 
 		// Create default service entries
-		cl, _ := db.Client.GetCluster(ctrl.ClusterName)
+		cl, _ := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
 		err = services.AddDefaultServices(&cl)
 		if err != nil {
 			log.Error().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)

@@ -8,21 +8,22 @@ package errors
 
 import (
 	"github.com/kubefirst/kubefirst-api/internal/constants"
-	"github.com/kubefirst/kubefirst-api/internal/db"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
+	"github.com/kubefirst/kubefirst-api/internal/utils"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 )
 
 // HandleClusterError implements an error handler for standalone cluster objects
 func HandleClusterError(cl *pkgtypes.Cluster, condition string) error {
-	err := db.Client.UpdateCluster(cl.ClusterName, "in_progress", false)
-	if err != nil {
-		return err
-	}
-	err = db.Client.UpdateCluster(cl.ClusterName, "status", constants.ClusterStatusError)
-	if err != nil {
-		return err
-	}
-	err = db.Client.UpdateCluster(cl.ClusterName, "last_condition", condition)
+
+	kcfg := utils.GetKubernetesClient(cl.ClusterName)
+
+	cl.InProgress = false
+	cl.Status = constants.ClusterStatusError
+	cl.LastCondition = condition
+
+	err := secrets.UpdateCluster(kcfg.Clientset, *cl)
+
 	if err != nil {
 		return err
 	}

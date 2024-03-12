@@ -6,14 +6,16 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kubefirst/kubefirst-api/internal/db"
 	environments "github.com/kubefirst/kubefirst-api/internal/environments"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/internal/utils"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 )
 
 func GetEnvironments(c *gin.Context) {
-	environments, err := db.Client.GetEnvironments()
+	kcfg := utils.GetKubernetesClient("TODO: SECRETS")
+	environments, err := secrets.GetEnvironments(kcfg.Clientset)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -59,7 +61,8 @@ func DeleteEnvironment(c *gin.Context) {
 		return
 	}
 
-	err := db.Client.DeleteEnvironment(envId)
+	kcfg := utils.GetKubernetesClient("TODO: SECRETS")
+	err := secrets.DeleteEnvironment(kcfg.Clientset, envId)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -100,7 +103,8 @@ func UpdateEnvironment(c *gin.Context) {
 		return
 	}
 
-	updateErr := db.Client.UpdateEnvironment(envId, environmentUpdate)
+	kcfg := utils.GetKubernetesClient("TODO: SECRETS")
+	updateErr := secrets.UpdateEnvironment(kcfg.Clientset, envId, environmentUpdate)
 
 	if updateErr != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{

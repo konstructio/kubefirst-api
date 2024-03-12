@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	githttps "github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	google "github.com/kubefirst/kubefirst-api/pkg/google"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
@@ -24,7 +25,7 @@ import (
 
 // RepositoryPrep
 func (clctrl *ClusterController) RepositoryPrep() error {
-	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -196,7 +197,10 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				return err
 			}
 		}
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "gitops_ready_check", true)
+
+		clctrl.Cluster.GitopsReadyCheck = true
+		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
+
 		if err != nil {
 			return err
 		}
@@ -209,7 +213,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 
 // RepositoryPush
 func (clctrl *ClusterController) RepositoryPush() error {
-	cl, err := clctrl.MdbCl.GetCluster(clctrl.ClusterName)
+	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return err
 	}
@@ -300,7 +304,9 @@ func (clctrl *ClusterController) RepositoryPush() error {
 		// todo that way we can stop worrying about which origin we're going to push to
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.GitopsRepoPushCompleted, "")
 
-		err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "gitops_pushed_check", true)
+		clctrl.Cluster.GitopsPushedCheck = true
+		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
+
 		if err != nil {
 			return err
 		}
