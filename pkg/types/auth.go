@@ -6,6 +6,11 @@ See the LICENSE file for more details.
 */
 package types
 
+// AkamaiAuth holds necessary auth credentials for interacting with civo
+type AkamaiAuth struct {
+	Token string `bson:"token" json:"token"`
+}
+
 // AWSAuth holds necessary auth credentials for interacting with aws
 type AWSAuth struct {
 	AccessKeyID     string `bson:"access_key_id" json:"access_key_id"`

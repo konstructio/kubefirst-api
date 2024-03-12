@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"time"
 
+	akamaiext "github.com/kubefirst/kubefirst-api/extensions/akamai"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
@@ -76,6 +77,8 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 		switch clctrl.GitProvider {
 		case "github":
 			switch clctrl.CloudProvider {
+			case "akamai":
+				tfEnvs = akamaiext.GetGithubTerraformEnvs(tfEnvs, &cl)
 			case "aws":
 				tfEnvs = awsext.GetGithubTerraformEnvs(tfEnvs, &cl)
 			case "civo":
@@ -91,6 +94,8 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 			}
 		case "gitlab":
 			switch clctrl.CloudProvider {
+			case "akamai":
+				tfEnvs = akamaiext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
 			case "aws":
 				tfEnvs = awsext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
 			case "civo":

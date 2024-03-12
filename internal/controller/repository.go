@@ -40,6 +40,28 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 		log.Info().Msg("initializing the gitops repository - this may take several minutes")
 
 		switch clctrl.CloudProvider {
+		case "akamai":
+			err := providerConfigs.PrepareGitRepositories(
+				clctrl.CloudProvider,
+				clctrl.GitProvider,
+				clctrl.ClusterName,
+				clctrl.ClusterType,
+				clctrl.ProviderConfig.DestinationGitopsRepoURL,
+				clctrl.ProviderConfig.GitopsDir,
+				clctrl.GitopsTemplateBranch,
+				clctrl.GitopsTemplateURL,
+				clctrl.ProviderConfig.DestinationMetaphorRepoURL,
+				clctrl.ProviderConfig.K1Dir,
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), //tokens created on the fly
+				clctrl.ProviderConfig.MetaphorDir,
+				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), //tokens created on the fly
+				true,
+				cl.GitProtocol,
+				useCloudflareOriginIssuer,
+			)
+			if err != nil {
+				return err
+			}
 		case "aws":
 			err := providerConfigs.PrepareGitRepositories(
 				clctrl.CloudProvider,

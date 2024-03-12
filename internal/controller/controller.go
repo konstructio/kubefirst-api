@@ -49,7 +49,11 @@ type ClusterController struct {
 	AlertsEmail               string
 
 	// auth
+<<<<<<< HEAD
+	AkamaiAuth             pkgtypes.AkamaiAuth
+=======
 
+>>>>>>> 5293e10f177cf27268d16dccf5b06bb8cef3f9ee
 	AWSAuth                pkgtypes.AWSAuth
 	CivoAuth               pkgtypes.CivoAuth
 	DigitaloceanAuth       pkgtypes.DigitaloceanAuth
@@ -190,6 +194,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	clctrl.NodeCount = def.NodeCount
 	clctrl.PostInstallCatalogApps = def.PostInstallCatalogApps
 
+	clctrl.AkamaiAuth = def.AkamaiAuth
 	clctrl.AWSAuth = def.AWSAuth
 	clctrl.CivoAuth = def.CivoAuth
 	clctrl.DigitaloceanAuth = def.DigitaloceanAuth
@@ -218,8 +223,12 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	} else {
 		clctrl.GitopsTemplateURL = "https://github.com/kubefirst/gitops-template.git"
 	}
+	if def.CloudProvider == "akamai" {
+		clctrl.KubefirstStateStoreBucketName = clctrl.ClusterName
+	} else {
+		clctrl.KubefirstStateStoreBucketName = fmt.Sprintf("k1-state-store-%s-%s", clctrl.ClusterName, clusterID)
+	}
 
-	clctrl.KubefirstStateStoreBucketName = fmt.Sprintf("k1-state-store-%s-%s", clctrl.ClusterName, clusterID)
 	clctrl.KubefirstArtifactsBucketName = fmt.Sprintf("k1-artifacts-%s-%s", clctrl.ClusterName, clusterID)
 	clctrl.NodeType = def.NodeType
 	clctrl.NodeCount = def.NodeCount
@@ -248,6 +257,9 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 
 	// Instantiate provider configuration
 	switch clctrl.CloudProvider {
+	case "akamai":
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.APIToken, clctrl.CloudflareAuth.OriginCaIssuerKey)
+		clctrl.ProviderConfig.AkamaiToken = clctrl.AkamaiAuth.Token
 	case "aws":
 		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
 	case "civo":
@@ -317,6 +329,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		AtlantisWebhookSecret:  clctrl.AtlantisWebhookSecret,
 		AtlantisWebhookURL:     clctrl.AtlantisWebhookURL,
 		KubefirstTeam:          clctrl.KubefirstTeam,
+		AkamaiAuth:             clctrl.AkamaiAuth,
 		AWSAuth:                clctrl.AWSAuth,
 		CivoAuth:               clctrl.CivoAuth,
 		GoogleAuth:             clctrl.GoogleAuth,

@@ -4,7 +4,7 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package civo
+package akamai
 
 import (
 	"os"
@@ -19,7 +19,7 @@ import (
 	log "github.com/rs/zerolog/log"
 )
 
-func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
+func CreateAkamaiCluster(definition *pkgtypes.ClusterDefinition) error {
 	ctrl := controller.ClusterController{}
 	err := ctrl.InitController(definition)
 	if err != nil {
