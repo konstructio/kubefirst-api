@@ -8,6 +8,7 @@ package controller
 
 import (
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
+	pkg "github.com/kubefirst/kubefirst-api/pkg/utils"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	log "github.com/rs/zerolog/log"
 )
