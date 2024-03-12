@@ -543,7 +543,7 @@ func PostCreateCluster(c *gin.Context) {
 		go func() {
 			err = k3s.CreateK3sCluster(&clusterDefinition)
 			if err != nil {
-				log.Errorf(err.Error())
+				log.Fatal().Msg(err.Error())
 			}
 		}()
 

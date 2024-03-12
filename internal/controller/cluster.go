@@ -365,7 +365,7 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 		case "k3s":
 			err := k3sext.BootstrapK3sMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
 			if err != nil {
-				log.Errorf("error adding kubernetes secrets for bootstrap: %s", err)
+				log.Fatal().Msgf("error adding kubernetes secrets for bootstrap: %s", err)
 				return err
 			}
 		}

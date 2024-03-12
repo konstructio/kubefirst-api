@@ -49,11 +49,7 @@ type ClusterController struct {
 	AlertsEmail               string
 
 	// auth
-<<<<<<< HEAD
 	AkamaiAuth             pkgtypes.AkamaiAuth
-=======
-
->>>>>>> 5293e10f177cf27268d16dccf5b06bb8cef3f9ee
 	AWSAuth                pkgtypes.AWSAuth
 	CivoAuth               pkgtypes.CivoAuth
 	DigitaloceanAuth       pkgtypes.DigitaloceanAuth
@@ -62,7 +58,7 @@ type ClusterController struct {
 	GitAuth                pkgtypes.GitAuth
 	VaultAuth              pkgtypes.VaultAuth
 	GoogleAuth             pkgtypes.GoogleAuth
- 	K3sAuth                pkgtypes.K3sAuth
+	K3sAuth                pkgtypes.K3sAuth
 	AwsAccessKeyID         string
 	AwsSecretAccessKey     string
 	NodeType               string
@@ -218,7 +214,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		if def.GitopsTemplateBranch != "" {
 			clctrl.GitopsTemplateURL = def.GitopsTemplateURL
 		} else {
-			return fmt.Errorf("must supply branch of gitops template repo when supplying a gitops template url")
+			return fmt.Errorf("must supply branch of gitops templatelog.Fatal().Msg( repo when supplying a gitops template url")
 		}
 	} else {
 		clctrl.GitopsTemplateURL = "https://github.com/kubefirst/gitops-template.git"
