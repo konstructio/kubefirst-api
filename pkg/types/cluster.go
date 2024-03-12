@@ -14,7 +14,7 @@ import (
 type ClusterDefinition struct {
 	//Cluster
 	AdminEmail             string             `json:"admin_email" binding:"required"`
-	CloudProvider          string             `json:"cloud_provider" binding:"required,oneof=akamai aws civo digitalocean vultr google"`
+	CloudProvider          string             `json:"cloud_provider" binding:"required,oneof=akamai aws civo digitalocean google k3s vultr"`
 	CloudRegion            string             `json:"cloud_region" binding:"required"`
 	ClusterName            string             `json:"cluster_name,omitempty"`
 	DomainName             string             `json:"domain_name" binding:"required"`
