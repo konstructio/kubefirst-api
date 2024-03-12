@@ -10,11 +10,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	log "github.com/rs/zerolog/log"
 )
 
 // DetokenizeGitGitops - Translate tokens by values on a given path
@@ -103,7 +104,7 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				var terraformServersPrivateIpsList string
 				jsonBytes, err := json.Marshal(tokens.K3sServersPrivateIps)
 				if err != nil {
-					log.Fatalf("detokenise issue on %s", err)
+					log.Fatal().Msgf("detokenise issue on %s", err)
 				}
 				terraformServersPrivateIpsList = string(jsonBytes)
 				newContents = strings.Replace(newContents, "<K3S_SERVERS_PRIVATE_IPS>", terraformServersPrivateIpsList, -1)
@@ -111,7 +112,7 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				var terraformServersPublicIpsList string
 				jsonBytes2, err := json.Marshal(tokens.K3sServersPublicIps)
 				if err != nil {
-					log.Fatalf("detokenise issue on %s", err)
+					log.Fatal().Msgf("detokenise issue on %s", err)
 				}
 				terraformServersPublicIpsList = string(jsonBytes2)
 				newContents = strings.Replace(newContents, "<K3S_SERVERS_PUBLIC_IPS>", terraformServersPublicIpsList, -1)
@@ -119,7 +120,7 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				var terraformServersArgsList string
 				jsonBytes3, err := json.Marshal(tokens.K3sServersArgs)
 				if err != nil {
-					log.Fatalf("detokenise issue on %s", err)
+					log.Fatal().Msgf("detokenise issue on %s", err)
 				}
 				terraformServersArgsList = string(jsonBytes3)
 				newContents = strings.Replace(newContents, "<K3S_SERVERS_ARGS>", terraformServersArgsList, -1)

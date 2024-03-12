@@ -19,7 +19,6 @@ require (
 	github.com/charmbracelet/bubbles v0.15.0
 	github.com/charmbracelet/bubbletea v0.23.2
 	github.com/charmbracelet/lipgloss v0.9.1
-	github.com/charmbracelet/log v0.3.1
 	github.com/civo/civogo v0.3.53
 	github.com/cloudflare/cloudflare-go v0.73.0
 	github.com/gin-contrib/cors v1.4.0
@@ -29,7 +28,7 @@ require (
 	github.com/hashicorp/vault/api v1.9.0
 	github.com/joho/godotenv v1.5.1
 	github.com/kubefirst/metrics-client v0.3.0
-	github.com/kubefirst/runtime v0.4.1
+	github.com/kubefirst/runtime v0.4.2
 	github.com/linode/linodego v1.29.0
 	github.com/mikesmitty/edkey v0.0.0-20170222072505-3356ea4e686a
 	github.com/minio/minio-go/v7 v7.0.49
@@ -54,7 +53,6 @@ require (
 
 require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.91.0 // indirect
-	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/go-resty/resty/v2 v2.11.0 // indirect
 	github.com/segmentio/analytics-go v3.1.0+incompatible // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
