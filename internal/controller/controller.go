@@ -343,9 +343,12 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	}
 
 	if !recordExists {
-		err = utils.CreateKubefirstNamespace(clctrl.KubernetesClient)
-		if err != nil {
-			return err
+
+		if env.K1LocalDebug == "true" {
+			err = utils.CreateKubefirstNamespace(clctrl.KubernetesClient)
+			if err != nil {
+				return err
+			}
 		}
 
 		err = secrets.InsertCluster(clctrl.KubernetesClient, clctrl.Cluster)
