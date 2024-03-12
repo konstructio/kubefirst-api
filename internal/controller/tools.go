@@ -30,6 +30,19 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 		log.Info().Msg("installing kubefirst dependencies")
 
 		switch cl.CloudProvider {
+		case "akamai":
+			err := civo.DownloadTools(
+				clctrl.ProviderConfig.KubectlClient,
+				providerConfigs.KubectlClientVersion,
+				providerConfigs.LocalhostOS,
+				providerConfigs.LocalhostArch,
+				providerConfigs.TerraformClientVersion,
+				toolsDir,
+			)
+			if err != nil {
+				log.Error().Msgf("error downloading dependencies: %s", err)
+				return err
+			}
 		case "aws":
 			err := awsinternal.DownloadTools(
 				&clctrl.ProviderConfig,
@@ -90,6 +103,22 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 			)
 			if err != nil {
 				log.Error().Msgf("error downloading dependencies: %s", err)
+				return err
+			}
+
+			// TODO: move to runtime
+			// use vultr DownloadTools meanwhile
+		case "k3s":
+			err := vultr.DownloadTools(
+				clctrl.ProviderConfig.KubectlClient,
+				providerConfigs.KubectlClientVersion,
+				providerConfigs.LocalhostOS,
+				providerConfigs.LocalhostArch,
+				providerConfigs.TerraformClientVersion,
+				toolsDir,
+			)
+			if err != nil {
+				log.Fatal().Msgf("error downloading dependencies: %s", err)
 				return err
 			}
 		}

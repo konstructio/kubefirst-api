@@ -4,14 +4,14 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package civo
+package k3s
 
 import (
 	"os"
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
-	"github.com/kubefirst/kubefirst-api/internal/secrets"
+	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/k8s"
@@ -19,15 +19,15 @@ import (
 	log "github.com/rs/zerolog/log"
 )
 
-func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
+// Createk3sCluster
+func CreateK3sCluster(definition *pkgtypes.ClusterDefinition) error {
 	ctrl := controller.ClusterController{}
 	err := ctrl.InitController(definition)
 	if err != nil {
 		return err
 	}
 
-	ctrl.Cluster.InProgress = true
-	err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
+	err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", true)
 	if err != nil {
 		return err
 	}
@@ -45,12 +45,6 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 	}
 
 	err = ctrl.StateStoreCredentials()
-	if err != nil {
-		ctrl.HandleError(err.Error())
-		return err
-	}
-
-	err = ctrl.StateStoreCreate()
 	if err != nil {
 		ctrl.HandleError(err.Error())
 		return err
@@ -92,7 +86,11 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	// Needs wait after cluster create
+	err = ctrl.WaitForClusterReady()
+	if err != nil {
+		ctrl.HandleError(err.Error())
+		return err
+	}
 
 	err = ctrl.ClusterSecretsBootstrap()
 	if err != nil {
@@ -104,7 +102,7 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 	log.Info().Msg("checking for tls secrets to restore")
 	secretsFilesToRestore, err := os.ReadDir(ctrl.ProviderConfig.SSLBackupDir + "/secrets")
 	if err != nil {
-		log.Info().Msg(err.Error())
+		log.Info().Msgf("%s", err)
 	}
 	if len(secretsFilesToRestore) != 0 {
 		// todo would like these but requires CRD's and is not currently supported
@@ -197,34 +195,31 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		3600,
 	)
 	if err != nil {
-		log.Error().Msgf("Error finding crossplane Deployment: %s", err)
+		log.Fatal().Msgf("Error finding crossplane Deployment: %s", err)
 		ctrl.HandleError(err.Error())
 		return err
 	}
-	log.Info().Msg("waiting on dns, tls certificates from letsencrypt and remaining sync waves.\n this may take up to 60 minutes but regularly completes in under 20 minutes")
+	log.Info().Msgf("waiting on dns, tls certificates from letsencrypt and remaining sync waves.\n this may take up to 60 minutes but regularly completes in under 20 minutes")
 	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, crossplaneDeployment, 3600)
 	if err != nil {
-		log.Error().Msgf("Error waiting for all Apps to sync ready state: %s", err)
+		log.Fatal().Msgf("Error waiting for all Apps to sync ready state: %s", err)
 
 		ctrl.HandleError(err.Error())
 		return err
 	}
-	cluster1KubefirstApiStopChannel := make(chan struct{}, 1)
-	defer func() {
-		close(cluster1KubefirstApiStopChannel)
-	}()
 
 	//* export and import cluster
 	err = ctrl.ExportClusterRecord()
 	if err != nil {
-		log.Error().Msgf("Error exporting cluster record: %s", err)
-		ctrl.HandleError(err.Error())
+		log.Fatal().Msgf("Error exporting cluster record: %s", err)
 		return err
 	} else {
-		ctrl.Cluster.Status = constants.ClusterStatusProvisioned
-		ctrl.Cluster.InProgress = false
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "status", constants.ClusterStatusProvisioned)
+		if err != nil {
+			return err
+		}
 
-		err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
 		if err != nil {
 			return err
 		}
@@ -232,10 +227,10 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		log.Info().Msg("cluster creation complete")
 
 		// Create default service entries
-		cl, _ := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
+		cl, _ := db.Client.GetCluster(ctrl.ClusterName)
 		err = services.AddDefaultServices(&cl)
 		if err != nil {
-			log.Error().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
+			log.Fatal().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
 		}
 	}
 
@@ -248,13 +243,13 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		1200,
 	)
 	if err != nil {
-		log.Error().Msgf("Error finding kubefirst api Deployment: %s", err)
+		log.Fatal().Msgf("Error finding kubefirst api Deployment: %s", err)
 		ctrl.HandleError(err.Error())
 		return err
 	}
 	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, kubefirstAPI, 300)
 	if err != nil {
-		log.Error().Msgf("Error waiting for kubefirst-api to transition to Running: %s", err)
+		log.Fatal().Msgf("Error waiting for kubefirst-api to transition to Running: %s", err)
 
 		ctrl.HandleError(err.Error())
 		return err

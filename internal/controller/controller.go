@@ -51,6 +51,7 @@ type ClusterController struct {
 	AlertsEmail               string
 
 	// auth
+	AkamaiAuth             pkgtypes.AkamaiAuth
 	AWSAuth                pkgtypes.AWSAuth
 	CivoAuth               pkgtypes.CivoAuth
 	DigitaloceanAuth       pkgtypes.DigitaloceanAuth
@@ -59,6 +60,7 @@ type ClusterController struct {
 	GitAuth                pkgtypes.GitAuth
 	VaultAuth              pkgtypes.VaultAuth
 	GoogleAuth             pkgtypes.GoogleAuth
+	K3sAuth                pkgtypes.K3sAuth
 	AwsAccessKeyID         string
 	AwsSecretAccessKey     string
 	NodeType               string
@@ -176,7 +178,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	}
 	clctrl.TelemetryEvent = telemetryEvent
 
-	//Copy Cluster Definiion to Cluster Controller
+	// Copy Cluster Definiion to Cluster Controller
 	clctrl.AlertsEmail = def.AdminEmail
 	clctrl.CloudProvider = def.CloudProvider
 	clctrl.CloudRegion = def.CloudRegion
@@ -191,11 +193,13 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	clctrl.NodeCount = def.NodeCount
 	clctrl.PostInstallCatalogApps = def.PostInstallCatalogApps
 
+	clctrl.AkamaiAuth = def.AkamaiAuth
 	clctrl.AWSAuth = def.AWSAuth
 	clctrl.CivoAuth = def.CivoAuth
 	clctrl.DigitaloceanAuth = def.DigitaloceanAuth
 	clctrl.VultrAuth = def.VultrAuth
 	clctrl.GoogleAuth = def.GoogleAuth
+	clctrl.K3sAuth = def.K3sAuth
 	clctrl.CloudflareAuth = def.CloudflareAuth
 
 	clctrl.Repositories = []string{"gitops", "metaphor"}
@@ -213,13 +217,17 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		if def.GitopsTemplateBranch != "" {
 			clctrl.GitopsTemplateURL = def.GitopsTemplateURL
 		} else {
-			return fmt.Errorf("must supply branch of gitops template repo when supplying a gitops template url")
+			return fmt.Errorf("must supply branch of gitops templatelog.Fatal().Msg( repo when supplying a gitops template url")
 		}
 	} else {
 		clctrl.GitopsTemplateURL = "https://github.com/kubefirst/gitops-template.git"
 	}
+	if def.CloudProvider == "akamai" {
+		clctrl.KubefirstStateStoreBucketName = clctrl.ClusterName
+	} else {
+		clctrl.KubefirstStateStoreBucketName = fmt.Sprintf("k1-state-store-%s-%s", clctrl.ClusterName, clusterID)
+	}
 
-	clctrl.KubefirstStateStoreBucketName = fmt.Sprintf("k1-state-store-%s-%s", clctrl.ClusterName, clusterID)
 	clctrl.KubefirstArtifactsBucketName = fmt.Sprintf("k1-artifacts-%s-%s", clctrl.ClusterName, clusterID)
 	clctrl.NodeType = def.NodeType
 	clctrl.NodeCount = def.NodeCount
@@ -248,6 +256,9 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 
 	// Instantiate provider configuration
 	switch clctrl.CloudProvider {
+	case "akamai":
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.APIToken, clctrl.CloudflareAuth.OriginCaIssuerKey)
+		clctrl.ProviderConfig.AkamaiToken = clctrl.AkamaiAuth.Token
 	case "aws":
 		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
 	case "civo":
@@ -263,6 +274,13 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	case "vultr":
 		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
 		clctrl.ProviderConfig.VultrToken = clctrl.VultrAuth.Token
+	case "k3s":
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		clctrl.ProviderConfig.K3sServersPrivateIps = clctrl.K3sAuth.K3sServersPrivateIps
+		clctrl.ProviderConfig.K3sServersPublicIps = clctrl.K3sAuth.K3sServersPublicIps
+		clctrl.ProviderConfig.K3sSshPrivateKey = clctrl.K3sAuth.K3sSshPrivateKey
+		clctrl.ProviderConfig.K3sSshUser = clctrl.K3sAuth.K3sSshUser
+		clctrl.ProviderConfig.K3sServersArgs = clctrl.K3sAuth.K3sServersArgs
 	}
 
 	// Instantiate provider clients and copy cluster controller to cluster type
@@ -310,11 +328,13 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		AtlantisWebhookSecret:  clctrl.AtlantisWebhookSecret,
 		AtlantisWebhookURL:     clctrl.AtlantisWebhookURL,
 		KubefirstTeam:          clctrl.KubefirstTeam,
+		AkamaiAuth:             clctrl.AkamaiAuth,
 		AWSAuth:                clctrl.AWSAuth,
 		CivoAuth:               clctrl.CivoAuth,
 		GoogleAuth:             clctrl.GoogleAuth,
 		DigitaloceanAuth:       clctrl.DigitaloceanAuth,
 		VultrAuth:              clctrl.VultrAuth,
+		K3sAuth:                clctrl.K3sAuth,
 		CloudflareAuth:         clctrl.CloudflareAuth,
 		NodeType:               clctrl.NodeType,
 		NodeCount:              clctrl.NodeCount,

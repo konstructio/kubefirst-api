@@ -8,8 +8,9 @@ package google
 
 import (
 	"fmt"
-	"log"
 	"os"
+
+	log "github.com/rs/zerolog/log"
 )
 
 // WriteGoogleApplicationCredentialsFile writes credentials file for use throughout installation
@@ -22,14 +23,14 @@ func WriteGoogleApplicationCredentialsFile(googleApplicationCredentials, homeDir
 
 	_, err = file.WriteString(googleApplicationCredentials)
 	if err != nil {
-		log.Fatal("error writing google application credentials file")
+		log.Fatal().Msg("error writing google application credentials file")
 		return err
 	}
 
 	// Close the file writer.
 	err = file.Close()
 	if err != nil {
-		log.Fatal("error closing file writer")
+		log.Fatal().Msg("error closing file writer")
 		return err
 	}
 	return nil

@@ -12,10 +12,9 @@ import (
 
 // ClusterDefinition describes an incoming request to create a cluster
 type ClusterDefinition struct {
-
 	//Cluster
 	AdminEmail             string             `json:"admin_email" binding:"required"`
-	CloudProvider          string             `json:"cloud_provider" binding:"required,oneof=aws civo digitalocean vultr google"`
+	CloudProvider          string             `json:"cloud_provider" binding:"required,oneof=akamai aws civo digitalocean vultr google"`
 	CloudRegion            string             `json:"cloud_region" binding:"required"`
 	ClusterName            string             `json:"cluster_name,omitempty"`
 	DomainName             string             `json:"domain_name" binding:"required"`
@@ -27,22 +26,26 @@ type ClusterDefinition struct {
 	NodeCount              int                `json:"node_count" binding:"required"`
 	PostInstallCatalogApps []GitopsCatalogApp `bson:"post_install_catalog_apps,omitempty" json:"post_install_catalog_apps,omitempty"`
 
-	//Git
+	// Git
+
+	// Git
 	GitopsTemplateURL    string `json:"gitops_template_url"`
 	GitopsTemplateBranch string `json:"gitops_template_branch"`
 	GitProvider          string `json:"git_provider" binding:"required,oneof=github gitlab"`
 	GitProtocol          string `json:"git_protocol" binding:"required,oneof=ssh https"`
 
-	//AWS
+	// AWS
 	ECR bool `json:"ecr,omitempty"`
 
 	//Auth
+	AkamaiAuth       AkamaiAuth       `json:"akamai_auth,omitempty"`
 	AWSAuth          AWSAuth          `json:"aws_auth,omitempty"`
 	CivoAuth         CivoAuth         `json:"civo_auth,omitempty"`
 	DigitaloceanAuth DigitaloceanAuth `json:"do_auth,omitempty"`
 	VultrAuth        VultrAuth        `json:"vultr_auth,omitempty"`
 	CloudflareAuth   CloudflareAuth   `json:"cloudflare_auth,omitempty"`
 	GoogleAuth       GoogleAuth       `json:"google_auth,omitempty"`
+	K3sAuth          K3sAuth          `json:"k3s_auth,omitempty"`
 	GitAuth          GitAuth          `json:"git_auth,omitempty"`
 	LogFileName      string           `bson:"log_file,omitempty" json:"log_file,omitempty"`
 }
@@ -70,6 +73,7 @@ type Cluster struct {
 	PostInstallCatalogApps []GitopsCatalogApp `bson:"post_install_catalog_apps,omitempty" json:"post_install_catalog_apps,omitempty"`
 
 	// Auth
+	AkamaiAuth       AkamaiAuth       `bson:"akamai_auth,omitempty" json:"akamai_auth,omitempty"`
 	AWSAuth          AWSAuth          `bson:"aws_auth,omitempty" json:"aws_auth,omitempty"`
 	CivoAuth         CivoAuth         `bson:"civo_auth,omitempty" json:"civo_auth,omitempty"`
 	DigitaloceanAuth DigitaloceanAuth `bson:"do_auth,omitempty" json:"do_auth,omitempty"`
@@ -78,6 +82,7 @@ type Cluster struct {
 	GitAuth          GitAuth          `bson:"git_auth,omitempty" json:"git_auth,omitempty"`
 	VaultAuth        VaultAuth        `bson:"vault_auth,omitempty" json:"vault_auth,omitempty"`
 	GoogleAuth       GoogleAuth       `bson:"google_auth,omitempty" json:"google_auth,omitempty"`
+	K3sAuth          K3sAuth          `bson:"k3s_auth,omitempty" json:"k3s_auth,omitempty"`
 
 	GitopsTemplateURL    string `bson:"gitops_template_url" json:"gitops_template_url"`
 	GitopsTemplateBranch string `bson:"gitops_template_branch" json:"gitops_template_branch"`

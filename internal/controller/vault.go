@@ -17,10 +17,12 @@ import (
 	"time"
 
 	vaultapi "github.com/hashicorp/vault/api"
+	akamaiext "github.com/kubefirst/kubefirst-api/extensions/akamai"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
 	googleext "github.com/kubefirst/kubefirst-api/extensions/google"
+	k3sext "github.com/kubefirst/kubefirst-api/extensions/k3s"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
@@ -41,7 +43,7 @@ func (clctrl *ClusterController) GetUserPassword(user string) error {
 
 	// empty conf
 	vaultConf := &vault.Conf
-	//sets up vault client within function
+	// sets up vault client within function
 	clctrl.VaultAuth.KbotPassword, err = vaultConf.GetUserPassword(vault.VaultDefaultAddress, cl.VaultAuth.RootToken, "kbot", "initial-password")
 	if err != nil {
 		return err
@@ -70,7 +72,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 		switch clctrl.CloudProvider {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-		case "civo", "digitalocean", "vultr":
+		case "akamai", "civo", "digitalocean", "k3s", "vultr":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 			vaultHandlerPath = "github.com:kubefirst/manifests.git/vault-handler/replicas-3"
 		case "google":
@@ -111,7 +113,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 			if err != nil {
 				return err
 			}
-		case "civo", "digitalocean", "vultr":
+		case "akamai", "civo", "digitalocean", "k3s", "vultr":
 			// Initialize and unseal Vault
 			// Build and apply manifests
 			yamlData, err := kcfg.KustomizeBuild(vaultHandlerPath)
@@ -164,7 +166,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		switch clctrl.CloudProvider {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-		case "civo", "digitalocean", "vultr":
+		case "akamai", "civo", "digitalocean", "k3s", "vultr":
 			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 		case "google":
 			var err error
@@ -178,7 +180,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 
 		tfEnvs := map[string]string{}
 
-		//Common TfEnvs
+		// Common TfEnvs
 		var usernamePasswordString, base64DockerAuth, registryAuth string
 
 		if clctrl.GitProvider == "gitlab" {
@@ -201,12 +203,14 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 			tfEnvs["TF_VAR_owner_group_id"] = strconv.Itoa(clctrl.GitlabOwnerGroupID)
 		}
 
-		//Specific TfEnvs
+		// Specific TfEnvs
 		switch clctrl.CloudProvider {
+		case "akamai":
+			tfEnvs = akamaiext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEnvs = akamaiext.GetAkamaiTerraformEnvs(tfEnvs, &cl)
 		case "aws":
 			tfEnvs = awsext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, &cl)
-
 		case "civo":
 			tfEnvs = civoext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, &cl)
@@ -219,6 +223,9 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		case "vultr":
 			tfEnvs = vultrext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
 			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
+		case "k3s":
+			tfEnvs = k3sext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEnvs = k3sext.GetK3sTerraformEnvs(tfEnvs, &cl)
 		}
 
 		tfEntrypoint := clctrl.ProviderConfig.GitopsDir + "/terraform/vault"
@@ -269,6 +276,8 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 
 	var externalDnsToken string
 	switch cl.DnsProvider {
+	case "akamai":
+		externalDnsToken = cl.AkamaiAuth.Token
 	case "civo":
 		externalDnsToken = cl.CivoAuth.Token
 	case "vultr":
@@ -287,7 +296,7 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 	switch clctrl.CloudProvider {
 	case "aws":
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-	case "civo", "digitalocean", "vultr":
+	case "akamai", "civo", "digitalocean", "k3s", "vultr":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 	case "google":
 		var err error
@@ -317,6 +326,11 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 		"origin-ca-api-key": cl.CloudflareAuth.OriginCaIssuerKey,
 	})
 
+	_, err = vaultClient.KVv2("secret").Put(context.Background(), "crossplane", map[string]interface{}{
+		"username": cl.GitAuth.User,
+		"password": cl.GitAuth.Token,
+	})
+
 	if cl.CloudProvider == "google" {
 		log.Info().Msg("writing google specific secrets to vault secret store")
 		homeDir, err := os.UserHomeDir()
@@ -343,7 +357,7 @@ func (clctrl *ClusterController) WaitForVault() error {
 	switch clctrl.CloudProvider {
 	case "aws":
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-	case "civo", "digitalocean", "vultr":
+	case "akamai", "civo", "digitalocean", "k3s", "vultr":
 		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 	case "google":
 		var err error
@@ -374,7 +388,6 @@ func (clctrl *ClusterController) WaitForVault() error {
 }
 
 func writeGoogleSecrets(homeDir string, vaultClient *vaultapi.Client) error {
-
 	// vault path - gcp/application-default-credentials
 	adcJSON, err := os.ReadFile(fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir))
 	if err != nil {

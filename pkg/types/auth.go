@@ -6,6 +6,11 @@ See the LICENSE file for more details.
 */
 package types
 
+// AkamaiAuth holds necessary auth credentials for interacting with civo
+type AkamaiAuth struct {
+	Token string `bson:"token" json:"token"`
+}
+
 // AWSAuth holds necessary auth credentials for interacting with aws
 type AWSAuth struct {
 	AccessKeyID     string `bson:"access_key_id" json:"access_key_id"`
@@ -64,4 +69,12 @@ type VaultAuth struct {
 type GoogleAuth struct {
 	KeyFile   string `bson:"key_file,omitempty" json:"key_file,omitempty"`
 	ProjectId string `bson:"project_id,omitempty" json:"project_id,omitempty"`
+}
+
+type K3sAuth struct {
+	K3sServersPrivateIps []string `bson:"servers_private_ips,omitempty" json:"servers_private_ips,omitempty"`
+	K3sServersPublicIps  []string `bson:"servers_public_ips,omitempty" json:"servers_public_ips,omitempty"`
+	K3sServersArgs       []string `bson:"servers_args,omitempty" json:"servers_args,omitempty"`
+	K3sSshUser           string   `bson:"ssh_user,omitempty" json:"ssh_user,omitempty"`
+	K3sSshPrivateKey     string   `bson:"ssh_privatekey,omitempty" json:"ssh_privatekey,omitempty"`
 }

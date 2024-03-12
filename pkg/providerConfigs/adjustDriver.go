@@ -47,9 +47,8 @@ func AdjustGitopsRepo(
 			} else if strings.Index(src, "/.terraform") > 0 {
 				return true, nil
 			}
-			//Add more stuff to be ignored here
+			// Add more stuff to be ignored here
 			return false, nil
-
 		},
 	}
 
@@ -72,6 +71,43 @@ func AdjustGitopsRepo(
 		os.RemoveAll(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/workload-vcluster/40-cloudflare-origin-issuer-crd.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
 		os.RemoveAll(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/workload-vcluster/41-cloudflare-origin-ca-issuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
 		os.RemoveAll(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/workload-vcluster/45-cloudflare-origin-issuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
+	}
+
+	AKAMAI_GITHUB := "akamai-github" //! i know i know i know.
+
+	if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == AKAMAI_GITHUB {
+		driverContent := fmt.Sprintf("%s/%s-%s/", gitopsRepoDir, cloudProvider, gitProvider)
+		err := cp.Copy(driverContent, gitopsRepoDir, opt)
+		if err != nil {
+			log.Info().Msgf("Error populating gitops repository with driver content: %s. error: %s", fmt.Sprintf("%s-%s", cloudProvider, gitProvider), err.Error())
+			return err
+		}
+		os.RemoveAll(driverContent)
+
+		//* copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
+		clusterContent := fmt.Sprintf("%s/templates/%s", gitopsRepoDir, clusterType)
+
+		// Remove apex content if apex content already exists
+		if apexContentExists {
+			log.Warn().Msgf("removing nginx-apex since apexContentExists was %v", apexContentExists)
+			os.Remove(fmt.Sprintf("%s/nginx-apex.yaml", clusterContent))
+			os.RemoveAll(fmt.Sprintf("%s/nginx-apex", clusterContent))
+		} else {
+			log.Warn().Msgf("will create nginx-apex since apexContentExists was %v", apexContentExists)
+		}
+
+		if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == AKAMAI_GITHUB {
+			err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/clusters/%s", gitopsRepoDir, clusterName), opt)
+		} else {
+			err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/%s", gitopsRepoDir, clusterName), opt)
+		}
+		if err != nil {
+			log.Info().Msgf("Error populating cluster content with %s. error: %s", clusterContent, err.Error())
+			return err
+		}
+		os.RemoveAll(fmt.Sprintf("%s/templates/mgmt", gitopsRepoDir))
+
+		return nil
 	}
 
 	AWS_GITHUB := "aws-github"
@@ -443,6 +479,80 @@ func AdjustGitopsRepo(
 		return nil
 	}
 
+	K3S_GITLAB := "k3s-gitlab"
+
+	if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == K3S_GITLAB {
+		driverContent := fmt.Sprintf("%s/%s-%s/", gitopsRepoDir, cloudProvider, gitProvider)
+		err := cp.Copy(driverContent, gitopsRepoDir, opt)
+		if err != nil {
+			log.Info().Msgf("Error populating gitops repository with driver content: %s. error: %s", fmt.Sprintf("%s-%s", cloudProvider, gitProvider), err.Error())
+			return err
+		}
+		os.RemoveAll(driverContent)
+
+		//* copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
+		clusterContent := fmt.Sprintf("%s/templates/%s", gitopsRepoDir, clusterType)
+
+		// Remove apex content if apex content already exists
+		if apexContentExists {
+			log.Warn().Msgf("removing nginx-apex since apexContentExists was %v", apexContentExists)
+			os.Remove(fmt.Sprintf("%s/nginx-apex.yaml", clusterContent))
+			os.RemoveAll(fmt.Sprintf("%s/nginx-apex", clusterContent))
+		} else {
+			log.Warn().Msgf("will create nginx-apex since apexContentExists was %v", apexContentExists)
+		}
+
+		if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == K3S_GITLAB {
+			err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/clusters/%s", gitopsRepoDir, clusterName), opt)
+		} else {
+			err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/%s", gitopsRepoDir, clusterName), opt)
+		}
+		if err != nil {
+			log.Info().Msgf("Error populating cluster content with %s. error: %s", clusterContent, err.Error())
+			return err
+		}
+		os.RemoveAll(fmt.Sprintf("%s/templates/mgmt", gitopsRepoDir))
+
+		return nil
+	}
+
+	K3S_GITHUB := "k3s-github"
+
+	if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == K3S_GITHUB {
+		driverContent := fmt.Sprintf("%s/%s-%s/", gitopsRepoDir, cloudProvider, gitProvider)
+		err := cp.Copy(driverContent, gitopsRepoDir, opt)
+		if err != nil {
+			log.Info().Msgf("Error populating gitops repository with driver content: %s. error: %s", fmt.Sprintf("%s-%s", cloudProvider, gitProvider), err.Error())
+			return err
+		}
+		os.RemoveAll(driverContent)
+
+		//* copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
+		clusterContent := fmt.Sprintf("%s/templates/%s", gitopsRepoDir, clusterType)
+
+		// Remove apex content if apex content already exists
+		if apexContentExists {
+			log.Warn().Msgf("removing nginx-apex since apexContentExists was %v", apexContentExists)
+			os.Remove(fmt.Sprintf("%s/nginx-apex.yaml", clusterContent))
+			os.RemoveAll(fmt.Sprintf("%s/nginx-apex", clusterContent))
+		} else {
+			log.Warn().Msgf("will create nginx-apex since apexContentExists was %v", apexContentExists)
+		}
+
+		if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == K3S_GITHUB {
+			err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/clusters/%s", gitopsRepoDir, clusterName), opt)
+		} else {
+			err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/%s", gitopsRepoDir, clusterName), opt)
+		}
+		if err != nil {
+			log.Info().Msgf("Error populating cluster content with %s. error: %s", clusterContent, err.Error())
+			return err
+		}
+		os.RemoveAll(fmt.Sprintf("%s/templates/mgmt", gitopsRepoDir))
+
+		return nil
+	}
+
 	//* copy $cloudProvider-$gitProvider/* $HOME/.k1/gitops/
 	driverContent := fmt.Sprintf("%s/%s-%s/", gitopsRepoDir, cloudProvider, gitProvider)
 	err := cp.Copy(driverContent, gitopsRepoDir, opt)
@@ -504,10 +614,59 @@ func AdjustMetaphorRepo(
 			} else if strings.Index(src, "/.terraform") > 0 {
 				return true, nil
 			}
-			//Add more stuff to be ignored here
+			// Add more stuff to be ignored here
 			return false, nil
-
 		},
+	}
+
+	AKAMAI_GITHUB := "akamai-github"
+
+	if strings.ToLower(fmt.Sprintf("akamai-%s", gitProvider)) != AKAMAI_GITHUB {
+		os.RemoveAll(metaphorDir + "/.argo")
+		os.RemoveAll(metaphorDir + "/.github")
+	}
+
+	//todo implement repo, err :- createMetaphor() which returns the metaphor repoository object, removes content from
+	// gitops and then allows gitops to commit during its sequence of ops
+	if strings.ToLower(fmt.Sprintf("akamai-%s", gitProvider)) == AKAMAI_GITHUB {
+		//* metaphor app source
+		metaphorContent := fmt.Sprintf("%s/metaphor", gitopsRepoDir)
+		err = cp.Copy(metaphorContent, metaphorDir, opt)
+		if err != nil {
+			log.Info().Msgf("Error populating metaphor content with %s. error: %s", metaphorContent, err.Error())
+			return err
+		}
+
+		// Remove metaphor content from gitops repository directory
+		os.RemoveAll(fmt.Sprintf("%s/metaphor", gitopsRepoDir))
+
+		err = gitClient.Commit(metaphorRepo, "init commit pre ref change")
+		if err != nil {
+			return err
+		}
+
+		metaphorRepo, err = gitClient.SetRefToMainBranch(metaphorRepo)
+		if err != nil {
+			return err
+		}
+
+		// remove old git ref
+		err = metaphorRepo.Storer.RemoveReference(plumbing.NewBranchReferenceName("master"))
+		if err != nil {
+			return fmt.Errorf("error removing previous git ref: %s", err)
+		}
+
+		// create remote
+		_, err = metaphorRepo.CreateRemote(&config.RemoteConfig{
+			Name: "origin",
+			URLs: []string{destinationMetaphorRepoURL},
+		})
+		if err != nil {
+			return fmt.Errorf("error creating remote for metaphor repository: %s", err)
+		}
+
+		return nil
+
 	}
 
 	AWS_GITHUB := "aws-github"
@@ -517,7 +676,7 @@ func AdjustMetaphorRepo(
 		os.RemoveAll(metaphorDir + "/.github")
 	}
 
-	//todo implement repo, err :- createMetaphor() which returns the metaphor repoository object, removes content from
+	// todo implement repo, err :- createMetaphor() which returns the metaphor repoository object, removes content from
 	// gitops and then allows gitops to commit during its sequence of ops
 	if strings.ToLower(fmt.Sprintf("aws-%s", gitProvider)) == AWS_GITHUB {
 		//* metaphor app source
@@ -567,7 +726,7 @@ func AdjustMetaphorRepo(
 		os.RemoveAll(metaphorDir + "/.github")
 	}
 
-	//todo implement repo, err :- createMetaphor() which returns the metaphor repoository object, removes content from
+	// todo implement repo, err :- createMetaphor() which returns the metaphor repoository object, removes content from
 	// gitops and then allows gitops to commit during its sequence of ops
 	if strings.ToLower(fmt.Sprintf("aws-%s", gitProvider)) == AWS_GITLAB {
 		//* metaphor app source
@@ -617,7 +776,7 @@ func AdjustMetaphorRepo(
 		os.RemoveAll(metaphorDir + "/.github")
 	}
 
-	//todo implement repo, err :- createMetaphor() which returns the metaphor repoository object, removes content from
+	// todo implement repo, err :- createMetaphor() which returns the metaphor repoository object, removes content from
 	// gitops and then allows gitops to commit during its sequence of ops
 	if strings.ToLower(fmt.Sprintf("civo-%s", gitProvider)) == CIVO_GITHUB {
 		//* metaphor app source
@@ -667,7 +826,7 @@ func AdjustMetaphorRepo(
 		os.RemoveAll(metaphorDir + "/.github")
 	}
 
-	//todo implement repo, err :- createMetaphor() which returns the metaphor repoository object, removes content from
+	// todo implement repo, err :- createMetaphor() which returns the metaphor repoository object, removes content from
 	// gitops and then allows gitops to commit during its sequence of ops
 	if strings.ToLower(fmt.Sprintf("civo-%s", gitProvider)) == CIVO_GITLAB {
 		//* metaphor app source

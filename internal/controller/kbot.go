@@ -9,7 +9,6 @@ package controller
 import (
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
-	internalssh "github.com/kubefirst/runtime/pkg/ssh"
 	log "github.com/rs/zerolog/log"
 )
 
@@ -22,7 +21,7 @@ func (clctrl *ClusterController) InitializeBot() error {
 
 	if !cl.KbotSetupCheck {
 
-		clctrl.GitAuth.PrivateKey, clctrl.GitAuth.PublicKey, err = internalssh.CreateSshKeyPair()
+		clctrl.GitAuth.PrivateKey, clctrl.GitAuth.PublicKey, err = pkg.CreateSshKeyPair()
 		if err != nil {
 			log.Error().Msgf("error generating ssh keys: %s", err)
 			telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.KbotSetupFailed, err.Error())

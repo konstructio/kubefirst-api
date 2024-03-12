@@ -10,10 +10,12 @@ import (
 	"fmt"
 	"time"
 
+	akamaiext "github.com/kubefirst/kubefirst-api/extensions/akamai"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	civoext "github.com/kubefirst/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/kubefirst/kubefirst-api/extensions/digitalocean"
 	googleext "github.com/kubefirst/kubefirst-api/extensions/google"
+	k3sext "github.com/kubefirst/kubefirst-api/extensions/k3s"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
@@ -77,6 +79,8 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 		switch clctrl.GitProvider {
 		case "github":
 			switch clctrl.CloudProvider {
+			case "akamai":
+				tfEnvs = akamaiext.GetGithubTerraformEnvs(tfEnvs, &cl)
 			case "aws":
 				tfEnvs = awsext.GetGithubTerraformEnvs(tfEnvs, &cl)
 			case "civo":
@@ -87,9 +91,13 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				tfEnvs = digitaloceanext.GetGithubTerraformEnvs(tfEnvs, &cl)
 			case "vultr":
 				tfEnvs = vultrext.GetGithubTerraformEnvs(tfEnvs, &cl)
+			case "k3s":
+				tfEnvs = k3sext.GetGithubTerraformEnvs(tfEnvs, &cl)
 			}
 		case "gitlab":
 			switch clctrl.CloudProvider {
+			case "akamai":
+				tfEnvs = akamaiext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
 			case "aws":
 				tfEnvs = awsext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
 			case "civo":
@@ -100,6 +108,8 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				tfEnvs = digitaloceanext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
 			case "vultr":
 				tfEnvs = vultrext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
+			case "k3s":
+				tfEnvs = k3sext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
 			}
 		}
 
@@ -132,7 +142,6 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 }
 
 func (clctrl *ClusterController) GetRepoURL() (string, error) {
-
 	// default case is https
 	destinationGitopsRepoURL := clctrl.ProviderConfig.DestinationGitopsRepoURL
 

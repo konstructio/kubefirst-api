@@ -4,14 +4,14 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package civo
+package akamai
 
 import (
 	"os"
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
-	"github.com/kubefirst/kubefirst-api/internal/secrets"
+	"github.com/kubefirst/kubefirst-api/internal/db"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/runtime/pkg/k8s"
@@ -19,15 +19,14 @@ import (
 	log "github.com/rs/zerolog/log"
 )
 
-func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
+func CreateAkamaiCluster(definition *pkgtypes.ClusterDefinition) error {
 	ctrl := controller.ClusterController{}
 	err := ctrl.InitController(definition)
 	if err != nil {
 		return err
 	}
 
-	ctrl.Cluster.InProgress = true
-	err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
+	err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", true)
 	if err != nil {
 		return err
 	}
@@ -221,10 +220,12 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		ctrl.HandleError(err.Error())
 		return err
 	} else {
-		ctrl.Cluster.Status = constants.ClusterStatusProvisioned
-		ctrl.Cluster.InProgress = false
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "status", constants.ClusterStatusProvisioned)
+		if err != nil {
+			return err
+		}
 
-		err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
+		err = ctrl.MdbCl.UpdateCluster(ctrl.ClusterName, "in_progress", false)
 		if err != nil {
 			return err
 		}
@@ -232,7 +233,7 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		log.Info().Msg("cluster creation complete")
 
 		// Create default service entries
-		cl, _ := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
+		cl, _ := db.Client.GetCluster(ctrl.ClusterName)
 		err = services.AddDefaultServices(&cl)
 		if err != nil {
 			log.Error().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
