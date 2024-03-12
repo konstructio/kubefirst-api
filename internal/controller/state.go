@@ -227,25 +227,15 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 				return err
 			}
 
-			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_details", pkgtypes.StateStoreDetails{
+			clctrl.Cluster.StateStoreDetails = pkgtypes.StateStoreDetails{
 				Name:     bucketAndCreds.StateStoreDetails.Name,
 				Hostname: bucketAndCreds.StateStoreDetails.Hostname,
-			})
-			if err != nil {
-				return err
 			}
+			clctrl.Cluster.StateStoreCreateCheck = true
+			clctrl.Cluster.StateStoreCredentials = bucketAndCreds.StateStoreCredentials
+			clctrl.Cluster.StateStoreCredsCheck = true
 
-			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_create_check", true)
-			if err != nil {
-				return err
-			}
-
-			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_credentials", bucketAndCreds.StateStoreCredentials)
-			if err != nil {
-				return err
-			}
-
-			err = clctrl.MdbCl.UpdateCluster(clctrl.ClusterName, "state_store_creds_check", true)
+			err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 			if err != nil {
 				return err
 			}
