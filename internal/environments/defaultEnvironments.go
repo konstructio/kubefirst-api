@@ -62,6 +62,10 @@ func CreateDefaultEnvironments(mgmtCluster types.Cluster) error {
 
 	kcfg := utils.GetKubernetesClient("TODO: Secrets")
 
+	secrets.CreateSecretReference(kcfg.Clientset, secrets.KUBEFIRST_ENVIRONMENTS_SECRET_NAME, types.SecretListReference{
+		Name: "environments",
+	})
+
 	for _, clusterName := range defaultClusterNames {
 		vcluster := defaultVclusterTemplate
 		vcluster.ClusterName = clusterName
