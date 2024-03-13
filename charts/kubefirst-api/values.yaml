@@ -20,6 +20,7 @@ fullnameOverride: ''
 serviceAccount:
   # Specifies whether a service account should be created
   create: true
+  createRoleBinding: false
   # Annotations to add to the service account
   annotations: {}
   # The name of the service account to use.
@@ -95,11 +96,6 @@ env: []
 envFrom: []
 
 existingSecret: ''
-# defaults to in cluster mongodb, accepts a host name like `your-db.123abcd.mongodb.net`
-atlasDbHost: ''
-atlasDbUsername: ''
-mongodbHost: ''
-mongodbUsername: ''
 
 initContainer:
   enabled: false
