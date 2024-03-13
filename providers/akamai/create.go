@@ -92,8 +92,6 @@ func CreateAkamaiCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	// Needs wait after cluster create
-
 	err = ctrl.ClusterSecretsBootstrap()
 	if err != nil {
 		ctrl.HandleError(err.Error())
