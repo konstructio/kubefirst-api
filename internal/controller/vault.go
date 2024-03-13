@@ -319,13 +319,14 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 	vaultClient.SetToken(vaultRootToken)
 
 	if clctrl.CloudProvider == "akamai" {
-		secretValuesMap, _ := secrets.ParseJSONToMap(string([]byte(vaultRootToken)))
 		secretToCreate := &v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "vault-secrets",
 				Namespace: "external-secrets-operator",
 			},
-			Data: secretValuesMap,
+			Data: map[string][]byte{
+				"vault-token": []byte(vaultRootToken),
+			},
 		}
 		k8s.CreateSecretV2(kcfg.Clientset, secretToCreate)
 	}
