@@ -1,4 +1,4 @@
-{{- if .Values.serviceAccount.createRoleBinding -}}
+{{- if .Values.serviceAccount.createClusterRoleBinding -}}
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
