@@ -26,9 +26,8 @@ Kubefirst API runtime implementation.
     - [Build the Binary](#build-the-binary)
     - [Leverage `air` for Live Reloading Locally](#leverage-air-for-live-reloading-locally)
     - [Use with the CLI](#use-with-the-cli)
-  - [Prerequisites](#prerequisites)
+  - [Prerequisites for local development](#prerequisites-for-local-development)
     - [Environment Variables](#environment-variables)
-    - [To run locally:](#to-run-locally)
   - [local environment variables](#local-environment-variables)
   - [Provider Support](#provider-support)
   - [Creating a Cluster](#creating-a-cluster)
@@ -265,3 +264,4 @@ go install github.com/swaggo/swag/cmd/swag@latest
 ```shell
 make updateswagger
 ```
+
