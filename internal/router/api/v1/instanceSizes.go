@@ -12,6 +12,8 @@ import (
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/vultr"
+	"github.com/linode/linodego"
+	"golang.org/x/oauth2"
 )
 
 func ListInstanceSizesForRegion(c *gin.Context) {
@@ -181,6 +183,32 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 		}
 
 		instanceSizesResponse.InstanceSizes = instances
+
+	case "akamai":
+		tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: instanceSizesRequest.AkamaiAuth.Token})
+
+		oauth2Client := &http.Client{
+			Transport: &oauth2.Transport{
+				Source: tokenSource,
+			},
+		}
+
+		client := linodego.NewClient(oauth2Client)
+
+		instances, err := client.ListTypes(context.Background(), &linodego.ListOptions{})
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+
+		linodeInstances := []string{}
+
+		for _, instance := range instances {
+			linodeInstances = append(linodeInstances, instance.ID)
+		}
+		instanceSizesResponse.InstanceSizes = linodeInstances
 
 	default:
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{

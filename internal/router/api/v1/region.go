@@ -20,6 +20,8 @@ import (
 	"github.com/kubefirst/runtime/pkg/civo"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/vultr"
+	"github.com/linode/linodego"
+	"golang.org/x/oauth2"
 )
 
 // PostRegions godoc
@@ -175,6 +177,32 @@ func PostRegions(c *gin.Context) {
 
 	case "k3s":
 		regionListResponse.Regions = []string{"on-premise (compatibilty-mode)"}
+
+	case "akamai":
+		tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: regionListRequest.AkamaiAuth.Token})
+
+		oauth2Client := &http.Client{
+			Transport: &oauth2.Transport{
+				Source: tokenSource,
+			},
+		}
+
+		client := linodego.NewClient(oauth2Client)
+
+		regions, err := client.ListRegions(context.Background(), &linodego.ListOptions{})
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+
+		linodeRegions := []string{}
+
+		for _, region := range regions {
+			linodeRegions = append(linodeRegions, region.ID)
+		}
+		regionListResponse.Regions = linodeRegions
 
 	default:
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
