@@ -11,14 +11,7 @@ import (
 func (c *AkamaiConfiguration) CreateObjectStorageBucketAndKeys(clusterName string) (AkamaiBucketAndKeysConfiguration, error) {
 
 	// todo get rid of hardcode default
-	// this also has implications on the state store url in the gitops template. see tf state configurations
 	DEFAULT_CLUSTER := "us-east-1"
-	// todo look at this
-	// creds, err := c.checkKubefirstCredentials(credentialName, region)
-	// if err != nil {
-	// 	log.Info().Msg(err.Error())
-	// }
-
 	bucket, err := c.Client.CreateObjectStorageBucket(context.TODO(), linodego.ObjectStorageBucketCreateOptions{
 		Cluster: DEFAULT_CLUSTER,
 		Label:   clusterName,
@@ -28,7 +21,7 @@ func (c *AkamaiConfiguration) CreateObjectStorageBucketAndKeys(clusterName strin
 	}
 
 	creds, err := c.Client.CreateObjectStorageKey(context.TODO(), linodego.ObjectStorageKeyCreateOptions{
-		Label: "clusterName",
+		Label: clusterName,
 		BucketAccess: &[]linodego.ObjectStorageKeyBucketAccess{
 			{
 				BucketName:  clusterName,
