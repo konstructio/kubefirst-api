@@ -20,6 +20,8 @@ import (
 	cloudflare "github.com/kubefirst/runtime/pkg/cloudflare"
 	"github.com/kubefirst/runtime/pkg/digitalocean"
 	"github.com/kubefirst/runtime/pkg/vultr"
+	"github.com/linode/linodego"
+	"golang.org/x/oauth2"
 )
 
 // PostDomains godoc
@@ -56,6 +58,32 @@ func PostDomains(c *gin.Context) {
 	var domainListResponse types.DomainListResponse
 
 	switch dnsProvider {
+	case "akamai":
+		tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: domainListRequest.AkamaiAuth.Token})
+
+		oauth2Client := &http.Client{
+			Transport: &oauth2.Transport{
+				Source: tokenSource,
+			},
+		}
+
+		client := linodego.NewClient(oauth2Client)
+
+		domains, err := client.ListDomains(context.Background(), &linodego.ListOptions{})
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+
+		linodeDomains := []string{}
+
+		for _, domain := range domains {
+			linodeDomains = append(linodeDomains, domain.Domain)
+		}
+		domainListResponse.Domains = linodeDomains
+
 	case "aws":
 		if domainListRequest.AWSAuth.AccessKeyID == "" ||
 			domainListRequest.AWSAuth.SecretAccessKey == "" ||
