@@ -73,6 +73,8 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.existingSecret | default "kubefirst-initial-secrets" }}
                   key: K1_ACCESS_TOKEN
+            - name: IN_CLUSTER
+              value: "true"
             - name: CLOUD_PROVIDER
               value: {{ .Values.global.cloudProvider | default "unset" }}
             - name: CLUSTER_ID
