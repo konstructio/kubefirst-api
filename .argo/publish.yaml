@@ -99,33 +99,34 @@ spec:
                 - name: nextAppChartVersion
                   value: '{{steps.get-initial-chart-version.outputs.result}}-rc.{{workflow.parameters.shortSha}}'
 
-        - - name: helm-dependency-update
-            templateRef:
-              name: cwft-helm
-              template: dependency-update
-              clusterScope: true
-            arguments:
-              artifacts:
-                - name: repo-source
-                  from: '{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}'
-              parameters:
-                - name: chartDir
-                  value: 'charts/kubefirst'
+        # - - name: helm-dependency-update
+        #     templateRef:
+        #       name: cwft-helm
+        #       template: dependency-update
+        #       clusterScope: true
+        #     arguments:
+        #       artifacts:
+        #         - name: repo-source
+        #           from: '{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}'
+        #       parameters:
+        #         - name: chartDir
+        #           value: 'charts/kubefirst'
 
-        - - name: publish-macro-helm-chart
-            templateRef:
-              name: cwft-helm
-              template: publish-chart
-              clusterScope: true
-            arguments:
-              artifacts:
-                - name: repo-source
-                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
-              parameters:
-                - name: appName
-                  value: charts # sets workingDir
-                - name: chartDir
-                  value: 'charts/kubefirst'
+        # - - name: publish-macro-helm-chart
+        #     templateRef:
+        #       name: cwft-helm
+        #       template: publish-chart
+        #       clusterScope: true
+        #     arguments:
+        #       artifacts:
+        #         - name: repo-source
+        #           from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
+        #       parameters:
+        #         - name: appName
+        #           value: charts # sets workingDir
+        #         - name: chartDir
+        #           value: 'charts/kubefirst'
+
         - - name: output-current-chart-version
             templateRef:
               name: cwft-helm
@@ -134,7 +135,7 @@ spec:
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
+                  from: '{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}'
               parameters:
                 - name: appName
                   value: "charts"
@@ -150,7 +151,7 @@ spec:
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
+                  from: '{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}'
               parameters:
                 - name: commitMessage
                   value: 'prepared next macro chart for kubefirst - set {{workflow.parameters.appName}} to {{steps.get-initial-chart-version.outputs.result}}-rc.{{workflow.parameters.shortSha}}'
@@ -166,7 +167,7 @@ spec:
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
+                  from: '{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}'
               parameters:
                 - name: appName
                   value: 'gitops-template'
@@ -183,7 +184,7 @@ spec:
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
+                  from: '{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}'
               parameters:
                 - name: appName
                   value: 'gitops'
