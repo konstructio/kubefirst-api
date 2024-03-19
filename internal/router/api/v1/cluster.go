@@ -855,29 +855,41 @@ func PostResetClusterProgress(c *gin.Context) {
 }
 
 // PostCreateVcluster godoc
-// @Summary Create a Kubefirst cluster
-// @Description Create a Kubefirst cluster
+// @Summary Create default virtual clusters
+// @Description Create default virtual clusters
 // @Tags cluster
 // @Accept json
 // @Produce json
 // @Param	cluster_name	path	string	true	"Cluster name"
-// @Param	definition	body	types.ClusterDefinition	true	"Cluster create request in JSON format"
 // @Success 202 {object} types.JSONSuccessResponse
 // @Failure 400 {object} types.JSONFailureResponse
-// @Router /vcluster/:cluster_name [post]
+// @Router /cluster/:cluster_name/vclusters [post]
 // @Param Authorization header string true "API key" default(Bearer <API key>)
-// PostCreateVcluster handles a request to create a cluster
+// PostCreateVcluster handles a request to create default virtual cluster for the mgmt cluster
 func PostCreateVcluster(c *gin.Context) {
-	importedCluster, err := secrets.ImportClusterIfEmpty(true)
+	clusterName, param := c.Params.Get("cluster_name")
+	if !param {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: ":cluster_name not provided",
+		})
+		return
+	}
+
+	kcfg := utils.GetKubernetesClient(clusterName)
+
+	cluster, err := secrets.GetCluster(kcfg.Clientset, clusterName)
 	if err != nil {
 		log.Fatal().Msg(err.Error())
 	}
 
-	err = environments.CreateDefaultClusters(importedCluster)
-	if err != nil {
-		log.Info().Msgf("Error creating default environments %s", err.Error())
-	}
+	go func() {
+		err = environments.CreateDefaultClusters(cluster)
+		if err != nil {
+			log.Fatal().Msgf("Error creating default environments %s", err.Error())
+		}
+	}()
+
 	c.JSON(http.StatusOK, types.JSONSuccessResponse{
-		Message: "created default cluster environments",
+		Message: "created default cluster environments enqueued",
 	})
 }

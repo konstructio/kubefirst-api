@@ -218,7 +218,6 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		ctrl.HandleError(err.Error())
 		return err
 	} else {
-
 		// Create default service entries
 		cl, _ := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
 		err = services.AddDefaultServices(&cl)
@@ -280,7 +279,10 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 
 	log.Info().Msg("cluster creation complete")
 
-	//! call api to create default clusters
+	err = ctrl.CreateVirtualClusters()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

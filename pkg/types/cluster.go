@@ -160,6 +160,10 @@ type ProxyImportRequest struct {
 	Url  string  `bson:"url" json:"url"`
 }
 
+type ProxyRequest struct {
+	Url string `bson:"url" json:"url"`
+}
+
 type Environment struct {
 	ID                primitive.ObjectID `bson:"_id" json:"_id"`
 	Name              string             `bson:"name" json:"name"`

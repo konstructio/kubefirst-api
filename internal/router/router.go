@@ -53,7 +53,7 @@ func SetupRouter() *gin.Engine {
 		v1.POST("/cluster/:cluster_name", middleware.ValidateAPIKey(), router.PostCreateCluster)
 		v1.GET("/cluster/:cluster_name/export", middleware.ValidateAPIKey(), router.GetExportCluster)
 		v1.POST("/cluster/:cluster_name/reset_progress", middleware.ValidateAPIKey(), router.PostResetClusterProgress)
-		v1.POST("/vclusters", middleware.ValidateAPIKey(), router.PostCreateVcluster)
+		v1.POST("/cluster/:cluster_name/vclusters", middleware.ValidateAPIKey(), router.PostCreateVcluster)
 
 		// KubeConfig
 		v1.POST("/kubeconfig/:cloud_provider", middleware.ValidateAPIKey(), router.GetClusterKubeConfig)

@@ -252,7 +252,34 @@ func CreateVultrCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
+	// Wait for last sync wave app transition to Running
+	log.Info().Msg("waiting for final sync wave Deployment to transition to Running")
+	argocdDeployment, err := k8s.ReturnDeploymentObject(
+		kcfg.Clientset,
+		"app.kubernetes.io/name",
+		"argocd-server",
+		"argocd",
+		3600,
+	)
+	if err != nil {
+		log.Error().Msgf("Error finding argocd Deployment: %s", err)
+		ctrl.HandleError(err.Error())
+		return err
+	}
+	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, argocdDeployment, 3600)
+	if err != nil {
+		log.Error().Msgf("Error waiting for argocd deployment to enter Ready state: %s", err)
+
+		ctrl.HandleError(err.Error())
+		return err
+	}
+
 	log.Info().Msg("cluster creation complete")
+
+	err = ctrl.CreateVirtualClusters()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
