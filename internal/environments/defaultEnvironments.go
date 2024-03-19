@@ -36,7 +36,7 @@ func NewEnvironment(envDef types.Environment) (types.Environment, error) {
 	return newEnv, err
 }
 
-func CreateDefaultEnvironments(mgmtCluster types.Cluster) error {
+func CreateDefaultClusters(mgmtCluster types.Cluster) error {
 	defaultClusterNames := []string{"development", "staging", "production"}
 
 	defaultVclusterTemplate := types.WorkloadCluster{

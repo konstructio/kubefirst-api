@@ -8,11 +8,9 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/kubefirst/kubefirst-api/docs"
 	"github.com/kubefirst/kubefirst-api/internal/env"
-	"github.com/kubefirst/kubefirst-api/internal/environments"
 	api "github.com/kubefirst/kubefirst-api/internal/router"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/services"
@@ -71,18 +69,18 @@ func main() {
 			}()
 		}
 
-		if importedCluster.CloudProvider != "k3d" {
-			go func() {
-				log.Info().Msgf("Waiting for services to be created  %s", importedCluster.ClusterName)
-				time.Sleep(time.Second * 30)
+		// if importedCluster.CloudProvider != "k3d" {
+		// 	go func() {
+		// 		log.Info().Msgf("Waiting for services to be created  %s", importedCluster.ClusterName)
+		// 		time.Sleep(time.Second * 30)
 
-				log.Info().Msgf("adding default environments for cluster %s", importedCluster.ClusterName)
-				err := environments.CreateDefaultEnvironments(importedCluster)
-				if err != nil {
-					log.Info().Msgf("Error creating default environments %s", err.Error())
-				}
-			}()
-		}
+		// 		log.Info().Msgf("adding default environments for cluster %s", importedCluster.ClusterName)
+		// 		err := environments.CreateDefaultClusters(importedCluster)
+		// 		if err != nil {
+		// 			log.Info().Msgf("Error creating default environments %s", err.Error())
+		// 		}
+		// 	}()
+		// }
 	}
 
 	// Programmatically set swagger info

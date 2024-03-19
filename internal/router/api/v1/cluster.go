@@ -15,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/env"
+	environments "github.com/kubefirst/kubefirst-api/internal/environments"
 	"github.com/kubefirst/kubefirst-api/internal/gitShim"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/services"
@@ -850,5 +851,33 @@ func PostResetClusterProgress(c *gin.Context) {
 
 	c.JSON(http.StatusOK, types.JSONSuccessResponse{
 		Message: "cluster updated",
+	})
+}
+
+// PostCreateVcluster godoc
+// @Summary Create a Kubefirst cluster
+// @Description Create a Kubefirst cluster
+// @Tags cluster
+// @Accept json
+// @Produce json
+// @Param	cluster_name	path	string	true	"Cluster name"
+// @Param	definition	body	types.ClusterDefinition	true	"Cluster create request in JSON format"
+// @Success 202 {object} types.JSONSuccessResponse
+// @Failure 400 {object} types.JSONFailureResponse
+// @Router /vcluster/:cluster_name [post]
+// @Param Authorization header string true "API key" default(Bearer <API key>)
+// PostCreateVcluster handles a request to create a cluster
+func PostCreateVcluster(c *gin.Context) {
+	importedCluster, err := secrets.ImportClusterIfEmpty(true)
+	if err != nil {
+		log.Fatal().Msg(err.Error())
+	}
+
+	err = environments.CreateDefaultClusters(importedCluster)
+	if err != nil {
+		log.Info().Msgf("Error creating default environments %s", err.Error())
+	}
+	c.JSON(http.StatusOK, types.JSONSuccessResponse{
+		Message: "created default cluster environments",
 	})
 }
