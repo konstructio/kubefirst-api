@@ -39,10 +39,6 @@ func main() {
 	}
 
 	log.Info().Msg("checking for cluster import secret for management cluster")
-	//! do we need this function call at all? i think this logic just needs to know if its cluster zero or not
-	//! kubefirst-service-*default*service*name
-	//! this will provide us the ability to use the api in cluster and not make decisions about how we start up
-
 	// Import if needed
 	//TODO: SECRETS
 	importedCluster, err := secrets.ImportClusterIfEmpty(true)
