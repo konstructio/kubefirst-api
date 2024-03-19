@@ -7,13 +7,20 @@ See the LICENSE file for more details.
 package controller
 
 import (
+	"bytes"
+	"crypto/tls"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
+	"github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/kubefirst/runtime/pkg"
 	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/rs/zerolog/log"
 	v1secret "k8s.io/api/core/v1"
@@ -21,7 +28,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func readKubefirstAPITokenFromSecret(clientset *kubernetes.Clientset) string {
+func ReadKubefirstAPITokenFromSecret(clientset *kubernetes.Clientset) string {
 	existingKubernetesSecret, err := k8s.ReadSecretV2(clientset, "kubefirst", "kubefirst-initial-secrets")
 	if err != nil || existingKubernetesSecret == nil {
 		log.Printf("Error reading existing Secret data: %s", err)
@@ -78,8 +85,76 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 
 	if err != nil {
 		clctrl.HandleError(err.Error())
-		return errors.New(fmt.Sprintf("unable to save secret to management cluster. %s", err))
+		return fmt.Errorf("unable to save secret to management cluster. %s", err)
 	}
+
+	return nil
+}
+
+// ExportClusterRecord will export cluster record to mgmt cluster
+func (clctrl *ClusterController) CreateVirtualClusters() error {
+	var fullDomainName string
+
+	if clctrl.SubdomainName != "" {
+		fullDomainName = fmt.Sprintf("%s.%s", clctrl.SubdomainName, clctrl.DomainName)
+	} else {
+		fullDomainName = clctrl.DomainName
+	}
+
+	consoleCloudUrl := fmt.Sprintf("https://kubefirst.%s", fullDomainName)
+
+	if strings.ToLower(os.Getenv("K1_LOCAL_DEBUG")) == "true" { //allow using local console running on port 3000
+		consoleCloudUrl = "http://localhost:3000"
+	}
+
+	err := pkg.IsAppAvailable(fmt.Sprintf("%s/api/proxyHealth", consoleCloudUrl), "kubefirst api")
+	if err != nil {
+		log.Error().Msgf("unable to wait for kubefirst console: %s", err)
+		clctrl.HandleError(err.Error())
+		return err
+	}
+
+	requestObject := types.ProxyRequest{
+		Url: fmt.Sprintf("/cluster/%s/vclusters", clctrl.ClusterName),
+	}
+
+	customTransport := http.DefaultTransport.(*http.Transport).Clone()
+	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	httpClient := http.Client{Transport: customTransport}
+
+	payload, err := json.Marshal(requestObject)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/proxy", consoleCloudUrl), bytes.NewReader(payload))
+	if err != nil {
+		log.Error().Msgf("unable to create default clusters: %s", err)
+		clctrl.HandleError(err.Error())
+		return err
+	}
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
+
+	res, err := httpClient.Do(req)
+	if err != nil {
+		log.Error().Msgf("unable to create default clusters: %s", err)
+		clctrl.HandleError(err.Error())
+		return err
+	}
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
+
+	if res.StatusCode != http.StatusOK {
+		log.Error().Msgf("unable to create default clusters: %s %s", err, body)
+		clctrl.HandleError(err.Error())
+		return err
+	}
+
+	log.Info().Msg("cluster creation complete")
 
 	return nil
 }

@@ -40,7 +40,6 @@ func main() {
 
 	log.Info().Msg("checking for cluster import secret for management cluster")
 	// Import if needed
-	//TODO: SECRETS
 	importedCluster, err := secrets.ImportClusterIfEmpty(true)
 	if err != nil {
 		log.Fatal().Msg(err.Error())
@@ -68,19 +67,6 @@ func main() {
 				}
 			}()
 		}
-
-		// if importedCluster.CloudProvider != "k3d" {
-		// 	go func() {
-		// 		log.Info().Msgf("Waiting for services to be created  %s", importedCluster.ClusterName)
-		// 		time.Sleep(time.Second * 30)
-
-		// 		log.Info().Msgf("adding default environments for cluster %s", importedCluster.ClusterName)
-		// 		err := environments.CreateDefaultClusters(importedCluster)
-		// 		if err != nil {
-		// 			log.Info().Msgf("Error creating default environments %s", err.Error())
-		// 		}
-		// 	}()
-		// }
 	}
 
 	// Programmatically set swagger info
