@@ -8,11 +8,9 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/kubefirst/kubefirst-api/docs"
 	"github.com/kubefirst/kubefirst-api/internal/env"
-	"github.com/kubefirst/kubefirst-api/internal/environments"
 	api "github.com/kubefirst/kubefirst-api/internal/router"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/services"
@@ -41,6 +39,10 @@ func main() {
 	}
 
 	log.Info().Msg("checking for cluster import secret for management cluster")
+	//! do we need this function call at all? i think this logic just needs to know if its cluster zero or not
+	//! kubefirst-service-*default*service*name
+	//! this will provide us the ability to use the api in cluster and not make decisions about how we start up
+
 	// Import if needed
 	//TODO: SECRETS
 	importedCluster, err := secrets.ImportClusterIfEmpty(true)
@@ -71,18 +73,18 @@ func main() {
 			}()
 		}
 
-		if importedCluster.CloudProvider != "k3d" {
-			go func() {
-				log.Info().Msgf("Waiting for services to be created  %s", importedCluster.ClusterName)
-				time.Sleep(time.Second * 30)
+		// if importedCluster.CloudProvider != "k3d" {
+		// 	go func() {
+		// 		log.Info().Msgf("Waiting for services to be created  %s", importedCluster.ClusterName)
+		// 		time.Sleep(time.Second * 30)
 
-				log.Info().Msgf("adding default environments for cluster %s", importedCluster.ClusterName)
-				err := environments.CreateDefaultEnvironments(importedCluster)
-				if err != nil {
-					log.Info().Msgf("Error creating default environments %s", err.Error())
-				}
-			}()
-		}
+		// 		log.Info().Msgf("adding default environments for cluster %s", importedCluster.ClusterName)
+		// 		err := environments.CreateDefaultClusters(importedCluster)
+		// 		if err != nil {
+		// 			log.Info().Msgf("Error creating default environments %s", err.Error())
+		// 		}
+		// 	}()
+		// }
 	}
 
 	// Programmatically set swagger info
