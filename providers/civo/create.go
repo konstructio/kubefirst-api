@@ -253,8 +253,8 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 	argocdDeployment, err := k8s.ReturnDeploymentObject(
 		kcfg.Clientset,
 		"app.kubernetes.io/name",
-		"argocd",
 		"argocd-server",
+		"argocd",
 		3600,
 	)
 	if err != nil {
