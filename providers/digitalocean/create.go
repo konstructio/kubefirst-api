@@ -8,7 +8,6 @@ package digitalocean
 
 import (
 	"os"
-	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
@@ -188,9 +187,6 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	log.Info().Msg("waiting for applications to create, looking up crossplane in 5 minutes")
-	time.Sleep(time.Minute * 5)
-
 	// Wait for last sync wave app transition to Running
 	log.Info().Msg("waiting for final sync wave Deployment to transition to Running")
 	crossplaneDeployment, err := k8s.ReturnDeploymentObject(
@@ -218,18 +214,8 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 	err = ctrl.ExportClusterRecord()
 	if err != nil {
 		log.Error().Msgf("Error exporting cluster record: %s", err)
-		return err
+		ctrl.HandleError(err.Error())
 	} else {
-		ctrl.Cluster.Status = constants.ClusterStatusProvisioned
-		ctrl.Cluster.InProgress = false
-		err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
-
-		if err != nil {
-			return err
-		}
-
-		log.Info().Msg("cluster creation complete")
-
 		// Create default service entries
 		cl, _ := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
 		err = services.AddDefaultServices(&cl)
@@ -278,6 +264,13 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 		log.Error().Msgf("Error waiting for argocd deployment to enter Ready state: %s", err)
 
 		ctrl.HandleError(err.Error())
+		return err
+	}
+
+	ctrl.Cluster.Status = constants.ClusterStatusProvisioned
+	ctrl.Cluster.InProgress = false
+	err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
+	if err != nil {
 		return err
 	}
 

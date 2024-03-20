@@ -8,7 +8,6 @@ package civo
 
 import (
 	"os"
-	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
@@ -271,7 +270,6 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 
 	ctrl.Cluster.Status = constants.ClusterStatusProvisioned
 	ctrl.Cluster.InProgress = false
-	time.Sleep(30 * time.Second)
 	err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
 	if err != nil {
 		return err
