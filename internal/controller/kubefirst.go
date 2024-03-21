@@ -93,6 +93,7 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 
 // ExportClusterRecord will export cluster record to mgmt cluster
 func (clctrl *ClusterController) CreateVirtualClusters() error {
+	time.Sleep(time.Minute * 2)
 	var fullDomainName string
 
 	if clctrl.SubdomainName != "" {
