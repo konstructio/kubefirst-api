@@ -70,7 +70,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 		log.Fatal().Msgf("an error ocurred preparing git environment %s %s", tmpGitopsDir, err)
 	}
 
-	err = gitShim.PrepareGitOpsCatalog(cl, tmpGitopsCatalogDir)
+	err = gitShim.PrepareGitOpsCatalog(tmpGitopsCatalogDir)
 	if err != nil {
 		log.Fatal().Msgf("an error ocurred preparing gitops catalog environment %s %s", tmpGitopsDir, err)
 	}

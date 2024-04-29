@@ -90,9 +90,9 @@ func PrepareGitEnvironment(cluster *pkgtypes.Cluster, gitopsDir string) error {
 	return nil
 }
 
-func PrepareGitOpsCatalog(cluster *pkgtypes.Cluster, gitopsCatalogDir string) error {
+func PrepareGitOpsCatalog(gitopsCatalogDir string) error {
 	repoUrl := fmt.Sprintf("https://github.com/%s/%s", KubefirstGitHubOrganization, KubefirstGitopsCatalogRepository)
-	_, err := gitClient.ClonePrivateRepo("main", gitopsCatalogDir, repoUrl, cluster.GitAuth.User, cluster.GitAuth.Token)
+	_, err := gitClient.Clone("main", gitopsCatalogDir, repoUrl)
 	if err != nil {
 		log.Fatal().Msgf("error cloning repository: %s", err)
 
