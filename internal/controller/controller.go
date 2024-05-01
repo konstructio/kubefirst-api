@@ -35,7 +35,7 @@ import (
 )
 
 const (
-	gitopsTemplateVersion = "v2.4.7"
+	gitopsTemplateVersion = "v2.4.8"
 )
 
 type ClusterController struct {
