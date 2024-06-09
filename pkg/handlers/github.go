@@ -96,10 +96,10 @@ func (handler GitHubHandler) AuthenticateUser() (string, error) {
 	gitHubTokenReport := printGitHubAuthToken(gitHubDeviceFlow.UserCode, gitHubDeviceFlow.VerificationUri)
 	fmt.Println(reports.StyleMessage(gitHubTokenReport))
 
-	// this blocks the progress until the user hits enter to open the browser
-	if _, err = fmt.Scanln(); err != nil {
-		return "", err
-	}
+	// // this blocks the progress until the user hits enter to open the browser
+	// if _, err = fmt.Scanln(); err != nil {
+	// 	return "", err
+	// }
 
 	if err = pkg.OpenBrowser("https://github.com/login/device"); err != nil {
 		log.Error().Msgf("error opening browser: %s", err)
