@@ -350,7 +350,10 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 		if err != nil {
 			log.Fatal().Msgf("error getting home path: %s", err)
 		}
-		writeGoogleSecrets(homeDir, vaultClient)
+		if err := writeGoogleSecrets(homeDir, vaultClient); err != nil {
+			log.Error().Msgf("error writing Google secrets to vault: %s", err)
+			return err
+		}
 		log.Info().Msg("successfully wrote google specific secrets to vault")
 	}
 
