@@ -209,20 +209,7 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 					newContents = strings.Replace(newContents, "<GIT_FQDN>", fmt.Sprintf("git@%v.com:", tokens.GitProvider), -1)
 				}
 				
-				var renderedContents []byte
-				
-				if tokens.CustomTemplateValues != nil {
-					// A new Buffer so we have an io.Writer for the CustomTemplateValues
-					buff := bytes.NewBuffer([]byte(newContents))
-					
-					if err = template.New("gitops-template").Delims("<<", ">>").ExecuteTemplate(buff, "gitops-template", tokens.CustomTemplateValues); err != nil {
-						return err
-					}
-					
-					renderedContents = buff.Bytes()
-				} else {
-					renderedContents = []byte(newContents)
-				}
+				renderedContents, err := renderGoTemplating(tokens, newContents)
 				
 				err = os.WriteFile(path, renderedContents, 0)
 				if err != nil {
@@ -268,8 +255,9 @@ func detokenizeAdditionalPath(path string, tokens *GitopsDirectoryValues) filepa
 				
 				newContents := string(read)
 				newContents = strings.Replace(newContents, "<GITLAB_OWNER>", tokens.GitlabOwner, -1)
+				renderedContents, err := renderGoTemplating(tokens, newContents)
 				
-				err = ioutil.WriteFile(path, []byte(newContents), 0)
+				err = os.WriteFile(path, renderedContents, 0)
 				if err != nil {
 					return err
 				}
