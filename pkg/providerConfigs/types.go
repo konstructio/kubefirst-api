@@ -15,6 +15,7 @@ type GitopsDirectoryValues struct {
 	ClusterName                    string
 	ClusterType                    string
 	ContainerRegistryURL           string
+	CustomTemplateValues           map[string]interface{}
 	DomainName                     string
 	SubdomainName                  string
 	DNSProvider                    string
@@ -45,23 +46,23 @@ type GitopsDirectoryValues struct {
 	Project                        string
 	ClusterDestination             string
 	Environment                    string
-
+	
 	AwsIamArnAccountRoot string
 	AwsKmsKeyId          string
 	AwsNodeCapacityType  string
 	AwsAccountID         string
-
+	
 	GoogleAuth       string
 	GoogleProject    string
 	GoogleUniqueness string
 	ForceDestroy     string
-
+	
 	K3sServersPrivateIps []string
 	K3sServersPublicIps  []string
 	K3sServersArgs       []string
 	SshUser              string
 	SshPrivateKey        string
-
+	
 	GitDescription       string
 	GitNamespace         string
 	GitProvider          string
@@ -72,26 +73,26 @@ type GitopsDirectoryValues struct {
 	GitRunnerDescription string
 	GitRunnerNS          string
 	GitURL               string
-
+	
 	GitHubHost  string
 	GitHubOwner string
 	GitHubUser  string
-
+	
 	GitlabHost         string
 	GitlabOwner        string
 	GitlabOwnerGroupID int
 	GitlabUser         string
-
+	
 	GitopsRepoAtlantisWebhookURL               string
 	GitopsRepoNoHTTPSURL                       string
 	WorkloadClusterTerraformModuleURL          string
 	WorkloadClusterBootstrapTerraformModuleURL string
-
+	
 	ExternalDNSProviderName         string
 	ExternalDNSProviderTokenEnvName string
 	ExternalDNSProviderSecretName   string
 	ExternalDNSProviderSecretKey    string
-
+	
 	UseTelemetry string
 }
 
@@ -101,6 +102,7 @@ type MetaphorTokenValues struct {
 	ClusterName                   string
 	CommitCWFTTemplate            string
 	ContainerRegistryURL          string
+	CustomTemplateValues          map[string]interface{}
 	DomainName                    string
 	MetaphorDevelopmentIngressURL string
 	MetaphorProductionIngressURL  string

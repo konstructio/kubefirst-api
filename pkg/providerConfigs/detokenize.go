@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package providerConfigs
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -14,7 +15,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-
+	"text/template"
+	
 	log "github.com/rs/zerolog/log"
 )
 
@@ -24,7 +26,7 @@ func DetokenizeGitGitops(path string, tokens *GitopsDirectoryValues, gitProtocol
 	if err != nil {
 		return err
 	}
-
+	
 	return nil
 }
 
@@ -36,35 +38,35 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 		if err != nil {
 			return err
 		}
-
+		
 		if fi.IsDir() {
 			return nil
 		}
-
+		
 		metaphorDevelopmentIngressURL := fmt.Sprintf("https://metaphor-development.%s", tokens.DomainName)
 		metaphorStagingIngressURL := fmt.Sprintf("https://metaphor-staging.%s", tokens.DomainName)
 		metaphorProductionIngressURL := fmt.Sprintf("https://metaphor-production.%s", tokens.DomainName)
-
+		
 		// var matched bool
 		matched, _ := filepath.Match("*", fi.Name())
-
+		
 		if matched {
 			// ignore .git files
 			if !strings.Contains(path, "/.git/") {
-
-				read, err := ioutil.ReadFile(path)
+				
+				read, err := os.ReadFile(path)
 				if err != nil {
 					return err
 				}
-
+				
 				var fullDomainName string
-
+				
 				if tokens.SubdomainName != "" {
 					fullDomainName = fmt.Sprintf("%s.%s", tokens.SubdomainName, tokens.DomainName)
 				} else {
 					fullDomainName = tokens.DomainName
 				}
-
+				
 				newContents := string(read)
 				newContents = strings.Replace(newContents, "<ALERTS_EMAIL>", tokens.AlertsEmail, -1)
 				newContents = strings.Replace(newContents, "<ATLANTIS_ALLOW_LIST>", tokens.AtlantisAllowList, -1)
@@ -86,17 +88,17 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				newContents = strings.Replace(newContents, "<WORKLOAD_CLUSTER_BOOTSTRAP_TERRAFORM_MODULE_URL>", tokens.WorkloadClusterBootstrapTerraformModuleURL, -1)
 				newContents = strings.Replace(newContents, "<NODE_TYPE>", tokens.NodeType, -1)
 				newContents = strings.Replace(newContents, "<NODE_COUNT>", fmt.Sprint(tokens.NodeCount), -1)
-
+				
 				// AWS
 				newContents = strings.Replace(newContents, "<AWS_ACCOUNT_ID>", tokens.AwsAccountID, -1)
 				newContents = strings.Replace(newContents, "<AWS_IAM_ARN_ACCOUNT_ROOT>", tokens.AwsIamArnAccountRoot, -1)
 				newContents = strings.Replace(newContents, "<AWS_NODE_CAPACITY_TYPE>", tokens.AwsNodeCapacityType, -1)
-
+				
 				// google
 				newContents = strings.Replace(newContents, "<GOOGLE_PROJECT>", tokens.GoogleProject, -1)
 				newContents = strings.Replace(newContents, "<TERRAFORM_FORCE_DESTROY>", tokens.ForceDestroy, -1)
 				newContents = strings.Replace(newContents, "<GOOGLE_UNIQUENESS>", tokens.GoogleUniqueness, -1)
-
+				
 				if tokens.CloudProvider == "k3s" {
 					// k3s
 					newContents = strings.Replace(newContents, "<K3S_ENDPOINT>", tokens.K3sServersPrivateIps[0], -1)
@@ -109,7 +111,7 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 					}
 					terraformServersPrivateIpsList = string(jsonBytes)
 					newContents = strings.Replace(newContents, "<K3S_SERVERS_PRIVATE_IPS>", terraformServersPrivateIpsList, -1)
-
+					
 					var terraformServersPublicIpsList string
 					jsonBytes2, err := json.Marshal(tokens.K3sServersPublicIps)
 					if err != nil {
@@ -117,7 +119,7 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 					}
 					terraformServersPublicIpsList = string(jsonBytes2)
 					newContents = strings.Replace(newContents, "<K3S_SERVERS_PUBLIC_IPS>", terraformServersPublicIpsList, -1)
-
+					
 					var terraformServersArgsList string
 					jsonBytes3, err := json.Marshal(tokens.K3sServersArgs)
 					if err != nil {
@@ -125,7 +127,7 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 					}
 					terraformServersArgsList = string(jsonBytes3)
 					newContents = strings.Replace(newContents, "<K3S_SERVERS_ARGS>", terraformServersArgsList, -1)
-
+					
 					newContents = strings.Replace(newContents, "<SSH_USER>", tokens.SshUser, -1)
 					newContents = strings.Replace(newContents, "<SSH_PRIVATE_KEY_PATH>", tokens.SshPrivateKey, -1)
 				}
@@ -140,7 +142,7 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				newContents = strings.Replace(newContents, "<VAULT_INGRESS_NO_HTTPS_URL>", tokens.VaultIngressNoHTTPSURL, -1)
 				newContents = strings.Replace(newContents, "<VAULT_DATA_BUCKET>", tokens.VaultDataBucketName, -1)
 				newContents = strings.Replace(newContents, "<VOUCH_INGRESS_URL>", tokens.VouchIngressURL, -1)
-
+				
 				newContents = strings.Replace(newContents, "<GIT_DESCRIPTION>", tokens.GitDescription, -1)
 				newContents = strings.Replace(newContents, "<GIT_NAMESPACE>", tokens.GitNamespace, -1)
 				newContents = strings.Replace(newContents, "<GIT_PROVIDER>", tokens.GitProvider, -1)
@@ -149,39 +151,39 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				newContents = strings.Replace(newContents, "<GIT_RUNNER_DESCRIPTION>", tokens.GitRunnerDescription, -1)
 				newContents = strings.Replace(newContents, "<GIT_RUNNER_NS>", tokens.GitRunnerNS, -1)
 				newContents = strings.Replace(newContents, "<GIT_URL>", tokens.GitURL, -1) // remove
-
+				
 				// GitHub
 				newContents = strings.Replace(newContents, "<GITHUB_HOST>", tokens.GitHubHost, -1)
 				newContents = strings.Replace(newContents, "<GITHUB_OWNER>", strings.ToLower(tokens.GitHubOwner), -1)
 				newContents = strings.Replace(newContents, "<GITHUB_USER>", tokens.GitHubUser, -1)
-
+				
 				// GitLab
 				newContents = strings.Replace(newContents, "<GITLAB_HOST>", tokens.GitlabHost, -1)
 				newContents = strings.Replace(newContents, "<GITLAB_OWNER>", tokens.GitlabOwner, -1)
 				newContents = strings.Replace(newContents, "<GITLAB_OWNER_GROUP_ID>", strconv.Itoa(tokens.GitlabOwnerGroupID), -1)
 				newContents = strings.Replace(newContents, "<GITLAB_USER>", tokens.GitlabUser, -1)
-
+				
 				newContents = strings.Replace(newContents, "<GITOPS_REPO_ATLANTIS_WEBHOOK_URL>", tokens.GitopsRepoAtlantisWebhookURL, -1)
 				newContents = strings.Replace(newContents, "<GITOPS_REPO_NO_HTTPS_URL>", tokens.GitopsRepoNoHTTPSURL, -1)
-
+				
 				newContents = strings.Replace(newContents, "<METAPHOR_DEVELOPMENT_INGRESS_URL>", metaphorDevelopmentIngressURL, -1)
 				newContents = strings.Replace(newContents, "<METAPHOR_PRODUCTION_INGRESS_URL>", metaphorProductionIngressURL, -1)
 				newContents = strings.Replace(newContents, "<METAPHOR_STAGING_INGRESS_URL>", metaphorStagingIngressURL, -1)
-
+				
 				// external-dns optionality to provide cloudflare support regardless of cloud provider
 				newContents = strings.Replace(newContents, "<EXTERNAL_DNS_PROVIDER_NAME>", tokens.ExternalDNSProviderName, -1)
 				newContents = strings.Replace(newContents, "<EXTERNAL_DNS_PROVIDER_TOKEN_ENV_NAME>", tokens.ExternalDNSProviderTokenEnvName, -1)
 				newContents = strings.Replace(newContents, "<EXTERNAL_DNS_PROVIDER_SECRET_NAME>", tokens.ExternalDNSProviderSecretName, -1)
 				newContents = strings.Replace(newContents, "<EXTERNAL_DNS_PROVIDER_SECRET_KEY>", tokens.ExternalDNSProviderSecretKey, -1)
 				newContents = strings.Replace(newContents, "<EXTERNAL_DNS_DOMAIN_NAME>", tokens.DomainName, -1)
-
+				
 				// Catalog
 				newContents = strings.Replace(newContents, "<REGISTRY_PATH>", tokens.RegistryPath, -1)
 				newContents = strings.Replace(newContents, "<SECRET_STORE_REF>", tokens.SecretStoreRef, -1)
 				newContents = strings.Replace(newContents, "<PROJECT>", tokens.Project, -1)
 				newContents = strings.Replace(newContents, "<CLUSTER_DESTINATION>", tokens.ClusterDestination, -1)
 				newContents = strings.Replace(newContents, "<ENVIRONMENT>", tokens.Environment, -1)
-
+				
 				//origin issuer defines which annotations should be on ingresses
 				if useCloudflareOriginIssuer {
 					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_1>", "cert-manager.io/issuer: cloudflare-origin-issuer", -1)
@@ -194,20 +196,35 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_3>", "", -1)
 					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_4>", "", -1)
 				}
-
+				
 				newContents = strings.Replace(newContents, "<USE_TELEMETRY>", tokens.UseTelemetry, -1)
-
+				
 				// Switch the repo url based on https flag
 				newContents = strings.Replace(newContents, "<GITOPS_REPO_URL>", tokens.GitopsRepoURL, -1)
-
+				
 				// The fqdn is used by metaphor/argo to choose the appropriate url for cicd operations.
 				if gitProtocol == "https" {
 					newContents = strings.Replace(newContents, "<GIT_FQDN>", fmt.Sprintf("https://%v.com/", tokens.GitProvider), -1)
 				} else {
 					newContents = strings.Replace(newContents, "<GIT_FQDN>", fmt.Sprintf("git@%v.com:", tokens.GitProvider), -1)
 				}
-
-				err = ioutil.WriteFile(path, []byte(newContents), 0)
+				
+				var renderedContents []byte
+				
+				if tokens.CustomTemplateValues != nil {
+					// A new Buffer so we have an io.Writer for the CustomTemplateValues
+					buff := bytes.NewBuffer([]byte(newContents))
+					
+					if err = template.New("gitops-template").Delims("<<", ">>").ExecuteTemplate(buff, "gitops-template", tokens.CustomTemplateValues); err != nil {
+						return err
+					}
+					
+					renderedContents = buff.Bytes()
+				} else {
+					renderedContents = []byte(newContents)
+				}
+				
+				err = os.WriteFile(path, renderedContents, 0)
 				if err != nil {
 					return err
 				}
@@ -223,7 +240,7 @@ func DetokenizeAdditionalPath(path string, tokens *GitopsDirectoryValues) error 
 	if err != nil {
 		return err
 	}
-
+	
 	return nil
 }
 
@@ -233,14 +250,14 @@ func detokenizeAdditionalPath(path string, tokens *GitopsDirectoryValues) filepa
 		if err != nil {
 			return err
 		}
-
+		
 		if !!fi.IsDir() {
 			return nil
 		}
-
+		
 		// var matched bool
 		matched, _ := filepath.Match("*", fi.Name())
-
+		
 		if matched {
 			// ignore .git files
 			if !strings.Contains(path, "/.git/") {
@@ -248,10 +265,10 @@ func detokenizeAdditionalPath(path string, tokens *GitopsDirectoryValues) filepa
 				if err != nil {
 					return err
 				}
-
+				
 				newContents := string(read)
 				newContents = strings.Replace(newContents, "<GITLAB_OWNER>", tokens.GitlabOwner, -1)
-
+				
 				err = ioutil.WriteFile(path, []byte(newContents), 0)
 				if err != nil {
 					return err
@@ -277,23 +294,23 @@ func detokenizeGitopsMetaphor(path string, tokens *MetaphorTokenValues) filepath
 		if err != nil {
 			return err
 		}
-
+		
 		if !!fi.IsDir() {
 			return nil
 		}
-
+		
 		// var matched bool
 		matched, _ := filepath.Match("*", fi.Name())
-
+		
 		if matched {
 			// ignore .git files
 			if !strings.Contains(path, "/.git/") {
-
-				read, err := ioutil.ReadFile(path)
+				
+				read, err := os.ReadFile(path)
 				if err != nil {
 					return err
 				}
-
+				
 				// todo reduce to terraform tokens by moving to helm chart?
 				newContents := string(read)
 				newContents = strings.Replace(newContents, "<CLOUD_REGION>", tokens.CloudRegion, -1)
@@ -303,13 +320,45 @@ func detokenizeGitopsMetaphor(path string, tokens *MetaphorTokenValues) filepath
 				newContents = strings.Replace(newContents, "<METAPHOR_DEVELOPMENT_INGRESS_URL>", tokens.MetaphorDevelopmentIngressURL, -1)
 				newContents = strings.Replace(newContents, "<METAPHOR_PRODUCTION_INGRESS_URL>", tokens.MetaphorProductionIngressURL, -1)
 				newContents = strings.Replace(newContents, "<METAPHOR_STAGING_INGRESS_URL>", tokens.MetaphorStagingIngressURL, -1)
-
-				err = ioutil.WriteFile(path, []byte(newContents), 0)
+				
+				renderedContents, err := renderGoTemplating(tokens, newContents)
+				
+				err = os.WriteFile(path, renderedContents, 0)
 				if err != nil {
 					return err
 				}
+				
 			}
 		}
+		
 		return nil
 	})
+}
+
+func renderGoTemplating(tokens interface{}, content string) ([]byte, error) {
+	var renderedContents []byte
+	customTokens := make(map[string]interface{})
+	
+	if t, ok := tokens.(GitopsDirectoryValues); ok {
+		customTokens = t.CustomTemplateValues
+	}
+	
+	if m, ok := tokens.(MetaphorTokenValues); ok {
+		customTokens = m.CustomTemplateValues
+	}
+	
+	if customTokens != nil {
+		// A new Buffer so we have an io.Writer for the CustomTemplateValues
+		buff := bytes.NewBuffer([]byte(content))
+		
+		if err := template.New("gitops-template").Delims("<<", ">>").ExecuteTemplate(buff, "gitops-template", renderedContents); err != nil {
+			return nil, err
+		}
+		
+		renderedContents = buff.Bytes()
+	} else {
+		renderedContents = []byte(content)
+	}
+	
+	return renderedContents, nil
 }
