@@ -311,10 +311,5 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 
 	log.Info().Msg("cluster creation complete")
 
-	err = ctrl.CreateVirtualClusters()
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
