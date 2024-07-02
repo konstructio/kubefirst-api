@@ -91,8 +91,8 @@ Some variables are required, others are optional depending on deployment type.
 | `CLUSTER_TYPE`              | Cluster type.                                                                                                                                    | Yes                            |
 | `INSTALL_METHOD`            | Description of the method through which the API was deployed. Example: `helm`                                                                    | Yes                            |
 | `K1_ACCESS_TOKEN`           | Access token in authorization header to prevent unsolicited in-cluster access                                                                    | Yes                            |
-| `K1_LOCAL_DEBUG`            | Identifies the api execution as local debug mode                                                                                                 | No                             |
-| `K1_LOCAL_KUBECONFIG_PATH`  | kubeconfig path location for k3d local cluster                                                                                                   | No                            |
+| `K1_LOCAL_DEBUG`            | Identifies the api execution as local debug mode                                                                                                 | Yes                             |
+| `K1_LOCAL_KUBECONFIG_PATH`  | kubeconfig path location for k3d local cluster                                                                                                   | Yes                            |
 
 
 ## local environment variables
