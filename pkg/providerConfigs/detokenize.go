@@ -127,7 +127,6 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 					newContents = strings.Replace(newContents, "<K3S_SERVERS_ARGS>", terraformServersArgsList, -1)
 
 					newContents = strings.Replace(newContents, "<SSH_USER>", tokens.SshUser, -1)
-					newContents = strings.Replace(newContents, "<SSH_PRIVATE_KEY_PATH>", tokens.SshPrivateKey, -1)
 				}
 				newContents = strings.Replace(newContents, "<ARGOCD_INGRESS_URL>", tokens.ArgoCDIngressURL, -1)
 				newContents = strings.Replace(newContents, "<ARGOCD_INGRESS_NO_HTTP_URL>", tokens.ArgoCDIngressNoHTTPSURL, -1)
