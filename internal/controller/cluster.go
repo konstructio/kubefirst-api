@@ -105,7 +105,6 @@ func (clctrl *ClusterController) CreateCluster() error {
 		clctrl.Cluster.CloudTerraformApplyCheck = true
 		clctrl.Cluster.CloudTerraformApplyFailedCheck = false
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
-
 		if err != nil {
 			return err
 		}
@@ -264,7 +263,6 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			gitopsTemplateTokens.K3sServersPrivateIps = clctrl.K3sAuth.K3sServersPrivateIps
 			gitopsTemplateTokens.K3sServersPublicIps = clctrl.K3sAuth.K3sServersPublicIps
 			gitopsTemplateTokens.SshUser = clctrl.K3sAuth.K3sSshUser
-			gitopsTemplateTokens.SshPrivateKey = clctrl.K3sAuth.K3sSshPrivateKey
 			gitopsTemplateTokens.K3sServersArgs = clctrl.K3sAuth.K3sServersArgs
 		}
 
