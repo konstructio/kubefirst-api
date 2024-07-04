@@ -36,7 +36,7 @@ Kubefirst API runtime implementation.
       - [API Call Parameters](#api-call-parameters)
     - [AWS](#aws)
     - [Civo](#civo)
-    - [Digital Ocean](#digital-ocean)
+    - [DigitalOcean](#digitalocean)
     - [Vultr](#vultr)
     - [Deleting a Cluster](#deleting-a-cluster)
   - [Authentication](#authentication)
@@ -109,7 +109,7 @@ The following providers are available for use with the API.
 | ------------- | ------ | -------------------- | ----------------------- |
 | AWS           | Beta   | Create, Delete       | GitHub, GitLab          |
 | Civo          | Beta   | Create, Delete       | GitHub, GitLab          |
-| Digital Ocean | Beta   | Create, Delete       | GitHub, GitLab          |
+| DigitalOcean  | Beta   | Create, Delete       | GitHub, GitLab          |
 | Vultr         | Beta   | Create, Delete       | GitHub, GitLab          |
 
 ## Creating a Cluster
@@ -209,9 +209,9 @@ You must use the authentication strategy above to set credentials before running
 curl -X POST http://localhost:8081/api/v1/cluster/my-cool-cluster -H "Content-Type: application/json" -d '{"admin_email": "scott@kubeshop.io", "cloud_provider": "civo", "cloud_region": "nyc1", "domain_name": "your-dns.io", "git_owner": "your-dns-io", "git_provider": "github", "git_token": "ghp_...", "type": "mgmt"}'
 ```
 
-### Digital Ocean
+### DigitalOcean
 
-Kubefirst does not create a Digital Ocean space for you. You must create one ahead of time and provide the key and secret when creating a Digital Ocean cluster. The space acts as an S3-compatible storage bucket for Terraform state and other cluster operations.
+Kubefirst does not create a DigitalOcean space for you. You must create one ahead of time and provide the key and secret when creating a DigitalOcean cluster. The space acts as an S3-compatible storage bucket for Terraform state and other cluster operations.
 
 You must use the authentication strategy above to set credentials before running.
 
