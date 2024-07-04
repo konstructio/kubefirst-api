@@ -108,7 +108,7 @@ The following providers are available for use with the API.
 | ------------- | ------ | -------------------- | ----------------------- |
 | AWS           | Beta   | Create, Delete       | GitHub, GitLab          |
 | Civo          | Beta   | Create, Delete       | GitHub, GitLab          |
-| Digital Ocean | Beta   | Create, Delete       | GitHub, GitLab          |
+| DigitalOcean  | Beta   | Create, Delete       | GitHub, GitLab          |
 | Vultr         | Beta   | Create, Delete       | GitHub, GitLab          |
 
 ## Creating a Cluster
@@ -240,7 +240,7 @@ curl -X POST http://localhost:8081/api/v1/cluster/my-cool-cluster -H "Content-Ty
 
 ##### DigitalOcean
 
-Kubefirst does not create a Digital Ocean space for you. You must create one ahead of time and provide the key and secret when creating a Digital Ocean cluster. The space acts as an S3-compatible storage bucket for Terraform state and other cluster operations.
+Kubefirst does not create a DigitalOcean space for you. You must create one ahead of time and provide the key and secret when creating a DigitalOcean cluster. The space acts as an S3-compatible storage bucket for Terraform state and other cluster operations.
 
 You must use the authentication strategy above to set credentials before running.
 
