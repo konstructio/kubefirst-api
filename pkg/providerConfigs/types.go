@@ -6,6 +6,10 @@ See the LICENSE file for more details.
 */
 package providerConfigs
 
+type Tokens interface {
+	ToTemplateVars(s string) string
+}
+
 type GitopsDirectoryValues struct {
 	AlertsEmail       string
 	AtlantisAllowList string
@@ -102,6 +106,10 @@ type GitopsDirectoryValues struct {
 	UseTelemetry string
 }
 
+func (v *GitopsDirectoryValues) ToTemplateVars(s string) string {
+	return ToTemplateVars(s, v)
+}
+
 type MetaphorTokenValues struct {
 	CheckoutCWFTTemplate          string
 	CloudRegion                   string
@@ -113,4 +121,8 @@ type MetaphorTokenValues struct {
 	MetaphorDevelopmentIngressURL string
 	MetaphorProductionIngressURL  string
 	MetaphorStagingIngressURL     string
+}
+
+func (m *MetaphorTokenValues) ToTemplateVars(s string) string {
+	return ToTemplateVars(s, m)
 }

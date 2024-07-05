@@ -11,44 +11,7 @@ import (
 )
 
 const (
-	renderedFileText = `terraform {
-  backend "s3" {
-    bucket = "got-test-bucket"
-    key    = "terraform/github/terraform.tfstate"
-
-    region  = "us-east-1"
-    encrypt = true
-  }
-  required_providers {
-    github = {
-      source  = "integrations/github"
-      version = "~> 5.17.0"
-    }
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 4.0"
-    }
-  }
-}
-
-module "gitops" {
-  source = "./modules/repository"
-
-  repo_name          = testKubeFirstCustomTemplating
-  archive_on_destroy = false
-  auto_init          = false # set to false if importing an existing repository
-  team_developers_id = github_team.developers.id
-  team_admins_id     = github_team.admins.id
-}
-
-locals {}
-
-module "example-loop" {
-  source = "./modules/repository"
-  repo_name = looper
-}
-
-`
+	templateRepositoryURL = "https://github.com/dahendel/gitops-template.git"
 )
 
 func TestDetokenizeGitops(t *testing.T) {
@@ -81,13 +44,6 @@ func TestDetokenizeGitops(t *testing.T) {
 		
 		err := DetokenizeGitGitops(filepath.Join(dirPath, "templating"), g, "https", false)
 		assert.NoError(t, err)
-		
-		//renderedFile, err := os.ReadFile(filePath)
-		//assert.NoError(t, err)
-		//buff := bytes.NewBuffer(renderedFile)
-		//assert.Equal(t, buff.Bytes(), []byte(renderedFileText))
-		//
-		//assert.NoError(t, os.WriteFile(dirPath+"/repos.tf", tmplFile, 0644))
 	})
 }
 
@@ -95,7 +51,7 @@ func cloneRepo(dirPath string) error {
 	
 	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
 		_, cloneErr := git.PlainClone(dirPath, false, &git.CloneOptions{
-			URL:           "https://github.com/dahendel/gitops-template.git",
+			URL:           templateRepositoryURL,
 			SingleBranch:  true,
 			ReferenceName: plumbing.NewBranchReferenceName("main"),
 		})
