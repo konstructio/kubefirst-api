@@ -128,28 +128,6 @@ func replaceTemplateVariables(content string, tokens Tokens) string {
 	return regex.ReplaceAllStringFunc(content, tokens.ToTemplateVars)
 }
 
-func toTemplateVariable(v string) string {
-	fields := reflect.TypeOf(GitopsDirectoryValues{})
-	r := regexp.MustCompile("<|>")
-	strippedVar := r.ReplaceAllString(strings.ToLower(v), "")
-	strippedVar = strings.ReplaceAll(strippedVar, "_", "")
-	for i := 0; i < fields.NumField(); i++ {
-		field := fields.Field(i)
-		val := reflect.ValueOf(field)
-		if strippedVar == strings.ToLower(field.Name) {
-			
-			if val.IsZero() {
-				return ""
-			}
-			// if field name matches return the correct formatted name
-			return fmt.Sprintf("%s .%s %s", leftDelimiter, field.Name, rightDelimiter)
-		}
-	}
-	
-	// If no match found, return an error placeholder
-	return "<variable not found>"
-}
-
 // DetokenizeGitMetaphor - Translate tokens by values on a given path
 func DetokenizeGitMetaphor(path string, tokens *MetaphorTokenValues) error {
 	err := filepath.Walk(path, detokenizeGitopsMetaphor(path, tokens))
@@ -182,7 +160,6 @@ func detokenizeGitopsMetaphor(path string, tokens *MetaphorTokenValues) filepath
 					return err
 				}
 				
-				// todo reduce to terraform tokens by moving to helm chart?
 				newContents := string(read)
 				newContentData, err := renderGoTemplating(tokens, newContents)
 				
@@ -191,16 +168,6 @@ func detokenizeGitopsMetaphor(path string, tokens *MetaphorTokenValues) filepath
 				}
 				
 				return os.WriteFile(path, newContentData, 0)
-				
-				//newContents = strings.Replace(newContents, "<CLOUD_REGION>", tokens.CloudRegion, -1)
-				//newContents = strings.Replace(newContents, "<CLUSTER_NAME>", tokens.ClusterName, -1)
-				//newContents = strings.Replace(newContents, "<CONTAINER_REGISTRY_URL>", tokens.ContainerRegistryURL, -1) // todo need to fix metaphor repo names
-				//newContents = strings.Replace(newContents, "<DOMAIN_NAME>", tokens.DomainName, -1)
-				//newContents = strings.Replace(newContents, "<METAPHOR_DEVELOPMENT_INGRESS_URL>", tokens.MetaphorDevelopmentIngressURL, -1)
-				//newContents = strings.Replace(newContents, "<METAPHOR_PRODUCTION_INGRESS_URL>", tokens.MetaphorProductionIngressURL, -1)
-				//newContents = strings.Replace(newContents, "<METAPHOR_STAGING_INGRESS_URL>", tokens.MetaphorStagingIngressURL, -1)
-				//
-				
 			}
 		}
 		
