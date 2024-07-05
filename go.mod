@@ -36,6 +36,7 @@ require (
 	github.com/otiai10/copy v1.7.0
 	github.com/rs/zerolog v1.29.1
 	github.com/sirupsen/logrus v1.9.0
+	github.com/stretchr/testify v1.8.4
 	github.com/swaggo/files v1.0.0
 	github.com/swaggo/gin-swagger v1.5.3
 	github.com/swaggo/swag v1.16.1
@@ -54,6 +55,7 @@ require (
 require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.91.0 // indirect
 	github.com/go-resty/resty/v2 v2.11.0 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/segmentio/analytics-go v3.1.0+incompatible // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 )

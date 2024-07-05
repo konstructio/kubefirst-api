@@ -7,13 +7,18 @@ See the LICENSE file for more details.
 package providerConfigs
 
 type GitopsDirectoryValues struct {
-	AlertsEmail                    string
-	AtlantisAllowList              string
-	CloudProvider                  string
-	CloudRegion                    string
-	ClusterId                      string
-	ClusterName                    string
-	ClusterType                    string
+	AlertsEmail       string
+	AtlantisAllowList string
+	CloudProvider     string
+	CloudRegion       string
+	ClusterId         string
+	ClusterName       string
+	ClusterType       string
+	// <CERT_MANAGER_ISSUER_ANNOTATION_1>
+	CertManagerIssuerAnnotation1   string
+	CertManagerIssuerAnnotation2   string
+	CertManagerIssuerAnnotation3   string
+	CertManagerIssuerAnnotation4   string
 	ContainerRegistryURL           string
 	CustomTemplateValues           map[string]interface{}
 	DomainName                     string
@@ -73,6 +78,7 @@ type GitopsDirectoryValues struct {
 	GitRunnerDescription string
 	GitRunnerNS          string
 	GitURL               string
+	GitFqdn              string
 	
 	GitHubHost  string
 	GitHubOwner string
