@@ -39,26 +39,26 @@ func TestDetokenizeGitops(t *testing.T) {
 				},
 			},
 		}
-		
+
 		assert.NoError(t, cloneRepo(dirPath))
-		
+
 		err := DetokenizeGitGitops(filepath.Join(dirPath, "templating"), g, "https", false)
 		assert.NoError(t, err)
 	})
 }
 
 func cloneRepo(dirPath string) error {
-	
+
 	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
 		_, cloneErr := git.PlainClone(dirPath, false, &git.CloneOptions{
 			URL:           templateRepositoryURL,
 			SingleBranch:  true,
 			ReferenceName: plumbing.NewBranchReferenceName("main"),
 		})
-		
+
 		return cloneErr
 	}
-	
+
 	return nil
 }
 

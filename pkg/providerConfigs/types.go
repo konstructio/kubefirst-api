@@ -55,23 +55,23 @@ type GitopsDirectoryValues struct {
 	Project                        string
 	ClusterDestination             string
 	Environment                    string
-	
+
 	AwsIamArnAccountRoot string
 	AwsKmsKeyId          string
 	AwsNodeCapacityType  string
 	AwsAccountID         string
-	
+
 	GoogleAuth       string
 	GoogleProject    string
 	GoogleUniqueness string
 	ForceDestroy     string
-	
+
 	K3sServersPrivateIps []string
 	K3sServersPublicIps  []string
 	K3sServersArgs       []string
 	SshUser              string
 	SshPrivateKey        string
-	
+
 	GitDescription       string
 	GitNamespace         string
 	GitProvider          string
@@ -83,26 +83,26 @@ type GitopsDirectoryValues struct {
 	GitRunnerNS          string
 	GitURL               string
 	GitFqdn              string
-	
+
 	GitHubHost  string
 	GitHubOwner string
 	GitHubUser  string
-	
+
 	GitlabHost         string
 	GitlabOwner        string
 	GitlabOwnerGroupID int
 	GitlabUser         string
-	
+
 	GitopsRepoAtlantisWebhookURL               string
 	GitopsRepoNoHTTPSURL                       string
 	WorkloadClusterTerraformModuleURL          string
 	WorkloadClusterBootstrapTerraformModuleURL string
-	
+
 	ExternalDNSProviderName         string
 	ExternalDNSProviderTokenEnvName string
 	ExternalDNSProviderSecretName   string
 	ExternalDNSProviderSecretKey    string
-	
+
 	UseTelemetry string
 }
 

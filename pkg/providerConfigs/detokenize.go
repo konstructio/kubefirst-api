@@ -24,13 +24,13 @@ func ToTemplateVars(input string, instance Tokens) string {
 		value = value.Elem()
 	}
 	sanitizer := strings.NewReplacer("<", "", "_", "", ">", "")
-	
+
 	fields := value.Type()
 	normalizedName := strings.ToLower(sanitizer.Replace(input))
 	for i := 0; i < fields.NumField(); i++ {
 		field := fields.Field(i)
 		val := value.Field(i) // Use value.Field(i) instead of value.FieldByName(field.Name)
-		
+
 		if normalizedName == strings.ToLower(field.Name) {
 			if val.IsZero() {
 				return ""
@@ -39,7 +39,7 @@ func ToTemplateVars(input string, instance Tokens) string {
 			return fmt.Sprintf("%s .%s %s", leftDelimiter, field.Name, rightDelimiter)
 		}
 	}
-	
+
 	// If no match found, return an error placeholder
 	return "<variable not found>"
 }
@@ -50,7 +50,7 @@ func DetokenizeGitGitops(path string, tokens *GitopsDirectoryValues, gitProtocol
 	if err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -59,11 +59,11 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 		if fi.IsDir() && fi.Name() == ".git" {
 			return filepath.SkipDir
 		}
-		
+
 		if fi.IsDir() {
 			return nil
 		}
-		
+
 		if strings.Contains(fi.Name(), ".git") {
 			return nil
 		}
@@ -71,17 +71,17 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 		//metaphorDevelopmentIngressURL := fmt.Sprintf("https://metaphor-development.%s", tokens.DomainName)
 		//metaphorStagingIngressURL := fmt.Sprintf("https://metaphor-staging.%s", tokens.DomainName)
 		//metaphorProductionIngressURL := fmt.Sprintf("https://metaphor-production.%s", tokens.DomainName)
-		
+
 		// var matched bool
 		matched, _ := filepath.Match("*", fi.Name())
-		
+
 		if matched {
 			// ignore .git files
 			read, err := os.ReadFile(path)
 			if err != nil {
 				return err
 			}
-			
+
 			if tokens.SubdomainName != "" {
 				tokens.DomainName = fmt.Sprintf("%s.%s", tokens.SubdomainName, tokens.DomainName)
 			}
@@ -100,14 +100,14 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 			} else {
 				tokens.GitFqdn = fmt.Sprintf("git@%v.com:", tokens.GitProvider)
 			}
-			
+
 			newContents := strings.TrimSpace(string(read))
 			newContentData, err := renderGoTemplating(tokens, newContents)
-			
+
 			if err != nil {
 				return err
 			}
-			
+
 			return os.WriteFile(path, newContentData, 0)
 		}
 		return nil
@@ -143,34 +143,34 @@ func detokenizeGitopsMetaphor(path string, tokens *MetaphorTokenValues) filepath
 		if err != nil {
 			return err
 		}
-		
+
 		if !!fi.IsDir() {
 			return nil
 		}
-		
+
 		// var matched bool
 		matched, _ := filepath.Match("*", fi.Name())
-		
+
 		if matched {
 			// ignore .git files
 			if !strings.Contains(path, "/.git/") {
-				
+
 				read, err := os.ReadFile(path)
 				if err != nil {
 					return err
 				}
-				
+
 				newContents := string(read)
 				newContentData, err := renderGoTemplating(tokens, newContents)
-				
+
 				if err != nil {
 					return err
 				}
-				
+
 				return os.WriteFile(path, newContentData, 0)
 			}
 		}
-		
+
 		return nil
 	})
 }
@@ -178,17 +178,17 @@ func detokenizeGitopsMetaphor(path string, tokens *MetaphorTokenValues) filepath
 func renderGoTemplating(tokens Tokens, content string) ([]byte, error) {
 	content = replaceTemplateVariables(content, tokens)
 	buff := bytes.NewBufferString(content)
-	
+
 	parsedTemplate, err := parseTemplate(buff.String())
 	if err != nil {
 		return nil, err
 	}
-	
+
 	newBuff := bytes.NewBuffer([]byte{})
 	if err = executeTemplate(parsedTemplate, newBuff, tokens); err != nil {
 		return nil, err
 	}
-	
+
 	return newBuff.Bytes(), nil
-	
+
 }

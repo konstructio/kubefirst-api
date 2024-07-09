@@ -8,7 +8,7 @@ package providerConfigs
 
 import (
 	"runtime"
-	
+
 	runtimepkg "github.com/kubefirst/runtime/pkg"
 )
 
@@ -20,10 +20,10 @@ const (
 	LocalhostArch          = runtime.GOARCH
 	TerraformClientVersion = "1.3.8"
 	ArgocdHelmChartVersion = "4.10.5"
-	
+
 	ArgocdPortForwardURL = runtimepkg.ArgocdPortForwardURL
 	VaultPortForwardURL  = runtimepkg.VaultPortForwardURL
-	
+
 	TokenRegexPattern = "<([A-Z_0-9]+)>"
 	leftDelimiter     = "[["
 	rightDelimiter    = "]]"
