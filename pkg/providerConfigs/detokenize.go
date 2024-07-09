@@ -9,6 +9,7 @@ package providerConfigs
 import (
 	"bytes"
 	"fmt"
+	"github.com/Masterminds/sprig/v3"
 	"io"
 	"os"
 	"path/filepath"
@@ -18,6 +19,7 @@ import (
 	"text/template"
 )
 
+// ToTemplateVars - converts a string to a template variable
 func ToTemplateVars(input string, instance Tokens) string {
 	value := reflect.ValueOf(instance)
 	if value.Kind() == reflect.Ptr {
@@ -32,6 +34,10 @@ func ToTemplateVars(input string, instance Tokens) string {
 		val := value.Field(i) // Use value.Field(i) instead of value.FieldByName(field.Name)
 
 		if normalizedName == strings.ToLower(field.Name) {
+			// TODO: Remove this check once we have a better way to handle empty values.
+			// This is a workaround for the fact that the value of the field cert manager annotations
+			// fields could be empty when cloudflare is used as the origin issuer.
+			// Additionally, it still leaves empty lines in the generated files.
 			if val.IsZero() {
 				return ""
 			}
@@ -40,8 +46,8 @@ func ToTemplateVars(input string, instance Tokens) string {
 		}
 	}
 
-	// If no match found, return an error placeholder
-	return "<variable not found>"
+	// If no match found, return the original input as a string
+	return input
 }
 
 // DetokenizeGitGitops - Translate tokens by values on a given path
@@ -67,7 +73,7 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 		if strings.Contains(fi.Name(), ".git") {
 			return nil
 		}
-		//
+
 		//metaphorDevelopmentIngressURL := fmt.Sprintf("https://metaphor-development.%s", tokens.DomainName)
 		//metaphorStagingIngressURL := fmt.Sprintf("https://metaphor-staging.%s", tokens.DomainName)
 		//metaphorProductionIngressURL := fmt.Sprintf("https://metaphor-production.%s", tokens.DomainName)
@@ -114,8 +120,12 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 	})
 }
 
+// renderGoTemplating - Renders the template with the given values
+// it also includes the sprig GenericFuncMap functions listed here: https://masterminds.github.io/sprig/.
 func parseTemplate(content string) (*template.Template, error) {
-	t := template.New("gitops-template").Delims(leftDelimiter, rightDelimiter)
+	t := template.New("gitops-template").
+		Funcs(sprig.GenericFuncMap()).
+		Delims(leftDelimiter, rightDelimiter)
 	return t.Parse(content)
 }
 
@@ -175,6 +185,7 @@ func detokenizeGitopsMetaphor(path string, tokens *MetaphorTokenValues) filepath
 	})
 }
 
+// renderGoTemplating - Render a template with the given tokens.
 func renderGoTemplating(tokens Tokens, content string) ([]byte, error) {
 	content = replaceTemplateVariables(content, tokens)
 	buff := bytes.NewBufferString(content)

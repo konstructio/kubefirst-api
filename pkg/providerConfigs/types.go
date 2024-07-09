@@ -6,6 +6,7 @@ See the LICENSE file for more details.
 */
 package providerConfigs
 
+// Tokens - interface for all token values
 type Tokens interface {
 	ToTemplateVars(s string) string
 }

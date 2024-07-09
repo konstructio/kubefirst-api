@@ -7,6 +7,7 @@ require (
 	cloud.google.com/go/container v1.24.0
 	cloud.google.com/go/secretmanager v1.10.0
 	cloud.google.com/go/storage v1.29.0
+	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/argoproj/argo-cd/v2 v2.6.7
 	github.com/argoproj/gitops-engine v0.7.3
 	github.com/atotto/clipboard v0.1.4
@@ -53,10 +54,15 @@ require (
 )
 
 require (
+	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.91.0 // indirect
 	github.com/go-resty/resty/v2 v2.11.0 // indirect
+	github.com/huandu/xstrings v1.3.1 // indirect
+	github.com/mitchellh/copystructure v1.0.0 // indirect
+	github.com/mitchellh/reflectwalk v1.0.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/segmentio/analytics-go v3.1.0+incompatible // indirect
+	github.com/shopspring/decimal v1.2.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 )
 
