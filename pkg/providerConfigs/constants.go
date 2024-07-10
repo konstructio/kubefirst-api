@@ -24,6 +24,6 @@ const (
 	VaultPortForwardURL  = runtimepkg.VaultPortForwardURL
 
 	TokenRegexPattern = "<([A-Z_0-9]+)>"
-	leftDelimiter     = "<<"
-	rightDelimiter    = ">>"
+	leftDelimiter     = "${k1"
+	rightDelimiter    = "}"
 )

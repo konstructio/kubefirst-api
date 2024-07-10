@@ -9,6 +9,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
+	"io/fs"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic/fake"
@@ -19,7 +20,9 @@ import (
 )
 
 const (
-	templateRepositoryURL = "https://github.com/dahendel/gitops-template.git"
+	templateRepositoryURL            = "https://github.com/dahendel/gitops-template.git"
+	k3dEndpointTerraformTemplateFile = "k3s-gitlab/terraform/vault/kubernetes-auth-backend.tf"
+	k3dTerraformTemplateFile         = "k3s-gitlab/terraform/k3s/terraform.tfvars"
 )
 
 var (
@@ -40,10 +43,6 @@ var (
 	k3dDirList = []string{
 		"k3d-github",
 		"k3d-gitlab",
-	}
-
-	templatingDirList = []string{
-		"templating",
 	}
 )
 
@@ -210,6 +209,8 @@ func SetupSuite(t *testing.T) *DetokenizeSuite {
 	d.GitopsTokens = setGitopsDirectoryValues()
 	d.MetaphorTokens = setMetaphorTokenValues(d)
 
+	fmt.Println(d.templatesDirectory)
+
 	err := cloneRepo(templateRepositoryURL, d.templatesDirectory)
 	assert.NoError(t, err)
 
@@ -225,25 +226,47 @@ func (d *DetokenizeSuite) TearDownSuite() {
 
 func (d *DetokenizeSuite) TestDetokenizeGitops(t *testing.T) {
 	for _, dir := range gitOpsDirList {
-		currentPath := filepath.Join(d.templatesDirectory, dir, "templates", "mgmt")
-		err := DetokenizeGitGitops(currentPath, d.GitopsTokens,
-			"https", false)
-		assert.NoError(d.t, err)
-		err = filepath.Walk(currentPath, func(path string, info os.FileInfo, err error) error {
-			if !info.IsDir() {
-				if strings.Contains(info.Name(), ".yaml") {
-					// Apply the manifests to the fake client and check for errors.
-					err = applyFile(path, d.k)
-					assert.NoError(t, err)
-				}
-				// Delete the manifests from the fake client so that we don't get duplicate resource errors
-				return delApp(currentPath, d.k)
-			}
-			return filepath.SkipDir
-		})
-
-		assert.NoError(d.t, err)
+		currentPath := filepath.Join(d.templatesDirectory, dir)
+		assert.NoError(t, DetokenizeGitGitops(currentPath, d.GitopsTokens,
+			"https", false))
+		assert.NoError(t, filepath.Walk(currentPath, testManifestValidity(currentPath, d)))
 	}
+}
+
+// TestDetokenizeK3d tests the detokenization of the k3d cluster-types directory.
+// Leaving this separate from the other cluster-types directories because it is slightly different,
+// and we may want to test it separately in the future.
+func (d *DetokenizeSuite) TestDetokenizeK3d(t *testing.T) {
+	for _, dir := range k3dDirList {
+		currentPath := filepath.Join(d.templatesDirectory, dir)
+		assert.NoError(t, DetokenizeGitGitops(currentPath, d.GitopsTokens,
+			"https", false))
+		assert.NoError(t, filepath.Walk(currentPath, testManifestValidity(currentPath, d)))
+	}
+}
+
+func (d *DetokenizeSuite) TestDetokenizeMetaphor(t *testing.T) {
+	err := DetokenizeGitMetaphor(filepath.Join(d.templatesDirectory, "metaphor", ".argo"), d.MetaphorTokens)
+	assert.NoError(t, err)
+}
+
+func (d *DetokenizeSuite) TestDetokenizeGitopsWithCustomTemplateValues(t *testing.T) {
+	templatingDir := filepath.Join(d.templatesDirectory, "templating")
+	assert.NoError(t, DetokenizeGitGitops(filepath.Join(d.templatesDirectory, "templating"),
+		d.GitopsTokens, "https", false))
+
+	assert.NoError(t, filepath.Walk(templatingDir, testManifestValidity(templatingDir, d)))
+
+}
+
+func cloneRepo(src string, dirPath string) error {
+	_, cloneErr := git.PlainClone(dirPath, false, &git.CloneOptions{
+		URL:           src,
+		SingleBranch:  true,
+		ReferenceName: plumbing.NewBranchReferenceName("main"),
+	})
+
+	return cloneErr
 }
 
 func applyFile(path string, k *fake.FakeDynamicClient) error {
@@ -271,47 +294,22 @@ func delApp(path string, k *fake.FakeDynamicClient) error {
 		return err
 	}
 
-	err = k.Resource(v1alpha1.SchemeGroupVersion.WithResource("Application")).Namespace(app.Namespace).
+	return k.Resource(v1alpha1.SchemeGroupVersion.WithResource("Application")).Namespace(app.Namespace).
 		DeleteCollection(context.Background(), metav1.DeleteOptions{}, metav1.ListOptions{
 			LabelSelector: fmt.Sprintf("app.kubernetes.io/instance=%s", app.Name),
 		})
-
-	return err
 }
 
-// TestDetokenizeK3d tests the detokenization of the k3d cluster-types directory.
-// Leaving this separate from the other cluster-types directories because it is slightly different,
-// and we may want to test it separately in the future.
-func (d *DetokenizeSuite) TestDetokenizeK3d(t *testing.T) {
-	for _, dir := range k3dDirList {
-		err := DetokenizeGitGitops(filepath.Join(d.templatesDirectory, dir,
-			"cluster-types", "mgmt"), d.GitopsTokens,
-			"https", false)
-		assert.NoError(t, err)
+func testManifestValidity(currentPath string, d *DetokenizeSuite) filepath.WalkFunc {
+	return func(path string, info fs.FileInfo, err error) error {
+		if !info.IsDir() {
+			if strings.Contains(info.Name(), ".yaml") {
+				// Apply the manifests to the fake client and check for errors.
+				assert.NoError(d.t, applyFile(path, d.k))
+			}
+			// Delete the manifests from the fake client so that we don't get duplicate resource errors
+			return delApp(currentPath, d.k)
+		}
+		return filepath.SkipDir
 	}
-}
-
-func (d *DetokenizeSuite) TestDetokenizeMetaphor(t *testing.T) {
-	err := DetokenizeGitMetaphor(filepath.Join(d.templatesDirectory, "metaphor", ".argo"), d.MetaphorTokens)
-	assert.NoError(t, err)
-}
-
-func (d *DetokenizeSuite) TestDetokenizeGitopsWithCustomTemplateValues(t *testing.T) {
-	err := DetokenizeGitGitops(filepath.Join(d.templatesDirectory, "templating"),
-		d.GitopsTokens, "https", false)
-	assert.NoError(t, err)
-	assert.NoError(t, applyFile(filepath.Join(d.templatesDirectory, "templating", "configmap.yaml"), d.k))
-	assert.NoError(t, applyFile(filepath.Join(d.templatesDirectory, "templating", "application.yaml"), d.k))
-	assert.NoError(t, delApp(filepath.Join(d.templatesDirectory, "templating", "application.yaml"), d.k))
-	assert.NoError(t, delApp(filepath.Join(d.templatesDirectory, "templating", "configmap.yaml"), d.k))
-}
-
-func cloneRepo(src string, dirPath string) error {
-	_, cloneErr := git.PlainClone(dirPath, false, &git.CloneOptions{
-		URL:           src,
-		SingleBranch:  true,
-		ReferenceName: plumbing.NewBranchReferenceName("main"),
-	})
-
-	return cloneErr
 }
