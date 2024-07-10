@@ -31,22 +31,23 @@ func ToTemplateVars(input string, instance Tokens) string {
 	normalizedName := strings.ToLower(sanitizer.Replace(input))
 	for i := 0; i < fields.NumField(); i++ {
 		field := fields.Field(i)
-		val := value.Field(i) // Use value.Field(i) instead of value.FieldByName(field.Name)
+		val := value.Field(i)
 
 		if normalizedName == strings.ToLower(field.Name) {
-			// TODO: Remove this check once we have a better way to handle empty values.
-			// This is a workaround for the fact that the value of the field cert manager annotations
-			// fields could be empty when cloudflare is used as the origin issuer.
-			// Additionally, it still leaves empty lines in the generated files.
+			// If the field value is the zero value of the field template
+			// will add - to the template variable to clean up extra whitespace.
+			// We do not have any bool values in the tokens, so we should be ok.
+			// TODO: Find a better way to handle this.
 			if val.IsZero() {
-				return ""
+				return fmt.Sprintf("%s- .%s %s", leftDelimiter, field.Name, rightDelimiter)
 			}
 			// if field name matches return the correct formatted name
 			return fmt.Sprintf("%s .%s %s", leftDelimiter, field.Name, rightDelimiter)
 		}
 	}
 
-	// If no match found, return the original input as a string
+	// If no match found, return the original input as a string, so we can have a visual indication
+	// that the token was not found in the Token Struct without erroring out
 	return input
 }
 
@@ -74,22 +75,14 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 			return nil
 		}
 
-		//metaphorDevelopmentIngressURL := fmt.Sprintf("https://metaphor-development.%s", tokens.DomainName)
-		//metaphorStagingIngressURL := fmt.Sprintf("https://metaphor-staging.%s", tokens.DomainName)
-		//metaphorProductionIngressURL := fmt.Sprintf("https://metaphor-production.%s", tokens.DomainName)
-
 		// var matched bool
 		matched, _ := filepath.Match("*", fi.Name())
 
 		if matched {
-			// ignore .git files
-			read, err := os.ReadFile(path)
-			if err != nil {
-				return err
-			}
-
 			if tokens.SubdomainName != "" {
-				tokens.DomainName = fmt.Sprintf("%s.%s", tokens.SubdomainName, tokens.DomainName)
+				if !strings.Contains(tokens.DomainName, tokens.SubdomainName) {
+					tokens.DomainName = fmt.Sprintf("%s.%s", tokens.SubdomainName, tokens.DomainName)
+				}
 			}
 			//origin issuer defines which annotations should be on ingresses
 			if useCloudflareOriginIssuer {
@@ -100,6 +93,11 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 			} else {
 				tokens.CertManagerIssuerAnnotation1 = "cert-manager.io/cluster-issuer: \"letsencrypt-prod\""
 			}
+
+			if tokens.CloudProvider == "k3s" {
+				tokens.K3sEndpoint = tokens.K3sServersPrivateIps[0]
+			}
+
 			// The fqdn is used by metaphor/argo to choose the appropriate url for cicd operations.
 			if gitProtocol == "https" {
 				tokens.GitFqdn = fmt.Sprintf("https://%v.com/", tokens.GitProvider)
@@ -107,14 +105,18 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				tokens.GitFqdn = fmt.Sprintf("git@%v.com:", tokens.GitProvider)
 			}
 
-			newContents := strings.TrimSpace(string(read))
-			newContentData, err := renderGoTemplating(tokens, newContents)
-
+			read, err := os.ReadFile(path)
 			if err != nil {
 				return err
 			}
 
-			return os.WriteFile(path, newContentData, 0)
+			newContentData, err := renderGoTemplating(tokens, string(read))
+			if err != nil {
+				return err
+			}
+
+			return os.WriteFile(path, newContentData, 0644)
+
 		}
 		return nil
 	})
@@ -130,7 +132,15 @@ func parseTemplate(content string) (*template.Template, error) {
 }
 
 func executeTemplate(t *template.Template, writer io.Writer, tokens Tokens) error {
-	return t.Execute(writer, tokens)
+	switch tmplTokens := tokens.(type) {
+	case *GitopsDirectoryValues:
+		return t.Execute(writer, tmplTokens)
+	case *MetaphorTokenValues:
+		// Handle tokens of type *MetaphorTokenValues
+		return t.Execute(writer, tmplTokens)
+	default:
+		return fmt.Errorf("invalid type for tokens: %T", tokens)
+	}
 }
 
 func replaceTemplateVariables(content string, tokens Tokens) string {
@@ -170,14 +180,13 @@ func detokenizeGitopsMetaphor(path string, tokens *MetaphorTokenValues) filepath
 					return err
 				}
 
-				newContents := string(read)
-				newContentData, err := renderGoTemplating(tokens, newContents)
+				newContentData, err := renderGoTemplating(tokens, string(read))
 
 				if err != nil {
 					return err
 				}
 
-				return os.WriteFile(path, newContentData, 0)
+				return os.WriteFile(path, newContentData, 0644)
 			}
 		}
 
@@ -201,5 +210,4 @@ func renderGoTemplating(tokens Tokens, content string) ([]byte, error) {
 	}
 
 	return newBuff.Bytes(), nil
-
 }

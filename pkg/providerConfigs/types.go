@@ -67,6 +67,7 @@ type GitopsDirectoryValues struct {
 	GoogleUniqueness string
 	ForceDestroy     string
 
+	K3sEndpoint          string
 	K3sServersPrivateIps []string
 	K3sServersPublicIps  []string
 	K3sServersArgs       []string
