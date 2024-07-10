@@ -196,8 +196,11 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			registryPath,
 		)
 
-		_, _ = argocdClient.ArgoprojV1alpha1().Applications("argocd").Create(context.Background(), registryApplicationObject, metav1.CreateOptions{})
-
+		application, err = argocdClient.ArgoprojV1alpha1().Applications("argocd").Create(context.Background(), registryApplicationObject, metav1.CreateOptions{})
+		if err != nil {
+			return err
+		}
+		log.Info().Msg("Registry Application Successfull") 
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.CreateRegistryCompleted, "")
 
 		clctrl.Cluster.ArgoCDCreateRegistryCheck = true
