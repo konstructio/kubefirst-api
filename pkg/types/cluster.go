@@ -25,6 +25,7 @@ type ClusterDefinition struct {
 	NodeType               string             `json:"node_type" binding:"required"`
 	NodeCount              int                `json:"node_count" binding:"required"`
 	PostInstallCatalogApps []GitopsCatalogApp `bson:"post_install_catalog_apps,omitempty" json:"post_install_catalog_apps,omitempty"`
+	InstallKubefirstPro    bool               `bson:"install_kubefirst_pro,omitempty" json:"install_kubefirst_pro,omitempty"`
 
 	// Git
 
