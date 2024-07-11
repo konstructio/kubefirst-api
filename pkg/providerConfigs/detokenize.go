@@ -25,7 +25,7 @@ func ToTemplateVars(input string, instance Tokens) string {
 	if value.Kind() == reflect.Ptr {
 		value = value.Elem()
 	}
-	sanitizer := strings.NewReplacer("<", "", "_", "", ">", "")
+	sanitizer := strings.NewReplacer("<", "", "_", "", ">", "", "-", "")
 
 	fields := value.Type()
 	normalizedName := strings.ToLower(sanitizer.Replace(input))
@@ -48,12 +48,12 @@ func ToTemplateVars(input string, instance Tokens) string {
 
 	// If no match found, return the original input as a string, so we can have a visual indication
 	// that the token was not found in the Token Struct without erroring out
-	return input
+	return "<variable-not-found>"
 }
 
 // DetokenizeGitGitops - Translate tokens by values on a given path
-func DetokenizeGitGitops(path string, tokens *GitopsDirectoryValues, gitProtocol string, useCloudflareOriginIssuer bool) error {
-	err := filepath.Walk(path, detokenizeGitops(path, tokens, gitProtocol, useCloudflareOriginIssuer))
+func Detokenize(path string, tokens Tokens, gitProtocol string, useCloudflareOriginIssuer bool) error {
+	err := filepath.Walk(path, detokenize(path, tokens, gitProtocol, useCloudflareOriginIssuer))
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func DetokenizeGitGitops(path string, tokens *GitopsDirectoryValues, gitProtocol
 	return nil
 }
 
-func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol string, useCloudflareOriginIssuer bool) filepath.WalkFunc {
+func detokenize(path string, tokens Tokens, gitProtocol string, useCloudflareOriginIssuer bool) filepath.WalkFunc {
 	return filepath.WalkFunc(func(path string, fi os.FileInfo, err error) error {
 		if fi.IsDir() && fi.Name() == ".git" {
 			return filepath.SkipDir
@@ -75,51 +75,65 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 			return nil
 		}
 
-		// var matched bool
-		matched, _ := filepath.Match("*", fi.Name())
-
-		if matched {
-			if tokens.SubdomainName != "" {
-				if !strings.Contains(tokens.DomainName, tokens.SubdomainName) {
-					tokens.DomainName = fmt.Sprintf("%s.%s", tokens.SubdomainName, tokens.DomainName)
-				}
-			}
-			//origin issuer defines which annotations should be on ingresses
-			if useCloudflareOriginIssuer {
-				tokens.CertManagerIssuerAnnotation1 = "cert-manager.io/issuer: cloudflare-origin-issuer"
-				tokens.CertManagerIssuerAnnotation2 = "cert-manager.io/issuer-kind: OriginIssuer"
-				tokens.CertManagerIssuerAnnotation3 = "cert-manager.io/issuer-group: cert-manager.k8s.cloudflare.com"
-				tokens.CertManagerIssuerAnnotation4 = "external-dns.alpha.kubernetes.io/cloudflare-proxied: \"true\""
-			} else {
-				tokens.CertManagerIssuerAnnotation1 = "cert-manager.io/cluster-issuer: \"letsencrypt-prod\""
-			}
-
-			if tokens.CloudProvider == "k3s" {
-				tokens.K3sEndpoint = tokens.K3sServersPrivateIps[0]
-			}
-
-			// The fqdn is used by metaphor/argo to choose the appropriate url for cicd operations.
-			if gitProtocol == "https" {
-				tokens.GitFqdn = fmt.Sprintf("https://%v.com/", tokens.GitProvider)
-			} else {
-				tokens.GitFqdn = fmt.Sprintf("git@%v.com:", tokens.GitProvider)
-			}
-
-			read, err := os.ReadFile(path)
-			if err != nil {
-				return err
-			}
-
-			newContentData, err := renderGoTemplating(tokens, string(read))
-			if err != nil {
-				return err
-			}
-
-			return os.WriteFile(path, newContentData, 0644)
-
+		switch tokenType := tokens.(type) {
+		case *GitopsDirectoryValues:
+			setGitOpsTokens(tokenType, gitProtocol, useCloudflareOriginIssuer)
+			tokens = tokenType
+		case *MetaphorTokenValues:
+			setMetaphorTokens(tokenType, tokens.GetGitProtocol(), tokens.GetDomain())
+			tokens = tokenType
 		}
-		return nil
+
+		read, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		newContentData, err := renderGoTemplating(tokens, string(read))
+		if err != nil {
+			return err
+		}
+
+		return os.WriteFile(path, newContentData, 0644)
+
 	})
+}
+
+func setMetaphorTokens(tokens *MetaphorTokenValues, gitProtocol string, domain string) {
+	tokens.GitProtocol = gitProtocol
+	tokens.DomainName = "metaphor.io"
+	tokens.MetaphorDevelopmentIngressURL = fmt.Sprintf("https://metaphor-dev.%s", domain)
+	tokens.MetaphorProductionIngressURL = fmt.Sprintf("https://metaphor.%s", domain)
+	tokens.MetaphorStagingIngressURL = fmt.Sprintf("https://metaphor-stage.%s", domain)
+
+}
+
+func setGitOpsTokens(tokens *GitopsDirectoryValues, gitProtocol string, useCloudflareOriginIssuer bool) {
+	if tokens.SubdomainName != "" {
+		if !strings.Contains(tokens.DomainName, tokens.SubdomainName) {
+			tokens.DomainName = fmt.Sprintf("%s.%s", tokens.SubdomainName, tokens.DomainName)
+		}
+	}
+	//origin issuer defines which annotations should be on ingresses
+	if useCloudflareOriginIssuer {
+		tokens.CertManagerIssuerAnnotation1 = "cert-manager.io/issuer: cloudflare-origin-issuer"
+		tokens.CertManagerIssuerAnnotation2 = "cert-manager.io/issuer-kind: OriginIssuer"
+		tokens.CertManagerIssuerAnnotation3 = "cert-manager.io/issuer-group: cert-manager.k8s.cloudflare.com"
+		tokens.CertManagerIssuerAnnotation4 = "external-dns.alpha.kubernetes.io/cloudflare-proxied: \"true\""
+	} else {
+		tokens.CertManagerIssuerAnnotation1 = "cert-manager.io/cluster-issuer: \"letsencrypt-prod\""
+	}
+
+	if tokens.CloudProvider == "k3s" {
+		tokens.K3sEndpoint = tokens.K3sServersPrivateIps[0]
+	}
+
+	// The fqdn is used by metaphor/argo to choose the appropriate url for cicd operations.
+	if gitProtocol == "https" {
+		tokens.GitFqdn = fmt.Sprintf("https://%v.com/", tokens.GitProvider)
+	} else {
+		tokens.GitFqdn = fmt.Sprintf("git@%v.com:", tokens.GitProvider)
+	}
 }
 
 // renderGoTemplating - Renders the template with the given values
@@ -148,54 +162,9 @@ func replaceTemplateVariables(content string, tokens Tokens) string {
 	return regex.ReplaceAllStringFunc(content, tokens.ToTemplateVars)
 }
 
-// DetokenizeGitMetaphor - Translate tokens by values on a given path
-func DetokenizeGitMetaphor(path string, tokens *MetaphorTokenValues) error {
-	err := filepath.Walk(path, detokenizeGitopsMetaphor(path, tokens))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// DetokenizeDirectoryGithubMetaphor - Translate tokens by values on a directory level.
-func detokenizeGitopsMetaphor(path string, tokens *MetaphorTokenValues) filepath.WalkFunc {
-	return filepath.WalkFunc(func(path string, fi os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if !!fi.IsDir() {
-			return nil
-		}
-
-		// var matched bool
-		matched, _ := filepath.Match("*", fi.Name())
-
-		if matched {
-			// ignore .git files
-			if !strings.Contains(path, "/.git/") {
-
-				read, err := os.ReadFile(path)
-				if err != nil {
-					return err
-				}
-
-				newContentData, err := renderGoTemplating(tokens, string(read))
-
-				if err != nil {
-					return err
-				}
-
-				return os.WriteFile(path, newContentData, 0644)
-			}
-		}
-
-		return nil
-	})
-}
-
 // renderGoTemplating - Render a template with the given tokens.
 func renderGoTemplating(tokens Tokens, content string) ([]byte, error) {
+	// Replace all tokens with their values
 	content = replaceTemplateVariables(content, tokens)
 	buff := bytes.NewBufferString(content)
 

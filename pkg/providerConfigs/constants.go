@@ -23,7 +23,7 @@ const (
 	ArgocdPortForwardURL = runtimepkg.ArgocdPortForwardURL
 	VaultPortForwardURL  = runtimepkg.VaultPortForwardURL
 
-	TokenRegexPattern = "<([A-Z_0-9]+)>"
+	TokenRegexPattern = "<([A-Z_0-9-]+)>"
 	leftDelimiter     = "${k1"
 	rightDelimiter    = "}"
 )

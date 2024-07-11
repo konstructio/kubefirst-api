@@ -9,6 +9,8 @@ package providerConfigs
 // Tokens - interface for all token values
 type Tokens interface {
 	ToTemplateVars(s string) string
+	GetDomain() string
+	GetGitProtocol() string
 }
 
 type GitopsDirectoryValues struct {
@@ -108,14 +110,23 @@ type GitopsDirectoryValues struct {
 	UseTelemetry string
 }
 
-func (v *GitopsDirectoryValues) ToTemplateVars(s string) string {
-	return ToTemplateVars(s, v)
+func (g *GitopsDirectoryValues) ToTemplateVars(s string) string {
+	return ToTemplateVars(s, g)
+}
+
+func (g *GitopsDirectoryValues) GetDomain() string {
+	return g.DomainName
+}
+
+func (g *GitopsDirectoryValues) GetGitProtocol() string {
+	return g.GitProvider
 }
 
 type MetaphorTokenValues struct {
 	CheckoutCWFTTemplate          string
 	CloudRegion                   string
 	ClusterName                   string
+	GitProtocol                   string
 	CommitCWFTTemplate            string
 	ContainerRegistryURL          string
 	CustomTemplateValues          map[string]interface{}
@@ -127,4 +138,12 @@ type MetaphorTokenValues struct {
 
 func (m *MetaphorTokenValues) ToTemplateVars(s string) string {
 	return ToTemplateVars(s, m)
+}
+
+func (m *MetaphorTokenValues) GetDomain() string {
+	return m.DomainName
+}
+
+func (m *MetaphorTokenValues) GetGitProtocol() string {
+	return m.GitProtocol
 }

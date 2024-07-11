@@ -985,7 +985,7 @@ func PrepareGitRepositories(
 
 	// DETOKENIZE
 	//* detokenize the gitops repo
-	err = DetokenizeGitGitops(gitopsDir, gitopsTokens, gitProtocol, useCloudflareOriginIssuer)
+	err = Detokenize(gitopsDir, gitopsTokens, gitProtocol, useCloudflareOriginIssuer)
 	if err != nil {
 		return err
 	}
@@ -999,7 +999,7 @@ func PrepareGitRepositories(
 
 	// DETOKENIZE
 	//* detokenize the metaphor repo
-	err = DetokenizeGitMetaphor(metaphorDir, metaphorTokens)
+	err = Detokenize(metaphorDir, metaphorTokens, gitProtocol, useCloudflareOriginIssuer)
 	if err != nil {
 		return err
 	}
