@@ -7,13 +7,13 @@ See the LICENSE file for more details.
 package controller
 
 import (
+	"github.com/kubefirst/kubefirst-api/internal/civo"
+	"github.com/kubefirst/kubefirst-api/internal/digitalocean"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
+	"github.com/kubefirst/kubefirst-api/internal/vultr"
 	awsinternal "github.com/kubefirst/kubefirst-api/pkg/aws"
 	google "github.com/kubefirst/kubefirst-api/pkg/google"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
-	"github.com/kubefirst/runtime/pkg/civo"
-	"github.com/kubefirst/runtime/pkg/digitalocean"
-	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/rs/zerolog/log"
 )
 

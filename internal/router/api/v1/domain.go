@@ -13,13 +13,13 @@ import (
 
 	cloudflare_api "github.com/cloudflare/cloudflare-go"
 	"github.com/gin-gonic/gin"
+	awsinternal "github.com/kubefirst/kubefirst-api/internal/aws"
+	"github.com/kubefirst/kubefirst-api/internal/civo"
+	cloudflare "github.com/kubefirst/kubefirst-api/internal/cloudflare"
+	"github.com/kubefirst/kubefirst-api/internal/digitalocean"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/internal/vultr"
 	"github.com/kubefirst/kubefirst-api/pkg/google"
-	awsinternal "github.com/kubefirst/runtime/pkg/aws"
-	"github.com/kubefirst/runtime/pkg/civo"
-	cloudflare "github.com/kubefirst/runtime/pkg/cloudflare"
-	"github.com/kubefirst/runtime/pkg/digitalocean"
-	"github.com/kubefirst/runtime/pkg/vultr"
 	"github.com/linode/linodego"
 	"golang.org/x/oauth2"
 )

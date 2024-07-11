@@ -12,8 +12,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/kubefirst/kubefirst-api/internal/civo"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
-	"github.com/kubefirst/runtime/pkg/civo"
 )
 
 // CivoHandoffScreen prints the handoff screen

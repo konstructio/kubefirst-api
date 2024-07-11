@@ -12,11 +12,11 @@ import (
 
 	argocdapi "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
+	pkg "github.com/kubefirst/kubefirst-api/internal"
+	"github.com/kubefirst/kubefirst-api/internal/argocd"
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
-	"github.com/kubefirst/runtime/pkg"
-	"github.com/kubefirst/runtime/pkg/argocd"
-	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/rs/zerolog/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

@@ -16,7 +16,7 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
-	"github.com/kubefirst/runtime/pkg/dns"
+	"github.com/kubefirst/kubefirst-api/internal/dns"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/oauth2/google"
 	googleDNS "google.golang.org/api/dns/v1"

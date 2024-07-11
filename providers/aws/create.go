@@ -8,13 +8,13 @@ package aws
 
 import (
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
+	awsinternal "github.com/kubefirst/kubefirst-api/internal/aws"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
-	awsinternal "github.com/kubefirst/runtime/pkg/aws"
-	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/rs/zerolog/log"
 )
 

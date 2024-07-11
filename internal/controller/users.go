@@ -17,9 +17,9 @@ import (
 	k3sext "github.com/kubefirst/kubefirst-api/extensions/k3s"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
-	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/rs/zerolog/log"
 )
 

@@ -9,8 +9,8 @@ package gitShim
 import (
 	"fmt"
 
-	"github.com/kubefirst/runtime/pkg/github"
-	"github.com/kubefirst/runtime/pkg/gitlab"
+	"github.com/kubefirst/kubefirst-api/internal/github"
+	"github.com/kubefirst/kubefirst-api/internal/gitlab"
 	log "github.com/rs/zerolog/log"
 )
 

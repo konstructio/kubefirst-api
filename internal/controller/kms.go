@@ -11,9 +11,9 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	githttps "github.com/go-git/go-git/v5/plumbing/transport/http"
+	pkg "github.com/kubefirst/kubefirst-api/internal"
+	"github.com/kubefirst/kubefirst-api/internal/gitClient"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
-	"github.com/kubefirst/runtime/pkg"
-	"github.com/kubefirst/runtime/pkg/gitClient"
 )
 
 // DetokenizeKMSKeyID
