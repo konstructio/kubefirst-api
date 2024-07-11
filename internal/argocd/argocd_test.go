@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	pkg "github.com/kubefirst/kubefirst-api/internal"
-	"github.com/kubefirst/runtime/configs"
+	"github.com/kubefirst/kubefirst-api/internal/configs"
 	"github.com/spf13/viper"
 )
 

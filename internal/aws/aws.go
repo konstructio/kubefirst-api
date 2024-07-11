@@ -69,21 +69,6 @@ func NewAws() aws.Config {
 	return awsClient
 }
 
-// GetHostedZoneID returns the id of a hosted zone based on its domain (name)
-func (conf *AWSConfiguration) GetHostedZoneID(domain string) (string, error) {
-	route53Client := route53.NewFromConfig(conf.Config)
-	zones, err := route53Client.ListHostedZones(context.Background(), &route53.ListHostedZonesInput{})
-	if err != nil {
-		return "", err
-	}
-	for _, zone := range zones.HostedZones {
-		if *zone.Name == domain {
-			return *zone.Id, nil
-		}
-	}
-	return "", fmt.Errorf(fmt.Sprintf("could not find a hosted zone for: %s", domain))
-}
-
 // Route53AlterResourceRecord simplifies manipulation of Route53 records
 func (conf *AWSConfiguration) Route53AlterResourceRecord(r *AWSRoute53AlterResourceRecord) (*route53.ChangeResourceRecordSetsOutput, error) {
 	route53Client := route53.NewFromConfig(conf.Config)
@@ -164,9 +149,9 @@ func (conf *AWSConfiguration) Route53ListTXTRecords(hostedZoneId string) ([]AWST
 	return txtRecords, nil
 }
 
-// TestHostedZoneLiveness determines whether or not a target hosted zone is initialized and
+// TestHostedZoneLivenessWithTxtRecords determines whether or not a target hosted zone is initialized and
 // ready to accept records
-func (conf *AWSConfiguration) TestHostedZoneLiveness(hostedZoneName string) (bool, error) {
+func (conf *AWSConfiguration) TestHostedZoneLivenessWithTxtRecords(hostedZoneName string) (bool, error) {
 	// Get hosted zone ID
 	hostedZoneID, err := conf.GetHostedZoneID(hostedZoneName)
 	if err != nil {

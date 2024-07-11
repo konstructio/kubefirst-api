@@ -24,7 +24,7 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/progressPrinter"
 
-	"github.com/kubefirst/runtime/configs"
+	"github.com/kubefirst/kubefirst-api/internal/configs"
 	"github.com/spf13/viper"
 )
 

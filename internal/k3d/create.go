@@ -129,7 +129,7 @@ func PrepareGitRepositories(
 	log.Info().Msg("gitops repository clone complete")
 
 	// * adjust the content for the gitops repo
-	err = AdjustGitopsRepo(CloudProvider, clusterName, clusterType, gitopsDir, gitProvider, k1Dir, removeAtlantis)
+	err = AdjustGitopsRepo(CloudProvider, clusterName, clusterType, gitopsDir, gitProvider, k1Dir, removeAtlantis, true)
 	if err != nil {
 		log.Info().Msgf("err: %v", err)
 		return err

@@ -60,7 +60,7 @@ func ReadConfigMapV2(kubeConfigPath string, namespace string, configMapName stri
 func ReadSecretV2(clientset *kubernetes.Clientset, namespace string, secretName string) (map[string]string, error) {
 	secret, err := clientset.CoreV1().Secrets(namespace).Get(context.Background(), secretName, metav1.GetOptions{})
 	if err != nil {
-		log.Error().Msgf("error getting secret: %s\n", err)
+		log.Warn().Msgf("no secret found: %s\n", err)
 		return map[string]string{}, err
 	}
 

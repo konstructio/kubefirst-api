@@ -39,7 +39,7 @@ func GetValidateAWSDomain(c *gin.Context) {
 	// Run validate func
 	awsClient := &aws.Conf
 	// Requires a trailing dot for Route53
-	validated, err := awsClient.TestHostedZoneLiveness(fmt.Sprintf("%s.", domainName))
+	validated, err := awsClient.TestHostedZoneLivenessWithTxtRecords(fmt.Sprintf("%s.", domainName))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
