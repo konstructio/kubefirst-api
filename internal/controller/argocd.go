@@ -9,6 +9,9 @@ package controller
 import (
 	"context"
 	"fmt"
+	"os/exec"
+	"time"	
+	 "encoding/json"
 
 	argocdapi "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
@@ -20,6 +23,14 @@ import (
 	log "github.com/rs/zerolog/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+func toJSONString(obj interface{}) string {
+    jsonBytes, err := json.MarshalIndent(obj, "", "  ")
+    if err != nil {
+        return fmt.Sprintf("Error marshaling to JSON: %v", err)
+    }
+    return string(jsonBytes)
+}
 
 // InstallArgoCD
 func (clctrl *ClusterController) InstallArgoCD() error {
@@ -176,7 +187,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		if err != nil {
 			return err
 		}
-
+		// log.Info().Msg(kcfg.RestConfig)
 		log.Info().Msg("applying the registry application to argocd")
 
 		registryURL, err := clctrl.GetRepoURL()
@@ -196,7 +207,36 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			registryPath,
 		)
 
-		_, _ = argocdClient.ArgoprojV1alpha1().Applications("argocd").Create(context.Background(), registryApplicationObject, metav1.CreateOptions{})
+
+		cmdStr := fmt.Sprintf("kubectl --kubeconfig=%s rollout restart -n argocd deploy/argocd-applicationset-controller", clctrl.ProviderConfig.Kubeconfig)
+
+		cmd := exec.Command("/bin/sh", "-c", cmdStr)
+
+		err = cmd.Run()
+		if err != nil {
+			fmt.Printf("Error executing kubectl command: %v\n", err)
+			return err
+		}
+
+
+		retryAttempts := 2
+		for attempt := 1; attempt <= retryAttempts; attempt++ {
+			log.Info().Msgf("Attempt #%d to create Argo CD application...\n", attempt)
+
+			app, err := argocdClient.ArgoprojV1alpha1().Applications("argocd").Create(context.Background(), registryApplicationObject, metav1.CreateOptions{})
+			if err != nil {
+				if attempt == retryAttempts {
+					return err
+				}
+				log.Info().Msgf("Error creating Argo CD application on attempt #%d: %v\n", attempt, err)
+				time.Sleep(5 * time.Second)
+				continue 
+			}
+
+			log.Info().Msgf("Argo CD application created successfully on attempt #%d: %s\n", attempt, app.Name)
+			break 
+		}
+		
 
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.CreateRegistryCompleted, "")
 
