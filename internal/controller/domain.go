@@ -11,13 +11,13 @@ import (
 	"fmt"
 
 	cloudflare_api "github.com/cloudflare/cloudflare-go"
+	"github.com/kubefirst/kubefirst-api/internal/civo"
+	"github.com/kubefirst/kubefirst-api/internal/cloudflare"
+	"github.com/kubefirst/kubefirst-api/internal/digitalocean"
+	"github.com/kubefirst/kubefirst-api/internal/dns"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
+	"github.com/kubefirst/kubefirst-api/internal/vultr"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
-	"github.com/kubefirst/runtime/pkg/civo"
-	"github.com/kubefirst/runtime/pkg/cloudflare"
-	"github.com/kubefirst/runtime/pkg/digitalocean"
-	"github.com/kubefirst/runtime/pkg/dns"
-	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/rs/zerolog/log"
 )
 
