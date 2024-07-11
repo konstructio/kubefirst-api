@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"os/exec"
 	"time"	
-	 "encoding/json"
 
 	argocdapi "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
@@ -23,14 +22,6 @@ import (
 	log "github.com/rs/zerolog/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-func toJSONString(obj interface{}) string {
-    jsonBytes, err := json.MarshalIndent(obj, "", "  ")
-    if err != nil {
-        return fmt.Sprintf("Error marshaling to JSON: %v", err)
-    }
-    return string(jsonBytes)
-}
 
 // InstallArgoCD
 func (clctrl *ClusterController) InstallArgoCD() error {
@@ -236,7 +227,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			log.Info().Msgf("Argo CD application created successfully on attempt #%d: %s\n", attempt, app.Name)
 			break 
 		}
-		
+
 
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.CreateRegistryCompleted, "")
 
