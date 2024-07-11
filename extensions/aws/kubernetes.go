@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	eksTypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
-	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/aws-iam-authenticator/pkg/token"

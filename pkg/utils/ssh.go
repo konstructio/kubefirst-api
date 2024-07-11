@@ -8,8 +8,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/kubefirst/kubefirst-api/internal/gitlab"
 	"github.com/kubefirst/kubefirst-api/pkg/types"
-	"github.com/kubefirst/runtime/pkg/gitlab"
 	"github.com/mikesmitty/edkey"
 	log "github.com/rs/zerolog/log"
 	"github.com/spf13/viper"

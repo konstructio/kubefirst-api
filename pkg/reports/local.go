@@ -12,7 +12,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/kubefirst/runtime/pkg/k3d"
+	"github.com/kubefirst/kubefirst-api/internal/k3d"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )

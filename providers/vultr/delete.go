@@ -16,18 +16,18 @@ import (
 
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
+	runtime "github.com/kubefirst/kubefirst-api/internal"
+	"github.com/kubefirst/kubefirst-api/internal/argocd"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/errors"
+	gitlab "github.com/kubefirst/kubefirst-api/internal/gitlab"
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
+	"github.com/kubefirst/kubefirst-api/internal/vultr"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
-	runtime "github.com/kubefirst/runtime/pkg"
-	"github.com/kubefirst/runtime/pkg/argocd"
-	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
-	"github.com/kubefirst/runtime/pkg/k8s"
-	"github.com/kubefirst/runtime/pkg/vultr"
 	log "github.com/rs/zerolog/log"
 )
 

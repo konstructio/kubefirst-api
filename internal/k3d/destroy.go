@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kubefirst/runtime/pkg"
+	pkg "github.com/kubefirst/kubefirst-api/internal"
 	"github.com/rs/zerolog/log"
 )
 
