@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
+	"github.com/kubefirst/kubefirst-api/internal/vault"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
-	"github.com/kubefirst/runtime/pkg/k8s"
-	"github.com/kubefirst/runtime/pkg/vault"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 )
@@ -30,6 +30,7 @@ func readVaultTokenFromSecret(clientset *kubernetes.Clientset) string {
 }
 
 func GetK3sTerraformEnvs(envs map[string]string, cl *pkgtypes.Cluster) map[string]string {
+	envs["TF_VAR_ssh_private_key"] = cl.K3sAuth.K3sSshPrivateKey
 	envs["AWS_ACCESS_KEY_ID"] = cl.StateStoreCredentials.AccessKeyID
 	envs["AWS_SECRET_ACCESS_KEY"] = cl.StateStoreCredentials.SecretAccessKey
 	envs["AWS_SESSION_TOKEN"] = "" // allows for debugging

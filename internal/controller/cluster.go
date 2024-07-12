@@ -23,11 +23,11 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/env"
 	gitShim "github.com/kubefirst/kubefirst-api/internal/gitShim"
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
-	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/rs/zerolog/log"
 	"github.com/thanhpk/randstr"
 	v1 "k8s.io/api/apps/v1"
@@ -105,7 +105,6 @@ func (clctrl *ClusterController) CreateCluster() error {
 		clctrl.Cluster.CloudTerraformApplyCheck = true
 		clctrl.Cluster.CloudTerraformApplyFailedCheck = false
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
-
 		if err != nil {
 			return err
 		}
@@ -264,7 +263,6 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			gitopsTemplateTokens.K3sServersPrivateIps = clctrl.K3sAuth.K3sServersPrivateIps
 			gitopsTemplateTokens.K3sServersPublicIps = clctrl.K3sAuth.K3sServersPublicIps
 			gitopsTemplateTokens.SshUser = clctrl.K3sAuth.K3sSshUser
-			gitopsTemplateTokens.SshPrivateKey = clctrl.K3sAuth.K3sSshPrivateKey
 			gitopsTemplateTokens.K3sServersArgs = clctrl.K3sAuth.K3sServersArgs
 		}
 

@@ -9,7 +9,7 @@ package providerConfigs
 import (
 	"runtime"
 
-	runtimepkg "github.com/kubefirst/runtime/pkg"
+	runtimepkg "github.com/kubefirst/kubefirst-api/internal"
 )
 
 const (

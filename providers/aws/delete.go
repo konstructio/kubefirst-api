@@ -15,18 +15,18 @@ import (
 
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
+	pkg "github.com/kubefirst/kubefirst-api/internal"
+	"github.com/kubefirst/kubefirst-api/internal/argocd"
+	awsinternal "github.com/kubefirst/kubefirst-api/internal/aws"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/errors"
+	gitlab "github.com/kubefirst/kubefirst-api/internal/gitlab"
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
-	"github.com/kubefirst/runtime/pkg"
-	"github.com/kubefirst/runtime/pkg/argocd"
-	awsinternal "github.com/kubefirst/runtime/pkg/aws"
-	gitlab "github.com/kubefirst/runtime/pkg/gitlab"
-	"github.com/kubefirst/runtime/pkg/k8s"
 	log "github.com/rs/zerolog/log"
 )
 

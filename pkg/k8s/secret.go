@@ -34,7 +34,7 @@ func CreateSecretV2(clientset *kubernetes.Clientset, secret *v1.Secret) error {
 func ReadSecretV2(clientset *kubernetes.Clientset, namespace string, secretName string) (map[string]interface{}, error) {
 	secret, err := clientset.CoreV1().Secrets(namespace).Get(context.Background(), secretName, metav1.GetOptions{})
 	if err != nil {
-		log.Error().Msgf("error getting secret: %s\n", err)
+		log.Warn().Msgf("no secret found: %s\n", err)
 		return map[string]interface{}{}, err
 	}
 

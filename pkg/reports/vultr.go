@@ -12,8 +12,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/kubefirst/kubefirst-api/internal/vultr"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
-	"github.com/kubefirst/runtime/pkg/vultr"
 )
 
 // VultrHandoffScreen prints the handoff screen

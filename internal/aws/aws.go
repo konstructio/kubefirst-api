@@ -11,11 +11,14 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"os"
 	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	route53Types "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
@@ -23,6 +26,22 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 	log "github.com/rs/zerolog/log"
 )
+
+type TXTRecord struct {
+	Name          string
+	Value         string
+	SetIdentifier *string
+	Weight        *int64
+	TTL           int64
+}
+
+// ARecord stores Route53 A record data
+type ARecord struct {
+	Name        string
+	RecordType  string
+	TTL         *int64
+	AliasTarget *route53Types.AliasTarget
+}
 
 const (
 	validationRecordSubdomain string = "kubefirst-liveness-test"
@@ -48,21 +67,6 @@ func NewAws() aws.Config {
 	}
 
 	return awsClient
-}
-
-// GetHostedZoneID returns the id of a hosted zone based on its domain (name)
-func (conf *AWSConfiguration) GetHostedZoneID(domain string) (string, error) {
-	route53Client := route53.NewFromConfig(conf.Config)
-	zones, err := route53Client.ListHostedZones(context.Background(), &route53.ListHostedZonesInput{})
-	if err != nil {
-		return "", err
-	}
-	for _, zone := range zones.HostedZones {
-		if *zone.Name == domain {
-			return *zone.Id, nil
-		}
-	}
-	return "", fmt.Errorf(fmt.Sprintf("could not find a hosted zone for: %s", domain))
 }
 
 // Route53AlterResourceRecord simplifies manipulation of Route53 records
@@ -145,9 +149,9 @@ func (conf *AWSConfiguration) Route53ListTXTRecords(hostedZoneId string) ([]AWST
 	return txtRecords, nil
 }
 
-// TestHostedZoneLiveness determines whether or not a target hosted zone is initialized and
+// TestHostedZoneLivenessWithTxtRecords determines whether or not a target hosted zone is initialized and
 // ready to accept records
-func (conf *AWSConfiguration) TestHostedZoneLiveness(hostedZoneName string) (bool, error) {
+func (conf *AWSConfiguration) TestHostedZoneLivenessWithTxtRecords(hostedZoneName string) (bool, error) {
 	// Get hosted zone ID
 	hostedZoneID, err := conf.GetHostedZoneID(hostedZoneName)
 	if err != nil {
@@ -251,4 +255,73 @@ func (conf *AWSConfiguration) TestHostedZoneLiveness(hostedZoneName string) (boo
 		}
 	}
 	return false, err
+}
+
+func NewAwsV2(region string) aws.Config {
+	// todo these should also be supported flags
+	profile := os.Getenv("AWS_PROFILE")
+
+	awsClient, err := config.LoadDefaultConfig(
+		context.Background(),
+		config.WithRegion(region),
+		config.WithSharedConfigProfile(profile),
+	)
+	if err != nil {
+		log.Error().Msg("unable to create aws client")
+	}
+
+	return awsClient
+}
+
+func NewAwsV3(region string, accessKeyID string, secretAccessKey string, sessionToken string) aws.Config {
+	awsClient, err := config.LoadDefaultConfig(
+		context.Background(),
+		config.WithRegion(region),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
+			accessKeyID,
+			secretAccessKey,
+			sessionToken,
+		)),
+	)
+	if err != nil {
+		log.Error().Msg("unable to create aws client")
+	}
+
+	return awsClient
+}
+
+// GetRegions lists all available regions
+func (conf *AWSConfiguration) GetRegions(region string) ([]string, error) {
+	var regionList []string
+
+	ec2Client := ec2.NewFromConfig(conf.Config)
+
+	regions, err := ec2Client.DescribeRegions(context.Background(), &ec2.DescribeRegionsInput{})
+	if err != nil {
+		return []string{}, fmt.Errorf("error listing regions: %s", err)
+	}
+
+	for _, region := range regions.Regions {
+		regionList = append(regionList, *region.RegionName)
+	}
+
+	return regionList, nil
+}
+
+func (conf *AWSConfiguration) ListInstanceSizesForRegion() ([]string, error) {
+
+	ec2Client := ec2.NewFromConfig(conf.Config)
+
+	sizes, err := ec2Client.DescribeInstanceTypeOfferings(context.Background(), &ec2.DescribeInstanceTypeOfferingsInput{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	var instanceNames []string
+	for _, size := range sizes.InstanceTypeOfferings {
+		instanceNames = append(instanceNames, string(size.InstanceType))
+	}
+
+	return instanceNames, nil
 }

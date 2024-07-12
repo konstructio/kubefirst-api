@@ -13,7 +13,7 @@ import (
 
 	container "cloud.google.com/go/container/apiv1"
 	containerpb "cloud.google.com/go/container/apiv1/containerpb"
-	"github.com/kubefirst/runtime/pkg/k8s"
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	gocontainer "google.golang.org/api/container/v1"

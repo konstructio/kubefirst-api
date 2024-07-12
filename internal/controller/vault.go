@@ -25,10 +25,10 @@ import (
 	k3sext "github.com/kubefirst/kubefirst-api/extensions/k3s"
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
+	vault "github.com/kubefirst/kubefirst-api/internal/vault"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
-	"github.com/kubefirst/runtime/pkg/k8s"
-	vault "github.com/kubefirst/runtime/pkg/vault"
 	log "github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -350,7 +350,10 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 		if err != nil {
 			log.Fatal().Msgf("error getting home path: %s", err)
 		}
-		writeGoogleSecrets(homeDir, vaultClient)
+		if err := writeGoogleSecrets(homeDir, vaultClient); err != nil {
+			log.Error().Msgf("error writing Google secrets to vault: %s", err)
+			return err
+		}
 		log.Info().Msg("successfully wrote google specific secrets to vault")
 	}
 

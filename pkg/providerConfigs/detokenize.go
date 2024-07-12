@@ -71,6 +71,7 @@ func detokenize(path string, tokens Tokens, gitProtocol string, useCloudflareOri
 			return nil
 		}
 
+
 		if strings.Contains(fi.Name(), ".git") {
 			return nil
 		}
