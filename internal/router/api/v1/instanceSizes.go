@@ -6,12 +6,12 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	awsinternal "github.com/kubefirst/kubefirst-api/internal/aws"
+	"github.com/kubefirst/kubefirst-api/internal/civo"
+	"github.com/kubefirst/kubefirst-api/internal/digitalocean"
 	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/kubefirst/kubefirst-api/internal/vultr"
 	"github.com/kubefirst/kubefirst-api/pkg/google"
-	awsinternal "github.com/kubefirst/runtime/pkg/aws"
-	"github.com/kubefirst/runtime/pkg/civo"
-	"github.com/kubefirst/runtime/pkg/digitalocean"
-	"github.com/kubefirst/runtime/pkg/vultr"
 	"github.com/linode/linodego"
 	"golang.org/x/oauth2"
 )

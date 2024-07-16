@@ -11,11 +11,11 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/services"
+	"github.com/kubefirst/kubefirst-api/internal/ssl"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
-	"github.com/kubefirst/runtime/pkg/k8s"
-	"github.com/kubefirst/runtime/pkg/ssl"
 	log "github.com/rs/zerolog/log"
 )
 
@@ -276,11 +276,6 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 	}
 
 	log.Info().Msg("cluster creation complete")
-
-	err = ctrl.CreateVirtualClusters()
-	if err != nil {
-		return err
-	}
 
 	return nil
 }

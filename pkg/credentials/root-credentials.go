@@ -13,11 +13,11 @@ import (
 	"strings"
 
 	"github.com/atotto/clipboard"
+	"github.com/kubefirst/kubefirst-api/internal/helpers"
+	"github.com/kubefirst/kubefirst-api/internal/httpCommon"
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
+	"github.com/kubefirst/kubefirst-api/internal/vault"
 	"github.com/kubefirst/kubefirst-api/pkg/reports"
-	"github.com/kubefirst/runtime/pkg/helpers"
-	"github.com/kubefirst/runtime/pkg/httpCommon"
-	"github.com/kubefirst/runtime/pkg/k8s"
-	"github.com/kubefirst/runtime/pkg/vault"
 	"github.com/rs/zerolog/log"
 	"k8s.io/client-go/kubernetes"
 )

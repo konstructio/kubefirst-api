@@ -12,9 +12,15 @@ import (
 	"net/http"
 	"time"
 
+	runtime "github.com/kubefirst/kubefirst-api/internal"
+	awsinternal "github.com/kubefirst/kubefirst-api/internal/aws"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/env"
+	"github.com/kubefirst/kubefirst-api/internal/github"
+	"github.com/kubefirst/kubefirst-api/internal/gitlab"
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
+	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 	google "github.com/kubefirst/kubefirst-api/pkg/google"
 	"github.com/kubefirst/kubefirst-api/pkg/handlers"
@@ -22,20 +28,10 @@ import (
 	"github.com/kubefirst/kubefirst-api/pkg/types"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
-	runtime "github.com/kubefirst/runtime/pkg"
-	awsinternal "github.com/kubefirst/runtime/pkg/aws"
-	"github.com/kubefirst/runtime/pkg/github"
-	"github.com/kubefirst/runtime/pkg/gitlab"
-	"github.com/kubefirst/runtime/pkg/k8s"
-	"github.com/kubefirst/runtime/pkg/services"
 	"k8s.io/client-go/kubernetes"
 
 	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-)
-
-const (
-	gitopsTemplateVersion = "v2.4.11"
 )
 
 type ClusterController struct {
@@ -210,7 +206,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	if def.GitopsTemplateBranch != "" {
 		clctrl.GitopsTemplateBranch = def.GitopsTemplateBranch
 	} else {
-		clctrl.GitopsTemplateBranch = gitopsTemplateVersion
+		clctrl.GitopsTemplateBranch = env.KubefirstVersion
 	}
 
 	if def.GitopsTemplateURL != "" {

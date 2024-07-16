@@ -13,8 +13,8 @@ import (
 
 	cloudflare_api "github.com/cloudflare/cloudflare-go"
 	"github.com/gin-gonic/gin"
+	"github.com/kubefirst/kubefirst-api/internal/cloudflare"
 	"github.com/kubefirst/kubefirst-api/internal/types"
-	"github.com/kubefirst/runtime/pkg/cloudflare"
 )
 
 func PostValidateCloudflareDomain(c *gin.Context) {

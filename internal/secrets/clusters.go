@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/kubefirst/kubefirst-api/pkg/k8s"
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	log "github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
@@ -42,7 +42,7 @@ func DeleteCluster(clientSet *kubernetes.Clientset, clusterName string) error {
 func GetCluster(clientSet *kubernetes.Clientset, clusterName string) (pkgtypes.Cluster, error) {
 	cluster := pkgtypes.Cluster{}
 
-	clusterSecret, err := k8s.ReadSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_CLUSTER_PREFIX, clusterName))
+	clusterSecret, err := k8s.ReadSecretV2Old(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_CLUSTER_PREFIX, clusterName))
 	if err != nil {
 		return cluster, fmt.Errorf("secret not found: %s", err)
 	}

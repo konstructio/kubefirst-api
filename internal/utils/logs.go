@@ -11,7 +11,7 @@ import (
 	stdLog "log"
 	"os"
 
-	"github.com/kubefirst/runtime/pkg"
+	pkg "github.com/kubefirst/kubefirst-api/internal"
 	zeroLog "github.com/rs/zerolog"
 	log "github.com/rs/zerolog/log"
 )

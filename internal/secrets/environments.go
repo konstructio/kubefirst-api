@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	"github.com/kubefirst/kubefirst-api/internal/types"
-	"github.com/kubefirst/kubefirst-api/pkg/k8s"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -35,7 +35,7 @@ func GetEnvironments(clientSet *kubernetes.Clientset) ([]pkgtypes.Environment, e
 func GetEnvironment(clientSet *kubernetes.Clientset, name string) (pkgtypes.Environment, error) {
 	environment := pkgtypes.Environment{}
 
-	kubefirstSecrets, _ := k8s.ReadSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_ENVIRONMENT_PREFIX, name))
+	kubefirstSecrets, _ := k8s.ReadSecretV2Old(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_ENVIRONMENT_PREFIX, name))
 	jsonString, _ := MapToStructuredJSON(kubefirstSecrets)
 
 	jsonData, err := json.Marshal(jsonString)
@@ -61,9 +61,18 @@ func InsertEnvironment(clientSet *kubernetes.Clientset, env pkgtypes.Environment
 		CreationTimestamp: env.CreationTimestamp,
 	}
 
-	err := AddSecretReferenceItem(clientSet, KUBEFIRST_ENVIRONMENTS_SECRET_NAME, env.Name)
+	_, err := GetSecretReference(clientSet, KUBEFIRST_ENVIRONMENTS_SECRET_NAME)
+
 	if err != nil {
-		return environment, err
+		CreateSecretReference(clientSet, KUBEFIRST_ENVIRONMENTS_SECRET_NAME, pkgtypes.SecretListReference{
+			Name: "environments",
+			List: []string{env.Name},
+		})
+	} else {
+		err := AddSecretReferenceItem(clientSet, KUBEFIRST_ENVIRONMENTS_SECRET_NAME, env.Name)
+		if err != nil {
+			return environment, err
+		}
 	}
 
 	bytes, _ := json.Marshal(environment)

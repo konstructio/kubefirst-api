@@ -11,8 +11,10 @@ import (
 	"os"
 	"time"
 
+	pkg "github.com/kubefirst/kubefirst-api/internal"
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	"github.com/kubefirst/kubefirst-api/pkg/types"
-	"github.com/kubefirst/runtime/pkg"
+
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/rs/zerolog/log"
@@ -66,7 +68,7 @@ func PutClusterObject(cr *types.StateStoreCredentials, d *types.StateStoreDetail
 }
 
 // ExportCluster proxy to kubefirst api /cluster/import to restore the database
-func ExportCluster(kcfg types.KubernetesClient, cl types.Cluster) error {
+func ExportCluster(kcfg k8s.KubernetesClient, cl types.Cluster) error {
 	time.Sleep(time.Second * 10)
 
 	err := pkg.IsAppAvailable(fmt.Sprintf("%s/api/proxyHealth", pkg.KubefirstConsoleLocalURLCloud), "kubefirst api")

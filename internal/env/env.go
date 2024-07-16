@@ -9,7 +9,7 @@ import (
 type Env struct {
 	ServerPort            string `env:"SERVER_PORT" envDefault:"8081"`
 	K1AccessToken         string `env:"K1_ACCESS_TOKEN"`
-	KubefirstVersion      string `env:"KUBEFIRST_VERSION" envDefault:"development"`
+	KubefirstVersion      string `env:"KUBEFIRST_VERSION" envDefault:"main"`
 	CloudProvider         string `env:"CLOUD_PROVIDER"`
 	ClusterId             string `env:"CLUSTER_ID"`
 	ClusterType           string `env:"CLUSTER_TYPE"`
