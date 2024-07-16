@@ -61,9 +61,18 @@ func InsertEnvironment(clientSet *kubernetes.Clientset, env pkgtypes.Environment
 		CreationTimestamp: env.CreationTimestamp,
 	}
 
-	err := AddSecretReferenceItem(clientSet, KUBEFIRST_ENVIRONMENTS_SECRET_NAME, env.Name)
+	_, err := GetSecretReference(clientSet, KUBEFIRST_ENVIRONMENTS_SECRET_NAME)
+
 	if err != nil {
-		return environment, err
+		CreateSecretReference(clientSet, KUBEFIRST_ENVIRONMENTS_SECRET_NAME, pkgtypes.SecretListReference{
+			Name: "environments",
+			List: []string{env.Name},
+		})
+	} else {
+		err := AddSecretReferenceItem(clientSet, KUBEFIRST_ENVIRONMENTS_SECRET_NAME, env.Name)
+		if err != nil {
+			return environment, err
+		}
 	}
 
 	bytes, _ := json.Marshal(environment)
