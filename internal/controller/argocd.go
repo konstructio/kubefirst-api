@@ -10,7 +10,7 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
-	"time"	
+	"time"
 
 	argocdapi "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned"
 	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
@@ -178,7 +178,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		if err != nil {
 			return err
 		}
-		
+
 		log.Info().Msg("applying the registry application to argocd")
 
 		registryURL, err := clctrl.GetRepoURL()
@@ -198,7 +198,6 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			registryPath,
 		)
 
-
 		cmdStr := fmt.Sprintf("kubectl --kubeconfig=%s rollout restart -n argocd deploy/argocd-applicationset-controller", clctrl.ProviderConfig.Kubeconfig)
 
 		cmd := exec.Command("/bin/sh", "-c", cmdStr)
@@ -208,7 +207,6 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			fmt.Printf("Error executing kubectl command: %v\n", err)
 			return err
 		}
-
 
 		retryAttempts := 2
 		for attempt := 1; attempt <= retryAttempts; attempt++ {
@@ -221,13 +219,12 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 				}
 				log.Info().Msgf("Error creating Argo CD application on attempt number #%d: %v\n", attempt, err)
 				time.Sleep(5 * time.Second)
-				continue 
+				continue
 			}
 
 			log.Info().Msgf("Argo CD application created successfully on attempt #%d: %s\n", attempt, app.Name)
-			break 
+			break
 		}
-
 
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.CreateRegistryCompleted, "")
 
