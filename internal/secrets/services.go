@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/kubefirst/kubefirst-api/pkg/k8s"
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	"github.com/kubefirst/kubefirst-api/pkg/types"
 	log "github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
@@ -97,7 +97,7 @@ func GetService(clientSet *kubernetes.Clientset, clusterName string, serviceName
 func GetServices(clientSet *kubernetes.Clientset, clusterName string) (types.ClusterServiceList, error) {
 	clusterServices := types.ClusterServiceList{}
 
-	kubefirstSecrets, err := k8s.ReadSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_SERVICES_PREFIX, clusterName))
+	kubefirstSecrets, err := k8s.ReadSecretV2Old(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_SERVICES_PREFIX, clusterName))
 
 	jsonString, err := MapToStructuredJSON(kubefirstSecrets)
 

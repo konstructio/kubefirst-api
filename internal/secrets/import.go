@@ -12,7 +12,7 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/env"
-	"github.com/kubefirst/kubefirst-api/pkg/k8s"
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/rs/zerolog/log"
 )
@@ -34,7 +34,7 @@ func ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster, error) {
 
 	kcfg := k8s.CreateKubeConfig(true, "")
 	log.Info().Msg("reading secret kubefirst-initial-state to determine if import is needed")
-	secData, err := k8s.ReadSecretV2(kcfg.Clientset, "kubefirst", "kubefirst-initial-state")
+	secData, err := k8s.ReadSecretV2Old(kcfg.Clientset, "kubefirst", "kubefirst-initial-state")
 	if err != nil {
 		log.Info().Msgf("error reading secret kubefirst-initial-state. %s", err)
 		return cluster, err

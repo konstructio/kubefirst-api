@@ -11,10 +11,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
-	"github.com/kubefirst/kubefirst-api/pkg/k8s"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -37,7 +37,7 @@ func GetClusterSecret(c *gin.Context) {
 	}
 
 	kcfg := utils.GetKubernetesClient(clusterName)
-	kubefirstSecrets, _ := k8s.ReadSecretV2(kcfg.Clientset, "kubefirst", secret)
+	kubefirstSecrets, _ := k8s.ReadSecretV2Old(kcfg.Clientset, "kubefirst", secret)
 
 	jsonString, err := secrets.MapToStructuredJSON(kubefirstSecrets)
 
