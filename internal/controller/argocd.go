@@ -198,6 +198,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			registryPath,
 		)
 
+
 		cmdStr := fmt.Sprintf("kubectl --kubeconfig=%s rollout restart -n argocd deploy/argocd-applicationset-controller", clctrl.ProviderConfig.Kubeconfig)
 
 		cmd := exec.Command("/bin/sh", "-c", cmdStr)
@@ -207,6 +208,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			fmt.Printf("Error executing kubectl command: %v\n", err)
 			return err
 		}
+
 
 		retryAttempts := 2
 		for attempt := 1; attempt <= retryAttempts; attempt++ {
@@ -225,6 +227,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			log.Info().Msgf("Argo CD application created successfully on attempt #%d: %s\n", attempt, app.Name)
 			break
 		}
+
 
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.CreateRegistryCompleted, "")
 
