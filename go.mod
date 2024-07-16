@@ -28,6 +28,7 @@ require (
 	github.com/gin-gonic/gin v1.8.2
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/google/go-github/v52 v52.0.0
+	github.com/hashicorp/hcl2 v0.0.0-20191002203319-fb75b3253c80
 	github.com/hashicorp/vault/api v1.9.0
 	github.com/joho/godotenv v1.5.1
 	github.com/kubefirst/metrics-client v0.3.0
@@ -57,8 +58,10 @@ require (
 
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
+	github.com/agext/levenshtein v1.2.1 // indirect
 	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
 	github.com/alicebob/miniredis/v2 v2.23.1 // indirect
+	github.com/apparentlymart/go-textseg v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.91.0 // indirect
 	github.com/go-resty/resty/v2 v2.11.0 // indirect
 	github.com/huandu/xstrings v1.3.1 // indirect
@@ -68,6 +71,7 @@ require (
 	github.com/segmentio/analytics-go v3.1.0+incompatible // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/yuin/gopher-lua v0.0.0-20220504180219-658193537a64 // indirect
+	github.com/zclconf/go-cty v1.0.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gotest.tools/v3 v3.4.0 // indirect
 )

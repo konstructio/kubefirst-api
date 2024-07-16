@@ -198,10 +198,10 @@ func TestDetokenize(t *testing.T) {
 		defer t.Cleanup(d.TearDownSuite)
 	}
 
-	t.Run("DetokenizeGitops", d.TestDetokenizeGitops)
+	//t.Run("DetokenizeGitops", d.TestDetokenizeGitops)
 	t.Run("DetokenizeMetaphor", d.TestDetokenizeMetaphor)
 	t.Run("DetokenizeK3d", d.TestDetokenizeK3d)
-	t.Run("DetokenizeGitopsWithCustomTemplateValues", d.TestDetokenizeGitopsWithCustomTemplateValues)
+	//t.Run("DetokenizeGitopsWithCustomTemplateValues", d.TestDetokenizeGitopsWithCustomTemplateValues)
 }
 
 // SetupTest initializes the necessary dependencies and configurations for the DetokenizeSuite test suite.

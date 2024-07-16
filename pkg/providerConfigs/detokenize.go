@@ -8,6 +8,7 @@ package providerConfigs
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/Masterminds/sprig/v3"
 	"io"
@@ -18,6 +19,8 @@ import (
 	"strings"
 	"text/template"
 )
+
+type TerraformDecoderFunc func(content string, dest []byte) error
 
 // ToTemplateVars - converts a string to a template variable
 func ToTemplateVars(input string, instance Tokens) string {
@@ -51,7 +54,7 @@ func ToTemplateVars(input string, instance Tokens) string {
 	return "<variable-not-found>"
 }
 
-// DetokenizeGitGitops - Translate tokens by values on a given path
+// Detokenize - Translate tokens by values on a given path
 func Detokenize(path string, tokens Tokens, gitProtocol string, useCloudflareOriginIssuer bool) error {
 	err := filepath.Walk(path, detokenize(path, tokens, gitProtocol, useCloudflareOriginIssuer))
 	if err != nil {
@@ -70,42 +73,38 @@ func detokenize(path string, tokens Tokens, gitProtocol string, useCloudflareOri
 		if fi.IsDir() {
 			return nil
 		}
-
-
+		// Incase there is a .gitignore or .gitkeep etc file in the directory, skip it.
 		if strings.Contains(fi.Name(), ".git") {
 			return nil
 		}
+
+		var (
+			newContentData []byte
+		)
 
 		switch tokenType := tokens.(type) {
 		case *GitopsDirectoryValues:
 			setGitOpsTokens(tokenType, gitProtocol, useCloudflareOriginIssuer)
 			tokens = tokenType
 		case *MetaphorTokenValues:
-			setMetaphorTokens(tokenType, tokens.GetGitProtocol(), tokens.GetDomain())
+			setMetaphorTokens(tokenType, gitProtocol)
 			tokens = tokenType
 		}
 
-		read, err := os.ReadFile(path)
+		newContentData, err = renderGoTemplating(path, tokens, nil)
 		if err != nil {
 			return err
 		}
-
-		newContentData, err := renderGoTemplating(tokens, string(read))
-		if err != nil {
-			return err
-		}
-
 		return os.WriteFile(path, newContentData, 0644)
 
 	})
 }
 
-func setMetaphorTokens(tokens *MetaphorTokenValues, gitProtocol string, domain string) {
+func setMetaphorTokens(tokens *MetaphorTokenValues, gitProtocol string) {
 	tokens.GitProtocol = gitProtocol
-	tokens.DomainName = "metaphor.io"
-	tokens.MetaphorDevelopmentIngressURL = fmt.Sprintf("https://metaphor-dev.%s", domain)
-	tokens.MetaphorProductionIngressURL = fmt.Sprintf("https://metaphor.%s", domain)
-	tokens.MetaphorStagingIngressURL = fmt.Sprintf("https://metaphor-stage.%s", domain)
+	tokens.MetaphorDevelopmentIngressURL = fmt.Sprintf("https://metaphor-dev.%s", tokens.DomainName)
+	tokens.MetaphorProductionIngressURL = fmt.Sprintf("https://metaphor.%s", tokens.DomainName)
+	tokens.MetaphorStagingIngressURL = fmt.Sprintf("https://metaphor-stage.%s", tokens.DomainName)
 
 }
 
@@ -140,8 +139,10 @@ func setGitOpsTokens(tokens *GitopsDirectoryValues, gitProtocol string, useCloud
 // renderGoTemplating - Renders the template with the given values
 // it also includes the sprig GenericFuncMap functions listed here: https://masterminds.github.io/sprig/.
 func parseTemplate(content string) (*template.Template, error) {
+	funcs := sprig.GenericFuncMap()
+	funcs["toJson"] = toJson
 	t := template.New("gitops-template").
-		Funcs(sprig.GenericFuncMap()).
+		Funcs(funcs).
 		Delims(leftDelimiter, rightDelimiter)
 	return t.Parse(content)
 }
@@ -164,9 +165,13 @@ func replaceTemplateVariables(content string, tokens Tokens) string {
 }
 
 // renderGoTemplating - Render a template with the given tokens.
-func renderGoTemplating(tokens Tokens, content string) ([]byte, error) {
+func renderGoTemplating(path string, tokens Tokens, f TerraformDecoderFunc) ([]byte, error) {
+	read, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
 	// Replace all tokens with their values
-	content = replaceTemplateVariables(content, tokens)
+	content := replaceTemplateVariables(string(read), tokens)
 	buff := bytes.NewBufferString(content)
 
 	parsedTemplate, err := parseTemplate(buff.String())
@@ -179,5 +184,20 @@ func renderGoTemplating(tokens Tokens, content string) ([]byte, error) {
 		return nil, err
 	}
 
+	if f != nil {
+		err = f(newBuff.String(), newBuff.Bytes())
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return newBuff.Bytes(), nil
+}
+
+func toJson(v interface{}) string {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return ""
+	}
+	return string(b)
 }
