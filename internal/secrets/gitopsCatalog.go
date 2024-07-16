@@ -11,7 +11,7 @@ import (
 	"fmt"
 
 	"github.com/kubefirst/kubefirst-api/internal/gitopsCatalog"
-	"github.com/kubefirst/kubefirst-api/pkg/k8s"
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	"github.com/kubefirst/kubefirst-api/pkg/types"
 	log "github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
@@ -48,7 +48,7 @@ func CreateGitopsCatalogApps(clientSet *kubernetes.Clientset, catalogApps types.
 func GetGitopsCatalogApps(clientSet *kubernetes.Clientset) (types.GitopsCatalogApps, error) {
 	catalogApps := types.GitopsCatalogApps{}
 
-	kubefirstSecrets, err := k8s.ReadSecretV2(clientSet, "kubefirst", KUBEFIRST_CATALOG_SECRET_NAME)
+	kubefirstSecrets, err := k8s.ReadSecretV2Old(clientSet, "kubefirst", KUBEFIRST_CATALOG_SECRET_NAME)
 	if err != nil {
 		return catalogApps, err
 	}

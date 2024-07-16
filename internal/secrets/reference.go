@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/kubefirst/kubefirst-api/pkg/k8s"
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,7 +20,7 @@ import (
 func GetSecretReference(clientSet *kubernetes.Clientset, secretName string) (pkgtypes.SecretListReference, error) {
 	secretReference := pkgtypes.SecretListReference{}
 
-	kubefirstSecrets, err := k8s.ReadSecretV2(clientSet, "kubefirst", secretName)
+	kubefirstSecrets, err := k8s.ReadSecretV2Old(clientSet, "kubefirst", secretName)
 	if err != nil {
 		return secretReference, fmt.Errorf("secret not found: %s", err)
 	}

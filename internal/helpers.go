@@ -4,7 +4,7 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package pkg
+package internal
 
 import (
 	"errors"
@@ -24,7 +24,7 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/progressPrinter"
 
-	"github.com/kubefirst/kubefirst-api/internal/configs"
+	"github.com/kubefirst/kubefirst-api/configs"
 	"github.com/spf13/viper"
 )
 

@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	log "github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"k8s.io/client-go/kubernetes"
@@ -23,7 +24,7 @@ var fs afero.Fs = afero.NewOsFs()
 
 // CreateKubeConfig returns a struct KubernetesClient with references to a clientset,
 // restConfig, and path to the Kubernetes config used to generate the client
-func CreateKubeConfig(inCluster bool, kubeConfigPath string) *KubernetesClient {
+func CreateKubeConfigOld(inCluster bool, kubeConfigPath string) *k8s.KubernetesClient {
 	// inCluster is either true or false
 	// If it's true, we pull Kubernetes API authentication from Pod SA
 	// If it's false, we use local machine settings
@@ -38,7 +39,7 @@ func CreateKubeConfig(inCluster bool, kubeConfigPath string) *KubernetesClient {
 			log.Error().Msgf("error creating kubernetes client: %s", err)
 		}
 
-		return &KubernetesClient{
+		return &k8s.KubernetesClient{
 			Clientset:      clientset,
 			RestConfig:     config,
 			KubeConfigPath: "in-cluster",
@@ -60,7 +61,7 @@ func CreateKubeConfig(inCluster bool, kubeConfigPath string) *KubernetesClient {
 		log.Error().Msgf("error creating kubernetes client: %s", err)
 	}
 
-	return &KubernetesClient{
+	return &k8s.KubernetesClient{
 		Clientset:      clientset,
 		RestConfig:     config,
 		KubeConfigPath: kubeconfig,
