@@ -16,6 +16,7 @@ var ReturnStatefulSetObject = internal.ReturnStatefulSetObject
 var WaitForStatefulSetReady = internal.WaitForStatefulSetReady
 var ReturnJobObject = internal.ReturnJobObject
 var WaitForJobComplete = internal.WaitForJobComplete
+var UpdateSecretV2 = internal.UpdateSecretV2
 
 var ReadSecretV2 = internal.ReadSecretV2
 var ReadService = internal.ReadService
