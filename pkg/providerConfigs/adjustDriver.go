@@ -31,7 +31,6 @@ func AdjustGitopsRepo(
 	k1Dir string,
 	apexContentExists bool,
 	useCloudflareOriginIssuer bool,
-	installKubefirstPro bool,
 ) error {
 	//* clean up all other platforms
 	for _, platform := range pkg.SupportedPlatforms {
@@ -587,14 +586,6 @@ func AdjustGitopsRepo(
 	os.RemoveAll(fmt.Sprintf("%s/cluster-types", gitopsRepoDir))
 	os.RemoveAll(fmt.Sprintf("%s/services", gitopsRepoDir))
 
-	if !installKubefirstPro {
-		kubefirstComponentsLocation := fmt.Sprintf("%s/registry/clusters/%s/components/kubefirst", gitopsRepoDir, clusterName)
-		kubefirstRegistryLocation := fmt.Sprintf("%s/registry/clusters/%s/kubefirst.yaml", gitopsRepoDir, clusterName)
-
-		os.RemoveAll(kubefirstComponentsLocation)
-		os.Remove(kubefirstRegistryLocation)
-	}
-
 	return nil
 }
 
@@ -976,7 +967,6 @@ func PrepareGitRepositories(
 	apexContentExists bool,
 	gitProtocol string,
 	useCloudflareOriginIssuer bool,
-	installKubefirstPro bool,
 ) error {
 	//* clone the gitops-template repo
 	gitopsRepo, err := gitClient.CloneRefSetMain(gitopsTemplateBranch, gitopsDir, gitopsTemplateURL)
@@ -987,7 +977,7 @@ func PrepareGitRepositories(
 
 	// ADJUST CONTENT
 	//* adjust the content for the gitops repo
-	err = AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsDir, gitProvider, k1Dir, apexContentExists, useCloudflareOriginIssuer, installKubefirstPro)
+	err = AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsDir, gitProvider, k1Dir, apexContentExists, useCloudflareOriginIssuer)
 	if err != nil {
 		log.Info().Msgf("err: %v", err)
 		return err
