@@ -59,6 +59,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				true,
 				cl.GitProtocol,
 				useCloudflareOriginIssuer,
+				clctrl.InstallKubefirstPro,
 			)
 			if err != nil {
 				return err
@@ -81,6 +82,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				true,
 				cl.GitProtocol,
 				useCloudflareOriginIssuer,
+				clctrl.InstallKubefirstPro,
 			)
 			if err != nil {
 				return err
@@ -103,6 +105,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				civo.GetDomainApexContent(clctrl.DomainName),
 				cl.GitProtocol,
 				useCloudflareOriginIssuer,
+				clctrl.InstallKubefirstPro,
 			)
 			if err != nil {
 				return err
@@ -125,6 +128,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				google.GetDomainApexContent(clctrl.DomainName),
 				cl.GitProtocol,
 				useCloudflareOriginIssuer,
+				clctrl.InstallKubefirstPro,
 			)
 			if err != nil {
 				return err
@@ -147,6 +151,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				digitalocean.GetDomainApexContent(clctrl.DomainName),
 				cl.GitProtocol,
 				useCloudflareOriginIssuer,
+				clctrl.InstallKubefirstPro,
 			)
 			if err != nil {
 				return err
@@ -169,6 +174,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				vultr.GetDomainApexContent(clctrl.DomainName),
 				cl.GitProtocol,
 				useCloudflareOriginIssuer,
+				clctrl.InstallKubefirstPro,
 			)
 			if err != nil {
 				return err
@@ -192,6 +198,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				vultr.GetDomainApexContent(clctrl.DomainName),
 				cl.GitProtocol,
 				useCloudflareOriginIssuer,
+				clctrl.InstallKubefirstPro,
 			)
 			if err != nil {
 				return err

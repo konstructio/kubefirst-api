@@ -62,6 +62,7 @@ type ClusterController struct {
 	NodeType               string
 	NodeCount              int
 	PostInstallCatalogApps []pkgtypes.GitopsCatalogApp
+	InstallKubefirstPro    bool
 
 	// configs
 	ProviderConfig providerConfigs.ProviderConfig
@@ -188,6 +189,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	clctrl.NodeType = def.NodeType
 	clctrl.NodeCount = def.NodeCount
 	clctrl.PostInstallCatalogApps = def.PostInstallCatalogApps
+	clctrl.InstallKubefirstPro = def.InstallKubefirstPro
 
 	clctrl.AkamaiAuth = def.AkamaiAuth
 	clctrl.AWSAuth = def.AWSAuth
