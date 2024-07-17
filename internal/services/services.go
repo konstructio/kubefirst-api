@@ -510,10 +510,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Status:      "",
 			CreatedBy:   "kbot",
 		},
-	}
-
-	if cl.CloudProvider == "k3d" {
-		defaults = append(defaults, pkgtypes.Service{
+		{
 			Name:        "Metaphor",
 			Default:     true,
 			Description: "A multi-environment demonstration space for frontend application best practices that's easy to apply to other projects.",
@@ -523,7 +520,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 				fmt.Sprintf("https://metaphor-production.%s", fullDomainName)},
 			Status:    "",
 			CreatedBy: "kbot",
-		})
+		},
 	}
 
 	for _, svc := range defaults {

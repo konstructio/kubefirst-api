@@ -8,6 +8,7 @@ package controller
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/go-git/go-git/v5"
@@ -196,6 +197,14 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 			if err != nil {
 				return err
 			}
+		}
+
+		if !clctrl.InstallKubefirstPro {
+			kubefirstComponentsLocation := fmt.Sprintf("%s/registry/clusters/%s/components/kubefirst", clctrl.ProviderConfig.GitopsDir, clctrl.ClusterName)
+			kubefirstRegistryLocation := fmt.Sprintf("%s/registry/clusters/%s/kubefirst.yaml", clctrl.ProviderConfig.GitopsDir, clctrl.ClusterName)
+
+			os.RemoveAll(kubefirstComponentsLocation)
+			os.Remove(kubefirstRegistryLocation)
 		}
 
 		clctrl.Cluster.GitopsReadyCheck = true
