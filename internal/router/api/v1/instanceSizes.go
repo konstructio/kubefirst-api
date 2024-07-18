@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	awsinternal "github.com/kubefirst/kubefirst-api/internal/aws"
@@ -11,6 +12,7 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/digitalocean"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/kubefirst/kubefirst-api/internal/vultr"
+	"github.com/kubefirst/kubefirst-api/pkg/aws"
 	"github.com/kubefirst/kubefirst-api/pkg/google"
 	"github.com/linode/linodego"
 	"golang.org/x/oauth2"
@@ -73,13 +75,20 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 			return
 		}
 
-		awsConf := &awsinternal.AWSConfiguration{
-			Config: awsinternal.NewAwsV3(
-				instanceSizesRequest.CloudRegion,
-				instanceSizesRequest.AWSAuth.AccessKeyID,
-				instanceSizesRequest.AWSAuth.SecretAccessKey,
-				instanceSizesRequest.AWSAuth.SessionToken,
-			),
+		var awsConf *awsinternal.AWSConfiguration
+		if os.Getenv("IS_CLUSTER_ZERO") == "false" {
+			awsConf = &awsinternal.AWSConfiguration{
+				Config: aws.NewEKSServiceAccountClientV1(),
+			}
+		} else {
+			awsConf = &awsinternal.AWSConfiguration{
+				Config: awsinternal.NewAwsV3(
+					instanceSizesRequest.CloudRegion,
+					instanceSizesRequest.AWSAuth.AccessKeyID,
+					instanceSizesRequest.AWSAuth.SecretAccessKey,
+					instanceSizesRequest.AWSAuth.SessionToken,
+				),
+			}
 		}
 
 		if err != nil {
