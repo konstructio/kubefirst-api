@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
