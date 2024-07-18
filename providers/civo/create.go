@@ -39,11 +39,11 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	// err = ctrl.DomainLivenessTest()
-	// if err != nil {
-	// 	ctrl.HandleError(err.Error())
-	// 	return err
-	// }
+	err = ctrl.DomainLivenessTest()
+	if err != nil {
+		ctrl.HandleError(err.Error())
+		return err
+	}
 
 	err = ctrl.StateStoreCredentials()
 	if err != nil {
@@ -75,15 +75,19 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	return nil
+
+	err = ctrl.TerraformPrep()
+	if err != nil {
+		ctrl.HandleError(err.Error())
+		return err
+	}
+
 
 	err = ctrl.RunGitTerraform()
 	if err != nil {
 		ctrl.HandleError(err.Error())
 		return err
 	}
-
-	
 
 	err = ctrl.RepositoryPush()
 	if err != nil {
