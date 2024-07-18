@@ -72,6 +72,7 @@ func GetConfig(
 	AdminTeamName string,
 	DeveloperTeamName string,
 ) *ProviderConfig {
+
 	config := ProviderConfig{}
 
 	homeDir, err := os.UserHomeDir()

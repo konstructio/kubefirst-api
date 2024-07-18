@@ -61,7 +61,7 @@ func (c *CloudflareConfiguration) TestDomainLiveness(domainName string) bool {
 		return false
 	}
 	rc := cloudflare.ZoneIdentifier(zoneId)
-	fmt.Println(zoneId)
+
 	log.Info().Msgf("Cloudflare ZoneID %s exists and contains domain %s", zoneId, domainName)
 
 	// Change this for origin certs

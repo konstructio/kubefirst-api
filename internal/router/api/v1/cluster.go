@@ -244,7 +244,7 @@ func PostCreateCluster(c *gin.Context) {
 		})
 		return
 	}
-	fmt.Println(c.Params)
+	
 	// Bind to variable as application/json, handle 	error
 	var clusterDefinition pkgtypes.ClusterDefinition
 	err := c.Bind(&clusterDefinition)

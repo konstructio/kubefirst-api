@@ -7,7 +7,6 @@ See the LICENSE file for more details.
 package api
 
 import (
-	"net/http"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/konstructio/kubefirst-api/internal/middleware"
@@ -58,9 +57,7 @@ func SetupRouter() *gin.Engine {
 
 		// KubeConfig
 		v1.POST("/kubeconfig/:cloud_provider", middleware.ValidateAPIKey(), router.GetClusterKubeConfig)
-		v1.GET("/abc", func(c *gin.Context) {
-			c.String(http.StatusOK, "hi")
-		})
+
 		// Cluster Secret
 		v1.GET("/secret/:cluster_name/:secret", router.GetClusterSecret)
 		v1.POST("/secret/:cluster_name/:secret", router.CreateClusterSecret)
