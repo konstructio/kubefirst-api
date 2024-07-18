@@ -38,7 +38,6 @@ type ClusterDefinition struct {
 	MetaphorRepoName     string `json:"metaphorRepoName" binding:"required"`
 	AdminTeamName        string `json:"adminTeamName" binding:"required"`
 	DeveloperTeamName    string `json:"developerTeamName" binding:"required"`
-
 	// AWS
 	ECR bool `json:"ecr,omitempty"`
 

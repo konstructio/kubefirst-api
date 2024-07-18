@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package civo
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/konstructio/kubefirst-api/internal/constants"
@@ -21,10 +22,12 @@ import (
 
 func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 	ctrl := controller.ClusterController{}
+	fmt.Print(definition)
 	err := ctrl.InitController(definition)
 	if err != nil {
 		return err
 	}
+
 	ctrl.Cluster.InProgress = true
 	err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
 	if err != nil {
@@ -37,11 +40,11 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	err = ctrl.DomainLivenessTest()
-	if err != nil {
-		ctrl.HandleError(err.Error())
-		return err
-	}
+	// err = ctrl.DomainLivenessTest()
+	// if err != nil {
+	// 	ctrl.HandleError(err.Error())
+	// 	return err
+	// }
 
 	err = ctrl.StateStoreCredentials()
 	if err != nil {
@@ -68,12 +71,6 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 	}
 
 	err = ctrl.RepositoryPrep()
-	if err != nil {
-		ctrl.HandleError(err.Error())
-		return err
-	}
-
-	err = ctrl.TerraformPrep()
 	if err != nil {
 		ctrl.HandleError(err.Error())
 		return err

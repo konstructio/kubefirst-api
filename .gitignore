@@ -21,7 +21,3 @@ launch.json
 __debug_*
 .env
 .envrc
-tmp
-/log
-
-
