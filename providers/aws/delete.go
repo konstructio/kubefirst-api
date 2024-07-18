@@ -35,7 +35,7 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEv
 	telemetry.SendEvent(telemetryEvent, telemetry.ClusterDeleteStarted, "")
 
 	// Instantiate aws config
-	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.APIToken, cl.CloudflareAuth.OriginCaIssuerKey)
+	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.APIToken, cl.CloudflareAuth.OriginCaIssuerKey,cl.GitopsRepoName,cl.MetaphorRepoName,cl.AdminTeamName,cl.DeveloperTeamName)
 
 	kcfg := utils.GetKubernetesClient(cl.ClusterName)
 

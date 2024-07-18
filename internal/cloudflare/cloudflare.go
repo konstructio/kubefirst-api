@@ -53,14 +53,24 @@ func (c *CloudflareConfiguration) TestDomainLiveness(domainName string) bool {
 	RecordName := "kubefirst-liveness." + domainName
 	RecordValue := "domain record propagated"
 
+	fmt.Printf("Doamin Name is %s\n",domainName)
+	// domainName = "kubefirst.tech"
+	// fmt.Println(domainName)
+	domainName = "kubernickels.com"
 	// Get zone id for domain name
 	zoneId, err := c.Client.ZoneIDByName(domainName)
+
+	fmt.Printf("Zone Id for kubernickels.com %s\n",zoneId)
+	domainName = "kubefirst.tech"
+
+	zoneId, err = c.Client.ZoneIDByName(domainName)
+	fmt.Println(err)
 	if err != nil {
 		log.Error().Msgf("error finding cloudflare zoneid for domain %s: %s", domainName, err)
 		return false
 	}
 	rc := cloudflare.ZoneIdentifier(zoneId)
-
+	fmt.Println(zoneId)
 	log.Info().Msgf("Cloudflare ZoneID %s exists and contains domain %s", zoneId, domainName)
 
 	// Change this for origin certs

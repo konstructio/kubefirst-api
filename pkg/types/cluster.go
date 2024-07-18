@@ -34,7 +34,11 @@ type ClusterDefinition struct {
 	GitopsTemplateBranch string `json:"gitops_template_branch"`
 	GitProvider          string `json:"git_provider" binding:"required,oneof=github gitlab"`
 	GitProtocol          string `json:"git_protocol" binding:"required,oneof=ssh https"`
-
+	GitopsRepoName       string `json:"gitopsRepoName" binding:"required"`
+	MetaphorRepoName     string `json:"metaphorRepoName" binding:"required"`
+	AdminTeamName        string `json:"adminTeamName" binding:"required"`
+	DeveloperTeamName    string `json:"developerTeamName" binding:"required"`
+	
 	// AWS
 	ECR bool `json:"ecr,omitempty"`
 
@@ -89,6 +93,10 @@ type Cluster struct {
 	GitopsTemplateBranch string `bson:"gitops_template_branch" json:"gitops_template_branch"`
 	GitProvider          string `bson:"git_provider" json:"git_provider"`
 	GitProtocol          string `bson:"git_protocol" json:"git_protocol"`
+	GitopsRepoName       string `bson:"gitopsRepoName" json:"gitopsRepoName"`
+	MetaphorRepoName     string `bson:"metaphorRepoName" json:"metaphorRepoName"`
+	AdminTeamName        string `bson:"adminTeamName" json:"adminTeamName"`
+	DeveloperTeamName    string `bson:"developerTeamName" json:"developerTeamName"`
 	GitHost              string `bson:"git_host" json:"git_host"`
 	GitlabOwnerGroupID   int    `bson:"gitlab_owner_group_id" json:"gitlab_owner_group_id"`
 

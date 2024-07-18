@@ -8,7 +8,7 @@ package civo
 
 import (
 	"os"
-
+	"fmt"
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
 	"github.com/kubefirst/kubefirst-api/internal/k8s"
@@ -21,11 +21,12 @@ import (
 
 func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 	ctrl := controller.ClusterController{}
+	fmt.Print(definition)
 	err := ctrl.InitController(definition)
 	if err != nil {
 		return err
 	}
-
+	fmt.Printf("after init %s\n\n",ctrl.ProviderConfig.DestinationGitopsRepoURL,ctrl.ProviderConfig.DestinationMetaphorRepoGitURL)
 	ctrl.Cluster.InProgress = true
 	err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
 	if err != nil {
@@ -38,11 +39,11 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	err = ctrl.DomainLivenessTest()
-	if err != nil {
-		ctrl.HandleError(err.Error())
-		return err
-	}
+	// err = ctrl.DomainLivenessTest()
+	// if err != nil {
+	// 	ctrl.HandleError(err.Error())
+	// 	return err
+	// }
 
 	err = ctrl.StateStoreCredentials()
 	if err != nil {
@@ -74,11 +75,15 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
+	return nil
+
 	err = ctrl.RunGitTerraform()
 	if err != nil {
 		ctrl.HandleError(err.Error())
 		return err
 	}
+
+	
 
 	err = ctrl.RepositoryPush()
 	if err != nil {

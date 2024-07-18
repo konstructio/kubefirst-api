@@ -67,7 +67,13 @@ func GetConfig(
 	gitProtocol string,
 	cloudflareAPIToken string,
 	cloudflareOriginCaIssuerAPIToken string,
+	GitopsRepoName string,
+	MetaphorRepoName string,
+	AdminTeamName string,
+	DeveloperTeamName string,
 ) *ProviderConfig {
+
+	fmt.Println("gmad %s\n %s\n %s\n %s\n ",GitopsRepoName,MetaphorRepoName,AdminTeamName,DeveloperTeamName)
 	config := ProviderConfig{}
 
 	homeDir, err := os.UserHomeDir()
@@ -84,10 +90,10 @@ func GetConfig(
 		cGitHost = GitlabHost
 	}
 
-	config.DestinationGitopsRepoURL = fmt.Sprintf("https://%s/%s/gitops.git", cGitHost, gitOwner)
-	config.DestinationGitopsRepoGitURL = fmt.Sprintf("git@%s:%s/gitops.git", cGitHost, gitOwner)
-	config.DestinationMetaphorRepoURL = fmt.Sprintf("https://%s/%s/metaphor.git", cGitHost, gitOwner)
-	config.DestinationMetaphorRepoGitURL = fmt.Sprintf("git@%s:%s/metaphor.git", cGitHost, gitOwner)
+	config.DestinationGitopsRepoURL = fmt.Sprintf("https://%s/%s/%s.git", cGitHost, gitOwner,GitopsRepoName)
+	config.DestinationGitopsRepoGitURL = fmt.Sprintf("git@%s:%s/%s.git", cGitHost, gitOwner,GitopsRepoName)
+	config.DestinationMetaphorRepoURL = fmt.Sprintf("https://%s/%s/%s.git", cGitHost, gitOwner,MetaphorRepoName)
+	config.DestinationMetaphorRepoGitURL = fmt.Sprintf("git@%s:%s/%s.git", cGitHost, gitOwner,MetaphorRepoName)
 	config.ArgoWorkflowsDir = fmt.Sprintf("%s/.k1/%s/argo-workflows", homeDir, clusterName)
 	config.GitopsDir = fmt.Sprintf("%s/.k1/%s/gitops", homeDir, clusterName)
 	config.GitProvider = gitProvider
