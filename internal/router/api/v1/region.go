@@ -81,7 +81,6 @@ func PostRegions(c *gin.Context) {
 					regionListRequest.AWSAuth.SessionToken,
 				),
 			}
-
 		}
 
 		regions, err := awsConf.GetRegions(regionListRequest.CloudRegion)
