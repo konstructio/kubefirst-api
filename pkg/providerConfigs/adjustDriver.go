@@ -985,7 +985,6 @@ func PrepareGitRepositories(
 
 	// DETOKENIZE
 	//* detokenize the gitops repo
-	fmt.Println(gitopsTokens)
 	DetokenizeGitGitops(gitopsDir, gitopsTokens, gitProtocol, useCloudflareOriginIssuer)
 	if err != nil {
 		return err

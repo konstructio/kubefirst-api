@@ -73,7 +73,6 @@ func GetConfig(
 	DeveloperTeamName string,
 ) *ProviderConfig {
 
-	fmt.Println("gmad %s\n %s\n %s\n %s\n ",GitopsRepoName,MetaphorRepoName,AdminTeamName,DeveloperTeamName)
 	config := ProviderConfig{}
 
 	homeDir, err := os.UserHomeDir()

@@ -258,7 +258,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	if err != nil {
 		return err
 	}
-	fmt.Println("gmad %s\n %s\n %s\n %s\n ",clctrl.GitopsRepoName,clctrl.MetaphorRepoName,clctrl.AdminTeamName,clctrl.DeveloperTeamName)
+	
 	// Instantiate provider configuration
 	switch clctrl.CloudProvider {
 	case "akamai":

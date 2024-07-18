@@ -8,7 +8,7 @@ package civo
 
 import (
 	"os"
-	"fmt"
+	
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
 	"github.com/kubefirst/kubefirst-api/internal/k8s"
@@ -26,7 +26,6 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("after init %s\n\n",ctrl.ProviderConfig.DestinationGitopsRepoURL,ctrl.ProviderConfig.DestinationMetaphorRepoGitURL)
 	ctrl.Cluster.InProgress = true
 	err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
 	if err != nil {
