@@ -72,6 +72,11 @@ type GitopsDirectoryValues struct {
 	GitRunnerDescription string
 	GitRunnerNS          string
 	GitURL               string
+	AdminTeamName		 string
+	DeveloperTeamName	 string
+	MetaphorRepoName	 string
+	GitopsRepoName		 string
+
 
 	GitHubHost  string
 	GitHubOwner string

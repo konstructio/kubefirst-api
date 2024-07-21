@@ -200,6 +200,10 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			GitRunnerDescription: fmt.Sprintf("Self Hosted %s Runner", clctrl.GitProvider),
 			GitRunnerNS:          fmt.Sprintf("%s-runner", clctrl.GitProvider),
 			GitURL:               clctrl.GitopsTemplateURL,
+			AdminTeamName:		  clctrl.AdminTeamName,
+			DeveloperTeamName:	  clctrl.DeveloperTeamName,
+			MetaphorRepoName:	  clctrl.MetaphorRepoName,
+			GitopsRepoName:		  clctrl.GitopsRepoName,
 			GitopsRepoURL:        destinationGitopsRepoURL,
 
 			GitHubHost:  fmt.Sprintf("https://github.com/%s/gitops.git", clctrl.GitAuth.Owner),
