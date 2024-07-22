@@ -27,6 +27,7 @@ var SupportedPlatforms = []string{
 	"k3d-github",
 	"k3d-gitlab",
 	"k3s-gitlab",
+	"k3s-github",
 	"vultr-github",
 	"vultr-gitlab",
 }
