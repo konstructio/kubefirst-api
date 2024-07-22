@@ -205,7 +205,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 
 		err = cmd.Run()
 		if err != nil {
-			fmt.Printf("Error executing kubectl command: %v\n", err)
+			log.Info().Msgf("Error executing kubectl command: %v\n", err)
 			return err
 		}
 
