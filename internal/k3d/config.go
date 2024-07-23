@@ -90,12 +90,12 @@ func GetConfig(clusterName string, gitProvider string, gitOwner string, gitProto
 		cGitHost = GitlabHost
 	}
 
-	config.DestinationGitopsRepoURL = fmt.Sprintf("https://%s/%s/gitops.git", cGitHost, gitOwner)
-	config.DestinationGitopsRepoGitURL = fmt.Sprintf("git@%s:%s/gitops.git", cGitHost, gitOwner)
-	config.DestinationMetaphorRepoURL = fmt.Sprintf("https://%s/%s/metaphor.git", cGitHost, gitOwner)
-	config.DestinationMetaphorRepoGitURL = fmt.Sprintf("git@%s:%s/metaphor.git", cGitHost, gitOwner)
+	config.DestinationGitopsRepoURL = fmt.Sprintf("https://%s/%s/%s.git", cGitHost, gitOwner, "gitops")
+	config.DestinationGitopsRepoGitURL = fmt.Sprintf("git@%s:%s/%s.git", cGitHost, gitOwner, "gitops")
+	config.DestinationMetaphorRepoURL = fmt.Sprintf("https://%s/%s/%s.git", cGitHost, gitOwner, "metaphor")
+	config.DestinationMetaphorRepoGitURL = fmt.Sprintf("git@%s:%s/%s.git", cGitHost, gitOwner, "metaphor")
 
-	config.GitopsDir = fmt.Sprintf("%s/.k1/%s/gitops", homeDir, clusterName)
+	config.GitopsDir = fmt.Sprintf("%s/.k1/%s/%s", homeDir, clusterName, "gitops")
 	config.GitProvider = gitProvider
 	config.GitProtocol = gitProtocol
 	config.K1Dir = fmt.Sprintf("%s/.k1/%s", homeDir, clusterName)

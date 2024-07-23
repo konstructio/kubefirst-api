@@ -69,8 +69,6 @@ func GetConfig(
 	cloudflareOriginCaIssuerAPIToken string,
 	GitopsRepoName string,
 	MetaphorRepoName string,
-	AdminTeamName string,
-	DeveloperTeamName string,
 ) *ProviderConfig {
 
 	config := ProviderConfig{}
@@ -94,7 +92,7 @@ func GetConfig(
 	config.DestinationMetaphorRepoURL = fmt.Sprintf("https://%s/%s/%s.git", cGitHost, gitOwner,MetaphorRepoName)
 	config.DestinationMetaphorRepoGitURL = fmt.Sprintf("git@%s:%s/%s.git", cGitHost, gitOwner,MetaphorRepoName)
 	config.ArgoWorkflowsDir = fmt.Sprintf("%s/.k1/%s/argo-workflows", homeDir, clusterName)
-	config.GitopsDir = fmt.Sprintf("%s/.k1/%s/gitops", homeDir, clusterName)
+	config.GitopsDir = fmt.Sprintf("%s/.k1/%s/%s", homeDir, clusterName,GitopsRepoName)
 	config.GitProvider = gitProvider
 	config.GitProtocol = gitProtocol
 	config.CloudflareAPIToken = cloudflareAPIToken
@@ -104,9 +102,9 @@ func GetConfig(
 	config.KubectlClient = fmt.Sprintf("%s/.k1/%s/tools/kubectl", homeDir, clusterName)
 	config.KubefirstConfig = fmt.Sprintf("%s/.k1/%s/%s", homeDir, clusterName, ".kubefirst")
 	config.LogsDir = fmt.Sprintf("%s/.k1/%s/logs", homeDir, clusterName)
-	config.MetaphorDir = fmt.Sprintf("%s/.k1/%s/metaphor", homeDir, clusterName)
+	config.MetaphorDir = fmt.Sprintf("%s/.k1/%s/%s", homeDir, clusterName, MetaphorRepoName)
 	config.RegistryAppName = "registry"
-	config.RegistryYaml = fmt.Sprintf("%s/.k1/%s/gitops/registry/%s/registry.yaml", homeDir, clusterName, clusterName)
+	config.RegistryYaml = fmt.Sprintf("%s/.k1/%s/%s/registry/%s/registry.yaml", homeDir, clusterName, clusterName,GitopsRepoName)
 	config.SSLBackupDir = fmt.Sprintf("%s/.k1/%s/ssl/%s", homeDir, clusterName, domainName)
 	config.TerraformClient = fmt.Sprintf("%s/.k1/%s/tools/terraform", homeDir, clusterName)
 	config.ToolsDir = fmt.Sprintf("%s/.k1/%s/tools", homeDir, clusterName)

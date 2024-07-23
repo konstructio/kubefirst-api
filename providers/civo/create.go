@@ -21,7 +21,6 @@ import (
 
 func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 	ctrl := controller.ClusterController{}
-	fmt.Print(definition)
 	err := ctrl.InitController(definition)
 	if err != nil {
 		return err
@@ -94,6 +93,9 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
+
+	return nil 
+	
 	err = ctrl.CreateCluster()
 	if err != nil {
 		ctrl.HandleError(err.Error())

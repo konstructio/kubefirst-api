@@ -162,11 +162,11 @@ func (clctrl *ClusterController) GetRepoURL() (string, error) {
 		switch clctrl.ProviderConfig.GitProtocol {
 		case "https":
 			// Update the urls in the cluster for gitlab parent groups
-			clctrl.ProviderConfig.DestinationGitopsRepoHttpsURL = fmt.Sprintf("https://gitlab.com/%s/gitops.git", gitlabClient.ParentGroupPath)
+			clctrl.ProviderConfig.DestinationGitopsRepoHttpsURL = fmt.Sprintf("https://gitlab.com/%s/%s.git", gitlabClient.ParentGroupPath,clctrl.GitopsRepoName)
 			clctrl.ProviderConfig.DestinationMetaphorRepoHttpsURL = fmt.Sprintf("https://gitlab.com/%s/metaphor.git", gitlabClient.ParentGroupPath)
 		default:
 			// Update the urls in the cluster for gitlab parent group
-			clctrl.ProviderConfig.DestinationGitopsRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)
+			clctrl.ProviderConfig.DestinationGitopsRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/%s.git", gitlabClient.ParentGroupPath,clctrl.GitopsRepoName)
 			clctrl.ProviderConfig.DestinationMetaphorRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/metaphor.git", gitlabClient.ParentGroupPath)
 			// Return the url used for detokenization
 			destinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL

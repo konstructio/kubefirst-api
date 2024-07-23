@@ -120,7 +120,7 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 	}
 
 	//* metaphor app source
-	metaphorContent := fmt.Sprintf("%s/metaphor", gitopsRepoDir)
+	metaphorContent := fmt.Sprintf("%s/%s", gitopsRepoDir, "metaphor")
 	err = cp.Copy(metaphorContent, metaphorDir, opt)
 	if err != nil {
 		log.Info().Msgf("Error populating metaphor content with %s. error: %s", metaphorContent, err.Error())
@@ -131,7 +131,7 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 	switch gitProvider {
 	case "github":
 		//* copy $HOME/.k1/gitops/ci/.github/* $HOME/.k1/metaphor/.github
-		githubActionsFolderContent := fmt.Sprintf("%s/gitops/ci/.github", k1Dir)
+		githubActionsFolderContent := fmt.Sprintf("%s/%s/ci/.github", "gitops")
 		log.Info().Msgf("copying github content: %s", githubActionsFolderContent)
 		err := cp.Copy(githubActionsFolderContent, fmt.Sprintf("%s/.github", metaphorDir), opt)
 		if err != nil {
@@ -140,7 +140,7 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 		}
 	case "gitlab":
 		//* copy $HOME/.k1/gitops/ci/.gitlab-ci.yml/* $HOME/.k1/metaphor/.github
-		gitlabCIContent := fmt.Sprintf("%s/gitops/ci/.gitlab-ci.yml", k1Dir)
+		gitlabCIContent := fmt.Sprintf("%s/%s/ci/.gitlab-ci.yml", k1Dir, "gitops")
 		log.Info().Msgf("copying gitlab content: %s", gitlabCIContent)
 		err := cp.Copy(gitlabCIContent, fmt.Sprintf("%s/.gitlab-ci.yml", metaphorDir), opt)
 		if err != nil {
@@ -150,7 +150,7 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 	}
 
 	//* copy $HOME/.k1/gitops/ci/.argo/* $HOME/.k1/metaphor/.argo
-	argoWorkflowsFolderContent := fmt.Sprintf("%s/gitops/ci/.argo", k1Dir)
+	argoWorkflowsFolderContent := fmt.Sprintf("%s/%s/ci/.argo", k1Dir, "gitops")
 	log.Info().Msgf("copying argo workflows content: %s", argoWorkflowsFolderContent)
 	err = cp.Copy(argoWorkflowsFolderContent, fmt.Sprintf("%s/.argo", metaphorDir), opt)
 	if err != nil {

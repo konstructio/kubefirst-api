@@ -206,7 +206,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			GitopsRepoName:		  clctrl.GitopsRepoName,
 			GitopsRepoURL:        destinationGitopsRepoURL,
 
-			GitHubHost:  fmt.Sprintf("https://github.com/%s/gitops.git", clctrl.GitAuth.Owner),
+			GitHubHost:  fmt.Sprintf("https://github.com/%s/%s.git", clctrl.GitAuth.Owner,clctrl.GitopsRepoName),
 			GitHubOwner: clctrl.GitAuth.Owner,
 			GitHubUser:  clctrl.GitAuth.User,
 
@@ -216,9 +216,9 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			GitlabUser:         clctrl.GitAuth.User,
 
 			GitopsRepoAtlantisWebhookURL:               clctrl.AtlantisWebhookURL,
-			GitopsRepoNoHTTPSURL:                       fmt.Sprintf("%s/%s/gitops.git", clctrl.GitHost, clctrl.GitAuth.Owner),
-			WorkloadClusterTerraformModuleURL:          fmt.Sprintf("git::https://%s/%s/gitops.git//terraform/%s/modules/workload-cluster?ref=main", clctrl.GitHost, clctrl.GitAuth.Owner, clctrl.CloudProvider),
-			WorkloadClusterBootstrapTerraformModuleURL: fmt.Sprintf("git::https://%s/%s/gitops.git//terraform/%s/modules/bootstrap?ref=main", clctrl.GitHost, clctrl.GitAuth.Owner, clctrl.CloudProvider),
+			GitopsRepoNoHTTPSURL:                       fmt.Sprintf("%s/%s/%s.git", clctrl.GitHost, clctrl.GitAuth.Owner,clctrl.GitopsRepoName),
+			WorkloadClusterTerraformModuleURL:          fmt.Sprintf("git::https://%s/%s/%s.git//terraform/%s/modules/workload-cluster?ref=main", clctrl.GitHost, clctrl.GitAuth.Owner, clctrl.GitopsRepoName,clctrl.CloudProvider),
+			WorkloadClusterBootstrapTerraformModuleURL: fmt.Sprintf("git::https://%s/%s/%s.git//terraform/%s/modules/bootstrap?ref=main", clctrl.GitHost, clctrl.GitAuth.Owner, clctrl.GitopsRepoName,clctrl.CloudProvider),
 			ClusterId: clctrl.ClusterID,
 
 			// external-dns optionality to provide cloudflare support regardless of cloud provider
