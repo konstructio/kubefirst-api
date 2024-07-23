@@ -110,4 +110,5 @@ type MetaphorTokenValues struct {
 	MetaphorDevelopmentIngressURL string
 	MetaphorProductionIngressURL  string
 	MetaphorStagingIngressURL     string
+	MetaphorRepoName			  string
 }

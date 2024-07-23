@@ -93,8 +93,6 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-
-	return nil 
 	
 	err = ctrl.CreateCluster()
 	if err != nil {

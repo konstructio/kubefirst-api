@@ -275,11 +275,12 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 		metaphorTemplateTokens := &providerConfigs.MetaphorTokenValues{
 			ClusterName:                   clctrl.ClusterName,
 			CloudRegion:                   clctrl.CloudRegion,
-			ContainerRegistryURL:          fmt.Sprintf("%s/%s/metaphor", clctrl.ContainerRegistryHost, clctrl.GitAuth.Owner),
+			ContainerRegistryURL:          fmt.Sprintf("%s/%s/%s", clctrl.ContainerRegistryHost, clctrl.GitAuth.Owner, clctrl.MetaphorRepoName),
 			DomainName:                    fullDomainName,
 			MetaphorDevelopmentIngressURL: fmt.Sprintf("metaphor-development.%s", fullDomainName),
 			MetaphorStagingIngressURL:     fmt.Sprintf("metaphor-staging.%s", fullDomainName),
 			MetaphorProductionIngressURL:  fmt.Sprintf("metaphor-production.%s", fullDomainName),
+			MetaphorRepoName:	  		   clctrl.MetaphorRepoName,
 		}
 		return metaphorTemplateTokens
 	}

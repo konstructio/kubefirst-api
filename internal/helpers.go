@@ -322,6 +322,7 @@ func UpdateTerraformS3BackendForLocalhostAddress() error {
 	// todo: create a function for file content replacement
 	vaultMainFile := fmt.Sprintf("%s/%s/terraform/vault/main.tf", config.K1FolderPath, "gitops")
 	if err := ReplaceFileContent(
+		
 		vaultMainFile,
 		"http://minio.minio.svc.cluster.local:9000",
 		MinioURL,

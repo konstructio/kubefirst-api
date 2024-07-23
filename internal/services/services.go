@@ -470,7 +470,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Description: "The git repositories contain all the Infrastructure as Code and Gitops configurations.",
 			Image:       fmt.Sprintf("https://assets.kubefirst.com/console/%s.svg", cl.GitProvider),
 			Links: []string{fmt.Sprintf("https://%s/%s/%s", cl.GitHost, cl.GitAuth.Owner,cl.GitopsRepoName),
-				fmt.Sprintf("https://%s/%s/metaphor", cl.GitHost, cl.GitAuth.Owner)},
+				fmt.Sprintf("https://%s/%s/%s", cl.GitHost, cl.GitAuth.Owner, cl.MetaphorRepoName)},
 			Status:    "",
 			CreatedBy: "kbot",
 		},
