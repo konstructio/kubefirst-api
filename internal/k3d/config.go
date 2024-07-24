@@ -73,7 +73,7 @@ type K3dConfig struct {
 }
 
 // GetConfig - load default values from kubefirst installer
-func GetConfig(clusterName, gitProvider, gitOwner, gitProtocol, gitopsRepoName, metaphorRepoName, adminTeamName, developerTeamName string) *K3dConfig {
+func GetConfig(clusterName string, gitProvider string, gitOwner string, gitProtocol string) *K3dConfig {
 	config := K3dConfig{}
 
 	if err := env.Parse(&config); err != nil {

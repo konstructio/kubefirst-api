@@ -8,6 +8,7 @@ package k3d
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
