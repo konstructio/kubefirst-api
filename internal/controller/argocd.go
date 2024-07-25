@@ -224,7 +224,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		)
 
 
-		err = RestartDeployment(context.Background(),clctrl.Kcfg.Clientset,"argocd","argocd-applicationser-controller")
+		err = RestartDeployment(context.Background(),clctrl.Kcfg.Clientset,"argocd","argocd-applicationset-controller")
 		
 		if err!= nil {
 			return err
