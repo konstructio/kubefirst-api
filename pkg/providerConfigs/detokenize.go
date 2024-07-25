@@ -8,7 +8,6 @@ package providerConfigs
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/Masterminds/sprig/v3"
 	"io"
@@ -19,8 +18,6 @@ import (
 	"strings"
 	"text/template"
 )
-
-type TerraformDecoderFunc func(content string, dest []byte) error
 
 // ToTemplateVars - converts a string to a template variable
 func ToTemplateVars(input string, instance Tokens) string {
@@ -56,7 +53,7 @@ func ToTemplateVars(input string, instance Tokens) string {
 
 // Detokenize - Translate tokens by values on a given path
 func Detokenize(path string, tokens Tokens, gitProtocol string, useCloudflareOriginIssuer bool) error {
-	err := filepath.Walk(path, detokenize(path, tokens, gitProtocol, useCloudflareOriginIssuer))
+	err := filepath.Walk(path, detokenize(tokens, gitProtocol, useCloudflareOriginIssuer))
 	if err != nil {
 		return err
 	}
@@ -64,7 +61,7 @@ func Detokenize(path string, tokens Tokens, gitProtocol string, useCloudflareOri
 	return nil
 }
 
-func detokenize(path string, tokens Tokens, gitProtocol string, useCloudflareOriginIssuer bool) filepath.WalkFunc {
+func detokenize(tokens Tokens, gitProtocol string, useCloudflareOriginIssuer bool) filepath.WalkFunc {
 	return filepath.WalkFunc(func(path string, fi os.FileInfo, err error) error {
 		if fi.IsDir() && fi.Name() == ".git" {
 			return filepath.SkipDir
@@ -91,7 +88,7 @@ func detokenize(path string, tokens Tokens, gitProtocol string, useCloudflareOri
 			tokens = tokenType
 		}
 
-		newContentData, err = renderGoTemplating(path, tokens, nil)
+		newContentData, err = renderGoTemplating(path, tokens)
 		if err != nil {
 			return err
 		}
@@ -140,7 +137,6 @@ func setGitOpsTokens(tokens *GitopsDirectoryValues, gitProtocol string, useCloud
 // it also includes the sprig GenericFuncMap functions listed here: https://masterminds.github.io/sprig/.
 func parseTemplate(content string) (*template.Template, error) {
 	funcs := sprig.GenericFuncMap()
-	funcs["toJson"] = toJson
 	t := template.New("gitops-template").
 		Funcs(funcs).
 		Delims(leftDelimiter, rightDelimiter)
@@ -159,19 +155,19 @@ func executeTemplate(t *template.Template, writer io.Writer, tokens Tokens) erro
 	}
 }
 
-func replaceTemplateVariables(content string, tokens Tokens) string {
-	regex := regexp.MustCompile(TokenRegexPattern)
+func replaceTemplateVariables(content string, regex *regexp.Regexp, tokens Tokens) string {
 	return regex.ReplaceAllStringFunc(content, tokens.ToTemplateVars)
 }
 
 // renderGoTemplating - Render a template with the given tokens.
-func renderGoTemplating(path string, tokens Tokens, f TerraformDecoderFunc) ([]byte, error) {
+func renderGoTemplating(path string, tokens Tokens) ([]byte, error) {
 	read, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 	// Replace all tokens with their values
-	content := replaceTemplateVariables(string(read), tokens)
+	regex := regexp.MustCompile(TokenRegexPattern)
+	content := replaceTemplateVariables(string(read), regex, tokens)
 	buff := bytes.NewBufferString(content)
 
 	parsedTemplate, err := parseTemplate(buff.String())
@@ -184,20 +180,5 @@ func renderGoTemplating(path string, tokens Tokens, f TerraformDecoderFunc) ([]b
 		return nil, err
 	}
 
-	if f != nil {
-		err = f(newBuff.String(), newBuff.Bytes())
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	return newBuff.Bytes(), nil
-}
-
-func toJson(v interface{}) string {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return ""
-	}
-	return string(b)
 }
