@@ -49,7 +49,7 @@ func ToTemplateVars(input string, instance Tokens) string {
 		}
 	}
 
-	// If no match found, return the original input as a string, so we can have a visual indication
+	// If no match found, return <variable-not-found> so we can have a visual indication
 	// that the token was not found in the Token Struct without erroring out
 	return "<variable-not-found>"
 }
