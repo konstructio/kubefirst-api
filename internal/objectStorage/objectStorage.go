@@ -46,7 +46,7 @@ func PutBucketObject(cr *pkgtypes.StateStoreCredentials, d *pkgtypes.StateStoreD
 	if err != nil {
 		return err
 	}
-	log.Info().Msgf("uploaded", obj.LocalFilePath, " of size: ", n, "successfully")
+	log.Info().Msgf("uploaded %s of size: %d successfully", obj.LocalFilePath, n.Size)
 
 	return nil
 }

@@ -44,7 +44,7 @@ func ArgoCDApplicationCleanup(clientset kubernetes.Interface, removeApps []strin
 		log.Info().Msgf("attempting to delete argocd application %s", app)
 		err := waitForApplicationDeletion(clientset, app)
 		if err != nil {
-			log.Error().Msgf("error deleting argocd application %s: %s", err)
+			log.Error().Msgf("error deleting argocd application %q: %s", app, err)
 		}
 	}
 

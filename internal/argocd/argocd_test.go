@@ -18,13 +18,12 @@ import (
 
 // this is called when ArgoCD is up and running
 func TestArgoCDLivenessIntegration(t *testing.T) {
-
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
 
 	config := configs.ReadConfig()
-	err := pkg.SetupViper(config)
+	err := pkg.SetupViper(config, false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -53,13 +52,12 @@ func TestArgoCDLivenessIntegration(t *testing.T) {
 
 // this is called when Argo Workflow is up and running
 func TestArgoWorkflowLivenessIntegration(t *testing.T) {
-
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
 
 	config := configs.ReadConfig()
-	err := pkg.SetupViper(config)
+	err := pkg.SetupViper(config, false)
 	if err != nil {
 		t.Error(err)
 	}
