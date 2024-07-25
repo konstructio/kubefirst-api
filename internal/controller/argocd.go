@@ -166,9 +166,9 @@ func RestartDeployment(ctx context.Context,clientset *kubernetes.Clientset,names
 	deploy.Spec.Template.ObjectMeta.Annotations["kubectl.kubernetes.io/restartedAt"] = time.Now().Format(time.RFC3339)
 
 	_,err = clientset.AppsV1().Deployments(namespace).Update(ctx,deploy,metav1.UpdateOptions{})
-	
+
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to update deployment %q: %w", deploy, err)
 	}
 
 	return nil
