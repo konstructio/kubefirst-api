@@ -9,7 +9,6 @@ package controller
 import (
 	"context"
 	"fmt"
-	"os/exec"
 	"time"	
 
 	argocdapi "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned"
@@ -21,6 +20,7 @@ import (
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	log "github.com/rs/zerolog/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 // InstallArgoCD
@@ -150,6 +150,31 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 	return nil
 }
 
+
+func RestartDeployment(ctx context.Context,clientset *kubernetes.Clientset,namespace string,deployment_name string) error {
+
+	deploy,err := clientset.AppsV1().Deployments(namespace).Get(ctx,deployment_name,metav1.GetOptions{})
+	
+	if err != nil {
+		return err
+	}
+
+	if deploy.Spec.Template.ObjectMeta.Annotations == nil {
+        deploy.Spec.Template.ObjectMeta.Annotations = make(map[string]string)
+    }
+
+	deploy.Spec.Template.ObjectMeta.Annotations["kubectl.kubernetes.io/restartedAt"] = time.Now().Format(time.RFC3339)
+
+	_,err = clientset.AppsV1().Deployments(namespace).Update(ctx,deploy,metav1.UpdateOptions{})
+	
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+
 // DeployRegistryApplication
 func (clctrl *ClusterController) DeployRegistryApplication() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
@@ -199,13 +224,9 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		)
 
 
-		cmdStr := fmt.Sprintf("kubectl --kubeconfig=%s rollout restart -n argocd deploy/argocd-applicationset-controller", clctrl.ProviderConfig.Kubeconfig)
-
-		cmd := exec.Command("/bin/sh", "-c", cmdStr)
-
-		err = cmd.Run()
-		if err != nil {
-			log.Info().Msgf("Error executing kubectl command: %v\n", err)
+		err = RestartDeployment(context.Background(),clctrl.Kcfg.Clientset,"argocd","argocd-applicationser-controller")
+		
+		if err!= nil {
 			return err
 		}
 
