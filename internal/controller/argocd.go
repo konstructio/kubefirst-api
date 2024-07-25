@@ -9,7 +9,6 @@ package controller
 import (
 	"context"
 	"fmt"
-	"os/exec"
 	"time"
 
 	argocdapi "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned"
@@ -21,7 +20,6 @@ import (
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	log "github.com/rs/zerolog/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 )
 
 // InstallArgoCD
@@ -231,11 +229,9 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 
 		cmdStr := fmt.Sprintf("kubectl --kubeconfig=%s rollout restart -n argocd deploy/argocd-applicationset-controller", clctrl.ProviderConfig.Kubeconfig)
 
-		cmd := exec.Command("/bin/sh", "-c", cmdStr)
+		err = RestartDeployment(context.Background(), clctrl.Kcfg.Clientset, "argocd", "argocd-applicationset-controller")
 
-		err = cmd.Run()
 		if err != nil {
-			log.Info().Msgf("Error executing kubectl command: %v\n", err)
 			return err
 		}
 
