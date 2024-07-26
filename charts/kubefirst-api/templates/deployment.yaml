@@ -82,6 +82,8 @@ spec:
               value: {{ .Values.global.cloudProvider | default "unset" }}
             - name: CLUSTER_ID
               value: {{ .Values.global.clusterId | default $clusterId }}
+            - name: KUBE_NAMESPACE
+              value: {{ .Release.Namespace }}
             - name: CLUSTER_TYPE
               value: {{ .Values.global.clusterType | default "bootstrap" | quote }}
             - name: DOMAIN_NAME
