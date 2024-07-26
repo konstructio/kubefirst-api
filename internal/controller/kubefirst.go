@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -28,13 +29,17 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func ReadKubefirstAPITokenFromSecret(clientset *kubernetes.Clientset) string {
-	existingKubernetesSecret, err := k8s.ReadSecretV2(clientset, "kubefirst", "kubefirst-initial-secrets")
+func ReadKubefirstAPITokenFromSecret(clientset *kubernetes.Clientset) (string, error) {
+	namespace := os.Getenv("KUBE_NAMESPACE")
+	if namespace == "" {
+		return "", errors.New("error namespace can not be empty")
+	}
+	existingKubernetesSecret, err := k8s.ReadSecretV2(clientset, namespace, "kubefirst-initial-secrets")
 	if err != nil || existingKubernetesSecret == nil {
 		log.Printf("Error reading existing Secret data: %s", err)
-		return ""
+		return "", err
 	}
-	return existingKubernetesSecret["K1_ACCESS_TOKEN"]
+	return existingKubernetesSecret["K1_ACCESS_TOKEN"], nil
 }
 
 // ExportClusterRecord will export cluster record to mgmt cluster
