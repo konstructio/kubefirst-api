@@ -7,7 +7,6 @@ replicaCount: 1
 image:
   api:
     repository: public.ecr.aws/kubefirst/kubefirst-api
-    tag: ad1462d
     pullPolicy: IfNotPresent
   hook:
     repository: public.ecr.aws/kubefirst/metrics-client
