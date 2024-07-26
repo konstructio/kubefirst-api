@@ -137,8 +137,6 @@ spec:
                 - name: repo-source
                   from: '{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}'
               parameters:
-                - name: appName
-                  value: "charts"
                 - name: chartDir
                   value: "charts/kubefirst"
 
@@ -153,7 +151,7 @@ spec:
                   from: '{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}'
               parameters:
                 - name: commitMessage
-                  value: 'prepared next macro chart for kubefirst - set {{workflow.parameters.appName}} to {{steps.get-initial-chart-version.outputs.result}}-rc.{{workflow.parameters.shortSha}}'
+                  value: 'tagged {{workflow.parameters.appName}} in charts kubefirst-v{{steps.get-current-macro-chart-version.outputs.result}}'
                 - name: gitUrlNoProtocol
                   value: '{{workflow.parameters.gitUrlNoProtocol}}'
                 - name: repoName
