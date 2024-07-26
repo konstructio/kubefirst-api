@@ -293,3 +293,4 @@ go install github.com/swaggo/swag/cmd/swag@latest
 ```shell
 make updateswagger
 ```
+
