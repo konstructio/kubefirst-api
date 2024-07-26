@@ -224,6 +224,10 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		)
 
 
+		if clctrl.Kcfg == nil{
+			clctrl.Kcfg = k8s.CreateKubeConfig(false,clctrl.ProviderConfig.Kubeconfig)
+		}
+
 		err = RestartDeployment(context.Background(),clctrl.Kcfg.Clientset,"argocd","argocd-applicationset-controller")
 		
 		if err!= nil {
