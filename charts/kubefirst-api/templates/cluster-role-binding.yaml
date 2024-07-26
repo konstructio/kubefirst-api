@@ -2,13 +2,13 @@
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: kubefirst-api-clusterrole
+  name: {{ include "kubefirst-api.fullname" . }}
   annotations:
     argocd.argoproj.io/sync-wave: '0'
 subjects:
   - kind: ServiceAccount
-    name: kubefirst-kubefirst-api
-    namespace: kubefirst
+    name: {{ include "kubefirst-api.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
   name: cluster-admin
