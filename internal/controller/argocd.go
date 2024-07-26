@@ -153,7 +153,7 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 	return nil
 }
 
-func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, namespace, deploymentName string) error {
+func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, namespace string, deployment_name string) error {
 
 	deploy, err := clientset.AppsV1().Deployments(namespace).Get(ctx, deploymentName, metav1.GetOptions{})
 
@@ -170,7 +170,7 @@ func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, name
 	_, err = clientset.AppsV1().Deployments(namespace).Update(ctx, deploy, metav1.UpdateOptions{})
 
 	if err != nil {
-		return fmt.Errorf("unable to update deployment %q: %w", deploy, err)
+		return err
 	}
 
 	return nil
@@ -223,6 +223,10 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			registryURL,
 			registryPath,
 		)
+
+		if clctrl.Kcfg == nil {
+			clctrl.Kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		}
 
 		err = RestartDeployment(context.Background(), clctrl.Kcfg.Clientset, "argocd", "argocd-applicationset-controller")
 
