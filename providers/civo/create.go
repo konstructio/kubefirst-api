@@ -99,7 +99,6 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		ctrl.HandleError(err.Error())
 		return err
 	}
-
 	// Needs wait after cluster create
 
 	err = ctrl.ClusterSecretsBootstrap()

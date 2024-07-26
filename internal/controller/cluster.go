@@ -309,6 +309,7 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 			return err
 		}
 	}
+	// clctrl.Kcfg = kcfg
 	clientSet := kcfg.Clientset
 
 	// create namespaces

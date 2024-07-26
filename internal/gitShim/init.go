@@ -27,6 +27,8 @@ type GitInitParameters struct {
 
 // InitializeGitProvider
 func InitializeGitProvider(p *GitInitParameters) error {
+
+
 	switch p.GitProvider {
 	case "github":
 		githubSession := github.New(p.GitToken)

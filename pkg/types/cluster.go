@@ -197,6 +197,7 @@ type WorkloadCluster struct {
 	NodeType          string      `bson:"node_type,omitempty" json:"node_type,omitempty"`
 	NodeCount         int         `bson:"node_count,omitempty" json:"node_count,omitempty"`
 	Status            string      `bson:"status,omitempty" json:"status,omitempty"`
+	GitopsRepoName    string      `bson:"gitops_repo_name,omitempty" json:"gitops_repo_name,omitempty"`
 }
 
 type WorkloadClusterSet struct {
