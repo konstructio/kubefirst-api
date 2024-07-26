@@ -68,7 +68,7 @@ spec:
                   value: '{{steps.get-initial-chart-version.outputs.result}}-rc.{{workflow.parameters.shortSha}}'
                 - name: shortSha
                   value: '{{workflow.parameters.shortSha}}'
-        - - name: publish-helm-chart
+        - - name: publish-helm-chart #! mini chart
             templateRef:
               name: cwft-helm
               template: publish-chart
@@ -127,26 +127,23 @@ spec:
                 - name: chartDir
                   value: 'charts/kubefirst'
 
-        - - name: output-current-chart-version
+        - - name: get-current-macro-chart-version
             templateRef:
               name: cwft-helm
-              template: output-macro-chart-version
+              template: get-macro-chart-version
               clusterScope: true
             arguments:
               artifacts:
                 - name: repo-source
                   from: '{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}'
               parameters:
-                - name: appName
-                  value: "charts"
                 - name: chartDir
                   value: "charts/kubefirst"
-                - name: version
-                  value: "current"
-        - - name: pull-commit-push-charts
+
+        - - name: pull-commit-push-tag-charts
             templateRef:
               name: cwft-git
-              template: pull-commit-push
+              template: pull-commit-push-tag
               clusterScope: true
             arguments:
               artifacts:
@@ -154,43 +151,11 @@ spec:
                   from: '{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}'
               parameters:
                 - name: commitMessage
-                  value: 'prepared next macro chart for kubefirst - set {{workflow.parameters.appName}} to {{steps.get-initial-chart-version.outputs.result}}-rc.{{workflow.parameters.shortSha}}'
+                  value: 'tagged {{workflow.parameters.appName}} in charts kubefirst-v{{steps.get-current-macro-chart-version.outputs.result}}'
                 - name: gitUrlNoProtocol
                   value: '{{workflow.parameters.gitUrlNoProtocol}}'
                 - name: repoName
                   value: 'charts'
-        - - name: pull-sign-commit-push-gitops-template
-            templateRef:
-              name: cwft-git
-              template: pull-sign-commit-push-gitops-template
-              clusterScope: true
-            arguments:
-              artifacts:
-                - name: repo-source
-                  from: '{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}'
-              parameters:
-                - name: appName
-                  value: 'gitops-template'
-                - name: commitMessage
-                  value: 'set next macro chart for kubefirst - {{steps.output-current-chart-version.outputs.result}}'
-                - name: nextChartVersion
-                  value: "{{steps.output-current-chart-version.outputs.result}}"
+                - name: tag
+                  value: 'kubefirst-v{{steps.get-current-macro-chart-version.outputs.result}}'
 
-        - - name: pull-sign-commit-push-gitops
-            templateRef:
-              name: cwft-git
-              template: pull-sign-commit-push-gitops
-              clusterScope: true
-            arguments:
-              artifacts:
-                - name: repo-source
-                  from: '{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}'
-              parameters:
-                - name: appName
-                  value: 'gitops'
-                - name: commitMessage
-                  value: 'set next macro chart for kubefirst - {{steps.output-current-chart-version.outputs.result}}'
-                - name: chartVersion
-                  value: "{{steps.output-current-chart-version.outputs.result}}"
-                - name: environment
-                  value: "development"
