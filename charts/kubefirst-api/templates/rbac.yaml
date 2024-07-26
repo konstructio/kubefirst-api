@@ -3,6 +3,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: {{ include "kubefirst-api.fullname" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "kubefirst-api.labels" . | nindent 4 }}
 rules:
@@ -19,6 +20,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: {{ include "kubefirst-api.fullname" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "kubefirst-api.labels" . | nindent 4 }}
 roleRef:
@@ -28,4 +30,5 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: {{ include "kubefirst-api.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
 {{- end }}

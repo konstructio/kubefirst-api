@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: "{{ include "kubefirst-api.fullname" . }}-test-connection"
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "kubefirst-api.labels" . | nindent 4 }}
   annotations:
