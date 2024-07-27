@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - main
+      - crb-name
 jobs:
   publish:
     runs-on: self-hosted
