@@ -37,10 +37,10 @@ func detokenizeterraform(path string,clctrl *ClusterController) filepath.WalkFun
 			}
 
 			newContents := string(read)
-			newContents = strings.Replace(newContents,"<ADMIN-TEAM>",clctrl.AdminTeamName,-1)
-			newContents = strings.Replace(newContents,"<DEVELOPER-TEAM>",clctrl.DeveloperTeamName,-1)
-			newContents = strings.Replace(newContents,"<METPAHOR-REPO-NAME>",clctrl.MetaphorRepoName,-1)
-			newContents = strings.Replace(newContents,"<GIT-REPO-NAME>",clctrl.GitopsRepoName,-1)
+			newContents = strings.Replace(newContents,"<ADMIN_TEAM>",clctrl.AdminTeamName,-1)
+			newContents = strings.Replace(newContents,"<DEVELOPER_TEAM>",clctrl.DeveloperTeamName,-1)
+			newContents = strings.Replace(newContents,"<METAPHOR_REPO_NAME>",clctrl.MetaphorRepoName,-1)
+			newContents = strings.Replace(newContents,"<GIT_REPO_NAME>",clctrl.GitopsRepoName,-1)
 
 			err = ioutil.WriteFile(path,[]byte(newContents),0)
 			if err != nil {
