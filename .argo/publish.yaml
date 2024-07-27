@@ -158,4 +158,3 @@ spec:
                   value: 'charts'
                 - name: tag
                   value: 'kubefirst-v{{steps.get-current-macro-chart-version.outputs.result}}'
-
