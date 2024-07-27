@@ -153,7 +153,7 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 	return nil
 }
 
-func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, namespace string, deployment_name string) error {
+func RestartDeployment(ctx context.Context, clientset *kubernetes.Clientset, namespace string, deployment_name string) error {
 
 	deploy, err := clientset.AppsV1().Deployments(namespace).Get(ctx, deploymentName, metav1.GetOptions{})
 
@@ -170,7 +170,7 @@ func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, name
 	_, err = clientset.AppsV1().Deployments(namespace).Update(ctx, deploy, metav1.UpdateOptions{})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to update deployment %q: %w", deploy, err)
 	}
 
 	return nil
