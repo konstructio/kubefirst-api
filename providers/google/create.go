@@ -110,7 +110,6 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 		ctrl.HandleError(err.Error())
 		return err
 	}
-	return nil
 
 	err = ctrl.DetokenizeKMSKeyID()
 	if err != nil {
