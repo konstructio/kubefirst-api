@@ -151,7 +151,7 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 }
 
 
-func RestartDeployment(ctx context.Context,clientset *kubernetes.Clientset,namespace string,deployment_name string) error {
+func RestartDeployment(ctx context.Context,clientset kubernetes.Interface,namespace string,deployment_name string) error {
 
 	deploy,err := clientset.AppsV1().Deployments(namespace).Get(ctx,deployment_name,metav1.GetOptions{})
 	
