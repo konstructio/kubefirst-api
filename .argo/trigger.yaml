@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  namespace: argo
+spec:
+  entrypoint: main
+  serviceAccountName: argo-server
+  templates:
+    - name: main
+      steps:
+        - - name: checkout
+            templateRef:
+              name: cwft-git
+              template: checkout-with-gitops
+              clusterScope: true
+            arguments:
+              parameters:
+                - name: appName
+                  value: '{{workflow.parameters.appName}}'
+                - name: branch
+                  value: '{{workflow.parameters.branch}}'
+                - name: gitUrlNoProtocol
+                  value: '{{workflow.parameters.gitUrlNoProtocol}}'
+        - - name: pull-commit-empty-push
+            templateRef:
+              name: cwft-git
+              template: pull-commit-empty-push
+              clusterScope: true
+            arguments:
+              artifacts:
+                - name: repo-source
+                  from: '{{steps.checkout.outputs.artifacts.repo-source}}'
+              parameters:
+                - name: commitMessage
+                  value: 'chore: triggered an empty commit against main branch'
+                - name: gitUrlNoProtocol
+                  value: '{{workflow.parameters.gitUrlNoProtocol}}'
+                - name: repoName
+                  value: '{{workflow.parameters.appName}}'
