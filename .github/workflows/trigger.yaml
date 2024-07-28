@@ -6,7 +6,7 @@ env:
 on: workflow_dispatch
 
 jobs:
-  trigger:
+  publish:
     runs-on: self-hosted
     steps:
       - name: Setup Runner for Argo
@@ -29,12 +29,12 @@ jobs:
       - run: echo ${GITHUB_REPOSITORY}
       - run: echo ${GITHUB_REPOSITORY_NAME_PART}
       - run: echo ${GITHUB_SERVER_URL}
-      - name: trigger
+      - name: publish
         run: |
           echo "commit sha ${GITHUB_SHA}"
           argo version --short
           argo submit .argo/trigger.yaml \
-            --generate-name="${GITHUB_REPOSITORY_NAME_PART}-trigger-" \
+            --generate-name="${GITHUB_REPOSITORY_NAME_PART}-publish-${GITHUB_SHA_SHORT}-" \
             -p appName="${GITHUB_REPOSITORY_NAME_PART}" \
             -p branch="${GITHUB_REF_NAME}" \
             -p containerRegistryURL="public.ecr.aws/kubefirst/${GITHUB_REPOSITORY_NAME_PART}:${GITHUB_SHA_SHORT}" \
