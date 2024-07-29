@@ -7,20 +7,53 @@ See the LICENSE file for more details.
 package providerConfigs
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
-	"io/ioutil"
+	"github.com/Masterminds/sprig/v3"
+	"io"
 	"os"
 	"path/filepath"
-	"strconv"
+	"reflect"
+	"regexp"
 	"strings"
-
-	log "github.com/rs/zerolog/log"
+	"text/template"
 )
 
-// DetokenizeGitGitops - Translate tokens by values on a given path
-func DetokenizeGitGitops(path string, tokens *GitopsDirectoryValues, gitProtocol string, useCloudflareOriginIssuer bool) error {
-	err := filepath.Walk(path, detokenizeGitops(path, tokens, gitProtocol, useCloudflareOriginIssuer))
+// ToTemplateVars - converts a string to a template variable
+func ToTemplateVars(input string, instance Tokens) string {
+	value := reflect.ValueOf(instance)
+	if value.Kind() == reflect.Ptr {
+		value = value.Elem()
+	}
+	sanitizer := strings.NewReplacer("<", "", "_", "", ">", "", "-", "")
+
+	fields := value.Type()
+	normalizedName := strings.ToLower(sanitizer.Replace(input))
+	for i := 0; i < fields.NumField(); i++ {
+		field := fields.Field(i)
+		val := value.Field(i)
+
+		if normalizedName == strings.ToLower(field.Name) {
+			// If the field value is the zero value of the field template
+			// will add - to the template variable to clean up extra whitespace.
+			// We do not have any bool values in the tokens, so we should be ok.
+			// TODO: Find a better way to handle this.
+			if val.IsZero() {
+				return fmt.Sprintf("%s- .%s %s", leftDelimiter, field.Name, rightDelimiter)
+			}
+			// if field name matches return the correct formatted name
+			return fmt.Sprintf("%s .%s %s", leftDelimiter, field.Name, rightDelimiter)
+		}
+	}
+
+	// If no match found, return <variable-not-found> so we can have a visual indication
+	// that the token was not found in the Token Struct without erroring out
+	return "<variable-not-found>"
+}
+
+// Detokenize - Translate tokens by values on a given path
+func Detokenize(path string, tokens Tokens, gitProtocol string, useCloudflareOriginIssuer bool) error {
+	err := filepath.Walk(path, detokenize(tokens, gitProtocol, useCloudflareOriginIssuer))
 	if err != nil {
 		return err
 	}
@@ -28,287 +61,124 @@ func DetokenizeGitGitops(path string, tokens *GitopsDirectoryValues, gitProtocol
 	return nil
 }
 
-func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol string, useCloudflareOriginIssuer bool) filepath.WalkFunc {
+func detokenize(tokens Tokens, gitProtocol string, useCloudflareOriginIssuer bool) filepath.WalkFunc {
 	return filepath.WalkFunc(func(path string, fi os.FileInfo, err error) error {
 		if fi.IsDir() && fi.Name() == ".git" {
 			return filepath.SkipDir
-		}
-		if err != nil {
-			return err
 		}
 
 		if fi.IsDir() {
 			return nil
 		}
-
-		metaphorDevelopmentIngressURL := fmt.Sprintf("https://metaphor-development.%s", tokens.DomainName)
-		metaphorStagingIngressURL := fmt.Sprintf("https://metaphor-staging.%s", tokens.DomainName)
-		metaphorProductionIngressURL := fmt.Sprintf("https://metaphor-production.%s", tokens.DomainName)
-
-		// var matched bool
-		matched, _ := filepath.Match("*", fi.Name())
-
-		if matched {
-			// ignore .git files
-			if !strings.Contains(path, "/.git/") {
-
-				read, err := ioutil.ReadFile(path)
-				if err != nil {
-					return err
-				}
-
-				var fullDomainName string
-
-				if tokens.SubdomainName != "" {
-					fullDomainName = fmt.Sprintf("%s.%s", tokens.SubdomainName, tokens.DomainName)
-				} else {
-					fullDomainName = tokens.DomainName
-				}
-
-				newContents := string(read)
-				newContents = strings.Replace(newContents, "<ALERTS_EMAIL>", tokens.AlertsEmail, -1)
-				newContents = strings.Replace(newContents, "<ATLANTIS_ALLOW_LIST>", tokens.AtlantisAllowList, -1)
-				newContents = strings.Replace(newContents, "<CLUSTER_NAME>", tokens.ClusterName, -1)
-				newContents = strings.Replace(newContents, "<CLOUD_PROVIDER>", tokens.CloudProvider, -1)
-				newContents = strings.Replace(newContents, "<CLOUD_REGION>", tokens.CloudRegion, -1)
-				newContents = strings.Replace(newContents, "<CLUSTER_ID>", tokens.ClusterId, -1)
-				newContents = strings.Replace(newContents, "<CLUSTER_TYPE>", tokens.ClusterType, -1)
-				newContents = strings.Replace(newContents, "<CONTAINER_REGISTRY_URL>", tokens.ContainerRegistryURL, -1)
-				newContents = strings.Replace(newContents, "<DOMAIN_NAME>", fullDomainName, -1)
-				newContents = strings.Replace(newContents, "<KUBE_CONFIG_PATH>", tokens.KubeconfigPath, -1)
-				newContents = strings.Replace(newContents, "<KUBEFIRST_ARTIFACTS_BUCKET>", tokens.KubefirstArtifactsBucket, -1)
-				newContents = strings.Replace(newContents, "<KUBEFIRST_STATE_STORE_BUCKET>", tokens.KubefirstStateStoreBucket, -1)
-				newContents = strings.Replace(newContents, "<KUBEFIRST_TEAM>", tokens.KubefirstTeam, -1)
-				newContents = strings.Replace(newContents, "<KUBEFIRST_TEAM_INFO>", os.Getenv("KUBEFIRST_TEAM_INFO"), -1)
-				newContents = strings.Replace(newContents, "<KUBEFIRST_VERSION>", tokens.KubefirstVersion, -1)
-				newContents = strings.Replace(newContents, "<KUBEFIRST_STATE_STORE_BUCKET_HOSTNAME>", tokens.StateStoreBucketHostname, -1)
-				newContents = strings.Replace(newContents, "<WORKLOAD_CLUSTER_TERRAFORM_MODULE_URL>", tokens.WorkloadClusterTerraformModuleURL, -1)
-				newContents = strings.Replace(newContents, "<WORKLOAD_CLUSTER_BOOTSTRAP_TERRAFORM_MODULE_URL>", tokens.WorkloadClusterBootstrapTerraformModuleURL, -1)
-				newContents = strings.Replace(newContents, "<NODE_TYPE>", tokens.NodeType, -1)
-				newContents = strings.Replace(newContents, "<NODE_COUNT>", fmt.Sprint(tokens.NodeCount), -1)
-
-				// AWS
-				newContents = strings.Replace(newContents, "<AWS_ACCOUNT_ID>", tokens.AwsAccountID, -1)
-				newContents = strings.Replace(newContents, "<AWS_IAM_ARN_ACCOUNT_ROOT>", tokens.AwsIamArnAccountRoot, -1)
-				newContents = strings.Replace(newContents, "<AWS_NODE_CAPACITY_TYPE>", tokens.AwsNodeCapacityType, -1)
-
-				// google
-				newContents = strings.Replace(newContents, "<GOOGLE_PROJECT>", tokens.GoogleProject, -1)
-				newContents = strings.Replace(newContents, "<TERRAFORM_FORCE_DESTROY>", tokens.ForceDestroy, -1)
-				newContents = strings.Replace(newContents, "<GOOGLE_UNIQUENESS>", tokens.GoogleUniqueness, -1)
-
-				if tokens.CloudProvider == "k3s" {
-					// k3s
-					newContents = strings.Replace(newContents, "<K3S_ENDPOINT>", tokens.K3sServersPrivateIps[0], -1)
-					// TODO: this is a hack to get around
-					// need to be refactored into a single function with args
-					var terraformServersPrivateIpsList string
-					jsonBytes, err := json.Marshal(tokens.K3sServersPrivateIps)
-					if err != nil {
-						log.Fatal().Msgf("detokenise issue on %s", err)
-					}
-					terraformServersPrivateIpsList = string(jsonBytes)
-					newContents = strings.Replace(newContents, "<K3S_SERVERS_PRIVATE_IPS>", terraformServersPrivateIpsList, -1)
-
-					var terraformServersPublicIpsList string
-					jsonBytes2, err := json.Marshal(tokens.K3sServersPublicIps)
-					if err != nil {
-						log.Fatal().Msgf("detokenise issue on %s", err)
-					}
-					terraformServersPublicIpsList = string(jsonBytes2)
-					newContents = strings.Replace(newContents, "<K3S_SERVERS_PUBLIC_IPS>", terraformServersPublicIpsList, -1)
-
-					var terraformServersArgsList string
-					jsonBytes3, err := json.Marshal(tokens.K3sServersArgs)
-					if err != nil {
-						log.Fatal().Msgf("detokenise issue on %s", err)
-					}
-					terraformServersArgsList = string(jsonBytes3)
-					newContents = strings.Replace(newContents, "<K3S_SERVERS_ARGS>", terraformServersArgsList, -1)
-
-					newContents = strings.Replace(newContents, "<SSH_USER>", tokens.SshUser, -1)
-				}
-				newContents = strings.Replace(newContents, "<ARGOCD_INGRESS_URL>", tokens.ArgoCDIngressURL, -1)
-				newContents = strings.Replace(newContents, "<ARGOCD_INGRESS_NO_HTTP_URL>", tokens.ArgoCDIngressNoHTTPSURL, -1)
-				newContents = strings.Replace(newContents, "<ARGO_WORKFLOWS_INGRESS_URL>", tokens.ArgoWorkflowsIngressURL, -1)
-				newContents = strings.Replace(newContents, "<ARGO_WORKFLOWS_INGRESS_NO_HTTPS_URL>", tokens.ArgoWorkflowsIngressNoHTTPSURL, -1)
-				newContents = strings.Replace(newContents, "<ATLANTIS_INGRESS_URL>", tokens.AtlantisIngressURL, -1)
-				newContents = strings.Replace(newContents, "<ATLANTIS_INGRESS_NO_HTTPS_URL>", tokens.AtlantisIngressNoHTTPSURL, -1)
-				newContents = strings.Replace(newContents, "<CHARTMUSEUM_INGRESS_URL>", tokens.ChartMuseumIngressURL, -1)
-				newContents = strings.Replace(newContents, "<VAULT_INGRESS_URL>", tokens.VaultIngressURL, -1)
-				newContents = strings.Replace(newContents, "<VAULT_INGRESS_NO_HTTPS_URL>", tokens.VaultIngressNoHTTPSURL, -1)
-				newContents = strings.Replace(newContents, "<VAULT_DATA_BUCKET>", tokens.VaultDataBucketName, -1)
-				newContents = strings.Replace(newContents, "<VOUCH_INGRESS_URL>", tokens.VouchIngressURL, -1)
-
-				newContents = strings.Replace(newContents, "<GIT_DESCRIPTION>", tokens.GitDescription, -1)
-				newContents = strings.Replace(newContents, "<GIT_NAMESPACE>", tokens.GitNamespace, -1)
-				newContents = strings.Replace(newContents, "<GIT_PROVIDER>", tokens.GitProvider, -1)
-				newContents = strings.Replace(newContents, "<GIT-PROTOCOL>", gitProtocol, -1)
-				newContents = strings.Replace(newContents, "<GIT_RUNNER>", tokens.GitRunner, -1)
-				newContents = strings.Replace(newContents, "<GIT_RUNNER_DESCRIPTION>", tokens.GitRunnerDescription, -1)
-				newContents = strings.Replace(newContents, "<GIT_RUNNER_NS>", tokens.GitRunnerNS, -1)
-				newContents = strings.Replace(newContents, "<GIT_URL>", tokens.GitURL, -1) // remove
-
-				// GitHub
-				newContents = strings.Replace(newContents, "<GITHUB_HOST>", tokens.GitHubHost, -1)
-				newContents = strings.Replace(newContents, "<GITHUB_OWNER>", strings.ToLower(tokens.GitHubOwner), -1)
-				newContents = strings.Replace(newContents, "<GITHUB_USER>", tokens.GitHubUser, -1)
-
-				// GitLab
-				newContents = strings.Replace(newContents, "<GITLAB_HOST>", tokens.GitlabHost, -1)
-				newContents = strings.Replace(newContents, "<GITLAB_OWNER>", tokens.GitlabOwner, -1)
-				newContents = strings.Replace(newContents, "<GITLAB_OWNER_GROUP_ID>", strconv.Itoa(tokens.GitlabOwnerGroupID), -1)
-				newContents = strings.Replace(newContents, "<GITLAB_USER>", tokens.GitlabUser, -1)
-
-				newContents = strings.Replace(newContents, "<GITOPS_REPO_ATLANTIS_WEBHOOK_URL>", tokens.GitopsRepoAtlantisWebhookURL, -1)
-				newContents = strings.Replace(newContents, "<GITOPS_REPO_NO_HTTPS_URL>", tokens.GitopsRepoNoHTTPSURL, -1)
-
-				newContents = strings.Replace(newContents, "<METAPHOR_DEVELOPMENT_INGRESS_URL>", metaphorDevelopmentIngressURL, -1)
-				newContents = strings.Replace(newContents, "<METAPHOR_PRODUCTION_INGRESS_URL>", metaphorProductionIngressURL, -1)
-				newContents = strings.Replace(newContents, "<METAPHOR_STAGING_INGRESS_URL>", metaphorStagingIngressURL, -1)
-
-				// external-dns optionality to provide cloudflare support regardless of cloud provider
-				newContents = strings.Replace(newContents, "<EXTERNAL_DNS_PROVIDER_NAME>", tokens.ExternalDNSProviderName, -1)
-				newContents = strings.Replace(newContents, "<EXTERNAL_DNS_PROVIDER_TOKEN_ENV_NAME>", tokens.ExternalDNSProviderTokenEnvName, -1)
-				newContents = strings.Replace(newContents, "<EXTERNAL_DNS_PROVIDER_SECRET_NAME>", tokens.ExternalDNSProviderSecretName, -1)
-				newContents = strings.Replace(newContents, "<EXTERNAL_DNS_PROVIDER_SECRET_KEY>", tokens.ExternalDNSProviderSecretKey, -1)
-				newContents = strings.Replace(newContents, "<EXTERNAL_DNS_DOMAIN_NAME>", tokens.DomainName, -1)
-
-				// Catalog
-				newContents = strings.Replace(newContents, "<REGISTRY_PATH>", tokens.RegistryPath, -1)
-				newContents = strings.Replace(newContents, "<SECRET_STORE_REF>", tokens.SecretStoreRef, -1)
-				newContents = strings.Replace(newContents, "<PROJECT>", tokens.Project, -1)
-				newContents = strings.Replace(newContents, "<CLUSTER_DESTINATION>", tokens.ClusterDestination, -1)
-				newContents = strings.Replace(newContents, "<ENVIRONMENT>", tokens.Environment, -1)
-
-				//origin issuer defines which annotations should be on ingresses
-				if useCloudflareOriginIssuer {
-					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_1>", "cert-manager.io/issuer: cloudflare-origin-issuer", -1)
-					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_2>", "cert-manager.io/issuer-kind: OriginIssuer", -1)
-					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_3>", "cert-manager.io/issuer-group: cert-manager.k8s.cloudflare.com", -1)
-					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_4>", "external-dns.alpha.kubernetes.io/cloudflare-proxied: \"true\"", -1)
-				} else {
-					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_1>", "cert-manager.io/cluster-issuer: \"letsencrypt-prod\"", -1)
-					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_2>", "", -1)
-					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_3>", "", -1)
-					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_4>", "", -1)
-				}
-
-				newContents = strings.Replace(newContents, "<USE_TELEMETRY>", tokens.UseTelemetry, -1)
-
-				// Switch the repo url based on https flag
-				newContents = strings.Replace(newContents, "<GITOPS_REPO_URL>", tokens.GitopsRepoURL, -1)
-
-				// The fqdn is used by metaphor/argo to choose the appropriate url for cicd operations.
-				if gitProtocol == "https" {
-					newContents = strings.Replace(newContents, "<GIT_FQDN>", fmt.Sprintf("https://%v.com/", tokens.GitProvider), -1)
-				} else {
-					newContents = strings.Replace(newContents, "<GIT_FQDN>", fmt.Sprintf("git@%v.com:", tokens.GitProvider), -1)
-				}
-
-				err = ioutil.WriteFile(path, []byte(newContents), 0)
-				if err != nil {
-					return err
-				}
-			}
-		}
-		return nil
-	})
-}
-
-// DetokenizeAdditionalPath - Translate tokens by values on a given path
-func DetokenizeAdditionalPath(path string, tokens *GitopsDirectoryValues) error {
-	err := filepath.Walk(path, detokenizeAdditionalPath(path, tokens))
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// detokenizeAdditionalPath temporary addition to handle detokenizing additional files
-func detokenizeAdditionalPath(path string, tokens *GitopsDirectoryValues) filepath.WalkFunc {
-	return filepath.WalkFunc(func(path string, fi os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if !!fi.IsDir() {
+		// Incase there is a .gitignore or .gitkeep etc file in the directory, skip it.
+		if strings.Contains(fi.Name(), ".git") {
 			return nil
 		}
 
-		// var matched bool
-		matched, _ := filepath.Match("*", fi.Name())
+		var (
+			newContentData []byte
+		)
 
-		if matched {
-			// ignore .git files
-			if !strings.Contains(path, "/.git/") {
-				read, err := ioutil.ReadFile(path)
-				if err != nil {
-					return err
-				}
-
-				newContents := string(read)
-				newContents = strings.Replace(newContents, "<GITLAB_OWNER>", tokens.GitlabOwner, -1)
-
-				err = ioutil.WriteFile(path, []byte(newContents), 0)
-				if err != nil {
-					return err
-				}
-			}
+		switch tokenType := tokens.(type) {
+		case *GitopsDirectoryValues:
+			setGitOpsTokens(tokenType, gitProtocol, useCloudflareOriginIssuer)
+			tokens = tokenType
+		case *MetaphorTokenValues:
+			setMetaphorTokens(tokenType, gitProtocol)
+			tokens = tokenType
 		}
-		return nil
-	})
-}
 
-// DetokenizeGithubMetaphor - Translate tokens by values on a given path
-func DetokenizeGitMetaphor(path string, tokens *MetaphorTokenValues) error {
-	err := filepath.Walk(path, detokenizeGitopsMetaphor(path, tokens))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// DetokenizeDirectoryGithubMetaphor - Translate tokens by values on a directory level.
-func detokenizeGitopsMetaphor(path string, tokens *MetaphorTokenValues) filepath.WalkFunc {
-	return filepath.WalkFunc(func(path string, fi os.FileInfo, err error) error {
+		newContentData, err = renderGoTemplating(path, tokens)
 		if err != nil {
 			return err
 		}
+		return os.WriteFile(path, newContentData, 0644)
 
-		if !!fi.IsDir() {
-			return nil
-		}
-
-		// var matched bool
-		matched, _ := filepath.Match("*", fi.Name())
-
-		if matched {
-			// ignore .git files
-			if !strings.Contains(path, "/.git/") {
-
-				read, err := ioutil.ReadFile(path)
-				if err != nil {
-					return err
-				}
-
-				// todo reduce to terraform tokens by moving to helm chart?
-				newContents := string(read)
-				newContents = strings.Replace(newContents, "<CLOUD_REGION>", tokens.CloudRegion, -1)
-				newContents = strings.Replace(newContents, "<CLUSTER_NAME>", tokens.ClusterName, -1)
-				newContents = strings.Replace(newContents, "<CONTAINER_REGISTRY_URL>", tokens.ContainerRegistryURL, -1) // todo need to fix metaphor repo names
-				newContents = strings.Replace(newContents, "<DOMAIN_NAME>", tokens.DomainName, -1)
-				newContents = strings.Replace(newContents, "<METAPHOR_DEVELOPMENT_INGRESS_URL>", tokens.MetaphorDevelopmentIngressURL, -1)
-				newContents = strings.Replace(newContents, "<METAPHOR_PRODUCTION_INGRESS_URL>", tokens.MetaphorProductionIngressURL, -1)
-				newContents = strings.Replace(newContents, "<METAPHOR_STAGING_INGRESS_URL>", tokens.MetaphorStagingIngressURL, -1)
-
-				err = ioutil.WriteFile(path, []byte(newContents), 0)
-				if err != nil {
-					return err
-				}
-			}
-		}
-		return nil
 	})
+}
+
+func setMetaphorTokens(tokens *MetaphorTokenValues, gitProtocol string) {
+	tokens.GitProtocol = gitProtocol
+	tokens.MetaphorDevelopmentIngressURL = fmt.Sprintf("https://metaphor-dev.%s", tokens.DomainName)
+	tokens.MetaphorProductionIngressURL = fmt.Sprintf("https://metaphor.%s", tokens.DomainName)
+	tokens.MetaphorStagingIngressURL = fmt.Sprintf("https://metaphor-stage.%s", tokens.DomainName)
+
+}
+
+func setGitOpsTokens(tokens *GitopsDirectoryValues, gitProtocol string, useCloudflareOriginIssuer bool) {
+	if tokens.SubdomainName != "" {
+		if !strings.Contains(tokens.DomainName, tokens.SubdomainName) {
+			tokens.DomainName = fmt.Sprintf("%s.%s", tokens.SubdomainName, tokens.DomainName)
+		}
+	}
+	//origin issuer defines which annotations should be on ingresses
+	if useCloudflareOriginIssuer {
+		tokens.CertManagerIssuerAnnotation1 = "cert-manager.io/issuer: cloudflare-origin-issuer"
+		tokens.CertManagerIssuerAnnotation2 = "cert-manager.io/issuer-kind: OriginIssuer"
+		tokens.CertManagerIssuerAnnotation3 = "cert-manager.io/issuer-group: cert-manager.k8s.cloudflare.com"
+		tokens.CertManagerIssuerAnnotation4 = "external-dns.alpha.kubernetes.io/cloudflare-proxied: \"true\""
+	} else {
+		tokens.CertManagerIssuerAnnotation1 = "cert-manager.io/cluster-issuer: \"letsencrypt-prod\""
+	}
+
+	if tokens.CloudProvider == "k3s" {
+		tokens.K3sEndpoint = tokens.K3sServersPrivateIps[0]
+	}
+
+	// The fqdn is used by metaphor/argo to choose the appropriate url for cicd operations.
+	if gitProtocol == "https" {
+		tokens.GitFqdn = fmt.Sprintf("https://%v.com/", tokens.GitProvider)
+	} else {
+		tokens.GitFqdn = fmt.Sprintf("git@%v.com:", tokens.GitProvider)
+	}
+}
+
+// renderGoTemplating - Renders the template with the given values
+// it also includes the sprig GenericFuncMap functions listed here: https://masterminds.github.io/sprig/.
+func parseTemplate(content string) (*template.Template, error) {
+	funcs := sprig.GenericFuncMap()
+	t := template.New("gitops-template").
+		Funcs(funcs).
+		Delims(leftDelimiter, rightDelimiter)
+	return t.Parse(content)
+}
+
+func executeTemplate(t *template.Template, writer io.Writer, tokens Tokens) error {
+	switch tmplTokens := tokens.(type) {
+	case *GitopsDirectoryValues:
+		return t.Execute(writer, tmplTokens)
+	case *MetaphorTokenValues:
+		// Handle tokens of type *MetaphorTokenValues
+		return t.Execute(writer, tmplTokens)
+	default:
+		return fmt.Errorf("invalid type for tokens: %T", tokens)
+	}
+}
+
+func replaceTemplateVariables(content string, regex *regexp.Regexp, tokens Tokens) string {
+	return regex.ReplaceAllStringFunc(content, tokens.ToTemplateVars)
+}
+
+// renderGoTemplating - Render a template with the given tokens.
+func renderGoTemplating(path string, tokens Tokens) ([]byte, error) {
+	read, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	// Replace all tokens with their values
+	regex := regexp.MustCompile(TokenRegexPattern)
+	content := replaceTemplateVariables(string(read), regex, tokens)
+	buff := bytes.NewBufferString(content)
+
+	parsedTemplate, err := parseTemplate(buff.String())
+	if err != nil {
+		return nil, err
+	}
+
+	newBuff := bytes.NewBuffer([]byte{})
+	if err = executeTemplate(parsedTemplate, newBuff, tokens); err != nil {
+		return nil, err
+	}
+
+	return newBuff.Bytes(), nil
 }

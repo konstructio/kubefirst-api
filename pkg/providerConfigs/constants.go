@@ -19,8 +19,11 @@ const (
 	LocalhostOS            = runtime.GOOS
 	LocalhostArch          = runtime.GOARCH
 	TerraformClientVersion = "1.3.8"
-	ArgocdHelmChartVersion = "4.10.5"
 
 	ArgocdPortForwardURL = runtimepkg.ArgocdPortForwardURL
 	VaultPortForwardURL  = runtimepkg.VaultPortForwardURL
+
+	TokenRegexPattern = "<([A-Z_0-9-]+)>"
+	leftDelimiter     = "<%"
+	rightDelimiter    = "%>"
 )

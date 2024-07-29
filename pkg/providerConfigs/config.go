@@ -8,9 +8,8 @@ package providerConfigs
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/rs/zerolog/log"
+	"os"
 )
 
 type ProviderConfig struct {
@@ -27,35 +26,32 @@ type ProviderConfig struct {
 	VultrToken                       string
 	CloudflareAPIToken               string
 	CloudflareOriginCaIssuerAPIToken string
-
-	GithubToken string
-	GitlabToken string
-
-	ArgoWorkflowsDir                string
-	DestinationGitopsRepoHttpsURL   string
-	DestinationGitopsRepoGitURL     string
-	DestinationGitopsRepoURL        string
-	DestinationMetaphorRepoHttpsURL string
-	DestinationMetaphorRepoGitURL   string
-	DestinationMetaphorRepoURL      string
-	GitopsDir                       string
-	GitProvider                     string
-	GitProtocol                     string
-	K1Dir                           string
-	Kubeconfig                      string
-	KubectlClient                   string
-	KubefirstBotSSHPrivateKey       string
-	KubefirstConfig                 string
-	LogsDir                         string
-	MetaphorDir                     string
-	RegistryAppName                 string
-	RegistryYaml                    string
-	SSLBackupDir                    string
-	TerraformClient                 string
-	ToolsDir                        string
-
-	GitopsDirectoryValues   *GitopsDirectoryValues
-	MetaphorDirectoryValues *MetaphorTokenValues
+	GithubToken                      string
+	GitlabToken                      string
+	ArgoWorkflowsDir                 string
+	DestinationGitopsRepoHttpsURL    string
+	DestinationGitopsRepoGitURL      string
+	DestinationGitopsRepoURL         string
+	DestinationMetaphorRepoHttpsURL  string
+	DestinationMetaphorRepoGitURL    string
+	DestinationMetaphorRepoURL       string
+	GitopsDir                        string
+	GitProvider                      string
+	GitProtocol                      string
+	K1Dir                            string
+	Kubeconfig                       string
+	KubectlClient                    string
+	KubefirstBotSSHPrivateKey        string
+	KubefirstConfig                  string
+	LogsDir                          string
+	MetaphorDir                      string
+	RegistryAppName                  string
+	RegistryYaml                     string
+	SSLBackupDir                     string
+	TerraformClient                  string
+	ToolsDir                         string
+	GitopsDirectoryValues            *GitopsDirectoryValues
+	MetaphorDirectoryValues          *MetaphorTokenValues
 }
 
 // GetConfig - load default values from kubefirst installer
@@ -69,12 +65,10 @@ func GetConfig(
 	cloudflareOriginCaIssuerAPIToken string,
 ) *ProviderConfig {
 	config := ProviderConfig{}
-
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal().Msgf("something went wrong getting home path: %s", err)
 	}
-
 	// cGitHost describes which git host to use depending on gitProvider
 	var cGitHost string
 	switch gitProvider {
@@ -83,7 +77,6 @@ func GetConfig(
 	case "gitlab":
 		cGitHost = GitlabHost
 	}
-
 	config.DestinationGitopsRepoURL = fmt.Sprintf("https://%s/%s/gitops.git", cGitHost, gitOwner)
 	config.DestinationGitopsRepoGitURL = fmt.Sprintf("git@%s:%s/gitops.git", cGitHost, gitOwner)
 	config.DestinationMetaphorRepoURL = fmt.Sprintf("https://%s/%s/metaphor.git", cGitHost, gitOwner)
@@ -105,6 +98,5 @@ func GetConfig(
 	config.SSLBackupDir = fmt.Sprintf("%s/.k1/%s/ssl/%s", homeDir, clusterName, domainName)
 	config.TerraformClient = fmt.Sprintf("%s/.k1/%s/tools/terraform", homeDir, clusterName)
 	config.ToolsDir = fmt.Sprintf("%s/.k1/%s/tools", homeDir, clusterName)
-
 	return &config
 }

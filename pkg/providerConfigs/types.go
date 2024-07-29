@@ -6,15 +6,28 @@ See the LICENSE file for more details.
 */
 package providerConfigs
 
+// Tokens - interface for all token values
+type Tokens interface {
+	ToTemplateVars(s string) string
+	GetDomain() string
+	GetGitProtocol() string
+}
+
 type GitopsDirectoryValues struct {
-	AlertsEmail                    string
-	AtlantisAllowList              string
-	CloudProvider                  string
-	CloudRegion                    string
-	ClusterId                      string
-	ClusterName                    string
-	ClusterType                    string
+	AlertsEmail       string
+	AtlantisAllowList string
+	CloudProvider     string
+	CloudRegion       string
+	ClusterId         string
+	ClusterName       string
+	ClusterType       string
+	// <CERT_MANAGER_ISSUER_ANNOTATION_1>
+	CertManagerIssuerAnnotation1   string
+	CertManagerIssuerAnnotation2   string
+	CertManagerIssuerAnnotation3   string
+	CertManagerIssuerAnnotation4   string
 	ContainerRegistryURL           string
+	CustomTemplateValues           map[string]interface{}
 	DomainName                     string
 	SubdomainName                  string
 	DNSProvider                    string
@@ -56,6 +69,7 @@ type GitopsDirectoryValues struct {
 	GoogleUniqueness string
 	ForceDestroy     string
 
+	K3sEndpoint          string
 	K3sServersPrivateIps []string
 	K3sServersPublicIps  []string
 	K3sServersArgs       []string
@@ -72,6 +86,7 @@ type GitopsDirectoryValues struct {
 	GitRunnerDescription string
 	GitRunnerNS          string
 	GitURL               string
+	GitFqdn              string
 
 	GitHubHost  string
 	GitHubOwner string
@@ -95,14 +110,40 @@ type GitopsDirectoryValues struct {
 	UseTelemetry string
 }
 
+func (g *GitopsDirectoryValues) ToTemplateVars(s string) string {
+	return ToTemplateVars(s, g)
+}
+
+func (g *GitopsDirectoryValues) GetDomain() string {
+	return g.DomainName
+}
+
+func (g *GitopsDirectoryValues) GetGitProtocol() string {
+	return g.GitProvider
+}
+
 type MetaphorTokenValues struct {
 	CheckoutCWFTTemplate          string
 	CloudRegion                   string
 	ClusterName                   string
+	GitProtocol                   string
 	CommitCWFTTemplate            string
 	ContainerRegistryURL          string
+	CustomTemplateValues          map[string]interface{}
 	DomainName                    string
 	MetaphorDevelopmentIngressURL string
 	MetaphorProductionIngressURL  string
 	MetaphorStagingIngressURL     string
+}
+
+func (m *MetaphorTokenValues) ToTemplateVars(s string) string {
+	return ToTemplateVars(s, m)
+}
+
+func (m *MetaphorTokenValues) GetDomain() string {
+	return m.DomainName
+}
+
+func (m *MetaphorTokenValues) GetGitProtocol() string {
+	return m.GitProtocol
 }

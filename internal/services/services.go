@@ -163,7 +163,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 		gitopsKubefirstTokens := utils.CreateTokensFromDatabaseRecord(cl, registryPath, secretStoreRef, project, clusterDestination, environment, clusterName)
 
 		//Detokenize App Template
-		err = providerConfigs.DetokenizeGitGitops(catalogServiceFolder, gitopsKubefirstTokens, cl.GitProtocol, cl.CloudflareAuth.OriginCaIssuerKey != "")
+		err = providerConfigs.Detokenize(catalogServiceFolder, gitopsKubefirstTokens, cl.GitProtocol, cl.CloudflareAuth.OriginCaIssuerKey != "")
 		if err != nil {
 			return fmt.Errorf("cluster %s - error opening file: %s", clusterName, err)
 		}
