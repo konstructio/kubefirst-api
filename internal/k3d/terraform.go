@@ -7,11 +7,13 @@ See the LICENSE file for more details.
 package k3d
 
 import (
-	"os"
 	"io/ioutil"
-	"strings"
+	"os"
 	"path/filepath"
+	"strings"
+
 	pkg "github.com/kubefirst/kubefirst-api/internal"
+	"github.com/rs/zerolog/log"
 )
 
 func GetGithubTerraformEnvs(config *K3dConfig, envs map[string]string, githubToken string) map[string]string {
@@ -62,6 +64,7 @@ type GithubTerraformEnvs struct {
 func TerraformPrep(config *K3dConfig) error{
 
 	path := config.GitopsDir + "/terraform"
+	log.Info().Msgf("Repooo is %s",path)
 	err := filepath.Walk(path,detokenizeterraform(path,config))
 	if err != nil {
 		return err
@@ -86,10 +89,10 @@ func detokenizeterraform(path string,config *K3dConfig) filepath.WalkFunc {
 			}
 
 			newContents := string(read)
-			newContents = strings.Replace(newContents,"<ADMIN-TEAM>",config.AdminTeamName,-1)
-			newContents = strings.Replace(newContents,"<DEVELOPER-TEAM>",config.DeveloperTeamName,-1)
-			newContents = strings.Replace(newContents,"<METPAHOR-REPO-NAME>",config.MetaphorRepoName,-1)
-			newContents = strings.Replace(newContents,"<GIT-REPO-NAME>",config.GitopsRepoName,-1)
+			newContents = strings.Replace(newContents,"<ADMIN_TEAM>",config.AdminTeamName,-1)
+			newContents = strings.Replace(newContents,"<DEVELOPER_TEAM>",config.DeveloperTeamName,-1)
+			newContents = strings.Replace(newContents,"<METAPHOR_REPO_NAME>",config.MetaphorRepoName,-1)
+			newContents = strings.Replace(newContents,"<GIT_REPO_NAME>",config.GitopsRepoName,-1)
 
 			err = ioutil.WriteFile(path,[]byte(newContents),0)
 			if err != nil {
