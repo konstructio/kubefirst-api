@@ -32,6 +32,5 @@ var DeleteK3dCluster = internal.DeleteK3dCluster
 var GenerateSingleTLSSecret = internal.GenerateSingleTLSSecret
 
 var ClusterCreateConsoleAPI = internal.ClusterCreateConsoleAPI
-var RestartDeployment = controller.RestartDeployment
-
 var TerraformPrep = internal.TerraformPrep
+var Restart = internal.Restart
