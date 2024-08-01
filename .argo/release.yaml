@@ -75,8 +75,10 @@ spec:
                 - name: repo-source
                   from: '{{steps.set-chart-versions.outputs.artifacts.repo-source}}'
               parameters:
-                - name: repo
-                  value: 'kubefirst/{{workflow.parameters.appName}}'
+                - name: orgName
+                  value: 'kubefirst'
+                - name: appName
+                  value: '{{workflow.parameters.appName}}'
                 - name: tagName
                   value: '{{steps.get-initial-chart-version.outputs.result}}'
         - - name: increment-chart-minor
