@@ -30,3 +30,4 @@ var GenerateSingleTLSSecret = internal.GenerateSingleTLSSecret
 
 var ClusterCreateConsoleAPI = internal.ClusterCreateConsoleAPI
 var TerraformPrep = internal.TerraformPrep
+var Restart = internal.Restart

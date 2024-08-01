@@ -66,14 +66,14 @@ type K3dConfig struct {
 	MkCertSSLSecretDir              string
 	TerraformClient                 string
 	ToolsDir                        string
-	GitopsRepoName					string
-	MetaphorRepoName				string
-	AdminTeamName					string
-	DeveloperTeamName				string
+	GitopsRepoName                  string
+	MetaphorRepoName                string
+	AdminTeamName                   string
+	DeveloperTeamName               string
 }
 
 // GetConfig - load default values from kubefirst installer
-func GetConfig(clusterName string, gitProvider string, gitOwner string, gitProtocol string,gitopsRepoName string,metaphorRepoName string,adminTeamName string,developerTeamName string) *K3dConfig {
+func GetConfig(clusterName string, gitProvider string, gitOwner string, gitProtocol string, gitopsRepoName string, metaphorRepoName string, adminTeamName string, developerTeamName string) *K3dConfig {
 	config := K3dConfig{}
 
 	if err := env.Parse(&config); err != nil {
@@ -119,8 +119,6 @@ func GetConfig(clusterName string, gitProvider string, gitOwner string, gitProto
 
 	return &config
 }
-
-
 
 type GitopsDirectoryValues struct {
 	GithubOwner                   string

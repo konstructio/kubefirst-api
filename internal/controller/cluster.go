@@ -200,13 +200,13 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			GitRunnerDescription: fmt.Sprintf("Self Hosted %s Runner", clctrl.GitProvider),
 			GitRunnerNS:          fmt.Sprintf("%s-runner", clctrl.GitProvider),
 			GitURL:               clctrl.GitopsTemplateURL,
-			AdminTeamName:		  clctrl.AdminTeamName,
-			DeveloperTeamName:	  clctrl.DeveloperTeamName,
-			MetaphorRepoName:	  clctrl.MetaphorRepoName,
-			GitopsRepoName:		  clctrl.GitopsRepoName,
+			AdminTeamName:        clctrl.AdminTeamName,
+			DeveloperTeamName:    clctrl.DeveloperTeamName,
+			MetaphorRepoName:     clctrl.MetaphorRepoName,
+			GitopsRepoName:       clctrl.GitopsRepoName,
 			GitopsRepoURL:        destinationGitopsRepoURL,
 
-			GitHubHost:  fmt.Sprintf("https://github.com/%s/%s.git", clctrl.GitAuth.Owner,clctrl.GitopsRepoName),
+			GitHubHost:  fmt.Sprintf("https://github.com/%s/%s.git", clctrl.GitAuth.Owner, clctrl.GitopsRepoName),
 			GitHubOwner: clctrl.GitAuth.Owner,
 			GitHubUser:  clctrl.GitAuth.User,
 
@@ -216,9 +216,9 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			GitlabUser:         clctrl.GitAuth.User,
 
 			GitopsRepoAtlantisWebhookURL:               clctrl.AtlantisWebhookURL,
-			GitopsRepoNoHTTPSURL:                       fmt.Sprintf("%s/%s/%s.git", clctrl.GitHost, clctrl.GitAuth.Owner,clctrl.GitopsRepoName),
-			WorkloadClusterTerraformModuleURL:          fmt.Sprintf("git::https://%s/%s/%s.git//terraform/%s/modules/workload-cluster?ref=main", clctrl.GitHost, clctrl.GitAuth.Owner, clctrl.GitopsRepoName,clctrl.CloudProvider),
-			WorkloadClusterBootstrapTerraformModuleURL: fmt.Sprintf("git::https://%s/%s/%s.git//terraform/%s/modules/bootstrap?ref=main", clctrl.GitHost, clctrl.GitAuth.Owner, clctrl.GitopsRepoName,clctrl.CloudProvider),
+			GitopsRepoNoHTTPSURL:                       fmt.Sprintf("%s/%s/%s.git", clctrl.GitHost, clctrl.GitAuth.Owner, clctrl.GitopsRepoName),
+			WorkloadClusterTerraformModuleURL:          fmt.Sprintf("git::https://%s/%s/%s.git//terraform/%s/modules/workload-cluster?ref=main", clctrl.GitHost, clctrl.GitAuth.Owner, clctrl.GitopsRepoName, clctrl.CloudProvider),
+			WorkloadClusterBootstrapTerraformModuleURL: fmt.Sprintf("git::https://%s/%s/%s.git//terraform/%s/modules/bootstrap?ref=main", clctrl.GitHost, clctrl.GitAuth.Owner, clctrl.GitopsRepoName, clctrl.CloudProvider),
 			ClusterId: clctrl.ClusterID,
 
 			// external-dns optionality to provide cloudflare support regardless of cloud provider
@@ -280,7 +280,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			MetaphorDevelopmentIngressURL: fmt.Sprintf("metaphor-development.%s", fullDomainName),
 			MetaphorStagingIngressURL:     fmt.Sprintf("metaphor-staging.%s", fullDomainName),
 			MetaphorProductionIngressURL:  fmt.Sprintf("metaphor-production.%s", fullDomainName),
-			MetaphorRepoName:	  		   clctrl.MetaphorRepoName,
+			MetaphorRepoName:              clctrl.MetaphorRepoName,
 		}
 		return metaphorTemplateTokens
 	}
@@ -309,7 +309,7 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 			return err
 		}
 	}
-	
+
 	clientSet := kcfg.Clientset
 
 	// create namespaces

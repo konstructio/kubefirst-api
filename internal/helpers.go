@@ -204,7 +204,7 @@ func ValidateK1Folder(folderPath string) error {
 
 	if _, err := os.Stat(folderPath); errors.Is(err, os.ErrNotExist) {
 		if err = os.Mkdir(folderPath, os.ModePerm); err != nil {
-			return fmt.Errorf("info: could not create directory %q - error: %s", folderPath, err)
+			return fmt.Errorf("info: could not create directory %q - error: %w", folderPath, err)
 		}
 		// folder was just created, no further validation required
 		return nil
@@ -276,10 +276,10 @@ func ReplaceFileContent(filPath string, oldContent string, newContent string) er
 // UpdateTerraformS3BackendForK8sAddress during the installation process, Terraform must reach port-forwarded resources
 // to be able to communicate with the services. When Kubefirst finish the installation, and Terraform needs to
 // communicate with the services, it must use the internal Kubernetes addresses.
-func UpdateTerraformS3BackendForK8sAddress(k1Dir string,gitopsRepoName string) error {
+func UpdateTerraformS3BackendForK8sAddress(k1Dir string, gitopsRepoName string) error {
 
 	// todo: create a function for file content replacement
-	vaultMainFile := fmt.Sprintf("%s/%s/terraform/vault/main.tf", k1Dir,gitopsRepoName)
+	vaultMainFile := fmt.Sprintf("%s/%s/terraform/vault/main.tf", k1Dir, gitopsRepoName)
 	if err := ReplaceFileContent(
 		vaultMainFile,
 		MinioURL,
@@ -322,7 +322,7 @@ func UpdateTerraformS3BackendForLocalhostAddress() error {
 	// todo: create a function for file content replacement
 	vaultMainFile := fmt.Sprintf("%s/%s/terraform/vault/main.tf", config.K1FolderPath, "gitops")
 	if err := ReplaceFileContent(
-		
+
 		vaultMainFile,
 		"http://minio.minio.svc.cluster.local:9000",
 		MinioURL,
@@ -557,27 +557,27 @@ func ResetK1Dir(k1Dir string, gitopsRepoName string, metaphorRepoName string) er
 		// path/to/whatever exists
 		err := os.RemoveAll(k1Dir + "/argo-workflows")
 		if err != nil {
-			return fmt.Errorf("unable to delete %q folder, error: %s", k1Dir+"/argo-workflows", err)
+			return fmt.Errorf("unable to delete %q folder, error: %w", k1Dir+"/argo-workflows", err)
 		}
 	}
 
 	if _, err := os.Stat(k1Dir + "/" + gitopsRepoName); !os.IsNotExist(err) {
 		err := os.RemoveAll(k1Dir + "/" + gitopsRepoName)
 		if err != nil {
-			return fmt.Errorf("unable to delete %q folder, error: %s", k1Dir+"/"+gitopsRepoName, err)
+			return fmt.Errorf("unable to delete %q folder, error: %w", k1Dir+"/"+gitopsRepoName, err)
 		}
 	}
 	if _, err := os.Stat(k1Dir + "/" + metaphorRepoName); !os.IsNotExist(err) {
 		err := os.RemoveAll(k1Dir + "/" + metaphorRepoName)
 		if err != nil {
-			return fmt.Errorf("unable to delete %q folder, error: %s", k1Dir+"/"+metaphorRepoName, err)
+			return fmt.Errorf("unable to delete %q folder, error: %w", k1Dir+"/"+metaphorRepoName, err)
 		}
 	}
 	// todo look at logic to not re-download
 	if _, err := os.Stat(k1Dir + "/tools"); !os.IsNotExist(err) {
 		err = os.RemoveAll(k1Dir + "/tools")
 		if err != nil {
-			return fmt.Errorf("unable to delete %q folder, error: %s", k1Dir+"/tools", err)
+			return fmt.Errorf("unable to delete %q folder, error: %w", k1Dir+"/tools", err)
 		}
 	}
 	//* files
@@ -585,7 +585,7 @@ func ResetK1Dir(k1Dir string, gitopsRepoName string, metaphorRepoName string) er
 	if _, err := os.Stat(k1Dir + "/argocd-init-values.yaml"); !os.IsNotExist(err) {
 		err = os.Remove(k1Dir + "/argocd-init-values.yaml")
 		if err != nil {
-			return fmt.Errorf("unable to delete %q folder, error: %s", k1Dir+"/argocd-init-values.yaml", err)
+			return fmt.Errorf("unable to delete %q folder, error: %w", k1Dir+"/argocd-init-values.yaml", err)
 		}
 	}
 

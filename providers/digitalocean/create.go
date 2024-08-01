@@ -75,7 +75,7 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 		ctrl.HandleError(err.Error())
 		return err
 	}
-	
+
 	err = ctrl.RunGitTerraform()
 	if err != nil {
 		ctrl.HandleError(err.Error())

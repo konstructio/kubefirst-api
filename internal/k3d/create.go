@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package k3d
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
@@ -16,6 +17,9 @@ import (
 
 	pkg "github.com/kubefirst/kubefirst-api/internal"
 	"github.com/kubefirst/kubefirst-api/internal/gitClient"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
@@ -122,7 +126,6 @@ func PrepareGitRepositories(
 	gitopsRepoName string,
 	metaphorRepoName string,
 ) error {
-	log.Info().Msg("hekeei")
 	//* clone the gitops-template repo
 	gitopsRepo, err := gitClient.CloneRefSetMain(gitopsTemplateBranch, gitopsDir, gitopsTemplateURL)
 	if err != nil {
@@ -152,7 +155,7 @@ func PrepareGitRepositories(
 	// ! metaphor
 	// * adjust the content for the gitops repo
 
-	err = AdjustMetaphorRepo(DestinationMetaphorRepoURL, gitopsDir, gitProvider, gitopsRepoName, metaphorRepoName,k1Dir)
+	err = AdjustMetaphorRepo(DestinationMetaphorRepoURL, gitopsDir, gitProvider, gitopsRepoName, metaphorRepoName, k1Dir)
 	if err != nil {
 		return err
 	}
@@ -197,5 +200,48 @@ func PostRunPrepareGitopsRepository(clusterName string,
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func Restart(kubeconfig string) error {
+
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		return fmt.Errorf("Unable to create config %w", err)
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return fmt.Errorf("Error in creating clientset %w", err)
+	}
+
+	err = RestartDeployment(context.Background(), clientset, "argocd", "argocd-applicationset-controller")
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, namespace string, deployment_name string) error {
+
+	deploy, err := clientset.AppsV1().Deployments(namespace).Get(ctx, deployment_name, metav1.GetOptions{})
+
+	if err != nil {
+		return err
+	}
+
+	if deploy.Spec.Template.ObjectMeta.Annotations == nil {
+		deploy.Spec.Template.ObjectMeta.Annotations = make(map[string]string)
+	}
+
+	deploy.Spec.Template.ObjectMeta.Annotations["kubectl.kubernetes.io/restartedAt"] = time.Now().Format(time.RFC3339)
+
+	_, err = clientset.AppsV1().Deployments(namespace).Update(ctx, deploy, metav1.UpdateOptions{})
+
+	if err != nil {
+		return fmt.Errorf("unable to update deployment %q: %w", deploy, err)
+	}
+
 	return nil
 }

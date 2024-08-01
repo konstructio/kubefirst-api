@@ -45,7 +45,7 @@ func PrepareMgmtCluster(cluster pkgtypes.Cluster) error {
 		log.Fatal().Msgf("error getting home path: %s", err)
 	}
 	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, cluster.ClusterName)
-	gitopsDir := fmt.Sprintf("%s/.k1/%s/%s", homeDir, cluster.ClusterName,cluster.GitopsRepoName)
+	gitopsDir := fmt.Sprintf("%s/.k1/%s/%s", homeDir, cluster.ClusterName, cluster.GitopsRepoName)
 
 	if _, err := os.Stat(clusterDir); os.IsNotExist(err) {
 		err := os.MkdirAll(clusterDir, 0777)
@@ -79,7 +79,7 @@ func PrepareMgmtCluster(cluster pkgtypes.Cluster) error {
 
 func PrepareGitEnvironment(cluster *pkgtypes.Cluster, gitopsDir string) error {
 
-	repoUrl := fmt.Sprintf("https://%s/%s/%s", cluster.GitHost, cluster.GitAuth.Owner,cluster.GitopsRepoName)
+	repoUrl := fmt.Sprintf("https://%s/%s/%s", cluster.GitHost, cluster.GitAuth.Owner, cluster.GitopsRepoName)
 	_, err := gitClient.ClonePrivateRepo("main", gitopsDir, repoUrl, cluster.GitAuth.User, cluster.GitAuth.Token)
 	if err != nil {
 		log.Fatal().Msgf("error cloning repository: %s", err)

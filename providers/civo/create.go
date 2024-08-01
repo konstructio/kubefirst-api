@@ -8,7 +8,7 @@ package civo
 
 import (
 	"os"
-	
+
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/controller"
 	"github.com/kubefirst/kubefirst-api/internal/k8s"
@@ -73,13 +73,11 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-
 	err = ctrl.TerraformPrep()
 	if err != nil {
 		ctrl.HandleError(err.Error())
 		return err
 	}
-
 
 	err = ctrl.RunGitTerraform()
 	if err != nil {
@@ -93,7 +91,6 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	
 	err = ctrl.CreateCluster()
 	if err != nil {
 		ctrl.HandleError(err.Error())

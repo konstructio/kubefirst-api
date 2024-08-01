@@ -7,7 +7,6 @@ See the LICENSE file for more details.
 package k3d
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -60,45 +59,47 @@ type GithubTerraformEnvs struct {
 	AwsSecretAccessKey    string
 }
 
-
-func TerraformPrep(config *K3dConfig) error{
+func TerraformPrep(config *K3dConfig) error {
 
 	path := config.GitopsDir + "/terraform"
-	log.Info().Msgf("Repooo is %s",path)
-	err := filepath.Walk(path,detokenizeterraform(path,config))
+	log.Info().Msgf("Repooo is %s", path)
+	err := filepath.Walk(path, detokenizeterraform(path, config))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func detokenizeterraform(path string,config *K3dConfig) filepath.WalkFunc {
-	return filepath.WalkFunc(func(path string,fi os.FileInfo,err error) error{
+func detokenizeterraform(path string, config *K3dConfig) filepath.WalkFunc {
+	return filepath.WalkFunc(func(path string, fi os.FileInfo, err error) error {
 
-		if fi.IsDir()  {
+		if fi.IsDir() {
 			return nil
 		}
 
-		matched,_ := filepath.Match("*",fi.Name())
+		matched, _ := filepath.Match("*", fi.Name())
 
 		if matched {
 
-			read,err := ioutil.ReadFile(path)
+			read, err := os.ReadFile(path)
 			if err != nil {
 				return err
 			}
 
-			newContents := string(read)
-			newContents = strings.Replace(newContents,"<ADMIN_TEAM>",config.AdminTeamName,-1)
-			newContents = strings.Replace(newContents,"<DEVELOPER_TEAM>",config.DeveloperTeamName,-1)
-			newContents = strings.Replace(newContents,"<METAPHOR_REPO_NAME>",config.MetaphorRepoName,-1)
-			newContents = strings.Replace(newContents,"<GIT_REPO_NAME>",config.GitopsRepoName,-1)
+			replacer := strings.NewReplacer(
+				"<ADMIN_TEAM>", config.AdminTeamName,
+				"<DEVELOPER_TEAM>", config.DeveloperTeamName,
+				"<METAPHOR_REPO_NAME>", config.MetaphorRepoName,
+				"<GIT_REPO_NAME>", config.GitopsRepoName,
+			)
 
-			err = ioutil.WriteFile(path,[]byte(newContents),0)
+			newContents := replacer.Replace(string(read))
+
+			err = os.WriteFile(path, []byte(newContents), 0)
 			if err != nil {
 				return err
 			}
-			
+
 		}
 		return nil
 	})

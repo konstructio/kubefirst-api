@@ -36,7 +36,7 @@ func DeleteDigitaloceanCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Te
 	telemetry.SendEvent(telemetryEvent, telemetry.ClusterDeleteStarted, "")
 
 	// Instantiate digitalocean config
-	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.Token, "",cl.GitopsRepoName,cl.MetaphorRepoName)
+	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.Token, "", cl.GitopsRepoName, cl.MetaphorRepoName)
 
 	kcfg := utils.GetKubernetesClient(cl.ClusterName)
 
