@@ -65,6 +65,20 @@ spec:
                   value: '{{workflow.parameters.appName}}'
                 - name: chartDir
                   value: 'charts/{{workflow.parameters.appName}}'
+        - - name: release-and-tag-main-with-notes
+            templateRef:
+              name: cwft-git
+              template: release-and-tag-main-with-notes
+              clusterScope: true
+            arguments:
+              artifacts:
+                - name: repo-source
+                  from: '{{steps.set-chart-versions.outputs.artifacts.repo-source}}'
+              parameters:
+                - name: repo
+                  value: 'kubefirst/{{workflow.parameters.appName}}'
+                - name: tagName
+                  value: '{{steps.get-initial-chart-version.outputs.result}}'
         - - name: increment-chart-minor
             templateRef:
               name: cwft-helm
