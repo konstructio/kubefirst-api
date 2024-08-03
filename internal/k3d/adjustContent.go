@@ -97,7 +97,7 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 
 	//* create ~/.k1/metaphor
 	metaphorDir := fmt.Sprintf("%s/%s", k1Dir, metaphorRepoName)
-	log.Info().Msg(metaphorDir)
+
 	os.Mkdir(metaphorDir, 0700)
 
 	//* git init
