@@ -10,7 +10,7 @@ import (
 	vaultapi "github.com/hashicorp/vault/api"
 )
 
-var Conf VaultConfiguration = VaultConfiguration{
+var Conf = Configuration{
 	Config: NewVault(),
 }
 

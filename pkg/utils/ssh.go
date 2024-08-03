@@ -16,7 +16,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func CreateSshKeyPair() (string, string, error) {
+func CreateSSHKeyPair() (string, string, error) {
 	// Generate a key pair
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
@@ -54,7 +54,7 @@ func EvalSSHKey(req *types.EvalSSHKeyRequest) error {
 		}
 
 		keyName := "kbot-ssh-key"
-		var keyFound bool = false
+		keyFound := false
 		for _, key := range keys {
 			if key.Title == keyName {
 				if strings.Contains(key.Key, strings.TrimSuffix(viper.GetString("kbot.public-key"), "\n")) {

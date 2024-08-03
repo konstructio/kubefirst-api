@@ -108,10 +108,11 @@ func ExecShellWithVars(osvars map[string]string, command string, args ...string)
 	if err != nil {
 		log.Error().Err(err).Msgf("command %q failed", command)
 		return err
-	} else {
-		close(stdOut)
-		close(stdErr)
 	}
+
+	close(stdOut)
+	close(stdErr)
+
 	<-doneOut
 	<-doneErr
 	return nil

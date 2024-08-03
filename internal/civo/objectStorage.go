@@ -16,11 +16,11 @@ import (
 )
 
 // CreateStorageBucket creates an object storage bucket
-func (c *CivoConfiguration) CreateStorageBucket(accessKeyId string, bucketName string, region string) (civogo.ObjectStore, error) {
+func (c *Configuration) CreateStorageBucket(accessKeyID string, bucketName string, region string) (civogo.ObjectStore, error) {
 	bucket, err := c.Client.NewObjectStore(&civogo.CreateObjectStoreRequest{
 		Name:        bucketName,
 		Region:      region,
-		AccessKeyID: accessKeyId,
+		AccessKeyID: accessKeyID,
 		MaxSizeGB:   500,
 	})
 	if err != nil {
@@ -31,7 +31,7 @@ func (c *CivoConfiguration) CreateStorageBucket(accessKeyId string, bucketName s
 }
 
 // DeleteStorageBucket deletes an object storage bucket
-func (c *CivoConfiguration) DeleteStorageBucket(bucketName string) error {
+func (c *Configuration) DeleteStorageBucket(bucketName string) error {
 	objsts, err := c.Client.ListObjectStores()
 	if err != nil {
 		return err
@@ -58,7 +58,7 @@ func (c *CivoConfiguration) DeleteStorageBucket(bucketName string) error {
 }
 
 // GetAccessCredentials creates object store access credentials if they do not exist and returns them if they do
-func (c *CivoConfiguration) GetAccessCredentials(credentialName string, region string) (civogo.ObjectStoreCredential, error) {
+func (c *Configuration) GetAccessCredentials(credentialName string, region string) (civogo.ObjectStoreCredential, error) {
 	creds, err := c.checkKubefirstCredentials(credentialName, region)
 	if err != nil {
 		log.Info().Msg(err.Error())
@@ -96,7 +96,7 @@ func (c *CivoConfiguration) GetAccessCredentials(credentialName string, region s
 }
 
 // DeleteAccessCredentials deletes object store credentials
-func (c *CivoConfiguration) DeleteAccessCredentials(credentialName string, region string) error {
+func (c *Configuration) DeleteAccessCredentials(credentialName string, region string) error {
 	creds, err := c.checkKubefirstCredentials(credentialName, region)
 	if err != nil {
 		log.Info().Msg(err.Error())
@@ -111,7 +111,7 @@ func (c *CivoConfiguration) DeleteAccessCredentials(credentialName string, regio
 }
 
 // checkKubefirstCredentials determines whether or not object store credentials exist
-func (c *CivoConfiguration) checkKubefirstCredentials(credentialName string, region string) (civogo.ObjectStoreCredential, error) {
+func (c *Configuration) checkKubefirstCredentials(credentialName string, region string) (civogo.ObjectStoreCredential, error) {
 	log.Info().Msgf("looking for credential: %s", credentialName)
 	remoteCredentials, err := c.Client.ListObjectStoreCredentials()
 	if err != nil {
@@ -132,7 +132,7 @@ func (c *CivoConfiguration) checkKubefirstCredentials(credentialName string, reg
 }
 
 // createAccessCredentials creates access credentials for an object store
-func (c *CivoConfiguration) createAccessCredentials(credentialName string, region string) (civogo.ObjectStoreCredential, error) {
+func (c *Configuration) createAccessCredentials(credentialName string, region string) (civogo.ObjectStoreCredential, error) {
 	creds, err := c.Client.NewObjectStoreCredential(&civogo.CreateObjectStoreCredentialRequest{
 		Name:   credentialName,
 		Region: region,
@@ -144,7 +144,7 @@ func (c *CivoConfiguration) createAccessCredentials(credentialName string, regio
 }
 
 // getAccessCredentials retrieves an object store's access credentials
-func (c *CivoConfiguration) getAccessCredentials(id string, region string) (civogo.ObjectStoreCredential, error) {
+func (c *Configuration) getAccessCredentials(id string, region string) (civogo.ObjectStoreCredential, error) {
 	creds, err := c.Client.GetObjectStoreCredential(id)
 	if err != nil {
 		return civogo.ObjectStoreCredential{}, err

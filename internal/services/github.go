@@ -40,7 +40,7 @@ func (service GitHubService) CheckUserCodeConfirmation(deviceCode string) (strin
 	gitHubAccessTokenURL := "https://github.com/login/oauth/access_token"
 
 	jsonData, err := json.Marshal(map[string]string{
-		"client_id":   pkg.GitHubOAuthClientId,
+		"client_id":   pkg.GitHubOAuthClientID,
 		"device_code": deviceCode,
 		"grant_type":  "urn:ietf:params:oauth:grant-type:device_code",
 	})

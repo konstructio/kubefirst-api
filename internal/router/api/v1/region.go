@@ -67,13 +67,13 @@ func PostRegions(c *gin.Context) {
 			})
 			return
 		}
-		var awsConf *awsinternal.AWSConfiguration
+		var awsConf *awsinternal.Configuration
 		if os.Getenv("IS_CLUSTER_ZERO") == "false" {
-			awsConf = &awsinternal.AWSConfiguration{
+			awsConf = &awsinternal.Configuration{
 				Config: aws.NewEKSServiceAccountClientV1(),
 			}
 		} else {
-			awsConf = &awsinternal.AWSConfiguration{
+			awsConf = &awsinternal.Configuration{
 				Config: awsinternal.NewAwsV3(
 					regionListRequest.CloudRegion,
 					regionListRequest.AWSAuth.AccessKeyID,
@@ -98,7 +98,7 @@ func PostRegions(c *gin.Context) {
 			})
 			return
 		}
-		civoConf := civo.CivoConfiguration{
+		civoConf := civo.Configuration{
 			Client:  civo.NewCivo(regionListRequest.CivoAuth.Token, regionListRequest.CloudRegion),
 			Context: context.Background(),
 		}
@@ -138,7 +138,7 @@ func PostRegions(c *gin.Context) {
 			})
 			return
 		}
-		vultrConf := vultr.VultrConfiguration{
+		vultrConf := vultr.Configuration{
 			Client:  vultr.NewVultr(regionListRequest.VultrAuth.Token),
 			Context: context.Background(),
 		}
@@ -160,7 +160,7 @@ func PostRegions(c *gin.Context) {
 		}
 		googleConf := google.GoogleConfiguration{
 			Context: context.Background(),
-			Project: regionListRequest.GoogleAuth.ProjectId,
+			Project: regionListRequest.GoogleAuth.ProjectID,
 			Region:  regionListRequest.CloudRegion,
 			KeyFile: regionListRequest.GoogleAuth.KeyFile,
 		}

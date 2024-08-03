@@ -31,7 +31,7 @@ type ElbDeletionParameters struct {
 
 // GetLoadBalancersForDeletion gets all load balancers and returns details for
 // a load balancer associated with the target EKS cluster
-func (conf *AWSConfiguration) GetLoadBalancersForDeletion(eksClusterName string) ([]ElbDeletionParameters, error) {
+func (conf *Configuration) GetLoadBalancersForDeletion(eksClusterName string) ([]ElbDeletionParameters, error) {
 	elbClient := elasticloadbalancing.NewFromConfig(conf.Config)
 
 	// Get all elastic load balancers
@@ -93,7 +93,7 @@ func (conf *AWSConfiguration) GetLoadBalancersForDeletion(eksClusterName string)
 }
 
 // DeleteEKSSecurityGroups deletes security groups associated with an EKS cluster
-func (conf *AWSConfiguration) DeleteEKSSecurityGroups(region string, eksClusterName string) error {
+func (conf *Configuration) DeleteEKSSecurityGroups(region string, eksClusterName string) error {
 	ec2Client := ec2.NewFromConfig(conf.Config, func(o *ec2.Options) {
 		o.Region = region
 	})
@@ -155,7 +155,7 @@ func (conf *AWSConfiguration) DeleteEKSSecurityGroups(region string, eksClusterN
 }
 
 // DeleteSecurityGroup deletes a security group
-func (conf *AWSConfiguration) DeleteSecurityGroup(region string, sgid string) error {
+func (conf *Configuration) DeleteSecurityGroup(region string, sgid string) error {
 	ec2Client := ec2.NewFromConfig(conf.Config, func(o *ec2.Options) {
 		o.Region = region
 	})
@@ -218,7 +218,7 @@ func (conf *AWSConfiguration) DeleteSecurityGroup(region string, sgid string) er
 }
 
 // DeleteElasticLoadBalancer deletes an Elastic Load Balancer associated with an EKS cluster
-func (conf *AWSConfiguration) DeleteElasticLoadBalancer(elbdp ElbDeletionParameters) error {
+func (conf *Configuration) DeleteElasticLoadBalancer(elbdp ElbDeletionParameters) error {
 	elbClient := elasticloadbalancing.NewFromConfig(conf.Config)
 
 	_, err := elbClient.DeleteLoadBalancer(context.Background(), &elasticloadbalancing.DeleteLoadBalancerInput{

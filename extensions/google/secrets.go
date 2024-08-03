@@ -31,7 +31,7 @@ func BootstrapGoogleMgmtCluster(
 		cl.GitProtocol,
 		cl.CloudflareAuth.Token,
 		cl.GoogleAuth.KeyFile, // Google has no authentication method because we use roles
-		cl.DnsProvider,
+		cl.DNSProvider,
 		cl.CloudProvider,
 		cl.GitAuth.Token,
 		cl.GitAuth.PrivateKey,
@@ -41,20 +41,20 @@ func BootstrapGoogleMgmtCluster(
 		return err
 	}
 
-	var externalDnsToken string
-	switch cl.DnsProvider {
+	var externalDNSToken string
+	switch cl.DNSProvider {
 	case "civo":
-		externalDnsToken = cl.CivoAuth.Token
+		externalDNSToken = cl.CivoAuth.Token
 	case "vultr":
-		externalDnsToken = cl.VultrAuth.Token
+		externalDNSToken = cl.VultrAuth.Token
 	case "digitalocean":
-		externalDnsToken = cl.DigitaloceanAuth.Token
+		externalDNSToken = cl.DigitaloceanAuth.Token
 	case "aws":
-		externalDnsToken = "implement with cluster management"
+		externalDNSToken = "implement with cluster management"
 	case "google":
-		externalDnsToken = "implement with cluster management"
+		externalDNSToken = "implement with cluster management"
 	case "cloudflare":
-		externalDnsToken = cl.CloudflareAuth.APIToken
+		externalDNSToken = cl.CloudflareAuth.APIToken
 	}
 
 	// Create secrets
@@ -80,7 +80,7 @@ func BootstrapGoogleMgmtCluster(
 		{
 			ObjectMeta: metav1.ObjectMeta{Name: "external-dns-secrets", Namespace: "external-dns"},
 			Data: map[string][]byte{
-				"token": []byte(externalDnsToken),
+				"token": []byte(externalDNSToken),
 			},
 		},
 		{

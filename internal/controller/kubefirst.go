@@ -105,13 +105,13 @@ func (clctrl *ClusterController) CreateVirtualClusters() error {
 		fullDomainName = clctrl.DomainName
 	}
 
-	consoleCloudUrl := fmt.Sprintf("https://kubefirst.%s", fullDomainName)
+	consoleCloudURL := fmt.Sprintf("https://kubefirst.%s", fullDomainName)
 
 	if strings.ToLower(os.Getenv("K1_LOCAL_DEBUG")) == "true" { // allow using local console running on port 3000
-		consoleCloudUrl = "http://localhost:3000"
+		consoleCloudURL = "http://localhost:3000"
 	}
 
-	err := pkg.IsAppAvailable(fmt.Sprintf("%s/api/proxyHealth", consoleCloudUrl), "kubefirst api")
+	err := pkg.IsAppAvailable(fmt.Sprintf("%s/api/proxyHealth", consoleCloudURL), "kubefirst api")
 	if err != nil {
 		log.Error().Msgf("unable to wait for kubefirst console: %s", err)
 		clctrl.HandleError(err.Error())
@@ -119,7 +119,7 @@ func (clctrl *ClusterController) CreateVirtualClusters() error {
 	}
 
 	requestObject := types.ProxyRequest{
-		Url: fmt.Sprintf("/cluster/%s/vclusters", clctrl.ClusterName),
+		URL: fmt.Sprintf("/cluster/%s/vclusters", clctrl.ClusterName),
 	}
 
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
@@ -131,7 +131,7 @@ func (clctrl *ClusterController) CreateVirtualClusters() error {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/proxy", consoleCloudUrl), bytes.NewReader(payload))
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/proxy", consoleCloudURL), bytes.NewReader(payload))
 	if err != nil {
 		log.Error().Msgf("unable to create default clusters: %s", err)
 		clctrl.HandleError(err.Error())

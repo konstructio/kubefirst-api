@@ -48,7 +48,7 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 			return
 		}
 
-		civoConfig := civo.CivoConfiguration{
+		civoConfig := civo.Configuration{
 			Client:  civo.NewCivo(instanceSizesRequest.CivoAuth.Token, instanceSizesRequest.CloudRegion),
 			Context: context.Background(),
 		}
@@ -75,13 +75,13 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 			return
 		}
 
-		var awsConf *awsinternal.AWSConfiguration
+		var awsConf *awsinternal.Configuration
 		if os.Getenv("IS_CLUSTER_ZERO") == "false" {
-			awsConf = &awsinternal.AWSConfiguration{
+			awsConf = &awsinternal.Configuration{
 				Config: aws.NewEKSServiceAccountClientV1(),
 			}
 		} else {
-			awsConf = &awsinternal.AWSConfiguration{
+			awsConf = &awsinternal.Configuration{
 				Config: awsinternal.NewAwsV3(
 					instanceSizesRequest.CloudRegion,
 					instanceSizesRequest.AWSAuth.AccessKeyID,
@@ -136,7 +136,7 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 			return
 		}
 
-		vultrConf := vultr.VultrConfiguration{
+		vultrConf := vultr.Configuration{
 			Client:  vultr.NewVultr(instanceSizesRequest.VultrAuth.Token),
 			Context: context.Background(),
 		}
@@ -162,7 +162,7 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 			return
 		}
 
-		if instanceSizesRequest.GoogleAuth.ProjectId == "" ||
+		if instanceSizesRequest.GoogleAuth.ProjectID == "" ||
 			instanceSizesRequest.GoogleAuth.KeyFile == "" {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: "missing authentication credentials in request, please check and try again",
@@ -172,7 +172,7 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 
 		googleConf := google.GoogleConfiguration{
 			Context: context.Background(),
-			Project: instanceSizesRequest.GoogleAuth.ProjectId,
+			Project: instanceSizesRequest.GoogleAuth.ProjectID,
 			Region:  instanceSizesRequest.CloudRegion,
 			KeyFile: instanceSizesRequest.GoogleAuth.KeyFile,
 		}

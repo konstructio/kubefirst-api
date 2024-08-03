@@ -80,7 +80,7 @@ func main() {
 	telemetryEvent := telemetry.TelemetryEvent{
 		CliVersion:        env.KubefirstVersion,
 		CloudProvider:     env.CloudProvider,
-		ClusterID:         env.ClusterId,
+		ClusterID:         env.ClusterID,
 		ClusterType:       env.ClusterType,
 		DomainName:        env.DomainName,
 		ErrorMessage:      "",
@@ -89,10 +89,10 @@ func main() {
 		KubefirstClient:   "api",
 		KubefirstTeam:     env.KubefirstTeam,
 		KubefirstTeamInfo: env.KubefirstTeamInfo,
-		MachineID:         env.ClusterId,
+		MachineID:         env.ClusterID,
 		MetricName:        telemetry.ClusterInstallCompleted,
-		ParentClusterId:   env.ParentClusterId,
-		UserId:            env.ClusterId,
+		ParentClusterId:   env.ParentClusterID,
+		UserId:            env.ClusterID,
 	}
 	if env.IsClusterZero != "true" {
 		// Subroutine to automatically update gitops catalog

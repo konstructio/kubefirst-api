@@ -33,7 +33,7 @@ func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 	}
 
 	// Validate aws region
-	awsClient := &awsinternal.AWSConfiguration{
+	awsClient := &awsinternal.Configuration{
 		Config: awsinternal.NewAwsV3(
 			ctrl.CloudRegion,
 			ctrl.AWSAuth.AccessKeyID,

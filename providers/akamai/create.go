@@ -207,9 +207,9 @@ func CreateAkamaiCluster(definition *pkgtypes.ClusterDefinition) error {
 		ctrl.HandleError(err.Error())
 		return err
 	}
-	cluster1KubefirstApiStopChannel := make(chan struct{}, 1)
+	chStop := make(chan struct{}, 1)
 	defer func() {
-		close(cluster1KubefirstApiStopChannel)
+		close(chStop)
 	}()
 
 	// * export and import cluster

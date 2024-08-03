@@ -71,8 +71,8 @@ func PrepareMgmtCluster(cluster pkgtypes.Cluster) error {
 }
 
 func PrepareGitEnvironment(cluster *pkgtypes.Cluster, gitopsDir string) error {
-	repoUrl := fmt.Sprintf("https://%s/%s/gitops", cluster.GitHost, cluster.GitAuth.Owner)
-	_, err := gitClient.ClonePrivateRepo("main", gitopsDir, repoUrl, cluster.GitAuth.User, cluster.GitAuth.Token)
+	repoURL := fmt.Sprintf("https://%s/%s/gitops", cluster.GitHost, cluster.GitAuth.Owner)
+	_, err := gitClient.ClonePrivateRepo("main", gitopsDir, repoURL, cluster.GitAuth.User, cluster.GitAuth.Token)
 	if err != nil {
 		log.Fatal().Msgf("error cloning repository: %s", err)
 
@@ -83,8 +83,8 @@ func PrepareGitEnvironment(cluster *pkgtypes.Cluster, gitopsDir string) error {
 }
 
 func PrepareGitOpsCatalog(gitopsCatalogDir string) error {
-	repoUrl := fmt.Sprintf("https://github.com/%s/%s", KubefirstGitHubOrganization, KubefirstGitopsCatalogRepository)
-	_, err := gitClient.Clone("main", gitopsCatalogDir, repoUrl)
+	repoURL := fmt.Sprintf("https://github.com/%s/%s", KubefirstGitHubOrganization, KubefirstGitopsCatalogRepository)
+	_, err := gitClient.Clone("main", gitopsCatalogDir, repoURL)
 	if err != nil {
 		log.Fatal().Msgf("error cloning repository: %s", err)
 

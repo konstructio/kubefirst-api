@@ -24,8 +24,8 @@ const (
 	applicationDeletionTimeout int = 120
 )
 
-// ArgoCDApplicationCleanup removes and waits for specific ArgoCD applications
-func ArgoCDApplicationCleanup(clientset kubernetes.Interface, removeApps []string) error {
+// ApplicationCleanup removes and waits for specific ArgoCD applications
+func ApplicationCleanup(clientset kubernetes.Interface, removeApps []string) error {
 	// Patch registry app to remove syncPolicy
 	removeSyncPolicyPatch, _ := json.Marshal(
 		[]PatchStringValue{{

@@ -69,7 +69,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				return err
 			}
 		case "civo":
-			civoConf := civo.CivoConfiguration{
+			civoConf := civo.Configuration{
 				Client:  civo.NewCivo(cl.CivoAuth.Token, cl.CloudRegion),
 				Context: context.Background(),
 			}
@@ -132,7 +132,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			}
 
 		case "vultr":
-			vultrConf := vultr.VultrConfiguration{
+			vultrConf := vultr.Configuration{
 				Client:  vultr.NewVultr(cl.VultrAuth.Token),
 				Context: context.Background(),
 				Region:  cl.CloudRegion,
@@ -146,7 +146,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				log.Error().Msg(err.Error())
 				return err
 			}
-			err = vultrConf.CreateObjectStorageBucket(vultr.VultrBucketCredentials{
+			err = vultrConf.CreateObjectStorageBucket(vultr.BucketCredentials{
 				AccessKey:       objst.S3AccessKey,
 				SecretAccessKey: objst.S3SecretKey,
 				Endpoint:        objst.S3Hostname,
@@ -241,17 +241,17 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 			log.Info().Msgf("%s state store bucket created", clctrl.CloudProvider)
 		case "civo":
 
-			civoConf := civo.CivoConfiguration{
+			civoConf := civo.Configuration{
 				Client:  civo.NewCivo(cl.CivoAuth.Token, cl.CloudRegion),
 				Context: context.Background(),
 			}
 
 			telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateStarted, "")
 
-			accessKeyId := cl.StateStoreCredentials.AccessKeyID
-			log.Info().Msgf("access key id %s", accessKeyId)
+			accessKeyID := cl.StateStoreCredentials.AccessKeyID
+			log.Info().Msgf("access key id %s", accessKeyID)
 
-			bucket, err := civoConf.CreateStorageBucket(accessKeyId, clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
+			bucket, err := civoConf.CreateStorageBucket(accessKeyID, clctrl.KubefirstStateStoreBucketName, clctrl.CloudRegion)
 			if err != nil {
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, err.Error())
 				log.Error().Msg(err.Error())

@@ -4,7 +4,7 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package providerConfigs
+package providerConfigs // nolint:revive // allowing temporarily for better code organization
 
 import (
 	"fmt"
@@ -21,9 +21,9 @@ type ProviderConfig struct {
 	GoogleProject                    string
 	K3sServersPrivateIps             []string
 	K3sServersPublicIps              []string
-	K3sSshPrivateKey                 string
+	K3sSSHPrivateKey                 string
 	K3sServersArgs                   []string
-	K3sSshUser                       string
+	K3sSSHUser                       string
 	VultrToken                       string
 	CloudflareAPIToken               string
 	CloudflareOriginCaIssuerAPIToken string
@@ -32,10 +32,10 @@ type ProviderConfig struct {
 	GitlabToken string
 
 	ArgoWorkflowsDir                string
-	DestinationGitopsRepoHttpsURL   string
+	DestinationGitopsRepoHTTPSURL   string
 	DestinationGitopsRepoGitURL     string
 	DestinationGitopsRepoURL        string
-	DestinationMetaphorRepoHttpsURL string
+	DestinationMetaphorRepoHTTPSURL string
 	DestinationMetaphorRepoGitURL   string
 	DestinationMetaphorRepoURL      string
 	GitopsDir                       string

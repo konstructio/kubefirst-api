@@ -48,7 +48,7 @@ func GetValidateCivoDomain(c *gin.Context) {
 	}
 
 	// Run validate func
-	civoConf := civo.CivoConfiguration{
+	civoConf := civo.Configuration{
 		Client:  &civogo.Client{},
 		Context: context.Background(),
 	}

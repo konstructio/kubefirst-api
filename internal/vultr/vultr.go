@@ -18,7 +18,7 @@ import (
 	"github.com/vultr/govultr/v3"
 )
 
-func (c *VultrConfiguration) TestDomainLiveness(domainName string) bool {
+func (c *Configuration) TestDomainLiveness(domainName string) bool {
 	vultrRecordName := "kubefirst-liveness"
 	vultrRecordValue := "domain record propagated"
 
@@ -87,7 +87,7 @@ func (c *VultrConfiguration) TestDomainLiveness(domainName string) bool {
 }
 
 // GetStorageBuckets retrieves all Vultr object storage buckets
-func (c *VultrConfiguration) GetDNSRecords(domainName string) ([]govultr.DomainRecord, error) {
+func (c *Configuration) GetDNSRecords(domainName string) ([]govultr.DomainRecord, error) {
 	records, _, _, err := c.Client.DomainRecord.List(c.Context, domainName, &govultr.ListOptions{})
 	if err != nil {
 		log.Error().Msgf("error getting vultr dns records for domain %s: %s", domainName, err)
@@ -98,7 +98,7 @@ func (c *VultrConfiguration) GetDNSRecords(domainName string) ([]govultr.DomainR
 }
 
 // GetDNSInfo determines whether or not a domain exists within Vultr
-func (c *VultrConfiguration) GetDNSInfo(domainName string) (string, error) {
+func (c *Configuration) GetDNSInfo(domainName string) (string, error) {
 	log.Info().Msg("GetDNSInfo (working...)")
 
 	vultrDNSDomain, _, err := c.Client.Domain.Get(c.Context, domainName)
@@ -134,7 +134,7 @@ func GetDomainApexContent(domainName string) bool {
 }
 
 // GetDNSDomains lists all available DNS domains
-func (c *VultrConfiguration) GetDNSDomains() ([]string, error) {
+func (c *Configuration) GetDNSDomains() ([]string, error) {
 	var domainList []string
 
 	domains, _, _, err := c.Client.Domain.List(c.Context, &govultr.ListOptions{})
@@ -150,7 +150,7 @@ func (c *VultrConfiguration) GetDNSDomains() ([]string, error) {
 }
 
 // GetRegions lists all available regions
-func (c *VultrConfiguration) GetRegions() ([]string, error) {
+func (c *Configuration) GetRegions() ([]string, error) {
 	var regionList []string
 
 	regions, _, _, err := c.Client.Region.List(c.Context, &govultr.ListOptions{})
@@ -165,7 +165,7 @@ func (c *VultrConfiguration) GetRegions() ([]string, error) {
 	return regionList, nil
 }
 
-func (c *VultrConfiguration) ListInstances() ([]string, error) {
+func (c *Configuration) ListInstances() ([]string, error) {
 	// can pass empty string to list all plans for second arg to List
 	plans, _, _, err := c.Client.Plan.List(c.Context, "", &govultr.ListOptions{
 		Region: c.Region,

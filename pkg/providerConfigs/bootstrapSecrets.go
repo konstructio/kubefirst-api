@@ -4,7 +4,7 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package providerConfigs
+package providerConfigs // nolint:revive // allowing temporarily for better code organization
 
 import (
 	"context"
@@ -46,7 +46,7 @@ func BootstrapMgmtCluster(
 	}
 	// Create secrets
 	// swap secret data based on https flag
-	secretData := map[string][]byte{}
+	var secretData map[string][]byte
 
 	if gitProtocol == "https" {
 		// http basic auth
@@ -113,7 +113,7 @@ func BootstrapMgmtCluster(
 	}
 
 	// Data used for service account creation
-	var automountServiceAccountToken bool = true
+	automountServiceAccountToken := true
 
 	// Create service accounts
 	createServiceAccounts := []*v1.ServiceAccount{
@@ -178,7 +178,7 @@ func K8sNamespaces(clientset *kubernetes.Clientset) error {
 }
 
 func ServiceAccounts(clientset *kubernetes.Clientset, cloudflareAPIToken string) error {
-	var automountServiceAccountToken bool = true
+	automountServiceAccountToken := true
 
 	// Create service accounts
 	createServiceAccounts := []*v1.ServiceAccount{

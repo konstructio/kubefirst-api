@@ -78,7 +78,7 @@ func ExportCluster(kcfg k8s.KubernetesClient, cl types.Cluster) error {
 
 	requestObject := types.ProxyImportRequest{
 		Body: cl,
-		Url:  "/cluster/import",
+		URL:  "/cluster/import",
 	}
 
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()

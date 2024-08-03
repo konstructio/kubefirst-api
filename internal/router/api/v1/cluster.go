@@ -492,7 +492,7 @@ func PostCreateCluster(c *gin.Context) {
 			}
 			clusterDefinition.GoogleAuth = pkgtypes.GoogleAuth{
 				KeyFile:   k1AuthSecret["KeyFile"],
-				ProjectId: k1AuthSecret["ProjectId"],
+				ProjectID: k1AuthSecret["ProjectId"],
 			}
 		} else if clusterDefinition.GoogleAuth.KeyFile == "" {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
@@ -530,13 +530,13 @@ func PostCreateCluster(c *gin.Context) {
 			clusterDefinition.K3sAuth = pkgtypes.K3sAuth{
 				K3sServersPrivateIps: strings.Split(k1AuthSecret["servers-private-ips"], ","),
 				K3sServersPublicIps:  defaultK3sServersPublicIps,
-				K3sSshUser:           k1AuthSecret["ssh-user"],
-				K3sSshPrivateKey:     k1AuthSecret["ssh-privatekey"],
+				K3sSSHUser:           k1AuthSecret["ssh-user"],
+				K3sSSHPrivateKey:     k1AuthSecret["ssh-privatekey"],
 				K3sServersArgs:       strings.Split(k1AuthSecret["servers-args"], ","),
 			}
 		} else if len(clusterDefinition.K3sAuth.K3sServersPrivateIps) == 0 ||
-			clusterDefinition.K3sAuth.K3sSshUser == "" ||
-			clusterDefinition.K3sAuth.K3sSshPrivateKey == "" {
+			clusterDefinition.K3sAuth.K3sSSHUser == "" ||
+			clusterDefinition.K3sAuth.K3sSSHPrivateKey == "" {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				// Message: "missing authentication credentials in request, please check and try again",
 				Message: fmt.Sprintf("missing authentication credentials in request, please check and try again: %v", clusterDefinition.K3sAuth),
@@ -667,7 +667,7 @@ func GetClusterKubeConfig(c *gin.Context) {
 			return
 		}
 
-		civoConfig := civoruntime.CivoConfiguration{
+		civoConfig := civoruntime.Configuration{
 			Client:  civoruntime.NewCivo(kubeConfigRequest.CivoAuth.Token, kubeConfigRequest.CloudRegion),
 			Context: context.Background(),
 		}
@@ -704,7 +704,7 @@ func GetClusterKubeConfig(c *gin.Context) {
 
 	case "vultr":
 
-		vultrConf := vultrruntime.VultrConfiguration{
+		vultrConf := vultrruntime.Configuration{
 			Client:  vultrruntime.NewVultr(kubeConfigRequest.VultrAuth.Token),
 			Context: context.Background(),
 		}

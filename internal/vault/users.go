@@ -15,7 +15,7 @@ import (
 )
 
 // GetUserPassword retrieves the password for a Vault user at the users mount path
-func (conf *VaultConfiguration) GetUserPassword(endpoint string, token string, username string, key string) (string, error) {
+func (conf *Configuration) GetUserPassword(endpoint string, token string, username string, key string) (string, error) {
 	conf.Config.Address = endpoint
 
 	vaultClient, err := vaultapi.NewClient(&conf.Config)

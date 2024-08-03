@@ -96,15 +96,15 @@ func InsertEnvironment(clientSet *kubernetes.Clientset, env pkgtypes.Environment
 	return environment, nil
 }
 
-func DeleteEnvironment(clientSet *kubernetes.Clientset, envId string) error {
-	objectId, _ := primitive.ObjectIDFromHex(envId)
+func DeleteEnvironment(clientSet *kubernetes.Clientset, envID string) error {
+	objectID, _ := primitive.ObjectIDFromHex(envID)
 	environmentSecretReference, _ := GetSecretReference(clientSet, KUBEFIRST_ENVIRONMENTS_SECRET_NAME)
 	environmentToDelete := pkgtypes.Environment{}
 
 	for _, environmentName := range environmentSecretReference.List {
 		environment, _ := GetEnvironment(clientSet, environmentName)
 
-		if environment.ID == objectId {
+		if environment.ID == objectID {
 			environmentToDelete = environment
 		}
 	}
@@ -125,14 +125,14 @@ func DeleteEnvironment(clientSet *kubernetes.Clientset, envId string) error {
 }
 
 func UpdateEnvironment(clientSet *kubernetes.Clientset, id string, env types.EnvironmentUpdateRequest) error {
-	objectId, _ := primitive.ObjectIDFromHex(id)
+	objectID, _ := primitive.ObjectIDFromHex(id)
 	environmentSecretReference, _ := GetSecretReference(clientSet, KUBEFIRST_ENVIRONMENTS_SECRET_NAME)
 	environmentToUpdate := pkgtypes.Environment{}
 
 	for _, environmentName := range environmentSecretReference.List {
 		environment, _ := GetEnvironment(clientSet, environmentName)
 
-		if environment.ID == objectId {
+		if environment.ID == objectID {
 			environmentToUpdate = environment
 		}
 	}

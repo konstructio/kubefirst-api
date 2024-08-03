@@ -168,9 +168,9 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryE
 
 				customTransport := http.DefaultTransport.(*http.Transport).Clone()
 				customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-				argocdHttpClient := http.Client{Transport: customTransport}
+				argocdHTTPClient := http.Client{Transport: customTransport}
 				log.Info().Msg("deleting the registry application")
-				httpCode, _, err := argocd.DeleteApplication(&argocdHttpClient, config.RegistryAppName, argocdAuthToken, "true")
+				httpCode, _, err := argocd.DeleteApplication(&argocdHTTPClient, config.RegistryAppName, argocdAuthToken, "true")
 				if err != nil {
 					errors.HandleClusterError(cl, err.Error())
 					return err

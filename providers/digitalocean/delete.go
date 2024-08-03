@@ -142,7 +142,7 @@ func DeleteDigitaloceanCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Te
 			"vault-components",
 			"vault",
 		}
-		err = argocd.ArgoCDApplicationCleanup(kcfg.Clientset, removeArgoCDApps)
+		err = argocd.ApplicationCleanup(kcfg.Clientset, removeArgoCDApps)
 		if err != nil {
 			log.Error().Msgf("encountered error during argocd application cleanup: %s", err)
 		}

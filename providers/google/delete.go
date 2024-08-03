@@ -129,7 +129,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 		if !cl.ArgoCDDeleteRegistryCheck {
 			googleConf := google.GoogleConfiguration{
 				Context: context.Background(),
-				Project: cl.GoogleAuth.ProjectId,
+				Project: cl.GoogleAuth.ProjectID,
 				Region:  cl.CloudRegion,
 			}
 			kcfg, _ := googleConf.GetContainerClusterAuth(cl.ClusterName, []byte(cl.GoogleAuth.KeyFile))
@@ -139,7 +139,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 			// Only port-forward to ArgoCD and delete registry if ArgoCD was installed
 			if cl.ArgoCDInstallCheck {
 				removeArgoCDApps := []string{"ingress-nginx-components", "ingress-nginx"}
-				err = argocd.ArgoCDApplicationCleanup(kcfg.Clientset, removeArgoCDApps)
+				err = argocd.ApplicationCleanup(kcfg.Clientset, removeArgoCDApps)
 				if err != nil {
 					log.Error().Msgf("encountered error during argocd application cleanup: %s", err)
 				}
@@ -202,7 +202,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 		tfEntrypoint := config.GitopsDir + fmt.Sprintf("/terraform/%s", cl.CloudProvider)
 		tfEnvs := map[string]string{}
 		tfEnvs = googleext.GetGoogleTerraformEnvs(tfEnvs, cl)
-		tfEnvs["TF_VAR_project"] = cl.GoogleAuth.ProjectId
+		tfEnvs["TF_VAR_project"] = cl.GoogleAuth.ProjectID
 
 		switch cl.GitProvider {
 		case "github":

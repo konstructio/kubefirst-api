@@ -50,6 +50,6 @@ type GithubTerraformEnvs struct {
 	GithubOwner           string
 	AtlantisWebhookSecret string
 	KbotSSHPublicKey      string
-	AwsAccessKeyId        string
+	AwsAccessKeyID        string
 	AwsSecretAccessKey    string
 }

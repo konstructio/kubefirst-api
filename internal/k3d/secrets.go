@@ -117,7 +117,7 @@ func AddK3DSecrets(
 	}
 
 	// Data used for service account creation
-	var automountServiceAccountToken bool = true
+	automountServiceAccountToken := true
 
 	// Create service accounts
 	createServiceAccounts := []*v1.ServiceAccount{

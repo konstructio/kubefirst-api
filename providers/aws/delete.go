@@ -130,7 +130,7 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEv
 
 	if cl.CloudTerraformApplyCheck || cl.CloudTerraformApplyFailedCheck {
 		if !cl.ArgoCDDeleteRegistryCheck {
-			awsClient := &awsinternal.AWSConfiguration{
+			awsClient := &awsinternal.Configuration{
 				Config: awsinternal.NewAwsV3(
 					cl.CloudRegion,
 					cl.AWSAuth.AccessKeyID,
@@ -145,7 +145,7 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEv
 			// Only port-forward to ArgoCD and delete registry if ArgoCD was installed
 			if cl.ArgoCDInstallCheck {
 				removeArgoCDApps := []string{"ingress-nginx-components", "ingress-nginx"}
-				err = argocd.ArgoCDApplicationCleanup(kcfg.Clientset, removeArgoCDApps)
+				err = argocd.ApplicationCleanup(kcfg.Clientset, removeArgoCDApps)
 				if err != nil {
 					log.Error().Msgf("encountered error during argocd application cleanup: %s", err)
 				}
@@ -208,7 +208,7 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEv
 		tfEntrypoint := config.GitopsDir + fmt.Sprintf("/terraform/%s", cl.CloudProvider)
 		tfEnvs := map[string]string{}
 		tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, cl)
-		tfEnvs["TF_VAR_aws_account_id"] = cl.AWSAccountId
+		tfEnvs["TF_VAR_aws_account_id"] = cl.AWSAccountID
 
 		switch cl.GitProvider {
 		case "github":

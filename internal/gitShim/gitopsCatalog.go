@@ -102,9 +102,9 @@ func (gh *GitHubClient) ReadGitopsCatalogAppDirectory(contents []*github.Reposit
 			}
 
 			return res, nil
-		} else {
-			continue
 		}
+
+		continue
 	}
 
 	return [][]byte{}, nil

@@ -121,7 +121,7 @@ func Random(seq int) string {
 
 const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
 
-var seededRand *rand.Rand = rand.New(
+var seededRand = rand.New(
 	rand.NewSource(time.Now().UnixNano()))
 
 func StringWithCharset(length int, charset string) string {
@@ -240,10 +240,10 @@ func AwaitHostNTimes(url string, times int, gracePeriod time.Duration) {
 			log.Printf("%s resolved, %s second grace period required...", url, gracePeriod)
 			time.Sleep(time.Second * gracePeriod)
 			return
-		} else {
-			log.Printf("%s not resolved, sleeping 10s", url)
-			time.Sleep(time.Second * 10)
 		}
+
+		log.Printf("%s not resolved, sleeping 10s", url)
+		time.Sleep(time.Second * 10)
 	}
 }
 

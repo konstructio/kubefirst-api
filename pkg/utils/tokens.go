@@ -36,7 +36,7 @@ func CreateTokensFromDatabaseRecord(cl *pkgtypes.Cluster, registryPath string, s
 	}
 
 	var externalDNSProviderTokenEnvName, externalDNSProviderSecretKey string
-	if cl.DnsProvider == "cloudflare" {
+	if cl.DNSProvider == "cloudflare" {
 		externalDNSProviderTokenEnvName = "CF_API_TOKEN"
 		externalDNSProviderSecretKey = "cf-api-token"
 	} else {
@@ -124,10 +124,10 @@ func CreateTokensFromDatabaseRecord(cl *pkgtypes.Cluster, registryPath string, s
 		GitopsRepoNoHTTPSURL:                       fmt.Sprintf("%s/%s/gitops.git", cl.GitHost, cl.GitAuth.Owner),
 		WorkloadClusterTerraformModuleURL:          fmt.Sprintf("git::https://%s/%s/gitops.git//terraform/%s/modules/workload-cluster?ref=main", cl.GitHost, cl.GitAuth.Owner, cl.CloudProvider),
 		WorkloadClusterBootstrapTerraformModuleURL: fmt.Sprintf("git::https://%s/%s/gitops.git//terraform/%s/modules/bootstrap?ref=main", cl.GitHost, cl.GitAuth.Owner, cl.CloudProvider),
-		ClusterId: cl.ClusterID,
+		ClusterID: cl.ClusterID,
 
 		// external-dns optionality to provide cloudflare support regardless of cloud provider
-		ExternalDNSProviderName:         cl.DnsProvider,
+		ExternalDNSProviderName:         cl.DNSProvider,
 		ExternalDNSProviderTokenEnvName: externalDNSProviderTokenEnvName,
 		ExternalDNSProviderSecretName:   fmt.Sprintf("%s-auth", cl.CloudProvider),
 		ExternalDNSProviderSecretKey:    externalDNSProviderSecretKey,
@@ -141,11 +141,11 @@ func CreateTokensFromDatabaseRecord(cl *pkgtypes.Cluster, registryPath string, s
 		gitopsTemplateTokens.StateStoreBucketHostname = cl.StateStoreDetails.Hostname
 	case "google":
 		gitopsTemplateTokens.GoogleAuth = cl.GoogleAuth.KeyFile
-		gitopsTemplateTokens.GoogleProject = cl.GoogleAuth.ProjectId
+		gitopsTemplateTokens.GoogleProject = cl.GoogleAuth.ProjectID
 		gitopsTemplateTokens.GoogleUniqueness = strings.ToLower(randstr.String(5))
 		gitopsTemplateTokens.ForceDestroy = strconv.FormatBool(true) // TODO make this optional
 		gitopsTemplateTokens.KubefirstArtifactsBucket = cl.StateStoreDetails.Name
-		gitopsTemplateTokens.VaultDataBucketName = fmt.Sprintf("%s-vault-data-%s", cl.GoogleAuth.ProjectId, cl.ClusterName)
+		gitopsTemplateTokens.VaultDataBucketName = fmt.Sprintf("%s-vault-data-%s", cl.GoogleAuth.ProjectID, cl.ClusterName)
 	case "aws":
 		gitopsTemplateTokens.KubefirstArtifactsBucket = cl.StateStoreDetails.Name
 		gitopsTemplateTokens.AtlantisWebhookURL = cl.AtlantisWebhookURL

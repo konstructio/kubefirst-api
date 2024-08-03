@@ -21,7 +21,7 @@ import (
 // in a bash shell to set environment variables
 //
 // If the argument at fileName is an existing file, it will be removed
-func (conf *VaultConfiguration) IterSecrets(
+func (conf *Configuration) IterSecrets(
 	endpoint string,
 	token string,
 	fileName string,

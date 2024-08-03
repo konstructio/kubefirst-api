@@ -33,12 +33,12 @@ func (clctrl *ClusterController) DetokenizeKMSKeyID() error {
 		if err != nil {
 			return err
 		}
-		awsKmsKeyId, err := clctrl.AwsClient.GetKmsKeyID(fmt.Sprintf("alias/vault_%s", clctrl.ClusterName))
+		awsKmsKeyID, err := clctrl.AwsClient.GetKmsKeyID(fmt.Sprintf("alias/vault_%s", clctrl.ClusterName))
 		if err != nil {
 			return err
 		}
 
-		clctrl.Cluster.AWSKMSKeyId = awsKmsKeyId
+		clctrl.Cluster.AWSKMSKeyID = awsKmsKeyID
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
 			return err
@@ -64,7 +64,7 @@ func (clctrl *ClusterController) DetokenizeKMSKeyID() error {
 		if err := pkg.ReplaceFileContent(
 			fmt.Sprintf("%s/%s/components/vault/application.yaml", clctrl.ProviderConfig.GitopsDir, registryPath),
 			"<AWS_KMS_KEY_ID>",
-			awsKmsKeyId,
+			awsKmsKeyID,
 		); err != nil {
 			return err
 		}

@@ -62,7 +62,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 			tfEnvs["TF_VAR_aws_account_id"] = *iamCaller.Account
 			tfEnvs["TF_VAR_use_ecr"] = strconv.FormatBool(clctrl.ECR) // Flag out the ecr terraform
 
-			clctrl.Cluster.AWSAccountId = *iamCaller.Account
+			clctrl.Cluster.AWSAccountID = *iamCaller.Account
 			err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 			if err != nil {
 				return err
@@ -215,7 +215,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			GitopsRepoNoHTTPSURL:                       fmt.Sprintf("%s/%s/gitops.git", clctrl.GitHost, clctrl.GitAuth.Owner),
 			WorkloadClusterTerraformModuleURL:          fmt.Sprintf("git::https://%s/%s/gitops.git//terraform/%s/modules/workload-cluster?ref=main", clctrl.GitHost, clctrl.GitAuth.Owner, clctrl.CloudProvider),
 			WorkloadClusterBootstrapTerraformModuleURL: fmt.Sprintf("git::https://%s/%s/gitops.git//terraform/%s/modules/bootstrap?ref=main", clctrl.GitHost, clctrl.GitAuth.Owner, clctrl.CloudProvider),
-			ClusterId: clctrl.ClusterID,
+			ClusterID: clctrl.ClusterID,
 
 			// external-dns optionality to provide cloudflare support regardless of cloud provider
 			ExternalDNSProviderName:         clctrl.DnsProvider,
@@ -232,11 +232,11 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			gitopsTemplateTokens.StateStoreBucketHostname = cl.StateStoreDetails.Hostname
 		case "google":
 			gitopsTemplateTokens.GoogleAuth = clctrl.GoogleAuth.KeyFile
-			gitopsTemplateTokens.GoogleProject = clctrl.GoogleAuth.ProjectId
+			gitopsTemplateTokens.GoogleProject = clctrl.GoogleAuth.ProjectID
 			gitopsTemplateTokens.GoogleUniqueness = strings.ToLower(randstr.String(5))
 			gitopsTemplateTokens.ForceDestroy = strconv.FormatBool(true) // TODO make this optional
 			gitopsTemplateTokens.KubefirstArtifactsBucket = clctrl.KubefirstStateStoreBucketName
-			gitopsTemplateTokens.VaultDataBucketName = fmt.Sprintf("%s-vault-data-%s", clctrl.GoogleAuth.ProjectId, clctrl.ClusterName)
+			gitopsTemplateTokens.VaultDataBucketName = fmt.Sprintf("%s-vault-data-%s", clctrl.GoogleAuth.ProjectID, clctrl.ClusterName)
 		case "aws":
 			iamCaller, err := clctrl.AwsClient.GetCallerIdentity()
 			if err != nil {
@@ -262,7 +262,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 		case "k3s":
 			gitopsTemplateTokens.K3sServersPrivateIps = clctrl.K3sAuth.K3sServersPrivateIps
 			gitopsTemplateTokens.K3sServersPublicIps = clctrl.K3sAuth.K3sServersPublicIps
-			gitopsTemplateTokens.SshUser = clctrl.K3sAuth.K3sSshUser
+			gitopsTemplateTokens.SSHUser = clctrl.K3sAuth.K3sSSHUser
 			gitopsTemplateTokens.K3sServersArgs = clctrl.K3sAuth.K3sServersArgs
 		}
 

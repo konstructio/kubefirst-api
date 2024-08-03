@@ -18,7 +18,7 @@ import (
 )
 
 // GetDNSDomains lists all available DNS domains
-func (c *CloudflareConfiguration) GetDNSDomains() ([]string, error) {
+func (c *Configuration) GetDNSDomains() ([]string, error) {
 	var domainList []string
 
 	zones, err := c.Client.ListZones(c.Context)
@@ -34,7 +34,7 @@ func (c *CloudflareConfiguration) GetDNSDomains() ([]string, error) {
 }
 
 // GetDNSDomains lists all available DNS domains
-func (c *CloudflareConfiguration) GetDNSRecord() ([]string, error) {
+func (c *Configuration) GetDNSRecord() ([]string, error) {
 	var domainList []string
 
 	zones, err := c.Client.ListZones(c.Context)
@@ -49,19 +49,19 @@ func (c *CloudflareConfiguration) GetDNSRecord() ([]string, error) {
 	return domainList, nil
 }
 
-func (c *CloudflareConfiguration) TestDomainLiveness(domainName string) bool {
+func (c *Configuration) TestDomainLiveness(domainName string) bool {
 	RecordName := "kubefirst-liveness." + domainName
 	RecordValue := "domain record propagated"
 
 	// Get zone id for domain name
-	zoneId, err := c.Client.ZoneIDByName(domainName)
+	zoneID, err := c.Client.ZoneIDByName(domainName)
 	if err != nil {
 		log.Error().Msgf("error finding cloudflare zoneid for domain %s: %s", domainName, err)
 		return false
 	}
-	rc := cloudflare.ZoneIdentifier(zoneId)
+	rc := cloudflare.ZoneIdentifier(zoneID)
 
-	log.Info().Msgf("Cloudflare ZoneID %s exists and contains domain %s", zoneId, domainName)
+	log.Info().Msgf("Cloudflare ZoneID %s exists and contains domain %s", zoneID, domainName)
 
 	// Change this for origin certs
 
@@ -92,7 +92,7 @@ func (c *CloudflareConfiguration) TestDomainLiveness(domainName string) bool {
 		Type:    "TXT",
 		Name:    RecordName,
 		Content: RecordValue,
-		ZoneID:  zoneId,
+		ZoneID:  zoneID,
 	}
 
 	record, err := c.Client.CreateDNSRecord(c.Context, rc, createParams)
@@ -100,7 +100,7 @@ func (c *CloudflareConfiguration) TestDomainLiveness(domainName string) bool {
 		log.Error().Msgf(
 			"could not create kubefirst liveness TXT record on cloudflare zoneid %s for domain %s: %s",
 			domainName,
-			zoneId,
+			zoneID,
 			err,
 		)
 		return false

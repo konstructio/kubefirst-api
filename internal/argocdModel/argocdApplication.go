@@ -4,7 +4,7 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package argocdModel
+package argocdModel // nolint:revive // allowed during refactoring
 
 import "time"
 
@@ -14,14 +14,14 @@ type V1alpha1Application struct {
 	Metadata struct {
 		Name              string    `json:"name"`
 		Namespace         string    `json:"namespace"`
-		Uid               string    `json:"uid"`
+		UID               string    `json:"uid"`
 		ResourceVersion   string    `json:"resourceVersion"`
 		Generation        int       `json:"generation"`
 		CreationTimestamp time.Time `json:"creationTimestamp"`
 		ManagedFields     []struct {
 			Manager    string    `json:"manager"`
 			Operation  string    `json:"operation"`
-			ApiVersion string    `json:"apiVersion"`
+			APIVersion string    `json:"apiVersion"`
 			Time       time.Time `json:"time"`
 			FieldsType string    `json:"fieldsType"`
 			FieldsV1   struct {
@@ -150,7 +150,7 @@ type V1alpha1Application struct {
 		History []struct {
 			Revision   string    `json:"revision"`
 			DeployedAt time.Time `json:"deployedAt"`
-			Id         int       `json:"id"`
+			ID         int       `json:"id"`
 			Source     struct {
 				RepoURL string `json:"repoURL"`
 				Path    string `json:"path"`

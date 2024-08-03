@@ -214,22 +214,22 @@ func CreateK3sCluster(definition *pkgtypes.ClusterDefinition) error {
 	if err != nil {
 		log.Fatal().Msgf("Error exporting cluster record: %s", err)
 		return err
-	} else {
-		ctrl.Cluster.InProgress = false
-		ctrl.Cluster.Status = constants.ClusterStatusProvisioned
-		err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
-		if err != nil {
-			return err
-		}
+	}
 
-		log.Info().Msg("cluster creation complete")
+	ctrl.Cluster.InProgress = false
+	ctrl.Cluster.Status = constants.ClusterStatusProvisioned
+	err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
+	if err != nil {
+		return err
+	}
 
-		// Create default service entries
-		cl, _ := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
-		err = services.AddDefaultServices(&cl)
-		if err != nil {
-			log.Fatal().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
-		}
+	log.Info().Msg("cluster creation complete")
+
+	// Create default service entries
+	cl, _ := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
+	err = services.AddDefaultServices(&cl)
+	if err != nil {
+		log.Fatal().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
 	}
 
 	log.Info().Msg("waiting for kubefirst-api Deployment to transition to Running")

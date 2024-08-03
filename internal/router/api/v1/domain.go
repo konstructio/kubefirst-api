@@ -93,7 +93,7 @@ func PostDomains(c *gin.Context) {
 			})
 			return
 		}
-		awsConf := &awsinternal.AWSConfiguration{
+		awsConf := &awsinternal.Configuration{
 			Config: awsinternal.NewAwsV3(
 				domainListRequest.CloudRegion,
 				domainListRequest.AWSAuth.AccessKeyID,
@@ -127,7 +127,7 @@ func PostDomains(c *gin.Context) {
 			return
 		}
 
-		cloudflareConf := cloudflare.CloudflareConfiguration{
+		cloudflareConf := cloudflare.Configuration{
 			Client:  client,
 			Context: context.Background(),
 		}
@@ -149,7 +149,7 @@ func PostDomains(c *gin.Context) {
 			})
 			return
 		}
-		civoConf := civo.CivoConfiguration{
+		civoConf := civo.Configuration{
 			Client:  civo.NewCivo(domainListRequest.CivoAuth.Token, domainListRequest.CloudRegion),
 			Context: context.Background(),
 		}
@@ -189,7 +189,7 @@ func PostDomains(c *gin.Context) {
 			})
 			return
 		}
-		vultrConf := vultr.VultrConfiguration{
+		vultrConf := vultr.Configuration{
 			Client:  vultr.NewVultr(domainListRequest.VultrAuth.Token),
 			Context: context.Background(),
 		}
@@ -203,7 +203,7 @@ func PostDomains(c *gin.Context) {
 		}
 		domainListResponse.Domains = domains
 	case "google":
-		if domainListRequest.GoogleAuth.ProjectId == "" {
+		if domainListRequest.GoogleAuth.ProjectID == "" {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: "missing authentication credentials in request, please check and try again",
 			})
@@ -212,7 +212,7 @@ func PostDomains(c *gin.Context) {
 
 		googleConf := google.GoogleConfiguration{
 			Context: context.Background(),
-			Project: domainListRequest.GoogleAuth.ProjectId,
+			Project: domainListRequest.GoogleAuth.ProjectID,
 			Region:  domainListRequest.CloudRegion,
 			KeyFile: domainListRequest.GoogleAuth.KeyFile,
 		}

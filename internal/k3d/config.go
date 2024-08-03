@@ -50,8 +50,8 @@ type K3dConfig struct {
 	DestinationGitopsRepoURL        string
 	DestinationMetaphorRepoURL      string
 	DestinationMetaphorRepoGitURL   string
-	DestinationGitopsRepoHttpsURL   string
-	DestinationMetaphorRepoHttpsURL string
+	DestinationGitopsRepoHTTPSURL   string
+	DestinationMetaphorRepoHTTPSURL string
 	GitopsDir                       string
 	GitProvider                     string
 	GitProtocol                     string

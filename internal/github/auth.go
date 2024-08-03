@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	githubApiUrl = "https://api.github.com"
+	githubAPIURL = "https://api.github.com"
 )
 
 var requiredScopes = []string{
@@ -34,7 +34,7 @@ var requiredScopes = []string{
 // VerifyTokenPermissions compares scope of the provided token to the required
 // scopes for kubefirst functionality
 func VerifyTokenPermissions(githubToken string) error {
-	req, err := http.NewRequest(http.MethodGet, githubApiUrl, nil)
+	req, err := http.NewRequest(http.MethodGet, githubAPIURL, nil)
 	if err != nil {
 		log.Info().Msg("error setting github owner permissions request")
 	}

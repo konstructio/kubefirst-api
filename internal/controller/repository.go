@@ -255,7 +255,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 			}
 
 			keyName := "kbot-ssh-key"
-			var keyFound bool = false
+			keyFound := false
 			for _, key := range keys {
 				if key.Title == keyName {
 					if strings.Contains(key.Key, strings.TrimSuffix(clctrl.GitAuth.PublicKey, "\n")) {

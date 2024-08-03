@@ -16,10 +16,10 @@ import (
 
 // NewGitLabClient instantiates a wrapper to communicate with GitLab
 // It sets the path and ID of the group under which resources will be managed
-func NewGitLabClient(token string, parentGroupName string) (GitLabWrapper, error) {
+func NewGitLabClient(token string, parentGroupName string) (Wrapper, error) {
 	git, err := gitlab.NewClient(token)
 	if err != nil {
-		return GitLabWrapper{}, fmt.Errorf("error instantiating gitlab client: %w", err)
+		return Wrapper{}, fmt.Errorf("error instantiating gitlab client: %w", err)
 	}
 
 	// Get parent group ID
@@ -34,14 +34,14 @@ func NewGitLabClient(token string, parentGroupName string) (GitLabWrapper, error
 			MinAccessLevel: &minAccessLevel,
 		})
 		if err != nil {
-			return GitLabWrapper{}, fmt.Errorf("could not get gitlab groups: %w", err)
+			return Wrapper{}, fmt.Errorf("could not get gitlab groups: %w", err)
 		}
 		for _, group := range groups {
 			container = append(container, *group)
 		}
 		nextPage = resp.NextPage
 	}
-	var gid int = 0
+	var gid int
 	for _, group := range container {
 		if group.FullPath == parentGroupName {
 			gid = group.ID
@@ -50,16 +50,16 @@ func NewGitLabClient(token string, parentGroupName string) (GitLabWrapper, error
 		}
 	}
 	if gid == 0 {
-		return GitLabWrapper{}, fmt.Errorf("could not find gitlab group %s", parentGroupName)
+		return Wrapper{}, fmt.Errorf("could not find gitlab group %s", parentGroupName)
 	}
 
 	// Get parent group path
 	group, _, err := git.Groups.GetGroup(gid, &gitlab.GetGroupOptions{})
 	if err != nil {
-		return GitLabWrapper{}, fmt.Errorf("could not get gitlab parent group path: %w", err)
+		return Wrapper{}, fmt.Errorf("could not get gitlab parent group path: %w", err)
 	}
 
-	return GitLabWrapper{
+	return Wrapper{
 		Client:          git,
 		ParentGroupID:   gid,
 		ParentGroupPath: group.FullPath,
@@ -67,7 +67,7 @@ func NewGitLabClient(token string, parentGroupName string) (GitLabWrapper, error
 }
 
 // CheckProjectExists within a parent group
-func (gl *GitLabWrapper) CheckProjectExists(projectName string) (bool, error) {
+func (gl *Wrapper) CheckProjectExists(projectName string) (bool, error) {
 	allprojects, err := gl.GetProjects()
 	if err != nil {
 		return false, err
@@ -84,7 +84,7 @@ func (gl *GitLabWrapper) CheckProjectExists(projectName string) (bool, error) {
 }
 
 // GetProjectID returns a project's ID scoped to the parent group
-func (gl *GitLabWrapper) GetProjectID(projectName string) (int, error) {
+func (gl *Wrapper) GetProjectID(projectName string) (int, error) {
 	container := make([]gitlab.Project, 0)
 	for nextPage := 1; nextPage > 0; {
 		projects, resp, err := gl.Client.Groups.ListGroupProjects(gl.ParentGroupID, &gitlab.ListGroupProjectsOptions{
@@ -113,7 +113,7 @@ func (gl *GitLabWrapper) GetProjectID(projectName string) (int, error) {
 }
 
 // GetProjects for a specific parent group by ID
-func (gl *GitLabWrapper) GetProjects() ([]gitlab.Project, error) {
+func (gl *Wrapper) GetProjects() ([]gitlab.Project, error) {
 	container := make([]gitlab.Project, 0)
 	for nextPage := 1; nextPage > 0; {
 		projects, resp, err := gl.Client.Groups.ListGroupProjects(gl.ParentGroupID, &gitlab.ListGroupProjectsOptions{
@@ -138,7 +138,7 @@ func (gl *GitLabWrapper) GetProjects() ([]gitlab.Project, error) {
 }
 
 // GetSubGroups for a specific parent group by ID
-func (gl *GitLabWrapper) GetSubGroups() ([]gitlab.Group, error) {
+func (gl *Wrapper) GetSubGroups() ([]gitlab.Group, error) {
 	container := make([]gitlab.Group, 0)
 	for nextPage := 1; nextPage > 0; {
 		subgroups, resp, err := gl.Client.Groups.ListSubGroups(gl.ParentGroupID, &gitlab.ListSubGroupsOptions{
@@ -162,7 +162,7 @@ func (gl *GitLabWrapper) GetSubGroups() ([]gitlab.Group, error) {
 // User Management
 
 // AddUserSSHKey
-func (gl *GitLabWrapper) AddUserSSHKey(keyTitle string, keyValue string) error {
+func (gl *Wrapper) AddUserSSHKey(keyTitle string, keyValue string) error {
 	_, _, err := gl.Client.Users.AddSSHKey(&gitlab.AddSSHKeyOptions{
 		Title: &keyTitle,
 		Key:   &keyValue,
@@ -175,7 +175,7 @@ func (gl *GitLabWrapper) AddUserSSHKey(keyTitle string, keyValue string) error {
 }
 
 // DeleteUserSSHKey
-func (gl *GitLabWrapper) DeleteUserSSHKey(keyTitle string) error {
+func (gl *Wrapper) DeleteUserSSHKey(keyTitle string) error {
 	allkeys, err := gl.GetUserSSHKeys()
 	if err != nil {
 		return err
@@ -201,7 +201,7 @@ func (gl *GitLabWrapper) DeleteUserSSHKey(keyTitle string) error {
 }
 
 // GetUserSSHKeys
-func (gl *GitLabWrapper) GetUserSSHKeys() ([]*gitlab.SSHKey, error) {
+func (gl *Wrapper) GetUserSSHKeys() ([]*gitlab.SSHKey, error) {
 	keys, _, err := gl.Client.Users.ListSSHKeys()
 	if err != nil {
 		return []*gitlab.SSHKey{}, err
@@ -213,7 +213,7 @@ func (gl *GitLabWrapper) GetUserSSHKeys() ([]*gitlab.SSHKey, error) {
 // Container Registry
 
 // GetProjectContainerRegistryRepositories
-func (gl *GitLabWrapper) GetProjectContainerRegistryRepositories(projectName string) ([]gitlab.RegistryRepository, error) {
+func (gl *Wrapper) GetProjectContainerRegistryRepositories(projectName string) ([]gitlab.RegistryRepository, error) {
 	projectID, err := gl.GetProjectID(projectName)
 	if err != nil {
 		return []gitlab.RegistryRepository{}, err
@@ -240,7 +240,7 @@ func (gl *GitLabWrapper) GetProjectContainerRegistryRepositories(projectName str
 }
 
 // DeleteProjectContainerRegistryRepository
-func (gl *GitLabWrapper) DeleteContainerRegistryRepository(projectName string, repositoryID int) error {
+func (gl *Wrapper) DeleteContainerRegistryRepository(projectName string, repositoryID int) error {
 	projectID, err := gl.GetProjectID(projectName)
 	if err != nil {
 		return err
@@ -271,7 +271,7 @@ func (gl *GitLabWrapper) DeleteContainerRegistryRepository(projectName string, r
 // CreateGroupDeployToken creates a deploy token for a group
 // If no groupID (0 by default) argument is provided, the parent group ID is used
 // If a group deploy token already exists, it will be deleted and recreated
-func (gl *GitLabWrapper) CreateGroupDeployToken(groupID int, p *DeployTokenCreateParameters) (string, error) {
+func (gl *Wrapper) CreateGroupDeployToken(groupID int, p *DeployTokenCreateParameters) (string, error) {
 	// Check to see if the token already exists
 	allTokens, err := gl.ListGroupDeployTokens(gl.ParentGroupID)
 	if err != nil {
@@ -320,7 +320,7 @@ func (gl *GitLabWrapper) CreateGroupDeployToken(groupID int, p *DeployTokenCreat
 }
 
 // CreateProjectDeployToken
-func (gl *GitLabWrapper) CreateProjectDeployToken(projectName string, p *DeployTokenCreateParameters) (string, error) {
+func (gl *Wrapper) CreateProjectDeployToken(projectName string, p *DeployTokenCreateParameters) (string, error) {
 	projectID, err := gl.GetProjectID(projectName)
 	if err != nil {
 		return "", err
@@ -358,7 +358,7 @@ func (gl *GitLabWrapper) CreateProjectDeployToken(projectName string, p *DeployT
 }
 
 // ListGroupDeployTokens
-func (gl *GitLabWrapper) ListGroupDeployTokens(groupID int) ([]gitlab.DeployToken, error) {
+func (gl *Wrapper) ListGroupDeployTokens(groupID int) ([]gitlab.DeployToken, error) {
 	container := make([]gitlab.DeployToken, 0)
 	for nextPage := 1; nextPage > 0; {
 		tokens, resp, err := gl.Client.DeployTokens.ListGroupDeployTokens(groupID, &gitlab.ListGroupDeployTokensOptions{
@@ -378,7 +378,7 @@ func (gl *GitLabWrapper) ListGroupDeployTokens(groupID int) ([]gitlab.DeployToke
 }
 
 // ListProjectDeployTokens
-func (gl *GitLabWrapper) ListProjectDeployTokens(projectName string) ([]gitlab.DeployToken, error) {
+func (gl *Wrapper) ListProjectDeployTokens(projectName string) ([]gitlab.DeployToken, error) {
 	projectID, err := gl.GetProjectID(projectName)
 	if err != nil {
 		return []gitlab.DeployToken{}, err
@@ -403,7 +403,7 @@ func (gl *GitLabWrapper) ListProjectDeployTokens(projectName string) ([]gitlab.D
 }
 
 // DeleteProjectWebhook
-func (gl *GitLabWrapper) DeleteProjectWebhook(projectName string, url string) error {
+func (gl *Wrapper) DeleteProjectWebhook(projectName string, url string) error {
 	projectID, err := gl.GetProjectID(projectName)
 	if err != nil {
 		return err
@@ -433,7 +433,7 @@ func (gl *GitLabWrapper) DeleteProjectWebhook(projectName string, url string) er
 }
 
 // ListProjectWebhooks returns all webhooks for a project
-func (gl *GitLabWrapper) ListProjectWebhooks(projectID int) ([]gitlab.ProjectHook, error) {
+func (gl *Wrapper) ListProjectWebhooks(projectID int) ([]gitlab.ProjectHook, error) {
 	container := make([]gitlab.ProjectHook, 0)
 	for nextPage := 1; nextPage > 0; {
 		hooks, resp, err := gl.Client.Projects.ListProjectHooks(projectID, &gitlab.ListProjectHooksOptions{
@@ -454,7 +454,7 @@ func (gl *GitLabWrapper) ListProjectWebhooks(projectID int) ([]gitlab.ProjectHoo
 // Runners
 
 // ListGroupRunners returns all registered runners for a parent group
-func (gl *GitLabWrapper) ListGroupRunners() ([]gitlab.Runner, error) {
+func (gl *Wrapper) ListGroupRunners() ([]gitlab.Runner, error) {
 	container := make([]gitlab.Runner, 0)
 	for nextPage := 1; nextPage > 0; {
 		runners, resp, err := gl.Client.Runners.ListGroupsRunners(gl.ParentGroupID, &gitlab.ListGroupsRunnersOptions{
@@ -474,7 +474,7 @@ func (gl *GitLabWrapper) ListGroupRunners() ([]gitlab.Runner, error) {
 }
 
 // DeleteGroupRunners deletes provided runners for a parent group
-func (gl *GitLabWrapper) DeleteGroupRunners(runners []gitlab.Runner) error {
+func (gl *Wrapper) DeleteGroupRunners(runners []gitlab.Runner) error {
 	for _, runner := range runners {
 		_, err := gl.Client.Runners.DeleteRegisteredRunnerByID(runner.ID)
 		if err != nil {

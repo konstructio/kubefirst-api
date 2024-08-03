@@ -24,7 +24,7 @@ import (
 
 var GitlabSecretClient coreV1Types.SecretInterface
 
-type PatchJson struct {
+type PatchJSON struct {
 	Op   string `json:"op"`
 	Path string `json:"path"`
 }

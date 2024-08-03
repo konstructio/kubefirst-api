@@ -22,7 +22,7 @@ func (clctrl *ClusterController) InitializeBot() error {
 
 	if !cl.KbotSetupCheck {
 
-		clctrl.GitAuth.PrivateKey, clctrl.GitAuth.PublicKey, err = pkg.CreateSshKeyPair()
+		clctrl.GitAuth.PrivateKey, clctrl.GitAuth.PublicKey, err = pkg.CreateSSHKeyPair()
 		if err != nil {
 			log.Error().Msgf("error generating ssh keys: %s", err)
 			telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.KbotSetupFailed, err.Error())

@@ -39,8 +39,8 @@ func AwsHandoffScreen(argocdAdminPassword, clusterName, domainName string, gitOw
 	handOffData.WriteString(strings.Repeat("-", 59))
 	handOffData.WriteString(fmt.Sprintf("\n Owner: %s", gitOwner))
 	handOffData.WriteString("\n Repos: ")
-	handOffData.WriteString(fmt.Sprintf("\n  %s", config.DestinationGitopsRepoHttpsURL))
-	handOffData.WriteString(fmt.Sprintf("\n  %s", config.DestinationMetaphorRepoHttpsURL))
+	handOffData.WriteString(fmt.Sprintf("\n  %s", config.DestinationGitopsRepoHTTPSURL))
+	handOffData.WriteString(fmt.Sprintf("\n  %s", config.DestinationMetaphorRepoHTTPSURL))
 
 	handOffData.WriteString("\n--- Kubefirst Console ")
 	handOffData.WriteString(strings.Repeat("-", 48))

@@ -107,7 +107,7 @@ type ClusterController struct {
 	TelemetryEvent telemetry.TelemetryEvent
 
 	// Provider clients
-	AwsClient    *awsinternal.AWSConfiguration
+	AwsClient    *awsinternal.Configuration
 	GoogleClient google.GoogleConfiguration
 	Kcfg         *k8s.KubernetesClient
 	Cluster      types.Cluster
@@ -158,7 +158,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	telemetryEvent := telemetry.TelemetryEvent{
 		CliVersion:        env.KubefirstVersion,
 		CloudProvider:     env.CloudProvider,
-		ClusterID:         env.ClusterId,
+		ClusterID:         env.ClusterID,
 		ClusterType:       env.ClusterType,
 		DomainName:        env.DomainName,
 		ErrorMessage:      "",
@@ -167,10 +167,10 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		KubefirstClient:   "api",
 		KubefirstTeam:     env.KubefirstTeam,
 		KubefirstTeamInfo: env.KubefirstTeamInfo,
-		MachineID:         env.ClusterId,
-		ParentClusterId:   env.ParentClusterId,
+		MachineID:         env.ClusterID,
+		ParentClusterId:   env.ParentClusterID,
 		MetricName:        telemetry.ClusterInstallCompleted,
-		UserId:            env.ClusterId,
+		UserId:            env.ClusterID,
 	}
 	clctrl.TelemetryEvent = telemetryEvent
 
@@ -182,7 +182,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	clctrl.ClusterID = clusterID
 	clctrl.DomainName = def.DomainName
 	clctrl.SubdomainName = def.SubdomainName
-	clctrl.DnsProvider = def.DnsProvider
+	clctrl.DnsProvider = def.DNSProvider
 	clctrl.ClusterType = def.Type
 	clctrl.HttpClient = http.DefaultClient
 	clctrl.NodeType = def.NodeType
@@ -264,7 +264,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	case "google":
 		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
 		clctrl.ProviderConfig.GoogleAuth = clctrl.GoogleAuth.KeyFile
-		clctrl.ProviderConfig.GoogleProject = clctrl.GoogleAuth.ProjectId
+		clctrl.ProviderConfig.GoogleProject = clctrl.GoogleAuth.ProjectID
 	case "digitalocean":
 		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
 		clctrl.ProviderConfig.DigitaloceanToken = clctrl.DigitaloceanAuth.Token
@@ -275,15 +275,15 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
 		clctrl.ProviderConfig.K3sServersPrivateIps = clctrl.K3sAuth.K3sServersPrivateIps
 		clctrl.ProviderConfig.K3sServersPublicIps = clctrl.K3sAuth.K3sServersPublicIps
-		clctrl.ProviderConfig.K3sSshPrivateKey = clctrl.K3sAuth.K3sSshPrivateKey
-		clctrl.ProviderConfig.K3sSshUser = clctrl.K3sAuth.K3sSshUser
+		clctrl.ProviderConfig.K3sSSHPrivateKey = clctrl.K3sAuth.K3sSSHPrivateKey
+		clctrl.ProviderConfig.K3sSSHUser = clctrl.K3sAuth.K3sSSHUser
 		clctrl.ProviderConfig.K3sServersArgs = clctrl.K3sAuth.K3sServersArgs
 	}
 
 	// Instantiate provider clients and copy cluster controller to cluster type
 	switch clctrl.CloudProvider {
 	case "aws":
-		clctrl.AwsClient = &awsinternal.AWSConfiguration{
+		clctrl.AwsClient = &awsinternal.Configuration{
 			Config: awsinternal.NewAwsV3(
 				clctrl.CloudRegion,
 				clctrl.AWSAuth.AccessKeyID,
@@ -294,7 +294,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	case "google":
 		clctrl.GoogleClient = google.GoogleConfiguration{
 			Context: context.Background(),
-			Project: def.GoogleAuth.ProjectId,
+			Project: def.GoogleAuth.ProjectID,
 			Region:  clctrl.CloudRegion,
 		}
 
@@ -311,7 +311,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		CloudRegion:            clctrl.CloudRegion,
 		DomainName:             clctrl.DomainName,
 		SubdomainName:          clctrl.SubdomainName,
-		DnsProvider:            clctrl.DnsProvider,
+		DNSProvider:            clctrl.DnsProvider,
 		ClusterID:              clctrl.ClusterID,
 		ECR:                    clctrl.ECR,
 		ClusterType:            clctrl.ClusterType,

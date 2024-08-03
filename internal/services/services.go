@@ -345,22 +345,21 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string, def pkgtypes.Gitops
 		_, err = os.Stat(serviceFile)
 		if err != nil {
 			return fmt.Errorf("file %s does not exist in repository", serviceFile)
-		} else {
-			err := os.Remove(serviceFile)
-			if err != nil {
-				return fmt.Errorf("cluster %s - error deleting file: %s", clusterName, err)
-			}
+		}
+
+		err := os.Remove(serviceFile)
+		if err != nil {
+			return fmt.Errorf("cluster %s - error deleting file: %s", clusterName, err)
 		}
 
 		// removing componentes service folder
 		_, err = os.Stat(componentsServiceFolder)
 		if err != nil {
 			return fmt.Errorf("folder %s does not exist in repository", componentsServiceFolder)
-		} else {
-			err := os.RemoveAll(componentsServiceFolder)
-			if err != nil {
-				return fmt.Errorf("cluster %s - error deleting components folder: %s", clusterName, err)
-			}
+		}
+
+		if err := os.RemoveAll(componentsServiceFolder); err != nil {
+			return fmt.Errorf("cluster %s - error deleting components folder: %s", clusterName, err)
 		}
 
 		// Commit to gitops repository
@@ -390,7 +389,7 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string, def pkgtypes.Gitops
 }
 
 // ValidateService
-func ValidateService(cl *pkgtypes.Cluster, serviceName string, def *pkgtypes.GitopsCatalogAppCreateRequest) (error, bool) {
+func ValidateService(cl *pkgtypes.Cluster, serviceName string, def *pkgtypes.GitopsCatalogAppCreateRequest) (bool, error) {
 	canDeleleteService := true
 
 	var gitopsRepo *git.Repository
@@ -408,7 +407,7 @@ func ValidateService(cl *pkgtypes.Cluster, serviceName string, def *pkgtypes.Git
 	err := os.RemoveAll(tmpGitopsDir)
 	if err != nil {
 		log.Fatal().Msgf("error removing gitops dir %s: %s", tmpGitopsDir, err)
-		return err, false
+		return false, err
 	}
 
 	err = gitShim.PrepareGitEnvironment(cl, tmpGitopsDir)
@@ -441,7 +440,7 @@ func ValidateService(cl *pkgtypes.Cluster, serviceName string, def *pkgtypes.Git
 		canDeleleteService = false
 	}
 
-	return nil, canDeleleteService
+	return canDeleleteService, nil
 }
 
 // AddDefaultServices

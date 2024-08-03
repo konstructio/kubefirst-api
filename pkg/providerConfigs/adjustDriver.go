@@ -4,7 +4,7 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package providerConfigs
+package providerConfigs // nolint:revive // allowing temporarily for better code organization
 
 import (
 	"fmt"
@@ -73,9 +73,9 @@ func AdjustGitopsRepo(
 		os.RemoveAll(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/workload-vcluster/45-cloudflare-origin-issuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
 	}
 
-	AKAMAI_GITHUB := "akamai-github" //! i know i know i know.
+	akamaiGithub := "akamai-github" //! i know i know i know.
 
-	if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == AKAMAI_GITHUB {
+	if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == akamaiGithub {
 		driverContent := fmt.Sprintf("%s/%s-%s/", gitopsRepoDir, cloudProvider, gitProvider)
 		err := cp.Copy(driverContent, gitopsRepoDir, opt)
 		if err != nil {
@@ -96,7 +96,7 @@ func AdjustGitopsRepo(
 			log.Warn().Msgf("will create nginx-apex since apexContentExists was %v", apexContentExists)
 		}
 
-		if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == AKAMAI_GITHUB {
+		if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == akamaiGithub {
 			err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/clusters/%s", gitopsRepoDir, clusterName), opt)
 		} else {
 			err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/%s", gitopsRepoDir, clusterName), opt)
@@ -110,9 +110,9 @@ func AdjustGitopsRepo(
 		return nil
 	}
 
-	AWS_GITHUB := "aws-github"
+	awsGithub := "aws-github"
 
-	if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == AWS_GITHUB {
+	if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == awsGithub {
 		driverContent := fmt.Sprintf("%s/%s-%s/", gitopsRepoDir, cloudProvider, gitProvider)
 		err := cp.Copy(driverContent, gitopsRepoDir, opt)
 		if err != nil {
@@ -133,7 +133,7 @@ func AdjustGitopsRepo(
 			log.Warn().Msgf("will create nginx-apex since apexContentExists was %v", apexContentExists)
 		}
 
-		if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == AWS_GITHUB {
+		if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == awsGithub {
 			err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/clusters/%s", gitopsRepoDir, clusterName), opt)
 		} else {
 			err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/%s", gitopsRepoDir, clusterName), opt)
@@ -147,9 +147,9 @@ func AdjustGitopsRepo(
 		return nil
 	}
 
-	AWS_GITLAB := "aws-gitlab"
+	awsGitlab := "aws-gitlab"
 
-	if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == AWS_GITLAB {
+	if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == awsGitlab {
 		driverContent := fmt.Sprintf("%s/%s-%s/", gitopsRepoDir, cloudProvider, gitProvider)
 		err := cp.Copy(driverContent, gitopsRepoDir, opt)
 		if err != nil {
@@ -170,7 +170,7 @@ func AdjustGitopsRepo(
 			log.Warn().Msgf("will create nginx-apex since apexContentExists was %v", apexContentExists)
 		}
 
-		if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == AWS_GITLAB {
+		if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == awsGitlab {
 			err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/clusters/%s", gitopsRepoDir, clusterName), opt)
 		} else {
 			err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/%s", gitopsRepoDir, clusterName), opt)
@@ -184,9 +184,9 @@ func AdjustGitopsRepo(
 		return nil
 	}
 
-	CIVO_GITHUB := "civo-github" //! i know i know i know.
+	civoGithub := "civo-github" //! i know i know i know.
 
-	if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == CIVO_GITHUB {
+	if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == civoGithub {
 		driverContent := fmt.Sprintf("%s/%s-%s/", gitopsRepoDir, cloudProvider, gitProvider)
 		err := cp.Copy(driverContent, gitopsRepoDir, opt)
 		if err != nil {
@@ -207,7 +207,7 @@ func AdjustGitopsRepo(
 			log.Warn().Msgf("will create nginx-apex since apexContentExists was %v", apexContentExists)
 		}
 
-		if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == CIVO_GITHUB {
+		if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == civoGithub {
 			err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/clusters/%s", gitopsRepoDir, clusterName), opt)
 		} else {
 			err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/%s", gitopsRepoDir, clusterName), opt)
@@ -221,9 +221,9 @@ func AdjustGitopsRepo(
 		return nil
 	}
 
-	CIVO_GITLAB := "civo-gitlab"
+	civoGitlab := "civo-gitlab"
 
-	if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == CIVO_GITLAB {
+	if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == civoGitlab {
 		driverContent := fmt.Sprintf("%s/%s-%s/", gitopsRepoDir, cloudProvider, gitProvider)
 		err := cp.Copy(driverContent, gitopsRepoDir, opt)
 		if err != nil {
@@ -244,7 +244,7 @@ func AdjustGitopsRepo(
 			log.Warn().Msgf("will create nginx-apex since apexContentExists was %v", apexContentExists)
 		}
 
-		if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == CIVO_GITLAB {
+		if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == civoGitlab {
 			err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/clusters/%s", gitopsRepoDir, clusterName), opt)
 		} else {
 			err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/%s", gitopsRepoDir, clusterName), opt)
@@ -257,9 +257,9 @@ func AdjustGitopsRepo(
 
 		return nil
 	}
-	GOOGLE_GITHUB := "google-github"
+	googleGithub := "google-github"
 
-	if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == GOOGLE_GITHUB {
+	if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == googleGithub {
 		driverContent := fmt.Sprintf("%s/%s-%s/", gitopsRepoDir, cloudProvider, gitProvider)
 		err := cp.Copy(driverContent, gitopsRepoDir, opt)
 		if err != nil {
@@ -280,7 +280,7 @@ func AdjustGitopsRepo(
 			log.Warn().Msgf("will create nginx-apex since apexContentExists was %v", apexContentExists)
 		}
 
-		if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == GOOGLE_GITHUB {
+		if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == googleGithub {
 			err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/clusters/%s", gitopsRepoDir, clusterName), opt)
 		} else {
 			err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/%s", gitopsRepoDir, clusterName), opt)
@@ -574,7 +574,7 @@ func AdjustGitopsRepo(
 		log.Warn().Msgf("will create nginx-apex since apexContentExists was %v", apexContentExists)
 	}
 
-	if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == CIVO_GITHUB {
+	if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == civoGithub {
 		err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/clusters/%s", gitopsRepoDir, clusterName), opt)
 	} else {
 		err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/%s", gitopsRepoDir, clusterName), opt)

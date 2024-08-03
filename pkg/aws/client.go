@@ -30,7 +30,7 @@ func NewEKSServiceAccountClientV1() aws.Config {
 }
 
 type (
-	AWSConfiguration    = awsinternal.AWSConfiguration
+	AWSConfiguration    = awsinternal.Configuration
 	QuotaDetailResponse = awsinternal.QuotaDetailResponse
 )
 

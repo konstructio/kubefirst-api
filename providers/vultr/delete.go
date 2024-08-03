@@ -141,7 +141,7 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 			"vault-components",
 			"vault",
 		}
-		err = argocd.ArgoCDApplicationCleanup(kcfg.Clientset, removeArgoCDApps)
+		err = argocd.ApplicationCleanup(kcfg.Clientset, removeArgoCDApps)
 		if err != nil {
 			log.Error().Msgf("encountered error during argocd application cleanup: %s", err)
 		}
@@ -151,7 +151,7 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 	}
 
 	// GetKubernetesAssociatedBlockStorage
-	vultrConf := vultr.VultrConfiguration{
+	vultrConf := vultr.Configuration{
 		Client:  vultr.NewVultr(cl.VultrAuth.Token),
 		Context: context.Background(),
 	}

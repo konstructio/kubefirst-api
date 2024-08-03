@@ -2,6 +2,6 @@ package docker
 
 import internal "github.com/kubefirst/kubefirst-api/internal/docker"
 
-type DockerClientWrapper = internal.DockerClientWrapper
+type ClientWrapper = internal.DockerClientWrapper
 
 var NewDockerClient = internal.NewDockerClient

@@ -27,7 +27,7 @@ func BootstrapVultrMgmtCluster(clientset *kubernetes.Clientset, cl *pkgtypes.Clu
 		cl.GitProtocol,
 		cl.CloudflareAuth.Token,
 		cl.VultrAuth.Token,
-		cl.DnsProvider,
+		cl.DNSProvider,
 		cl.CloudProvider,
 		cl.GitAuth.Token,
 		cl.GitAuth.PrivateKey,
@@ -38,7 +38,7 @@ func BootstrapVultrMgmtCluster(clientset *kubernetes.Clientset, cl *pkgtypes.Clu
 	}
 
 	var externalDnsToken string
-	switch cl.DnsProvider {
+	switch cl.DNSProvider {
 	case "civo":
 		externalDnsToken = cl.CivoAuth.Token
 	case "vultr":

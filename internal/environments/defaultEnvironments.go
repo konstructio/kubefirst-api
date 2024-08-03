@@ -47,7 +47,7 @@ func CreateDefaultClusters(mgmtCluster types.Cluster) error {
 		ClusterType:   "workload-vcluster",
 		CloudRegion:   mgmtCluster.CloudRegion,
 		DomainName:    "not so empty string which should be replaced",
-		DnsProvider:   mgmtCluster.DnsProvider,
+		DNSProvider:   mgmtCluster.DNSProvider,
 		Environment: types.Environment{
 			Name:        "not so empty string which should be replaced",
 			Description: "not so empty string which should be replaced",
@@ -140,7 +140,7 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 			return err
 		}
 
-		req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/v1/cluster/%s", env.EnterpriseApiUrl, env.ClusterId), bytes.NewReader(payload))
+		req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/v1/cluster/%s", env.EnterpriseAPIURL, env.ClusterID), bytes.NewReader(payload))
 		if err != nil {
 			log.Error().Msgf("error creating http request %s", err)
 			return err

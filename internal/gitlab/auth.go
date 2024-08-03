@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	gitlabApiUrl = "https://gitlab.com/api/v4"
+	gitlabAPIURL = "https://gitlab.com/api/v4"
 )
 
 var requiredScopes = []string{
@@ -32,7 +32,7 @@ var requiredScopes = []string{
 // VerifyTokenPermissions compares scope of the provided token to the required
 // scopes for kubefirst functionality
 func VerifyTokenPermissions(gitlabToken string) error {
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/personal_access_tokens/self", gitlabApiUrl), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/personal_access_tokens/self", gitlabAPIURL), nil)
 	if err != nil {
 		log.Info().Msg("error setting gitlab owner permissions request")
 	}

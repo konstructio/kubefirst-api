@@ -40,20 +40,20 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 				return err
 			}
 		case "civo":
-			civoConf := civo.CivoConfiguration{
+			civoConf := civo.Configuration{
 				Client:  civo.NewCivo(cl.CivoAuth.Token, cl.CloudRegion),
 				Context: context.Background(),
 			}
 
 			// domain id
-			domainId, err := civoConf.GetDNSInfo(clctrl.DomainName, clctrl.CloudRegion)
+			domainID, err := civoConf.GetDNSInfo(clctrl.DomainName, clctrl.CloudRegion)
 			if err != nil {
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.DomainLivenessFailed, err.Error())
 				log.Info().Msg(err.Error())
 			}
 
-			log.Info().Msgf("domainId: %s", domainId)
-			domainLiveness := civoConf.TestDomainLiveness(clctrl.DomainName, domainId, clctrl.CloudRegion)
+			log.Info().Msgf("domainId: %s", domainID)
+			domainLiveness := civoConf.TestDomainLiveness(clctrl.DomainName, domainID, clctrl.CloudRegion)
 
 			err = clctrl.HandleDomainLiveness(domainLiveness)
 			if err != nil {
@@ -66,7 +66,7 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 				return err
 			}
 
-			cloudflareConf := cloudflare.CloudflareConfiguration{
+			cloudflareConf := cloudflare.Configuration{
 				Client:  client,
 				Context: context.Background(),
 			}
@@ -84,12 +84,12 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 			}
 
 			// domain id
-			domainId, err := digitaloceanConf.GetDNSInfo(clctrl.DomainName)
+			domainID, err := digitaloceanConf.GetDNSInfo(clctrl.DomainName)
 			if err != nil {
 				log.Info().Msg(err.Error())
 			}
 
-			log.Info().Msgf("domainId: %s", domainId)
+			log.Info().Msgf("domainId: %s", domainID)
 			domainLiveness := digitaloceanConf.TestDomainLiveness(clctrl.DomainName)
 
 			err = clctrl.HandleDomainLiveness(domainLiveness)
@@ -97,19 +97,19 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 				return err
 			}
 		case "vultr":
-			vultrConf := vultr.VultrConfiguration{
+			vultrConf := vultr.Configuration{
 				Client:  vultr.NewVultr(cl.VultrAuth.Token),
 				Context: context.Background(),
 			}
 
 			// domain id
-			domainId, err := vultrConf.GetDNSInfo(clctrl.DomainName)
+			domainID, err := vultrConf.GetDNSInfo(clctrl.DomainName)
 			if err != nil {
 				log.Info().Msg(err.Error())
 			}
 
 			// viper values set in above function
-			log.Info().Msgf("domainId: %s", domainId)
+			log.Info().Msgf("domainId: %s", domainID)
 			domainLiveness := vultrConf.TestDomainLiveness(clctrl.DomainName)
 
 			err = clctrl.HandleDomainLiveness(domainLiveness)
@@ -144,7 +144,7 @@ func (clctrl *ClusterController) HandleDomainLiveness(domainLiveness bool) error
 			msg += fmt.Sprintf(" - last result: %s - it may be necessary to wait for propagation", foundRecords)
 		}
 		return fmt.Errorf(msg)
-	} else {
-		return nil
 	}
+
+	return nil
 }

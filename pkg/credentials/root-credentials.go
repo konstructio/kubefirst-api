@@ -40,7 +40,7 @@ func EvalAuth(expectedCloudProvider string, expectedGitProvider string) (bool, e
 }
 
 // ParseAuthData gets base root credentials for platform components
-func ParseAuthData(clientset *kubernetes.Clientset, cloudProvider string, gitProvider string, domainName string, opts *CredentialOptions) error {
+func ParseAuthData(clientset *kubernetes.Clientset, cloudProvider string, domainName string, opts *CredentialOptions) error {
 	// Retrieve vault root token
 	var vaultRootToken string
 	vaultUnsealSecretData, err := k8s.ReadSecretV2(clientset, "vault", "vault-unseal-secret")
@@ -64,17 +64,17 @@ func ParseAuthData(clientset *kubernetes.Clientset, cloudProvider string, gitPro
 	// Retrieve kbot password
 	var kbotPassword string
 	if vaultRootToken != "" {
-		vaultUrl := fmt.Sprintf("https://vault.%s", domainName)
-		vaultResolves := httpCommon.ResolveAddress(vaultUrl)
+		vaultURL := fmt.Sprintf("https://vault.%s", domainName)
+		vaultResolves := httpCommon.ResolveAddress(vaultURL)
 
 		if vaultResolves == nil {
 			if vaultRootToken == "" {
 				fmt.Println("Cannot retrieve Vault token automatically. Please provide one here:")
 				fmt.Scanln(&vaultRootToken)
 			}
-			vault := vault.VaultConfiguration{}
+			vault := vault.Configuration{}
 			kbotPassword, err = vault.GetUserPassword(
-				vaultUrl,
+				vaultURL,
 				vaultRootToken,
 				"kbot",
 				"initial-password",

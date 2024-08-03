@@ -44,7 +44,7 @@ func (clctrl *ClusterController) GetUserPassword(user string) error {
 	// empty conf
 	vaultConf := &vault.Conf
 	// sets up vault client within function
-	clctrl.VaultAuth.KbotPassword, err = vaultConf.GetUserPassword(vault.VaultDefaultAddress, cl.VaultAuth.RootToken, "kbot", "initial-password")
+	clctrl.VaultAuth.KbotPassword, err = vaultConf.GetUserPassword(vault.VaultDefaultAddress, cl.VaultAuth.RootToken, user, "initial-password")
 	if err != nil {
 		return err
 	}
@@ -275,7 +275,7 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 	}
 
 	var externalDnsToken string
-	switch cl.DnsProvider {
+	switch cl.DNSProvider {
 	case "akamai":
 		externalDnsToken = cl.AkamaiAuth.Token
 	case "civo":

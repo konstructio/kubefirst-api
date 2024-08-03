@@ -4,7 +4,7 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package providerConfigs
+package providerConfigs // nolint:revive // allowed during refactoring
 
 import (
 	"encoding/json"
@@ -71,7 +71,7 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				newContents = strings.ReplaceAll(newContents, "<CLUSTER_NAME>", tokens.ClusterName)
 				newContents = strings.ReplaceAll(newContents, "<CLOUD_PROVIDER>", tokens.CloudProvider)
 				newContents = strings.ReplaceAll(newContents, "<CLOUD_REGION>", tokens.CloudRegion)
-				newContents = strings.ReplaceAll(newContents, "<CLUSTER_ID>", tokens.ClusterId)
+				newContents = strings.ReplaceAll(newContents, "<CLUSTER_ID>", tokens.ClusterID)
 				newContents = strings.ReplaceAll(newContents, "<CLUSTER_TYPE>", tokens.ClusterType)
 				newContents = strings.ReplaceAll(newContents, "<CONTAINER_REGISTRY_URL>", tokens.ContainerRegistryURL)
 				newContents = strings.ReplaceAll(newContents, "<DOMAIN_NAME>", fullDomainName)
@@ -126,7 +126,7 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 					terraformServersArgsList = string(jsonBytes3)
 					newContents = strings.ReplaceAll(newContents, "<K3S_SERVERS_ARGS>", terraformServersArgsList)
 
-					newContents = strings.ReplaceAll(newContents, "<SSH_USER>", tokens.SshUser)
+					newContents = strings.ReplaceAll(newContents, "<SSH_USER>", tokens.SSHUser)
 				}
 				newContents = strings.ReplaceAll(newContents, "<ARGOCD_INGRESS_URL>", tokens.ArgoCDIngressURL)
 				newContents = strings.ReplaceAll(newContents, "<ARGOCD_INGRESS_NO_HTTP_URL>", tokens.ArgoCDIngressNoHTTPSURL)

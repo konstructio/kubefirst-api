@@ -49,7 +49,7 @@ const (
 )
 
 // Create a single configuration instance to act as an interface to the AWS client
-var Conf AWSConfiguration = AWSConfiguration{
+var Conf = Configuration{
 	Config: NewAws(),
 }
 
@@ -70,7 +70,7 @@ func NewAws() aws.Config {
 }
 
 // Route53AlterResourceRecord simplifies manipulation of Route53 records
-func (conf *AWSConfiguration) Route53AlterResourceRecord(r *AWSRoute53AlterResourceRecord) (*route53.ChangeResourceRecordSetsOutput, error) {
+func (conf *Configuration) Route53AlterResourceRecord(r *Route53AlterResourceRecord) (*route53.ChangeResourceRecordSetsOutput, error) {
 	route53Client := route53.NewFromConfig(conf.Config)
 
 	log.Info().Msgf("validating hostedZoneId %s", r.hostedZoneID)
@@ -86,18 +86,18 @@ func (conf *AWSConfiguration) Route53AlterResourceRecord(r *AWSRoute53AlterResou
 }
 
 // Route53ListARecords retrieves all DNS A records for a hosted zone
-func (conf *AWSConfiguration) Route53ListARecords(hostedZoneId string) ([]AWSARecord, error) {
+func (conf *Configuration) Route53ListARecords(hostedZoneID string) ([]ARecord, error) {
 	route53Client := route53.NewFromConfig(conf.Config)
 	recordSets, err := route53Client.ListResourceRecordSets(context.Background(), &route53.ListResourceRecordSetsInput{
-		HostedZoneId: &hostedZoneId,
+		HostedZoneId: &hostedZoneID,
 	})
 	if err != nil {
-		return []AWSARecord{}, err
+		return []ARecord{}, err
 	}
-	var aRecords []AWSARecord
+	var aRecords []ARecord
 	for _, recordSet := range recordSets.ResourceRecordSets {
 		if recordSet.Type == route53Types.RRTypeA {
-			record := AWSARecord{
+			record := ARecord{
 				Name:       *recordSet.Name,
 				RecordType: "A",
 				AliasTarget: &route53Types.AliasTarget{
@@ -113,21 +113,21 @@ func (conf *AWSConfiguration) Route53ListARecords(hostedZoneId string) ([]AWSARe
 }
 
 // Route53ListTXTRecords retrieves all DNS TXT record type for a hosted zone
-func (conf *AWSConfiguration) Route53ListTXTRecords(hostedZoneId string) ([]AWSTXTRecord, error) {
+func (conf *Configuration) Route53ListTXTRecords(hostedZoneID string) ([]TXTRecord, error) {
 	route53Client := route53.NewFromConfig(conf.Config)
 	recordSets, err := route53Client.ListResourceRecordSets(context.Background(), &route53.ListResourceRecordSetsInput{
-		HostedZoneId: &hostedZoneId,
+		HostedZoneId: &hostedZoneID,
 	})
 	if err != nil {
-		return []AWSTXTRecord{}, err
+		return []TXTRecord{}, err
 	}
-	var txtRecords []AWSTXTRecord
+	var txtRecords []TXTRecord
 	for _, recordSet := range recordSets.ResourceRecordSets {
 		log.Debug().Msgf("Record Name: %s", *recordSet.Name)
 		if recordSet.Type == route53Types.RRTypeTxt {
 			for _, resourceRecord := range recordSet.ResourceRecords {
 				if recordSet.SetIdentifier != nil && recordSet.Weight != nil {
-					record := AWSTXTRecord{
+					record := TXTRecord{
 						Name:          *recordSet.Name,
 						Value:         *resourceRecord.Value,
 						SetIdentifier: recordSet.SetIdentifier,
@@ -137,7 +137,7 @@ func (conf *AWSConfiguration) Route53ListTXTRecords(hostedZoneId string) ([]AWST
 					txtRecords = append(txtRecords, record)
 					continue
 				}
-				record := AWSTXTRecord{
+				record := TXTRecord{
 					Name:  *recordSet.Name,
 					Value: *resourceRecord.Value,
 					TTL:   *recordSet.TTL,
@@ -151,7 +151,7 @@ func (conf *AWSConfiguration) Route53ListTXTRecords(hostedZoneId string) ([]AWST
 
 // TestHostedZoneLivenessWithTxtRecords determines whether or not a target hosted zone is initialized and
 // ready to accept records
-func (conf *AWSConfiguration) TestHostedZoneLivenessWithTxtRecords(hostedZoneName string) (bool, error) {
+func (conf *Configuration) TestHostedZoneLivenessWithTxtRecords(hostedZoneName string) (bool, error) {
 	// Get hosted zone ID
 	hostedZoneID, err := conf.GetHostedZoneID(hostedZoneName)
 	if err != nil {
@@ -182,7 +182,7 @@ func (conf *AWSConfiguration) TestHostedZoneLivenessWithTxtRecords(hostedZoneNam
 		log.Info().Msgf("record %s does not exist, creating...", route53RecordName)
 
 		// Construct resource record alter and create record
-		alt := AWSRoute53AlterResourceRecord{
+		alt := Route53AlterResourceRecord{
 			hostedZoneName:    hostedZoneName,
 			hostedZoneID:      hostedZoneID,
 			route53RecordName: route53RecordName,
@@ -291,7 +291,7 @@ func NewAwsV3(region string, accessKeyID string, secretAccessKey string, session
 }
 
 // GetRegions lists all available regions
-func (conf *AWSConfiguration) GetRegions(region string) ([]string, error) {
+func (conf *Configuration) GetRegions(region string) ([]string, error) {
 	var regionList []string
 
 	ec2Client := ec2.NewFromConfig(conf.Config)
@@ -308,7 +308,7 @@ func (conf *AWSConfiguration) GetRegions(region string) ([]string, error) {
 	return regionList, nil
 }
 
-func (conf *AWSConfiguration) ListInstanceSizesForRegion() ([]string, error) {
+func (conf *Configuration) ListInstanceSizesForRegion() ([]string, error) {
 	ec2Client := ec2.NewFromConfig(conf.Config)
 
 	sizes, err := ec2Client.DescribeInstanceTypeOfferings(context.Background(), &ec2.DescribeInstanceTypeOfferingsInput{})

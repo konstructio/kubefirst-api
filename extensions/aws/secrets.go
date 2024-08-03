@@ -24,7 +24,7 @@ func BootstrapAWSMgmtCluster(
 	clientset *kubernetes.Clientset,
 	cl *pkgtypes.Cluster,
 	destinationGitopsRepoURL string,
-	awsClient *aws.AWSConfiguration,
+	awsClient *aws.Configuration,
 ) error {
 	err := providerConfig.BootstrapMgmtCluster(
 		clientset,
@@ -34,7 +34,7 @@ func BootstrapAWSMgmtCluster(
 		cl.GitProtocol,
 		cl.CloudflareAuth.APIToken,
 		"",
-		cl.DnsProvider,
+		cl.DNSProvider,
 		cl.CloudProvider,
 		cl.GitAuth.Token,
 		cl.GitAuth.PrivateKey,
@@ -44,7 +44,7 @@ func BootstrapAWSMgmtCluster(
 		return err
 	}
 	var externalDnsToken string
-	switch cl.DnsProvider {
+	switch cl.DNSProvider {
 	case "civo":
 		externalDnsToken = cl.CivoAuth.Token
 	case "vultr":
@@ -124,7 +124,7 @@ func BootstrapAWSMgmtCluster(
 			return err
 		}
 
-		dockerConfigString := fmt.Sprintf(`{"auths": {"%s": {"auth": "%s"}}}`, fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", cl.AWSAccountId, cl.CloudRegion), ecrToken)
+		dockerConfigString := fmt.Sprintf(`{"auths": {"%s": {"auth": "%s"}}}`, fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", cl.AWSAccountID, cl.CloudRegion), ecrToken)
 		dockerCfgSecret := &v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{Name: "docker-config", Namespace: "argo"},
 			Data:       map[string][]byte{"config.json": []byte(dockerConfigString)},

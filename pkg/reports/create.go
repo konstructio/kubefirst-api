@@ -13,7 +13,7 @@ import (
 )
 
 type CreateHandOff struct {
-	AwsAccountId      string
+	AwsAccountID      string
 	AwsHostedZoneName string
 	AwsRegion         string
 	ClusterName       string
@@ -53,7 +53,7 @@ func BuildCreateHandOffReport(clusterData CreateHandOff) bytes.Buffer {
 
 	handOffData.WriteString("\n--- AWS ")
 	handOffData.WriteString(strings.Repeat("-", 62))
-	handOffData.WriteString(fmt.Sprintf("\n AWS Account Id: %s", clusterData.AwsAccountId))
+	handOffData.WriteString(fmt.Sprintf("\n AWS Account Id: %s", clusterData.AwsAccountID))
 	handOffData.WriteString(fmt.Sprintf("\n AWS hosted zone name: %s", clusterData.AwsHostedZoneName))
 	handOffData.WriteString(fmt.Sprintf("\n AWS region: %s", clusterData.AwsRegion))
 	// handOffData.WriteString(strings.Repeat("-", 70))

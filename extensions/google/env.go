@@ -31,7 +31,7 @@ func readVaultTokenFromSecret(clientset *kubernetes.Clientset) string {
 }
 
 func GetGoogleTerraformEnvs(envs map[string]string, cl *pkgtypes.Cluster) map[string]string {
-	envs["TF_VAR_project"] = cl.GoogleAuth.ProjectId
+	envs["TF_VAR_project"] = cl.GoogleAuth.ProjectID
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal().Msgf("error getting home path: %s", err)

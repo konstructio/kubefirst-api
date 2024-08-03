@@ -22,7 +22,7 @@ import (
 )
 
 // TestDomainLiveness checks Civo DNS for the liveness test record
-func (c *CivoConfiguration) TestDomainLiveness(domainName string, domainId string, region string) bool {
+func (c *Configuration) TestDomainLiveness(domainName string, domainID string, region string) bool {
 	civoRecordName := fmt.Sprintf("kubefirst-liveness.%s", domainName)
 	civoRecordValue := "domain record propagated"
 
@@ -35,11 +35,11 @@ func (c *CivoConfiguration) TestDomainLiveness(domainName string, domainId strin
 	}
 
 	log.Info().Msgf("checking to see if record %s exists", domainName)
-	log.Info().Msgf("domainId %s", domainId)
+	log.Info().Msgf("domainId %s", domainID)
 	log.Info().Msgf("domainName %s", domainName)
 
 	// check for existing records
-	records, err := c.Client.ListDNSRecords(domainId)
+	records, err := c.Client.ListDNSRecords(domainID)
 	if err != nil {
 		log.Warn().Msgf("%s", err)
 		return false
@@ -50,7 +50,7 @@ func (c *CivoConfiguration) TestDomainLiveness(domainName string, domainId strin
 	}
 
 	// create record if it does not exist
-	_, err = c.Client.CreateDNSRecord(domainId, civoRecordConfig)
+	_, err = c.Client.CreateDNSRecord(domainID, civoRecordConfig)
 	if err != nil {
 		log.Warn().Msgf("%s", err)
 		return false
@@ -113,7 +113,7 @@ func GetDomainApexContent(domainName string) bool {
 }
 
 // GetDNSInfo try to reach the provided domain
-func (c *CivoConfiguration) GetDNSInfo(domainName string, region string) (string, error) {
+func (c *Configuration) GetDNSInfo(domainName string, region string) (string, error) {
 	log.Info().Msg("GetDNSInfo (working...)")
 
 	civoDNSDomain, err := c.Client.FindDNSDomain(domainName)
@@ -126,7 +126,7 @@ func (c *CivoConfiguration) GetDNSInfo(domainName string, region string) (string
 }
 
 // GetDNSDomains lists all available DNS domains
-func (c *CivoConfiguration) GetDNSDomains(region string) ([]string, error) {
+func (c *Configuration) GetDNSDomains(region string) ([]string, error) {
 	var domainList []string
 
 	domains, err := c.Client.ListDNSDomains()
@@ -142,7 +142,7 @@ func (c *CivoConfiguration) GetDNSDomains(region string) ([]string, error) {
 }
 
 // GetRegions lists all available regions
-func (c *CivoConfiguration) GetRegions(region string) ([]string, error) {
+func (c *Configuration) GetRegions(region string) ([]string, error) {
 	var regionList []string
 
 	regions, err := c.Client.ListRegions()
@@ -157,7 +157,7 @@ func (c *CivoConfiguration) GetRegions(region string) ([]string, error) {
 	return regionList, nil
 }
 
-func (c *CivoConfiguration) ListInstanceSizes() ([]string, error) {
+func (c *Configuration) ListInstanceSizes() ([]string, error) {
 	resp, err := c.Client.SendGetRequest("/v2/sizes")
 	if err != nil {
 		return nil, err
@@ -178,7 +178,7 @@ func (c *CivoConfiguration) ListInstanceSizes() ([]string, error) {
 	return instanceNames, nil
 }
 
-func (c *CivoConfiguration) GetKubeconfig(clusterName string) (string, error) {
+func (c *Configuration) GetKubeconfig(clusterName string) (string, error) {
 	cluster, err := c.Client.FindKubernetesCluster(clusterName)
 	if err != nil {
 		return "", err

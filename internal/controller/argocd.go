@@ -150,8 +150,8 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 	return nil
 }
 
-func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, namespace string, deployment_name string) error {
-	deploy, err := clientset.AppsV1().Deployments(namespace).Get(ctx, deployment_name, metav1.GetOptions{})
+func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, namespace string, deploymentName string) error {
+	deploy, err := clientset.AppsV1().Deployments(namespace).Get(ctx, deploymentName, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}

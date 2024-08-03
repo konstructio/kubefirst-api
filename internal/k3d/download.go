@@ -25,13 +25,13 @@ func DownloadTools(clusterName string, gitProvider string, gitOwner string, tool
 	}
 
 	// * k3d
-	k3dDownloadUrl := fmt.Sprintf(
+	k3dDownloadURL := fmt.Sprintf(
 		"https://github.com/k3d-io/k3d/releases/download/%s/k3d-%s-%s",
 		K3dVersion,
 		LocalhostOS,
 		LocalhostARCH,
 	)
-	err := downloadManager.DownloadFile(config.K3dClient, k3dDownloadUrl)
+	err := downloadManager.DownloadFile(config.K3dClient, k3dDownloadURL)
 	if err != nil {
 		return fmt.Errorf("error while trying to download k3d: %w", err)
 	}
