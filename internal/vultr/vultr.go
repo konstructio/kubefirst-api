@@ -33,7 +33,7 @@ func (c *VultrConfiguration) TestDomainLiveness(domainName string) bool {
 	log.Info().Msgf("checking to see if record %s exists", domainName)
 	log.Info().Msgf("domainName %s", domainName)
 
-	//check for existing records
+	// check for existing records
 	records, err := c.GetDNSRecords(domainName)
 	if err != nil {
 		log.Error().Msgf("error getting vultr dns records for domain %s: %s", domainName, err)
@@ -46,7 +46,7 @@ func (c *VultrConfiguration) TestDomainLiveness(domainName string) bool {
 		}
 	}
 
-	//create record if it does not exist
+	// create record if it does not exist
 	_, _, err = c.Client.DomainRecord.Create(c.Context, domainName, vultrRecordConfig)
 	if err != nil {
 		log.Warn().Msgf("%s", err)
@@ -166,12 +166,10 @@ func (c *VultrConfiguration) GetRegions() ([]string, error) {
 }
 
 func (c *VultrConfiguration) ListInstances() ([]string, error) {
-
 	// can pass empty string to list all plans for second arg to List
 	plans, _, _, err := c.Client.Plan.List(c.Context, "", &govultr.ListOptions{
 		Region: c.Region,
 	})
-
 	if err != nil {
 		return nil, err
 	}

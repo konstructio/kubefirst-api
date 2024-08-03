@@ -66,7 +66,7 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	//Checks for existing repos
+	// Checks for existing repos
 	err = ctrl.GitInit()
 	if err != nil {
 		ctrl.HandleError(err.Error())
@@ -79,7 +79,7 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	//Where detokeinization happens
+	// Where detokeinization happens
 	err = ctrl.RepositoryPrep()
 	if err != nil {
 		ctrl.HandleError(err.Error())
@@ -114,7 +114,7 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 	if err != nil {
 		return err
 	}
-	//Save config
+	// Save config
 	ctrl.Kcfg = kcfg
 
 	err = ctrl.WaitForClusterReady()
@@ -150,11 +150,9 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 
 	ctrl.Cluster.ClusterSecretsCreatedCheck = true
 	err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
-
 	if err != nil {
 		ctrl.Cluster.InProgress = false
 		err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
-
 		if err != nil {
 			return err
 		}
@@ -251,7 +249,6 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 		ctrl.Cluster.Status = constants.ClusterStatusProvisioned
 		ctrl.Cluster.InProgress = false
 		err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
-
 		if err != nil {
 			return err
 		}

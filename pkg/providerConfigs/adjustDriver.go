@@ -598,7 +598,7 @@ func AdjustMetaphorRepo(
 ) error {
 	//* create ~/.k1/metaphor
 	metaphorDir := fmt.Sprintf("%s/metaphor", k1Dir)
-	os.Mkdir(metaphorDir, 0700)
+	os.Mkdir(metaphorDir, 0o700)
 
 	//* git init
 	metaphorRepo, err := git.PlainInit(metaphorDir, false)
@@ -626,7 +626,7 @@ func AdjustMetaphorRepo(
 		os.RemoveAll(metaphorDir + "/.github")
 	}
 
-	//todo implement repo, err :- createMetaphor() which returns the metaphor repoository object, removes content from
+	// todo implement repo, err :- createMetaphor() which returns the metaphor repoository object, removes content from
 	// gitops and then allows gitops to commit during its sequence of ops
 	if strings.ToLower(fmt.Sprintf("akamai-%s", gitProvider)) == AKAMAI_GITHUB {
 		//* metaphor app source
@@ -910,7 +910,7 @@ func AdjustMetaphorRepo(
 
 	//* copy $HOME/.k1/gitops/metaphor/Dockerfile $HOME/.k1/metaphor/build/Dockerfile
 	dockerfileContent := fmt.Sprintf("%s/Dockerfile", metaphorDir)
-	os.Mkdir(metaphorDir+"/build", 0700)
+	os.Mkdir(metaphorDir+"/build", 0o700)
 	log.Info().Msgf("copying dockerfile content: %s", argoWorkflowsFolderContent)
 	err = cp.Copy(dockerfileContent, fmt.Sprintf("%s/build/Dockerfile", metaphorDir), opt)
 	if err != nil {

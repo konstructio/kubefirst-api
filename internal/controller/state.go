@@ -64,7 +64,6 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				Name:                clctrl.KubefirstStateStoreBucketName,
 			}
 			err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
-
 			if err != nil {
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCredentialsCreateFailed, err.Error())
 				return err
@@ -117,7 +116,6 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				Hostname: creds.Endpoint,
 			}
 			err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
-
 			if err != nil {
 				return err
 			}
@@ -171,7 +169,6 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				Hostname: objst.S3Hostname,
 			}
 			err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
-
 			if err != nil {
 				return err
 			}

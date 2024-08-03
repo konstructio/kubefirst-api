@@ -111,7 +111,7 @@ func PostDomains(c *gin.Context) {
 		}
 		domainListResponse.Domains = domains
 	case "cloudflare":
-		//check for token, make sure it aint blank
+		// check for token, make sure it aint blank
 		if domainListRequest.CloudflareAuth.APIToken == "" {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: "missing authentication credentials in request, please check and try again",

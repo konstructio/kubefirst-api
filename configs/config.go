@@ -22,8 +22,10 @@ This is an initial implementation of Config. Please keep in mind we're still wor
 environment variables and general config data.
 */
 
-const DefaultK1Version = "development"
-const DefaultGitOpsTemplateBranch = "main"
+const (
+	DefaultK1Version            = "development"
+	DefaultGitOpsTemplateBranch = "main"
+)
 
 // K1Version is used on version command. The value is dynamically updated on build time via ldflag. Built Kubefirst
 // versions will follow semver value like 1.9.0, when not using the built version, "development" is used.

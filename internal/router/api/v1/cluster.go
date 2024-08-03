@@ -289,7 +289,7 @@ func PostCreateCluster(c *gin.Context) {
 
 	// Retry mechanism
 	if cluster.ClusterName != "" {
-		//Assign cloud and git credentials
+		// Assign cloud and git credentials
 		clusterDefinition.AkamaiAuth = cluster.AkamaiAuth
 		clusterDefinition.AWSAuth = cluster.AWSAuth
 		clusterDefinition.CivoAuth = cluster.CivoAuth
@@ -602,7 +602,6 @@ func GetExportCluster(c *gin.Context) {
 }
 
 func GetClusterKubeConfig(c *gin.Context) {
-
 	cloudProvider, param := c.Params.Get("cloud_provider")
 	if !param {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{

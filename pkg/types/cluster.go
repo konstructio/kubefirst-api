@@ -12,7 +12,7 @@ import (
 
 // ClusterDefinition describes an incoming request to create a cluster
 type ClusterDefinition struct {
-	//Cluster
+	// Cluster
 	AdminEmail             string             `json:"admin_email" binding:"required"`
 	CloudProvider          string             `json:"cloud_provider" binding:"required,oneof=akamai aws civo digitalocean google k3s vultr"`
 	CloudRegion            string             `json:"cloud_region" binding:"required"`
@@ -38,7 +38,7 @@ type ClusterDefinition struct {
 	// AWS
 	ECR bool `json:"ecr,omitempty"`
 
-	//Auth
+	// Auth
 	AkamaiAuth       AkamaiAuth       `json:"akamai_auth,omitempty"`
 	AWSAuth          AWSAuth          `json:"aws_auth,omitempty"`
 	CivoAuth         CivoAuth         `json:"civo_auth,omitempty"`

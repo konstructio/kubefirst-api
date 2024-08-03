@@ -87,7 +87,6 @@ func ExtractFileFromTarGz(gzipStream io.Reader, tarAddress string, targetFilePat
 					string(header.Typeflag),
 					header.Name)
 			}
-
 		}
 	}
 }
@@ -142,7 +141,7 @@ func Unzip(zipFilepath string, unzipDirectory string) error {
 
 func createDirIfDontExist(toolsDirPath string) error {
 	if _, err := os.Stat(toolsDirPath); errors.Is(err, fs.ErrNotExist) {
-		err = os.Mkdir(toolsDirPath, 0777)
+		err = os.Mkdir(toolsDirPath, 0o777)
 		if err != nil {
 			return err
 		}
@@ -151,7 +150,6 @@ func createDirIfDontExist(toolsDirPath string) error {
 }
 
 func DownloadTarGz(binaryPath string, tarAddress string, targzPath string, URL string) error {
-
 	log.Info().Msgf("Downloading tar.gz from %s", URL)
 
 	err := DownloadFile(targzPath, URL)
@@ -170,7 +168,7 @@ func DownloadTarGz(binaryPath string, tarAddress string, targzPath string, URL s
 		binaryPath,
 	)
 	os.Remove(targzPath)
-	err = os.Chmod(binaryPath, 0755)
+	err = os.Chmod(binaryPath, 0o755)
 	if err != nil {
 		return err
 	}
@@ -178,7 +176,6 @@ func DownloadTarGz(binaryPath string, tarAddress string, targzPath string, URL s
 }
 
 func DownloadZip(toolsDir string, URL string, zipPath string) error {
-
 	log.Info().Msgf("Downloading zip from %s", "URL")
 
 	err := DownloadFile(zipPath, URL)

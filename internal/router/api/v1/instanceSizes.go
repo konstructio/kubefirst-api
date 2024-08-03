@@ -183,7 +183,6 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 		}
 
 		instances, err := googleConf.ListInstances(instanceSizesRequest.CloudZone)
-
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: err.Error(),

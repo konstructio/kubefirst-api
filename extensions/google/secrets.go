@@ -23,7 +23,6 @@ func BootstrapGoogleMgmtCluster(
 	cl *pkgtypes.Cluster,
 	destinationGitopsRepoURL string,
 ) error {
-
 	err := providerConfig.BootstrapMgmtCluster(
 		clientset,
 		cl.GitProvider,
@@ -31,7 +30,7 @@ func BootstrapGoogleMgmtCluster(
 		destinationGitopsRepoURL,
 		cl.GitProtocol,
 		cl.CloudflareAuth.Token,
-		cl.GoogleAuth.KeyFile, //Google has no authentication method because we use roles
+		cl.GoogleAuth.KeyFile, // Google has no authentication method because we use roles
 		cl.DnsProvider,
 		cl.CloudProvider,
 		cl.GitAuth.Token,

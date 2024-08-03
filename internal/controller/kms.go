@@ -38,7 +38,6 @@ func (clctrl *ClusterController) DetokenizeKMSKeyID() error {
 
 			clctrl.Cluster.AWSKMSKeyId = awsKmsKeyId
 			err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
-
 			if err != nil {
 				return err
 			}
@@ -94,7 +93,6 @@ func (clctrl *ClusterController) DetokenizeKMSKeyID() error {
 
 			clctrl.Cluster.AWSKMSKeyDetokenizedCheck = true
 			err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
-
 			if err != nil {
 				return err
 			}

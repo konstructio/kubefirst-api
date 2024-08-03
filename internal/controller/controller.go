@@ -424,7 +424,6 @@ func (clctrl *ClusterController) HandleError(condition string) error {
 	clctrl.Cluster.LastCondition = condition
 
 	err := secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
-
 	if err != nil {
 		return err
 	}

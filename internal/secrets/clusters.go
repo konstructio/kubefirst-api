@@ -18,8 +18,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-const KUBEFIRST_CLUSTERS_SECRET_NAME = "kubefirst-clusters"
-const KUBEFIRST_CLUSTER_PREFIX = "kubefirst-cluster"
+const (
+	KUBEFIRST_CLUSTERS_SECRET_NAME = "kubefirst-clusters"
+	KUBEFIRST_CLUSTER_PREFIX       = "kubefirst-cluster"
+)
 
 // DeleteCluster
 func DeleteCluster(clientSet *kubernetes.Clientset, clusterName string) error {
@@ -104,7 +106,6 @@ func InsertCluster(clientSet *kubernetes.Clientset, cl pkgtypes.Cluster) error {
 	}
 
 	err = k8s.CreateSecretV2(clientSet, secretToCreate)
-
 	if err != nil {
 		return fmt.Errorf("error creating kubernetes secret: %s", err)
 	}
@@ -118,7 +119,6 @@ func UpdateCluster(clientSet *kubernetes.Clientset, cluster pkgtypes.Cluster) er
 	secretValuesMap, _ := ParseJSONToMap(string(bytes))
 
 	err := k8s.UpdateSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_CLUSTER_PREFIX, cluster.ClusterName), secretValuesMap)
-
 	if err != nil {
 		return fmt.Errorf("error updating kubernetes secret: %s", err)
 	}

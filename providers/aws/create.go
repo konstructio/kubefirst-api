@@ -28,7 +28,6 @@ func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 	// Update cluster status in database
 	ctrl.Cluster.InProgress = true
 	err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
-
 	if err != nil {
 		return err
 	}
@@ -79,7 +78,7 @@ func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	//Where detokeinization happens
+	// Where detokeinization happens
 	err = ctrl.RepositoryPrep()
 	if err != nil {
 		ctrl.HandleError(err.Error())
@@ -111,7 +110,7 @@ func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 	}
 
 	// Get Cluster kubeconfig and save to path so we can reference like everything else
-	//TODO replace constant references to a new config with references to an existing config created here
+	// TODO replace constant references to a new config with references to an existing config created here
 	// for all cloud providers
 	ctrl.Kcfg = awsext.CreateEKSKubeconfig(&ctrl.AwsClient.Config, ctrl.ClusterName)
 	kcfg := ctrl.Kcfg
@@ -250,7 +249,6 @@ func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 		ctrl.Cluster.Status = constants.ClusterStatusProvisioned
 		ctrl.Cluster.InProgress = false
 		err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
-
 		if err != nil {
 			return err
 		}

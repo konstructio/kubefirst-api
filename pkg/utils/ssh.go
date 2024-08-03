@@ -17,7 +17,6 @@ import (
 )
 
 func CreateSshKeyPair() (string, string, error) {
-
 	// Generate a key pair
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
@@ -54,7 +53,7 @@ func EvalSSHKey(req *types.EvalSSHKeyRequest) error {
 			log.Fatal().Msgf("unable to check for ssh keys in gitlab: %s", err.Error())
 		}
 
-		var keyName = "kbot-ssh-key"
+		keyName := "kbot-ssh-key"
 		var keyFound bool = false
 		for _, key := range keys {
 			if key.Title == keyName {

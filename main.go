@@ -18,7 +18,6 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 	"github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
-
 	log "github.com/rs/zerolog/log"
 )
 
@@ -31,9 +30,7 @@ import (
 // @BasePath /api/v1
 
 func main() {
-
 	env, err := env.GetEnv(false)
-
 	if err != nil {
 		log.Fatal().Msg(err.Error())
 	}
@@ -47,7 +44,9 @@ func main() {
 
 	if importedCluster.ClusterName != "" {
 		log.Info().Msgf("adding default services for cluster %s", importedCluster.ClusterName)
-		services.AddDefaultServices(&importedCluster)
+		if err := services.AddDefaultServices(&importedCluster); err != nil {
+			log.Fatal().Msg(err.Error())
+		}
 
 		if importedCluster.PostInstallCatalogApps != nil {
 			go func() {
@@ -60,7 +59,7 @@ func main() {
 						ConfigKeys: catalogApp.ConfigKeys,
 					}
 
-					err = services.CreateService(&importedCluster, catalogApp.Name, &catalogApp, request, true)
+					err := services.CreateService(&importedCluster, catalogApp.Name, &catalogApp, request, true)
 					if err != nil {
 						log.Info().Msgf("Error creating default environments %s", err.Error())
 					}

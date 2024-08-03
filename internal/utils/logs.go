@@ -25,7 +25,7 @@ func InitializeLogs(fileName string) error {
 
 	//* create log directory
 	logsFolder := fmt.Sprintf("%s/logs", k1Dir)
-	_ = os.Mkdir(logsFolder, 0700)
+	_ = os.Mkdir(logsFolder, 0o700)
 	if err != nil {
 		return fmt.Errorf("error creating logs directory: %s", err)
 	}

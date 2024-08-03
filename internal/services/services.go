@@ -159,16 +159,16 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 	}
 
 	if !req.IsTemplate {
-		//Create Tokens
+		// Create Tokens
 		gitopsKubefirstTokens := utils.CreateTokensFromDatabaseRecord(cl, registryPath, secretStoreRef, project, clusterDestination, environment, clusterName)
 
-		//Detokenize App Template
+		// Detokenize App Template
 		err = providerConfigs.DetokenizeGitGitops(catalogServiceFolder, gitopsKubefirstTokens, cl.GitProtocol, cl.CloudflareAuth.OriginCaIssuerKey != "")
 		if err != nil {
 			return fmt.Errorf("cluster %s - error opening file: %s", clusterName, err)
 		}
 
-		//Detokenize Config Keys
+		// Detokenize Config Keys
 		err = DetokenizeConfigKeys(catalogServiceFolder, req.ConfigKeys)
 		if err != nil {
 			return fmt.Errorf("cluster %s - error opening file: %s", clusterName, err)
@@ -337,7 +337,6 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string, def pkgtypes.Gitops
 				Password: cl.GitAuth.Token,
 			},
 		)
-
 		if err != nil {
 			log.Warn().Msgf("cluster %s - error pulling gitops repo: %s", clusterName, err)
 		}
@@ -377,7 +376,6 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string, def pkgtypes.Gitops
 				Password: cl.GitAuth.Token,
 			},
 		})
-
 		if err != nil {
 			return fmt.Errorf("cluster %s - error pushing commit for service file: %s", clusterName, err)
 		}
@@ -433,7 +431,6 @@ func ValidateService(cl *pkgtypes.Cluster, serviceName string, def *pkgtypes.Git
 			Password: cl.GitAuth.Token,
 		},
 	)
-
 	if err != nil {
 		log.Warn().Msgf("cluster %s - error pulling gitops repo: %s", clusterName, err)
 	}
@@ -469,8 +466,10 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Default:     true,
 			Description: "The git repositories contain all the Infrastructure as Code and Gitops configurations.",
 			Image:       fmt.Sprintf("https://assets.kubefirst.com/console/%s.svg", cl.GitProvider),
-			Links: []string{fmt.Sprintf("https://%s/%s/gitops", cl.GitHost, cl.GitAuth.Owner),
-				fmt.Sprintf("https://%s/%s/metaphor", cl.GitHost, cl.GitAuth.Owner)},
+			Links: []string{
+				fmt.Sprintf("https://%s/%s/gitops", cl.GitHost, cl.GitAuth.Owner),
+				fmt.Sprintf("https://%s/%s/metaphor", cl.GitHost, cl.GitAuth.Owner),
+			},
 			Status:    "",
 			CreatedBy: "kbot",
 		},
@@ -515,9 +514,11 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 			Default:     true,
 			Description: "A multi-environment demonstration space for frontend application best practices that's easy to apply to other projects.",
 			Image:       "https://assets.kubefirst.com/console/metaphor.svg",
-			Links: []string{fmt.Sprintf("https://metaphor-development.%s", fullDomainName),
+			Links: []string{
+				fmt.Sprintf("https://metaphor-development.%s", fullDomainName),
 				fmt.Sprintf("https://metaphor-staging.%s", fullDomainName),
-				fmt.Sprintf("https://metaphor-production.%s", fullDomainName)},
+				fmt.Sprintf("https://metaphor-production.%s", fullDomainName),
+			},
 			Status:    "",
 			CreatedBy: "kbot",
 		},

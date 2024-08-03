@@ -73,7 +73,6 @@ func PortForwardPodWithRetry(clientset *kubernetes.Clientset, req PortForwardAPo
 	}
 
 	return fmt.Errorf("not able to open port-forward: %s", err)
-
 }
 
 // PortForwardPod receives a PortForwardAPodRequest, and enables port forwarding for the specified resource.

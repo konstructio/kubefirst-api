@@ -30,7 +30,7 @@ import (
 
 func CreateDirIfNotExist(dir string) error {
 	if _, err := os.Stat(dir); errors.Is(err, fs.ErrNotExist) {
-		err = os.Mkdir(dir, 0777)
+		err = os.Mkdir(dir, 0o777)
 		if err != nil {
 			return err
 		}
@@ -39,7 +39,6 @@ func CreateDirIfNotExist(dir string) error {
 }
 
 func RemoveSubdomainV2(domainName string) (string, error) {
-
 	domainName = strings.TrimRight(domainName, ".")
 	domainSlice := strings.Split(domainName, ".")
 
@@ -54,7 +53,6 @@ func RemoveSubdomainV2(domainName string) (string, error) {
 
 // SetupViper handles Viper config file. If config file doesn't exist, create, in case the file is available, use it.
 func SetupViper(config *configs.Config, silent bool) error {
-
 	viperConfigFile := config.KubefirstConfigFilePath
 
 	if _, err := os.Stat(viperConfigFile); errors.Is(err, os.ErrNotExist) {
@@ -62,7 +60,7 @@ func SetupViper(config *configs.Config, silent bool) error {
 			log.Printf("Config file not found, creating a blank one: %s \n", viperConfigFile)
 		}
 
-		err = os.WriteFile(viperConfigFile, []byte(""), 0700)
+		err = os.WriteFile(viperConfigFile, []byte(""), 0o700)
 		if err != nil {
 			return fmt.Errorf("unable to create blank config file, error is: %s", err)
 		}
@@ -101,14 +99,14 @@ func CreateFile(fileName string, fileContent []byte) error {
 
 // CreateFullPath - Create path and its parents
 func CreateFullPath(p string) (*os.File, error) {
-	if err := os.MkdirAll(filepath.Dir(p), 0777); err != nil {
+	if err := os.MkdirAll(filepath.Dir(p), 0o777); err != nil {
 		return nil, err
 	}
 	return os.Create(p)
 }
 
 func randSeq(n int) string {
-	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 	b := make([]rune, n)
 	for i := range b {
 		b[i] = letters[rand.Intn(len(letters))]
@@ -140,7 +138,6 @@ func GenerateClusterID() string {
 
 // RemoveSubDomain receives a host and remove its subdomain, if exists.
 func RemoveSubDomain(fullURL string) (string, error) {
-
 	// add http if fullURL doesn't have it, this is for validation only, won't be used on http requests
 	if !strings.HasPrefix(fullURL, "http") {
 		fullURL = "https://" + fullURL
@@ -183,7 +180,6 @@ func RemoveSubDomain(fullURL string) (string, error) {
 
 // IsValidURL checks if a URL is valid
 func IsValidURL(rawURL string) error {
-
 	if len(rawURL) == 0 {
 		return fmt.Errorf("rawURL cannot be empty string")
 	}
@@ -258,7 +254,6 @@ func AwaitHostNTimes(url string, times int, gracePeriod time.Duration) {
 //
 //	err := ReplaceFileContent(vaultMainFile, "http://127.0.0.1:9000", "http://minio.minio.svc.cluster.local:9000")
 func ReplaceFileContent(filPath string, oldContent string, newContent string) error {
-
 	file, err := os.ReadFile(filPath)
 	if err != nil {
 		return err
@@ -277,7 +272,6 @@ func ReplaceFileContent(filPath string, oldContent string, newContent string) er
 // to be able to communicate with the services. When Kubefirst finish the installation, and Terraform needs to
 // communicate with the services, it must use the internal Kubernetes addresses.
 func UpdateTerraformS3BackendForK8sAddress(k1Dir string) error {
-
 	// todo: create a function for file content replacement
 	vaultMainFile := fmt.Sprintf("%s/gitops/terraform/vault/main.tf", k1Dir)
 	if err := ReplaceFileContent(
@@ -316,7 +310,6 @@ func UpdateTerraformS3BackendForK8sAddress(k1Dir string) error {
 // UpdateTerraformS3BackendForLocalhostAddress during the destroy process, Terraform must reach port-forwarded resources
 // to be able to communicate with the services.
 func UpdateTerraformS3BackendForLocalhostAddress() error {
-
 	config := configs.ReadConfig()
 
 	// todo: create a function for file content replacement
@@ -459,7 +452,7 @@ func IsAppAvailable(url string, appname string) error {
 }
 
 func OpenLogFile(path string) (*os.File, error) {
-	logFile, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	logFile, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o644)
 	if err != nil {
 		return nil, err
 	}
@@ -469,7 +462,6 @@ func OpenLogFile(path string) (*os.File, error) {
 
 // GetFileContent receives a file path, and return its content.
 func GetFileContent(filePath string) ([]byte, error) {
-
 	// check if file exists
 	if _, err := os.Stat(filePath); err != nil && os.IsNotExist(err) {
 		return nil, err
@@ -551,7 +543,6 @@ func FindStringInSlice(s []string, str string) bool {
 }
 
 func ResetK1Dir(k1Dir string) error {
-
 	if _, err := os.Stat(k1Dir + "/argo-workflows"); !os.IsNotExist(err) {
 		// path/to/whatever exists
 		err := os.RemoveAll(k1Dir + "/argo-workflows")
@@ -589,5 +580,4 @@ func ResetK1Dir(k1Dir string) error {
 	}
 
 	return nil
-
 }

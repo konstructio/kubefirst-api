@@ -55,7 +55,6 @@ func NewGitHubHandler(gitHubService *services.GitHubService) *GitHubHandler {
 // waits for the user authorize the request in the browser, then it pool GitHub access point endpoint, to validate and
 // grant permission to return a valid access token.
 func (handler GitHubHandler) AuthenticateUser() (string, error) {
-
 	gitHubDeviceFlowCodeURL := "https://github.com/login/device/code"
 	// todo: update scope list, we have more than we need at the moment
 	requestBody, err := json.Marshal(map[string]string{
@@ -107,8 +106,8 @@ func (handler GitHubHandler) AuthenticateUser() (string, error) {
 	}
 
 	var gitHubAccessToken string
-	var attempts = 18       // 18 * 5 = 90 seconds
-	var secondsControl = 95 // 95 to start with 95-5=90
+	attempts := 18       // 18 * 5 = 90 seconds
+	secondsControl := 95 // 95 to start with 95-5=90
 	for i := 0; i < attempts; i++ {
 		gitHubAccessToken, err = handler.service.CheckUserCodeConfirmation(gitHubDeviceFlow.DeviceCode)
 		if err != nil {
@@ -131,7 +130,6 @@ func (handler GitHubHandler) AuthenticateUser() (string, error) {
 
 // todo: make it a method
 func (handler GitHubHandler) GetGitHubUser(gitHubAccessToken string) (string, error) {
-
 	req, err := http.NewRequest(http.MethodGet, "https://api.github.com/user", nil)
 	if err != nil {
 		log.Warn().Msg("error setting request")
@@ -172,7 +170,6 @@ func (handler GitHubHandler) GetGitHubUser(gitHubAccessToken string) (string, er
 
 	log.Info().Msgf("GitHub user: %s", githubUser.Login)
 	return githubUser.Login, nil
-
 }
 
 func (handler GitHubHandler) CheckGithubOrganizationPermissions(githubToken, githubOwner, githubUsername string) error {
@@ -218,7 +215,6 @@ func (handler GitHubHandler) CheckGithubOrganizationPermissions(githubToken, git
 	}
 
 	return nil
-
 }
 
 func printGitHubAuthToken(userCode, verificationUri string) string {

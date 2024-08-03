@@ -64,7 +64,7 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryE
 
 			// Before removing Terraform resources, remove any container registry repositories
 			// since failing to remove them beforehand will result in an apply failure
-			var projectsForDeletion = []string{"gitops", "metaphor"}
+			projectsForDeletion := []string{"gitops", "metaphor"}
 			for _, project := range projectsForDeletion {
 				projectExists, err := gitlabClient.CheckProjectExists(project)
 				if err != nil {

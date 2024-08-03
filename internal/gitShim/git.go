@@ -48,7 +48,7 @@ func PrepareMgmtCluster(cluster pkgtypes.Cluster) error {
 	gitopsDir := fmt.Sprintf("%s/.k1/%s/gitops", homeDir, cluster.ClusterName)
 
 	if _, err := os.Stat(clusterDir); os.IsNotExist(err) {
-		err := os.MkdirAll(clusterDir, 0777)
+		err := os.MkdirAll(clusterDir, 0o777)
 		if err != nil {
 			log.Fatal().Msgf("error creating home dir: %s", err)
 			return err
@@ -78,7 +78,6 @@ func PrepareMgmtCluster(cluster pkgtypes.Cluster) error {
 }
 
 func PrepareGitEnvironment(cluster *pkgtypes.Cluster, gitopsDir string) error {
-
 	repoUrl := fmt.Sprintf("https://%s/%s/gitops", cluster.GitHost, cluster.GitAuth.Owner)
 	_, err := gitClient.ClonePrivateRepo("main", gitopsDir, repoUrl, cluster.GitAuth.User, cluster.GitAuth.Token)
 	if err != nil {

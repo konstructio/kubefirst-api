@@ -26,7 +26,6 @@ func BootstrapAWSMgmtCluster(
 	destinationGitopsRepoURL string,
 	awsClient *aws.AWSConfiguration,
 ) error {
-
 	err := providerConfig.BootstrapMgmtCluster(
 		clientset,
 		cl.GitProvider,
@@ -118,7 +117,7 @@ func BootstrapAWSMgmtCluster(
 		}
 	}
 
-	//flag out the ecr token
+	// flag out the ecr token
 	if cl.ECR {
 		ecrToken, err := awsClient.GetECRAuthToken()
 		if err != nil {

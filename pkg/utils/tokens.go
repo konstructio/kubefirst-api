@@ -135,7 +135,7 @@ func CreateTokensFromDatabaseRecord(cl *pkgtypes.Cluster, registryPath string, s
 		ContainerRegistryURL: fmt.Sprintf("%s/%s", containerRegistryHost, cl.GitAuth.Owner), // Not Supported for AWS ECR
 	}
 
-	//Handle provider specific tokens
+	// Handle provider specific tokens
 	switch cl.CloudProvider {
 	case "vultr":
 		gitopsTemplateTokens.StateStoreBucketHostname = cl.StateStoreDetails.Hostname
@@ -143,7 +143,7 @@ func CreateTokensFromDatabaseRecord(cl *pkgtypes.Cluster, registryPath string, s
 		gitopsTemplateTokens.GoogleAuth = cl.GoogleAuth.KeyFile
 		gitopsTemplateTokens.GoogleProject = cl.GoogleAuth.ProjectId
 		gitopsTemplateTokens.GoogleUniqueness = strings.ToLower(randstr.String(5))
-		gitopsTemplateTokens.ForceDestroy = strconv.FormatBool(true) //TODO make this optional
+		gitopsTemplateTokens.ForceDestroy = strconv.FormatBool(true) // TODO make this optional
 		gitopsTemplateTokens.KubefirstArtifactsBucket = cl.StateStoreDetails.Name
 		gitopsTemplateTokens.VaultDataBucketName = fmt.Sprintf("%s-vault-data-%s", cl.GoogleAuth.ProjectId, cl.ClusterName)
 	case "aws":

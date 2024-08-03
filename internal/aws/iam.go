@@ -14,7 +14,6 @@ import (
 )
 
 func (conf *AWSConfiguration) GetIamRole(roleName string) (*iam.GetRoleOutput, error) {
-
 	// fmt.Println("looking up iam role: ", roleName) // todo add helpful logs about if found or not
 	iamClient := iam.NewFromConfig(conf.Config)
 

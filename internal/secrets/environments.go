@@ -14,8 +14,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-const KUBEFIRST_ENVIRONMENTS_SECRET_NAME = "kubefirst-environments"
-const KUBEFIRST_ENVIRONMENT_PREFIX = "kubefirst-environment"
+const (
+	KUBEFIRST_ENVIRONMENTS_SECRET_NAME = "kubefirst-environments"
+	KUBEFIRST_ENVIRONMENT_PREFIX       = "kubefirst-environment"
+)
 
 // GetEnvironments
 func GetEnvironments(clientSet *kubernetes.Clientset) ([]pkgtypes.Environment, error) {
@@ -87,7 +89,6 @@ func InsertEnvironment(clientSet *kubernetes.Clientset, env pkgtypes.Environment
 	}
 
 	err = k8s.CreateSecretV2(clientSet, secretToCreate)
-
 	if err != nil {
 		return environment, fmt.Errorf("error creating kubernetes environment secret: %s", err)
 	}
@@ -143,7 +144,6 @@ func UpdateEnvironment(clientSet *kubernetes.Clientset, id string, env types.Env
 	secretValuesMap, _ := ParseJSONToMap(string(bytes))
 
 	err := k8s.UpdateSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_ENVIRONMENT_PREFIX, environmentToUpdate.Name), secretValuesMap)
-
 	if err != nil {
 		return fmt.Errorf("error creating kubernetes secret: %s", err)
 	}

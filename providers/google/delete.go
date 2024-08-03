@@ -33,7 +33,6 @@ import (
 
 // DeleteGoogleCluster
 func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEvent) error {
-
 	// Instantiate google config
 	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.Token, "")
 
@@ -78,7 +77,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 
 			// Before removing Terraform resources, remove any container registry repositories
 			// since failing to remove them beforehand will result in an apply failure
-			var projectsForDeletion = []string{"gitops", "metaphor"}
+			projectsForDeletion := []string{"gitops", "metaphor"}
 			for _, project := range projectsForDeletion {
 				projectExists, err := gitlabClient.CheckProjectExists(project)
 				if err != nil {
@@ -226,7 +225,6 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 		cl.CloudTerraformApplyCheck = false
 		cl.CloudTerraformApplyFailedCheck = false
 		err = secrets.UpdateCluster(kcfg.Clientset, *cl)
-
 		if err != nil {
 			return err
 		}

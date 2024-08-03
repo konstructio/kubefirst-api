@@ -75,7 +75,6 @@ func ExecShellWithVars(osvars map[string]string, command string, args ...string)
 	<-doneOut
 	<-doneErr
 	return nil
-
 }
 
 // Not meant to be exported, for internal use only.

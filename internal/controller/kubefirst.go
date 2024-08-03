@@ -46,7 +46,6 @@ func ReadKubefirstAPITokenFromSecret(clientset *kubernetes.Clientset) (string, e
 // To be intiated by cluster 0
 func (clctrl *ClusterController) ExportClusterRecord() error {
 	cluster, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
-
 	if err != nil {
 		log.Error().Msgf("Error exporting cluster record: %s", err)
 		clctrl.HandleError(err.Error())
@@ -87,7 +86,6 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 	}
 
 	err = k8s.CreateSecretV2(kcfg.Clientset, secret)
-
 	if err != nil {
 		clctrl.HandleError(err.Error())
 		return fmt.Errorf("unable to save secret to management cluster. %s", err)
@@ -109,7 +107,7 @@ func (clctrl *ClusterController) CreateVirtualClusters() error {
 
 	consoleCloudUrl := fmt.Sprintf("https://kubefirst.%s", fullDomainName)
 
-	if strings.ToLower(os.Getenv("K1_LOCAL_DEBUG")) == "true" { //allow using local console running on port 3000
+	if strings.ToLower(os.Getenv("K1_LOCAL_DEBUG")) == "true" { // allow using local console running on port 3000
 		consoleCloudUrl = "http://localhost:3000"
 	}
 

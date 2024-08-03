@@ -58,7 +58,6 @@ func (conf *GoogleConfiguration) GetContainerCluster(clusterName string) (*conta
 
 // GetContainerClusterAuth
 func (conf *GoogleConfiguration) GetContainerClusterAuth(clusterName string, keyFile []byte) (*k8s.KubernetesClient, error) {
-
 	creds, err := google.CredentialsFromJSON(conf.Context, keyFile, gocontainer.CloudPlatformScope)
 	if err != nil {
 		return nil, fmt.Errorf("could not create google storage client credentials: %s", err)
@@ -90,7 +89,7 @@ func (conf *GoogleConfiguration) GetContainerClusterAuth(clusterName string, key
 		return nil, fmt.Errorf("invalid certificate cluster=%s cert=%s: %w", name, cluster.MasterAuth.ClusterCaCertificate, err)
 	}
 
-	//Rest Config
+	// Rest Config
 	config := &rest.Config{
 		Host: cluster.Endpoint,
 		TLSClientConfig: rest.TLSClientConfig{
@@ -130,7 +129,7 @@ func (conf *GoogleConfiguration) GetContainerClusterAuth(clusterName string, key
 	// 	return nil, fmt.Errorf("error building kubernetes config: %s", err)
 	// }
 
-	//Client Set
+	// Client Set
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, fmt.Errorf("error buildling kubernetes clientset: %s", err)

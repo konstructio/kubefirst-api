@@ -33,7 +33,7 @@ func (c *DigitaloceanConfiguration) TestDomainLiveness(domainName string) bool {
 	log.Info().Msgf("checking to see if record %s exists", domainName)
 	log.Info().Msgf("domainName %s", domainName)
 
-	//check for existing records
+	// check for existing records
 	records, err := c.GetDNSRecords(domainName)
 	if err != nil {
 		log.Error().Msgf("error getting digitalocean dns records for domain %s: %s", domainName, err)
@@ -46,7 +46,7 @@ func (c *DigitaloceanConfiguration) TestDomainLiveness(domainName string) bool {
 		}
 	}
 
-	//create record if it does not exist
+	// create record if it does not exist
 	_, _, err = c.Client.Domains.CreateRecord(c.Context, domainName, doRecordConfig)
 	if err != nil {
 		log.Warn().Msgf("%s", err)

@@ -54,9 +54,9 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.GitopsTemplateURL,
 				clctrl.ProviderConfig.DestinationMetaphorRepoURL,
 				clctrl.ProviderConfig.K1Dir,
-				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), //tokens created on the fly
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), // tokens created on the fly
 				clctrl.ProviderConfig.MetaphorDir,
-				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), //tokens created on the fly
+				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), // tokens created on the fly
 				true,
 				cl.GitProtocol,
 				useCloudflareOriginIssuer,
@@ -209,7 +209,6 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 
 		clctrl.Cluster.GitopsReadyCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
-
 		if err != nil {
 			return err
 		}
@@ -315,7 +314,6 @@ func (clctrl *ClusterController) RepositoryPush() error {
 
 		clctrl.Cluster.GitopsPushedCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
-
 		if err != nil {
 			return err
 		}

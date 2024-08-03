@@ -29,7 +29,9 @@ func NewEKSServiceAccountClientV1() aws.Config {
 	return awsClient
 }
 
-type AWSConfiguration = awsinternal.AWSConfiguration
-type QuotaDetailResponse = awsinternal.QuotaDetailResponse
+type (
+	AWSConfiguration    = awsinternal.AWSConfiguration
+	QuotaDetailResponse = awsinternal.QuotaDetailResponse
+)
 
 var NewAwsV2 = awsinternal.NewAwsV2

@@ -134,7 +134,7 @@ func GetKubernetesClient(clusterName string) *k8s.KubernetesClient {
 	// Get Environment variables
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
-	//Create Kubernetes Client Context
+	// Create Kubernetes Client Context
 	var inCluster bool = false
 	if env.InCluster == "true" {
 		inCluster = true

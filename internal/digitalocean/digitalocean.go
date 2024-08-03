@@ -30,10 +30,8 @@ func (c *DigitaloceanConfiguration) GetRegions() ([]string, error) {
 }
 
 func (c *DigitaloceanConfiguration) ListInstances() ([]string, error) {
-
 	DO_MAX_PER_PAGE := 200
 	instances, _, err := c.Client.Sizes.List(context.Background(), &godo.ListOptions{PerPage: DO_MAX_PER_PAGE})
-
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +46,6 @@ func (c *DigitaloceanConfiguration) ListInstances() ([]string, error) {
 
 func (c *DigitaloceanConfiguration) GetKubeconfig(clusterName string) ([]byte, error) {
 	clusters, _, err := c.Client.Kubernetes.List(context.Background(), &godo.ListOptions{})
-
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +63,6 @@ func (c *DigitaloceanConfiguration) GetKubeconfig(clusterName string) ([]byte, e
 	}
 
 	config, _, err := c.Client.Kubernetes.GetKubeConfig(context.Background(), clusterId)
-
 	if err != nil {
 		return nil, err
 	}

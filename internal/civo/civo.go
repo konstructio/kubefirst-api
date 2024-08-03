@@ -38,7 +38,7 @@ func (c *CivoConfiguration) TestDomainLiveness(domainName string, domainId strin
 	log.Info().Msgf("domainId %s", domainId)
 	log.Info().Msgf("domainName %s", domainName)
 
-	//check for existing records
+	// check for existing records
 	records, err := c.Client.ListDNSRecords(domainId)
 	if err != nil {
 		log.Warn().Msgf("%s", err)
@@ -49,7 +49,7 @@ func (c *CivoConfiguration) TestDomainLiveness(domainName string, domainId strin
 		return true
 	}
 
-	//create record if it does not exist
+	// create record if it does not exist
 	_, err = c.Client.CreateDNSRecord(domainId, civoRecordConfig)
 	if err != nil {
 		log.Warn().Msgf("%s", err)
@@ -123,7 +123,6 @@ func (c *CivoConfiguration) GetDNSInfo(domainName string, region string) (string
 	}
 
 	return civoDNSDomain.ID, nil
-
 }
 
 // GetDNSDomains lists all available DNS domains

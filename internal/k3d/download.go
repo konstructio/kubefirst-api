@@ -15,7 +15,6 @@ import (
 )
 
 func DownloadTools(clusterName string, gitProvider string, gitOwner string, toolsDir string, gitProtocol string) error {
-
 	config := GetConfig(clusterName, gitProvider, gitOwner, gitProtocol)
 
 	if _, err := os.Stat(toolsDir); os.IsNotExist(err) {
@@ -37,7 +36,7 @@ func DownloadTools(clusterName string, gitProvider string, gitOwner string, tool
 		return fmt.Errorf("error while trying to download k3d: %s", err)
 	}
 
-	err = os.Chmod(config.K3dClient, 0755)
+	err = os.Chmod(config.K3dClient, 0o755)
 	if err != nil {
 		return err
 	}
@@ -55,7 +54,7 @@ func DownloadTools(clusterName string, gitProvider string, gitOwner string, tool
 		return fmt.Errorf("error while trying to download kubectl: %s", err)
 	}
 
-	err = os.Chmod(config.KubectlClient, 0755)
+	err = os.Chmod(config.KubectlClient, 0o755)
 	if err != nil {
 		return err
 	}
@@ -74,7 +73,7 @@ func DownloadTools(clusterName string, gitProvider string, gitOwner string, tool
 	if err != nil {
 		return fmt.Errorf("error while trying to download mkcert: %s", err)
 	}
-	err = os.Chmod(config.MkCertClient, 0755)
+	err = os.Chmod(config.MkCertClient, 0o755)
 	if err != nil {
 		return err
 	}

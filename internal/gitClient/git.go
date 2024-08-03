@@ -21,7 +21,6 @@ import (
 )
 
 func Clone(gitRef, repoLocalPath, repoURL string) (*git.Repository, error) {
-
 	// kubefirst tags do not contain a `v` prefix, to use the library requires the v to be valid
 	isSemVer := semver.IsValid(gitRef)
 
@@ -46,7 +45,6 @@ func Clone(gitRef, repoLocalPath, repoURL string) (*git.Repository, error) {
 }
 
 func ClonePrivateRepo(gitRef string, repoLocalPath string, repoURL string, userName string, token string) (*git.Repository, error) {
-
 	// kubefirst tags do not contain a `v` prefix, to use the library requires the v to be valid
 	isSemVer := semver.IsValid(gitRef)
 
@@ -75,7 +73,6 @@ func ClonePrivateRepo(gitRef string, repoLocalPath string, repoURL string, userN
 }
 
 func CloneRefSetMain(gitRef, repoLocalPath, repoURL string) (*git.Repository, error) {
-
 	log.Info().Msgf("cloning url: %s - git ref: %s", repoURL, gitRef)
 
 	repo, err := Clone(gitRef, repoLocalPath, repoURL)
@@ -122,7 +119,6 @@ func SetRefToMainBranch(repo *git.Repository) (*git.Repository, error) {
 }
 
 func AddRemote(newGitRemoteURL, remoteName string, repo *git.Repository) error {
-
 	log.Info().Msgf("git remote add %s %s", remoteName, newGitRemoteURL)
 	_, err := repo.CreateRemote(&gitConfig.RemoteConfig{
 		Name: remoteName,
@@ -152,7 +148,6 @@ func Commit(repo *git.Repository, commitMsg string) error {
 			When:  time.Now(),
 		},
 	})
-
 	if err != nil {
 		log.Info().Msgf("error committing in repo: %s", err)
 		return err

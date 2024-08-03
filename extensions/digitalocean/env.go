@@ -38,7 +38,7 @@ func GetDigitaloceanTerraformEnvs(envs map[string]string, cl *pkgtypes.Cluster) 
 	envs["TF_VAR_aws_access_key_id"] = cl.StateStoreCredentials.AccessKeyID
 	envs["TF_VAR_aws_secret_access_key"] = cl.StateStoreCredentials.SecretAccessKey
 	envs["TF_VAR_aws_session_token"] = "" // allows for debugging
-	//envs["TF_LOG"] = "debug"
+	// envs["TF_LOG"] = "debug"
 
 	return envs
 }

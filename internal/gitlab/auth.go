@@ -20,16 +20,14 @@ const (
 	gitlabApiUrl = "https://gitlab.com/api/v4"
 )
 
-var (
-	requiredScopes = []string{
-		"read_api",
-		"read_user",
-		"read_repository",
-		"write_repository",
-		"read_registry",
-		"write_registry",
-	}
-)
+var requiredScopes = []string{
+	"read_api",
+	"read_user",
+	"read_repository",
+	"write_repository",
+	"read_registry",
+	"write_registry",
+}
 
 // VerifyTokenPermissions compares scope of the provided token to the required
 // scopes for kubefirst functionality

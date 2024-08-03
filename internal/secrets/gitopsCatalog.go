@@ -36,7 +36,6 @@ func CreateGitopsCatalogApps(clientSet *kubernetes.Clientset, catalogApps types.
 	}
 
 	err := k8s.CreateSecretV2(clientSet, secretToCreate)
-
 	if err != nil {
 		return fmt.Errorf("error creating gitops catalog secret: %s", err)
 	}
@@ -106,7 +105,6 @@ func UpdateGitopsCatalogApps(clientSet *kubernetes.Clientset) error {
 		secretValuesMap, _ := ParseJSONToMap(string(bytes))
 
 		err = k8s.UpdateSecretV2(clientSet, "kubefirst", KUBEFIRST_CATALOG_SECRET_NAME, secretValuesMap)
-
 		if err != nil {
 			return fmt.Errorf("error creating kubernetes secret: %s", err)
 		}

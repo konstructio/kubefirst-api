@@ -11,7 +11,6 @@ import (
 
 // Currently only needs to support google
 func ListZonesForRegion(c *gin.Context) {
-
 	var zonesListRequest types.ZonesListRequest
 	err := c.Bind(&zonesListRequest)
 	if err != nil {

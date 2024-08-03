@@ -58,5 +58,4 @@ func (conf *AWSConfiguration) GetServiceQuotas(services []string) (map[string][]
 	}
 
 	return returnQuotas, nil
-
 }

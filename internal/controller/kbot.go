@@ -34,7 +34,6 @@ func (clctrl *ClusterController) InitializeBot() error {
 		clctrl.Cluster.KbotSetupCheck = true
 
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
-
 		if err != nil {
 			return err
 		}

@@ -58,7 +58,7 @@ func ClusterCreate(clusterName string, k1Dir string, k3dClient string, kubeconfi
 		return err
 	}
 
-	err = os.WriteFile(kubeconfig, []byte(kConfigString), 0644)
+	err = os.WriteFile(kubeconfig, []byte(kConfigString), 0o644)
 	if err != nil {
 		log.Error().Err(err).Msg("error updating config")
 		return fmt.Errorf("error updating config")
@@ -94,7 +94,7 @@ func ClusterCreateConsoleAPI(clusterName string, k1Dir string, k3dClient string,
 		return err
 	}
 
-	err = os.WriteFile(kubeconfig, []byte(kConfigString), 0644)
+	err = os.WriteFile(kubeconfig, []byte(kConfigString), 0o644)
 	if err != nil {
 		log.Error().Err(err).Msg("error updating config")
 		return fmt.Errorf("error updating config")
@@ -120,7 +120,6 @@ func PrepareGitRepositories(
 	gitProtocol string,
 	removeAtlantis bool,
 ) error {
-
 	//* clone the gitops-template repo
 	gitopsRepo, err := gitClient.CloneRefSetMain(gitopsTemplateBranch, gitopsDir, gitopsTemplateURL)
 	if err != nil {
@@ -184,12 +183,11 @@ func PrepareGitRepositories(
 }
 
 func PostRunPrepareGitopsRepository(clusterName string,
-	//destinationGitopsRepoGitURL string,
+	// destinationGitopsRepoGitURL string,
 	gitopsDir string,
-	//gitopsRepo *git.Repository,
+	// gitopsRepo *git.Repository,
 	tokens *GitopsDirectoryValues,
 ) error {
-
 	err := postRunDetokenizeGitGitops(gitopsDir, tokens)
 	if err != nil {
 		return err

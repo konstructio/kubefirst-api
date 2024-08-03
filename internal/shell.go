@@ -62,7 +62,6 @@ func ExecShellReturnStringsV2(command string, args ...string) (string, error) {
 //   - On-the-fly logging of result
 //   - Map of Vars loaded
 func ExecShellWithVars(osvars map[string]string, command string, args ...string) error {
-
 	log.Debug().Msgf("Debug: Running %s", command)
 	for k, v := range osvars {
 		os.Setenv(k, v)
@@ -116,7 +115,6 @@ func ExecShellWithVars(osvars map[string]string, command string, args ...string)
 	<-doneOut
 	<-doneErr
 	return nil
-
 }
 
 // Not meant to be exported, for internal use only.

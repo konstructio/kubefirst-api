@@ -51,7 +51,6 @@ func DeleteSecretReference(clientSet *kubernetes.Clientset, secretName string, v
 	}
 
 	err := UpdateSecretReference(clientSet, secretName, filteredReferenceList)
-
 	if err != nil {
 		return err
 	}
@@ -65,7 +64,6 @@ func UpdateSecretReference(clientSet *kubernetes.Clientset, secretName string, s
 	secretValuesMap, _ := ParseJSONToMap(string(bytes))
 
 	err := k8s.UpdateSecretV2(clientSet, "kubefirst", secretName, secretValuesMap)
-
 	if err != nil {
 		return fmt.Errorf("error updating secret reference: %s", err)
 	}
@@ -86,7 +84,6 @@ func CreateSecretReference(clientSet *kubernetes.Clientset, secretName string, s
 	}
 
 	err := k8s.CreateSecretV2(clientSet, secretToCreate)
-
 	if err != nil {
 		return fmt.Errorf("error creating secret reference: %s", err)
 	}
@@ -99,7 +96,6 @@ func AddSecretReferenceItem(clientSet *kubernetes.Clientset, secretName string, 
 	secretReference.List = append(secretReference.List, valueToAdd)
 
 	err := UpdateSecretReference(clientSet, secretName, secretReference)
-
 	if err != nil {
 		return err
 	}

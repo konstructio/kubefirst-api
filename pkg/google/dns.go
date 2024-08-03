@@ -130,13 +130,11 @@ func (conf *GoogleConfiguration) GetDNSDomains() ([]string, error) {
 	}
 
 	dnsService, err := googleDNS.NewService(conf.Context, option.WithCredentials(creds))
-
 	if err != nil {
 		return zoneNames, err
 	}
 
 	zones, err := dnsService.ManagedZones.List(conf.Project).Do()
-
 	if err != nil {
 		return zoneNames, err
 	}

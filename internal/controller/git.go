@@ -132,7 +132,6 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 
 		clctrl.Cluster.GitTerraformApplyCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
-
 		if err != nil {
 			return err
 		}

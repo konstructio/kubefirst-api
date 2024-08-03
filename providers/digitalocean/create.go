@@ -29,7 +29,6 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 
 	ctrl.Cluster.InProgress = true
 	err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
-
 	if err != nil {
 		return err
 	}

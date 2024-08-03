@@ -39,7 +39,7 @@ func GetAwsTerraformEnvs(envs map[string]string, cl *pkgtypes.Cluster) map[strin
 	envs["TF_VAR_aws_session_token"] = cl.AWSAuth.SessionToken
 	envs["TF_VAR_aws_region"] = cl.CloudRegion
 	envs["TF_VAR_hosted_zone_name"] = cl.DomainName
-	//envs["TF_LOG"] = "debug"
+	// envs["TF_LOG"] = "debug"
 
 	return envs
 }

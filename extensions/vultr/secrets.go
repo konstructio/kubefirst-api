@@ -19,7 +19,6 @@ import (
 )
 
 func BootstrapVultrMgmtCluster(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster, destinationGitopsRepoURL string) error {
-
 	err := providerConfig.BootstrapMgmtCluster(
 		clientset,
 		cl.GitProvider,

@@ -79,7 +79,7 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 
 			// Before removing Terraform resources, remove any container registry repositories
 			// since failing to remove them beforehand will result in an apply failure
-			var projectsForDeletion = []string{"gitops", "metaphor"}
+			projectsForDeletion := []string{"gitops", "metaphor"}
 			for _, project := range projectsForDeletion {
 				projectExists, err := gitlabClient.CheckProjectExists(project)
 				if err != nil {
@@ -150,7 +150,7 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 		time.Sleep(time.Second * 20)
 	}
 
-	//GetKubernetesAssociatedBlockStorage
+	// GetKubernetesAssociatedBlockStorage
 	vultrConf := vultr.VultrConfiguration{
 		Client:  vultr.NewVultr(cl.VultrAuth.Token),
 		Context: context.Background(),

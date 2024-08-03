@@ -14,7 +14,6 @@ import (
 )
 
 func (conf *AWSConfiguration) GetCallerIdentity() (*sts.GetCallerIdentityOutput, error) {
-
 	stsClient := sts.NewFromConfig(conf.Config)
 	iamCaller, err := stsClient.GetCallerIdentity(
 		context.Background(),

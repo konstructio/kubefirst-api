@@ -19,7 +19,6 @@ import (
 
 // detokenizeGitGitops - Translate tokens by values on a given path
 func detokenizeGitGitops(path string, tokens *GitopsDirectoryValues, gitProtocol string) error {
-
 	err := filepath.Walk(path, detokenizeGitops(path, tokens, gitProtocol))
 	if err != nil {
 		return err
@@ -101,7 +100,6 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 
 // postRunDetokenizeGitGitops - Translate tokens by values on a given path
 func postRunDetokenizeGitGitops(path string, tokens *GitopsDirectoryValues) error {
-
 	err := filepath.Walk(path, postRunDetokenizeGitops(path, tokens))
 	if err != nil {
 		return err
@@ -131,7 +129,7 @@ func postRunDetokenizeGitops(path string, tokens *GitopsDirectoryValues) filepat
 					return err
 				}
 
-				//change Minio post cluster launch to cluster svc address
+				// change Minio post cluster launch to cluster svc address
 				newContents := string(read)
 				newContents = strings.Replace(newContents, fmt.Sprintf("https://minio.%s", DomainName), "http://minio.minio.svc.cluster.local:9000", -1)
 				err = ioutil.WriteFile(path, []byte(newContents), 0)
@@ -146,7 +144,6 @@ func postRunDetokenizeGitops(path string, tokens *GitopsDirectoryValues) filepat
 
 // detokenizeGitMetaphor - Translate tokens by values on a given path
 func detokenizeGitMetaphor(path string, tokens *MetaphorTokenValues) error {
-
 	err := filepath.Walk(path, detokenize(path, tokens))
 	if err != nil {
 		return err

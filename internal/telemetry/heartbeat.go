@@ -11,7 +11,6 @@ import (
 )
 
 func Heartbeat(event telemetry.TelemetryEvent) {
-
 	telemetry.SendEvent(event, telemetry.KubefirstHeartbeat, "")
 	HeartbeatWorkloadClusters(event)
 

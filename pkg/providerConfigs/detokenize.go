@@ -181,7 +181,7 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				newContents = strings.Replace(newContents, "<CLUSTER_DESTINATION>", tokens.ClusterDestination, -1)
 				newContents = strings.Replace(newContents, "<ENVIRONMENT>", tokens.Environment, -1)
 
-				//origin issuer defines which annotations should be on ingresses
+				// origin issuer defines which annotations should be on ingresses
 				if useCloudflareOriginIssuer {
 					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_1>", "cert-manager.io/issuer: cloudflare-origin-issuer", -1)
 					newContents = strings.Replace(newContents, "<CERT_MANAGER_ISSUER_ANNOTATION_2>", "cert-manager.io/issuer-kind: OriginIssuer", -1)

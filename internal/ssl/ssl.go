@@ -13,8 +13,8 @@ import (
 	"os"
 	"strings"
 
-	//cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
-	//cm "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
+	// cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	// cm "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
 	"github.com/rs/zerolog/log"
 
 	pkg "github.com/kubefirst/kubefirst-api/internal"
@@ -25,7 +25,6 @@ import (
 )
 
 func Restore(backupDir, domainName, kubeconfigPath string) error {
-
 	sslSecretFiles, err := ioutil.ReadDir(backupDir + "/secrets")
 	if err != nil {
 		return err
@@ -65,7 +64,6 @@ func Restore(backupDir, domainName, kubeconfigPath string) error {
 }
 
 func Backup(backupDir, domainName, k1Dir, kubeconfigPath string) error {
-
 	clientset, err := k8s.GetClientSet(kubeconfigPath)
 	if err != nil {
 		return err

@@ -71,7 +71,6 @@ type TLSConfig struct {
 
 // Sync request ArgoCD to manual sync an application.
 func DeleteApplication(httpClient pkg.HTTPDoer, applicationName, argoCDToken, cascade string) (httpCodeResponse int, syncStatus string, Error error) {
-
 	params := url.Values{}
 	params.Add("cascade", cascade)
 	paramBody := strings.NewReader(params.Encode())
@@ -114,7 +113,6 @@ func DeleteApplication(httpClient pkg.HTTPDoer, applicationName, argoCDToken, ca
 // application data Application struct. This can be used when a resource needs to be updated, we firstly collect all
 // Application data, update what is necessary and then request the PUT function to update the resource.
 func GetArgoCDApplication(token string, applicationName string) (argocdModel.V1alpha1Application, error) {
-
 	// todo: instantiate a new client on every http request isn't a good idea, we might want to work with methods and
 	//       provide resources via structs.
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()

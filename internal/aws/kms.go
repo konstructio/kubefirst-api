@@ -14,7 +14,6 @@ import (
 )
 
 func (conf *AWSConfiguration) GetKmsKeyID(keyAlias string) (string, error) {
-
 	var kmsKeyId string
 	kmsClient := kms.NewFromConfig(conf.Config)
 

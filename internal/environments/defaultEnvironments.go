@@ -54,8 +54,8 @@ func CreateDefaultClusters(mgmtCluster types.Cluster) error {
 		},
 		GitAuth:      mgmtCluster.GitAuth,
 		InstanceSize: "", // left up to terraform
-		NodeType:     "", //left up to terraform
-		NodeCount:    3,  //defaulted here
+		NodeType:     "", // left up to terraform
+		NodeCount:    3,  // defaulted here
 	}
 
 	defaultClusters := []types.WorkloadCluster{}
@@ -116,7 +116,6 @@ func CreateDefaultClusters(mgmtCluster types.Cluster) error {
 			Links:       []string{fmt.Sprintf("https://metaphor-%s.%s", clusterName, fullDomainName)},
 			Status:      "",
 		})
-
 		if err != nil {
 			return err
 		}
@@ -142,7 +141,6 @@ func callApiEE(goPayload types.WorkloadClusterSet) error {
 		}
 
 		req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/v1/cluster/%s", env.EnterpriseApiUrl, env.ClusterId), bytes.NewReader(payload))
-
 		if err != nil {
 			log.Error().Msgf("error creating http request %s", err)
 			return err

@@ -30,8 +30,10 @@ type progressPrinter struct {
 	pw       progress.Writer
 }
 
-var instance *progressPrinter
-var once sync.Once
+var (
+	instance *progressPrinter
+	once     sync.Once
+)
 
 // GetInstance  Function used to initialize the component once in the execution.
 // Usually called from the `cmd`  `init` func or as early as possible on the execution.
@@ -47,7 +49,6 @@ func GetInstance() *progressPrinter {
 		instance.Trackers = make(map[string]*ActionTracker)
 		// instantiate a Progress Writer and set up the options
 		instance.pw = progress.NewWriter()
-
 	})
 	return instance
 }

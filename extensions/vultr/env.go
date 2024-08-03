@@ -37,7 +37,7 @@ func GetVultrTerraformEnvs(envs map[string]string, cl *pkgtypes.Cluster) map[str
 	envs["TF_VAR_aws_secret_access_key"] = cl.StateStoreCredentials.SecretAccessKey
 	envs["AWS_SESSION_TOKEN"] = ""        // allows for debugging
 	envs["TF_VAR_aws_session_token"] = "" // allows for debugging
-	//envs["TF_LOG"] = "debug"
+	// envs["TF_LOG"] = "debug"
 
 	return envs
 }

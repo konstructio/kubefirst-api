@@ -9,7 +9,6 @@ import (
 
 // CreateObjectStorageBucketAndKeys creates object store and access credentials
 func (c *AkamaiConfiguration) CreateObjectStorageBucketAndKeys(clusterName string) (AkamaiBucketAndKeysConfiguration, error) {
-
 	// todo get rid of hardcode default
 	DEFAULT_CLUSTER := "us-east-1"
 	bucket, err := c.Client.CreateObjectStorageBucket(context.TODO(), linodego.ObjectStorageBucketCreateOptions{

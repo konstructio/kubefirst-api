@@ -79,7 +79,7 @@ func DeleteDigitaloceanCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Te
 
 			// Before removing Terraform resources, remove any container registry repositories
 			// since failing to remove them beforehand will result in an apply failure
-			var projectsForDeletion = []string{"gitops", "metaphor"}
+			projectsForDeletion := []string{"gitops", "metaphor"}
 			for _, project := range projectsForDeletion {
 				projectExists, err := gitlabClient.CheckProjectExists(project)
 				if err != nil {
@@ -121,7 +121,6 @@ func DeleteDigitaloceanCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Te
 
 			cl.GitTerraformApplyCheck = false
 			err = secrets.UpdateCluster(kcfg.Clientset, *cl)
-
 			if err != nil {
 				return err
 			}
@@ -250,7 +249,6 @@ func DeleteDigitaloceanCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Te
 		cl.CloudTerraformApplyCheck = false
 		cl.CloudTerraformApplyFailedCheck = false
 		err = secrets.UpdateCluster(kcfg.Clientset, *cl)
-
 		if err != nil {
 			return err
 		}

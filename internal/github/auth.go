@@ -20,18 +20,16 @@ const (
 	githubApiUrl = "https://api.github.com"
 )
 
-var (
-	requiredScopes = []string{
-		"admin:org",
-		"admin:public_key",
-		"admin:repo_hook",
-		"delete_repo",
-		"repo",
-		"user",
-		"workflow",
-		"write:packages",
-	}
-)
+var requiredScopes = []string{
+	"admin:org",
+	"admin:public_key",
+	"admin:repo_hook",
+	"delete_repo",
+	"repo",
+	"user",
+	"workflow",
+	"write:packages",
+}
 
 // VerifyTokenPermissions compares scope of the provided token to the required
 // scopes for kubefirst functionality

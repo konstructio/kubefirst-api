@@ -172,5 +172,4 @@ func printAuthData(messageHeader string, params map[string]string) string {
 	}
 
 	return createAuthData.String()
-
 }

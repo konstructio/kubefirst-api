@@ -37,7 +37,6 @@ func New(token string) GithubSession {
 	gSession.oauthClient = oauth2.NewClient(gSession.context, gSession.staticToken)
 	gSession.gitClient = github.NewClient(gSession.oauthClient)
 	return gSession
-
 }
 
 func (g GithubSession) CreateWebhookRepo(org, repo, hookName, hookURL, hookSecret string, hookEvents []string) error {
@@ -53,7 +52,6 @@ func (g GithubSession) CreateWebhookRepo(org, repo, hookName, hookURL, hookSecre
 	}
 
 	hook, _, err := g.gitClient.Repositories.CreateHook(g.context, org, repo, input)
-
 	if err != nil {
 		return fmt.Errorf("error when creating a webhook: %v", err)
 	}
@@ -70,10 +68,12 @@ func (g GithubSession) CreatePrivateRepo(org string, name string, description st
 	}
 	isPrivate := true
 	autoInit := true
-	r := &github.Repository{Name: &name,
+	r := &github.Repository{
+		Name:        &name,
 		Private:     &isPrivate,
 		Description: &description,
-		AutoInit:    &autoInit}
+		AutoInit:    &autoInit,
+	}
 	repo, _, err := g.gitClient.Repositories.Create(g.context, org, r)
 	if err != nil {
 		return fmt.Errorf("error creating private repo: %s - %s", name, err)
@@ -149,7 +149,6 @@ func (g GithubSession) RemoveSSHKey(keyId int64) error {
 
 // RemoveSSHKeyByPublicKey deletes a GitHub key that matches the provided public key.
 func (g GithubSession) RemoveSSHKeyByPublicKey(user string, publicKey string) error {
-
 	keys, resp, err := g.gitClient.Users.ListKeys(g.context, user, &github.ListOptions{})
 	if err != nil {
 		return err
@@ -159,7 +158,6 @@ func (g GithubSession) RemoveSSHKeyByPublicKey(user string, publicKey string) er
 	}
 
 	for _, key := range keys {
-
 		// as https://pkg.go.dev/golang.org/x/crypto/ssh@v0.0.0-20220722155217-630584e8d5aa#MarshalAuthorizedKey
 		// documentation describes, the Marshall ssh key function adds extra new line at the end of the key id
 		if key.GetKey()+"\n" == publicKey {
@@ -189,8 +187,8 @@ func (g GithubSession) CreatePR(
 	gitHubUser string,
 	baseBranch string,
 	title string,
-	body string) (*github.PullRequest, error) {
-
+	body string,
+) (*github.PullRequest, error) {
 	head := branchName
 	prData := github.NewPullRequest{
 		Title: &title,
@@ -215,7 +213,6 @@ func (g GithubSession) CreatePR(
 }
 
 func (g GithubSession) CommentPR(pullRequesrt *github.PullRequest, gitHubUser string, body string) error {
-
 	issueComment := github.IssueComment{
 		Body: &body,
 	}
@@ -233,15 +230,14 @@ func (g GithubSession) CommentPR(pullRequesrt *github.PullRequest, gitHubUser st
 	log.Printf("pull request comment response http code: %d", resp.StatusCode)
 
 	return nil
-
 }
 
 // SearchWordInPullRequestComment look for a specific sentence in a GitHub Pull Request comment
 func (g GithubSession) SearchWordInPullRequestComment(gitHubUser string,
 	gitOpsRepo string,
 	pullRequest *github.PullRequest,
-	searchFor string) (bool, error) {
-
+	searchFor string,
+) (bool, error) {
 	comments, r, err := g.gitClient.Issues.ListComments(
 		context.Background(),
 		gitHubUser,
@@ -273,7 +269,6 @@ func (g GithubSession) RetrySearchPullRequestComment(
 	searchFor string,
 	logMessage string,
 ) (bool, error) {
-
 	for i := 0; i < 30; i++ {
 		ok, err := g.SearchWordInPullRequestComment(gitHubUser, gitOpsRepo, pullRequest, searchFor)
 		if err != nil || !ok {

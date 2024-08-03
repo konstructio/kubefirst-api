@@ -21,7 +21,6 @@ import (
 )
 
 func AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsRepoDir, gitProvider, k1Dir string, removeAtlantis bool, installKubefirstPro bool) error {
-
 	//* clean up all other platforms
 	for _, platform := range pkg.SupportedPlatforms {
 		if platform != fmt.Sprintf("%s-%s", CloudProvider, gitProvider) {
@@ -37,9 +36,8 @@ func AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsRepoDir, gi
 			} else if strings.Index(src, "/.terraform") > 0 {
 				return true, nil
 			}
-			//Add more stuff to be ignored here
+			// Add more stuff to be ignored here
 			return false, nil
-
 		},
 	}
 
@@ -94,10 +92,9 @@ func AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsRepoDir, gi
 }
 
 func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvider, k1Dir string) error {
-
 	//* create ~/.k1/metaphor
 	metaphorDir := fmt.Sprintf("%s/metaphor", k1Dir)
-	os.Mkdir(metaphorDir, 0700)
+	os.Mkdir(metaphorDir, 0o700)
 
 	//* git init
 	metaphorRepo, err := git.PlainInit(metaphorDir, false)
@@ -113,9 +110,8 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 			} else if strings.Index(src, "/.terraform") > 0 {
 				return true, nil
 			}
-			//Add more stuff to be ignored here
+			// Add more stuff to be ignored here
 			return false, nil
-
 		},
 	}
 
@@ -160,7 +156,7 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 
 	//* copy $HOME/.k1/gitops/metaphor/Dockerfile $HOME/.k1/metaphor/build/Dockerfile
 	dockerfileContent := fmt.Sprintf("%s/Dockerfile", metaphorDir)
-	os.Mkdir(metaphorDir+"/build", 0700)
+	os.Mkdir(metaphorDir+"/build", 0o700)
 	log.Info().Msgf("copying dockerfile content: %s", argoWorkflowsFolderContent)
 	err = cp.Copy(dockerfileContent, fmt.Sprintf("%s/build/Dockerfile", metaphorDir), opt)
 	if err != nil {
