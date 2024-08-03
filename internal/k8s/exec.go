@@ -45,7 +45,7 @@ func ReadConfigMapV2(kubeConfigPath string, namespace string, configMapName stri
 	}
 	configMap, err := clientset.CoreV1().ConfigMaps(namespace).Get(context.Background(), configMapName, metav1.GetOptions{})
 	if err != nil {
-		return map[string]string{}, fmt.Errorf("error getting ConfigMap: %s", err)
+		return map[string]string{}, fmt.Errorf("error getting ConfigMap: %w", err)
 	}
 
 	parsedSecretData := make(map[string]string)
@@ -437,7 +437,7 @@ func WaitForStatefulSetReady(clientset *kubernetes.Clientset, statefulset *appsv
 
 					// Determine when the Pods are running
 					for _, pod := range pods.Items {
-						err := watchForStatefulSetPodReady(clientset, statefulset.Namespace, statefulset.Name, pod.Name, timeoutSeconds)
+						err := watchForStatefulSetPodReady(clientset, statefulset.Namespace, pod.Name, timeoutSeconds)
 						if err != nil {
 							log.Error().Msgf(err.Error())
 							return false, err
@@ -447,14 +447,10 @@ func WaitForStatefulSetReady(clientset *kubernetes.Clientset, statefulset *appsv
 					objWatch.Stop()
 					return true, nil
 				}
-			} else {
-				// Under normal circumstances, once all Pods are ready
-				// return success
-				if event.Object.(*appsv1.StatefulSet).Status.AvailableReplicas == configuredReplicas {
-					log.Info().Msgf("All Pods in StatefulSet %s are ready.", statefulset.Name)
-					objWatch.Stop()
-					return true, nil
-				}
+			} else if event.Object.(*appsv1.StatefulSet).Status.AvailableReplicas == configuredReplicas {
+				log.Info().Msgf("All Pods in StatefulSet %s are ready.", statefulset.Name)
+				objWatch.Stop()
+				return true, nil
 			}
 		case <-time.After(time.Duration(timeoutSeconds) * time.Second):
 			log.Error().Msg("the StatefulSet was not ready within the timeout period")
@@ -466,7 +462,7 @@ func WaitForStatefulSetReady(clientset *kubernetes.Clientset, statefulset *appsv
 // watchForStatefulSetPodReady inspects a Pod associated with a StatefulSet and
 // uses a channel to determine when it's ready
 // The channel will timeout if the Pod isn't ready by timeoutSeconds
-func watchForStatefulSetPodReady(clientset *kubernetes.Clientset, namespace string, statefulSetName string, podName string, timeoutSeconds int) error {
+func watchForStatefulSetPodReady(clientset *kubernetes.Clientset, namespace string, podName string, timeoutSeconds int) error {
 	podObjWatch, err := clientset.CoreV1().Pods(namespace).Watch(context.Background(), metav1.ListOptions{
 		FieldSelector: fmt.Sprintf(
 			"metadata.name=%s", podName),

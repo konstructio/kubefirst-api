@@ -153,7 +153,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			}, clctrl.KubefirstStateStoreBucketName)
 			if err != nil {
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCredentialsCreateFailed, err.Error())
-				return fmt.Errorf("error creating vultr state storage bucket: %s", err)
+				return fmt.Errorf("error creating vultr state storage bucket: %w", err)
 			}
 
 			stateStoreData = pkgtypes.StateStoreCredentials{

@@ -90,7 +90,7 @@ func CloneRefSetMain(gitRef, repoLocalPath, repoURL string) (*git.Repository, er
 		// remove old git ref
 		err = repo.Storer.RemoveReference(plumbing.NewBranchReferenceName(gitRef))
 		if err != nil {
-			return nil, fmt.Errorf("error removing previous git ref: %s", err)
+			return nil, fmt.Errorf("error removing previous git ref: %w", err)
 		}
 	}
 	return repo, nil
@@ -102,18 +102,18 @@ func SetRefToMainBranch(repo *git.Repository) (*git.Repository, error) {
 	branchName := plumbing.NewBranchReferenceName("main")
 	headRef, err := repo.Head()
 	if err != nil {
-		return nil, fmt.Errorf("error Setting reference: %s", err)
+		return nil, fmt.Errorf("error Setting reference: %w", err)
 	}
 
 	ref := plumbing.NewHashReference(branchName, headRef.Hash())
 	err = repo.Storer.SetReference(ref)
 	if err != nil {
-		return nil, fmt.Errorf("error Storing reference: %s", err)
+		return nil, fmt.Errorf("error Storing reference: %w", err)
 	}
 
 	err = w.Checkout(&git.CheckoutOptions{Branch: ref.Name()})
 	if err != nil {
-		return nil, fmt.Errorf("error checking out main: %s", err)
+		return nil, fmt.Errorf("error checking out main: %w", err)
 	}
 	return repo, nil
 }
@@ -164,7 +164,7 @@ func Pull(repo *git.Repository, remote string, branch string) error {
 		ReferenceName: branchName,
 	})
 	if err != nil {
-		return fmt.Errorf("error during git pull: %s", err)
+		return fmt.Errorf("error during git pull: %w", err)
 	}
 
 	return nil

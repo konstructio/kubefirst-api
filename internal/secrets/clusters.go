@@ -46,18 +46,18 @@ func GetCluster(clientSet *kubernetes.Clientset, clusterName string) (pkgtypes.C
 
 	clusterSecret, err := k8s.ReadSecretV2Old(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_CLUSTER_PREFIX, clusterName))
 	if err != nil {
-		return cluster, fmt.Errorf("secret not found: %s", err)
+		return cluster, fmt.Errorf("secret not found: %w", err)
 	}
 	jsonString, _ := MapToStructuredJSON(clusterSecret)
 
 	jsonData, err := json.Marshal(jsonString)
 	if err != nil {
-		return cluster, fmt.Errorf("error marshalling json: %s", err)
+		return cluster, fmt.Errorf("error marshalling json: %w", err)
 	}
 
 	err = json.Unmarshal([]byte(jsonData), &cluster)
 	if err != nil {
-		return cluster, fmt.Errorf("unable to cast cluster: %s", err)
+		return cluster, fmt.Errorf("unable to cast cluster: %w", err)
 	}
 
 	return cluster, nil
@@ -107,7 +107,7 @@ func InsertCluster(clientSet *kubernetes.Clientset, cl pkgtypes.Cluster) error {
 
 	err = k8s.CreateSecretV2(clientSet, secretToCreate)
 	if err != nil {
-		return fmt.Errorf("error creating kubernetes secret: %s", err)
+		return fmt.Errorf("error creating kubernetes secret: %w", err)
 	}
 
 	return nil
@@ -120,7 +120,7 @@ func UpdateCluster(clientSet *kubernetes.Clientset, cluster pkgtypes.Cluster) er
 
 	err := k8s.UpdateSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_CLUSTER_PREFIX, cluster.ClusterName), secretValuesMap)
 	if err != nil {
-		return fmt.Errorf("error updating kubernetes secret: %s", err)
+		return fmt.Errorf("error updating kubernetes secret: %w", err)
 	}
 
 	return nil

@@ -26,7 +26,6 @@ import (
 	"github.com/kubefirst/kubefirst-api/pkg/handlers"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	"github.com/kubefirst/kubefirst-api/pkg/types"
-	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"k8s.io/client-go/kubernetes"
 
@@ -47,21 +46,21 @@ type ClusterController struct {
 	AlertsEmail               string
 
 	// auth
-	AkamaiAuth             pkgtypes.AkamaiAuth
-	AWSAuth                pkgtypes.AWSAuth
-	CivoAuth               pkgtypes.CivoAuth
-	DigitaloceanAuth       pkgtypes.DigitaloceanAuth
-	VultrAuth              pkgtypes.VultrAuth
-	CloudflareAuth         pkgtypes.CloudflareAuth
-	GitAuth                pkgtypes.GitAuth
-	VaultAuth              pkgtypes.VaultAuth
-	GoogleAuth             pkgtypes.GoogleAuth
-	K3sAuth                pkgtypes.K3sAuth
+	AkamaiAuth             types.AkamaiAuth
+	AWSAuth                types.AWSAuth
+	CivoAuth               types.CivoAuth
+	DigitaloceanAuth       types.DigitaloceanAuth
+	VultrAuth              types.VultrAuth
+	CloudflareAuth         types.CloudflareAuth
+	GitAuth                types.GitAuth
+	VaultAuth              types.VaultAuth
+	GoogleAuth             types.GoogleAuth
+	K3sAuth                types.K3sAuth
 	AwsAccessKeyID         string
 	AwsSecretAccessKey     string
 	NodeType               string
 	NodeCount              int
-	PostInstallCatalogApps []pkgtypes.GitopsCatalogApp
+	PostInstallCatalogApps []types.GitopsCatalogApp
 	InstallKubefirstPro    bool
 
 	// configs
@@ -115,7 +114,7 @@ type ClusterController struct {
 }
 
 // InitController
-func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition) error {
+func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) error {
 	// Create k1 dir if it doesn't exist
 	utils.CreateK1Directory(def.ClusterName)
 
@@ -302,7 +301,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	}
 
 	// Write cluster record if it doesn't exist
-	clctrl.Cluster = pkgtypes.Cluster{
+	clctrl.Cluster = types.Cluster{
 		ID:                     primitive.NewObjectID(),
 		CreationTimestamp:      fmt.Sprintf("%v", primitive.NewDateTimeFromTime(time.Now().UTC())),
 		Status:                 constants.ClusterStatusProvisioning,
@@ -361,7 +360,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 }
 
 // GetCurrentClusterRecord will return an active cluster's record if it exists
-func (clctrl *ClusterController) SetGitTokens(def pkgtypes.ClusterDefinition) error {
+func (clctrl *ClusterController) SetGitTokens(def types.ClusterDefinition) error {
 	switch def.GitProvider {
 	case "github":
 		gitHubService := services.NewGitHubService(clctrl.HttpClient)
@@ -408,10 +407,10 @@ func (clctrl *ClusterController) SetGitTokens(def pkgtypes.ClusterDefinition) er
 }
 
 // GetCurrentClusterRecord will return an active cluster's record if it exists
-func (clctrl *ClusterController) GetCurrentClusterRecord() (pkgtypes.Cluster, error) {
+func (clctrl *ClusterController) GetCurrentClusterRecord() (types.Cluster, error) {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return pkgtypes.Cluster{}, err
+		return types.Cluster{}, err
 	}
 
 	return cl, nil

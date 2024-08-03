@@ -151,7 +151,7 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEv
 				}
 
 				log.Info().Msg("opening argocd port forward")
-				//* ArgoCD port-forward
+				// * ArgoCD port-forward
 				argoCDStopChannel := make(chan struct{}, 1)
 				defer func() {
 					close(argoCDStopChannel)
@@ -216,7 +216,7 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEv
 		case "gitlab":
 			gid, err := strconv.Atoi(fmt.Sprint(cl.GitlabOwnerGroupID))
 			if err != nil {
-				return fmt.Errorf("couldn't convert gitlab group id to int: %s", err)
+				return fmt.Errorf("couldn't convert gitlab group id to int: %w", err)
 			}
 			tfEnvs = awsext.GetGitlabTerraformEnvs(tfEnvs, gid, cl)
 		}

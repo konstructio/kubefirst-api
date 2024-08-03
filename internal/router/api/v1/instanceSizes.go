@@ -91,11 +91,6 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 			}
 		}
 
-		if err != nil {
-			fmt.Println("Error describing instance offerings:", err)
-			return
-		}
-
 		instanceSizes, err := awsConf.ListInstanceSizesForRegion()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{

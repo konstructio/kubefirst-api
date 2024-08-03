@@ -149,10 +149,10 @@ func createDirIfDontExist(toolsDirPath string) error {
 	return nil
 }
 
-func DownloadTarGz(binaryPath string, tarAddress string, targzPath string, URL string) error {
-	log.Info().Msgf("Downloading tar.gz from %s", URL)
+func DownloadTarGz(binaryPath string, tarAddress string, targzPath string, address string) error {
+	log.Info().Msgf("Downloading tar.gz from %s", address)
 
-	err := DownloadFile(targzPath, URL)
+	err := DownloadFile(targzPath, address)
 	if err != nil {
 		return err
 	}
@@ -175,10 +175,10 @@ func DownloadTarGz(binaryPath string, tarAddress string, targzPath string, URL s
 	return nil
 }
 
-func DownloadZip(toolsDir string, URL string, zipPath string) error {
+func DownloadZip(toolsDir string, address string, zipPath string) error {
 	log.Info().Msgf("Downloading zip from %s", "URL")
 
-	err := DownloadFile(zipPath, URL)
+	err := DownloadFile(zipPath, address)
 	if err != nil {
 		return err
 	}

@@ -70,16 +70,12 @@ func (gh *GitHubClient) ReadGitopsCatalogRepoDirectory(path string) ([]*github.R
 // ReadGitopsCatalogIndex reads the gitops catalog repository index
 func (gh *GitHubClient) ReadGitopsCatalogIndex(contents []*github.RepositoryContent) ([]byte, error) {
 	for _, content := range contents {
-		switch *content.Type {
-		case "file":
-			switch *content.Name {
-			case "index.yaml":
-				b, err := gh.readFileContents(content)
-				if err != nil {
-					return b, err
-				}
-				return b, nil
+		if *content.Type == "file" && *content.Name == "index.yaml" {
+			b, err := gh.readFileContents(content)
+			if err != nil {
+				return b, err
 			}
+			return b, nil
 		}
 	}
 

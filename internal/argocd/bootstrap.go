@@ -33,7 +33,7 @@ func ApplyArgoCDKustomize(clientset *kubernetes.Clientset, argoCDInstallPath str
 		_, err = clientset.CoreV1().Namespaces().Create(context.Background(), nsObj, metav1.CreateOptions{})
 		if err != nil {
 			log.Error().Msgf("error creating namespace: %s", err)
-			return fmt.Errorf("error creating namespace: %s", err)
+			return fmt.Errorf("error creating namespace: %w", err)
 		}
 		log.Info().Msgf("namespace created: %s", namespace)
 	} else {
@@ -54,7 +54,7 @@ func ApplyArgoCDKustomize(clientset *kubernetes.Clientset, argoCDInstallPath str
 		_, err = clientset.CoreV1().ServiceAccounts(namespace).Create(context.Background(), saObj, metav1.CreateOptions{})
 		if err != nil {
 			log.Error().Msgf("error creating service account: %s", err)
-			return fmt.Errorf("error creating service account: %s", err)
+			return fmt.Errorf("error creating service account: %w", err)
 		}
 		log.Info().Msgf("service account created: %s", name)
 	} else {
@@ -81,7 +81,7 @@ func ApplyArgoCDKustomize(clientset *kubernetes.Clientset, argoCDInstallPath str
 		_, err = clientset.RbacV1().ClusterRoles().Create(context.Background(), crObj, metav1.CreateOptions{})
 		if err != nil {
 			log.Error().Msgf("error creating cluster role: %s", err)
-			return fmt.Errorf("error creating cluster role: %s", err)
+			return fmt.Errorf("error creating cluster role: %w", err)
 		}
 		log.Info().Msgf("cluster role created: %s", name)
 	} else {
@@ -113,7 +113,7 @@ func ApplyArgoCDKustomize(clientset *kubernetes.Clientset, argoCDInstallPath str
 		_, err = clientset.RbacV1().ClusterRoleBindings().Create(context.Background(), crbObj, metav1.CreateOptions{})
 		if err != nil {
 			log.Error().Msgf("error creating cluster role binding: %s", err)
-			return fmt.Errorf("error creating cluster role binding: %s", err)
+			return fmt.Errorf("error creating cluster role binding: %w", err)
 		}
 		log.Info().Msgf("cluster role binding created: %s", name)
 	} else {
@@ -168,7 +168,7 @@ func ApplyArgoCDKustomize(clientset *kubernetes.Clientset, argoCDInstallPath str
 	_, err = k8s.WaitForJobComplete(clientset, job, 240)
 	if err != nil {
 		log.Error().Msgf("could not run argocd bootstrap job: %s", err)
-		return fmt.Errorf("could not run argocd bootstrap job: %s", err)
+		return fmt.Errorf("could not run argocd bootstrap job: %w", err)
 	}
 
 	// Cleanup

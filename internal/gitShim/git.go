@@ -33,7 +33,7 @@ func PullWithAuth(repo *git.Repository, remote string, branch string, auth trans
 		Auth:          auth,
 	})
 	if err != nil {
-		return fmt.Errorf("error during git pull: %s", err)
+		return fmt.Errorf("error during git pull: %w", err)
 	}
 
 	return nil
@@ -64,14 +64,7 @@ func PrepareMgmtCluster(cluster pkgtypes.Cluster) error {
 	err = gitClient.AddRemote(fmt.Sprintf("https://%s/%s/gitops", cluster.GitHost, cluster.GitAuth.Owner), cluster.GitProvider, gitopsRepo)
 	if err != nil {
 		log.Fatal().Msgf("error cloning repository: %s", err)
-
 		return err
-	}
-
-	if err != nil {
-		log.Fatal().Msgf("error cloning repository: %s", err)
-		return err
-
 	}
 
 	return nil

@@ -37,7 +37,7 @@ func CreateGitopsCatalogApps(clientSet *kubernetes.Clientset, catalogApps types.
 
 	err := k8s.CreateSecretV2(clientSet, secretToCreate)
 	if err != nil {
-		return fmt.Errorf("error creating gitops catalog secret: %s", err)
+		return fmt.Errorf("error creating gitops catalog secret: %w", err)
 	}
 
 	return nil
@@ -56,12 +56,12 @@ func GetGitopsCatalogApps(clientSet *kubernetes.Clientset) (types.GitopsCatalogA
 
 	jsonData, err := json.Marshal(jsonString)
 	if err != nil {
-		return catalogApps, fmt.Errorf("error marshalling json: %s", err)
+		return catalogApps, fmt.Errorf("error marshalling json: %w", err)
 	}
 
 	err = json.Unmarshal([]byte(jsonData), &catalogApps)
 	if err != nil {
-		return catalogApps, fmt.Errorf("unable to cast catalog: %s", err)
+		return catalogApps, fmt.Errorf("unable to cast catalog: %w", err)
 	}
 
 	return catalogApps, nil
@@ -96,7 +96,7 @@ func UpdateGitopsCatalogApps(clientSet *kubernetes.Clientset) error {
 		err = CreateGitopsCatalogApps(clientSet, mpapps)
 		if err != nil {
 			log.Error().Msgf("error creating gitops catalog apps secret: %s", err)
-			return fmt.Errorf("error creating gitops catalog apps secret: %s", err)
+			return fmt.Errorf("error creating gitops catalog apps secret: %w", err)
 		}
 	} else {
 		catalogApps.Apps = mpapps.Apps
@@ -106,7 +106,7 @@ func UpdateGitopsCatalogApps(clientSet *kubernetes.Clientset) error {
 
 		err = k8s.UpdateSecretV2(clientSet, "kubefirst", KUBEFIRST_CATALOG_SECRET_NAME, secretValuesMap)
 		if err != nil {
-			return fmt.Errorf("error creating kubernetes secret: %s", err)
+			return fmt.Errorf("error creating kubernetes secret: %w", err)
 		}
 	}
 

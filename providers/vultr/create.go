@@ -98,7 +98,7 @@ func CreateVultrCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	//* check for ssl restore
+	// * check for ssl restore
 	log.Info().Msg("checking for tls secrets to restore")
 	secretsFilesToRestore, err := os.ReadDir(ctrl.ProviderConfig.SSLBackupDir + "/secrets")
 	if err != nil {
@@ -151,8 +151,8 @@ func CreateVultrCluster(definition *pkgtypes.ClusterDefinition) error {
 
 	// SetupMinioStorage(kcfg, ctrl.ProviderConfig.K1Dir, ctrl.GitProvider)
 
-	//* configure vault with terraform
-	//* vault port-forward
+	// * configure vault with terraform
+	// * vault port-forward
 	vaultStopChannel := make(chan struct{}, 1)
 	defer func() {
 		close(vaultStopChannel)
@@ -208,7 +208,7 @@ func CreateVultrCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	//* export and import cluster
+	// * export and import cluster
 	err = ctrl.ExportClusterRecord()
 	if err != nil {
 		log.Error().Msgf("Error exporting cluster record: %s", err)

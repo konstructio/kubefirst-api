@@ -4,6 +4,8 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
+
+// nolint:revive // allowing package name objectStorage
 package objectStorage
 
 import (
@@ -19,16 +21,16 @@ import (
 )
 
 // PutBucketObject
-func PutBucketObject(cr *pkgtypes.StateStoreCredentials, d *pkgtypes.StateStoreDetails, obj *pkgtypes.PushBucketObject) error {
+func PutBucketObject(cr *pkgtypes.StateStoreCredentials, details *pkgtypes.StateStoreDetails, obj *pkgtypes.PushBucketObject) error {
 	ctx := context.Background()
 
 	// Initialize minio client object.
-	minioClient, err := minio.New(d.Hostname, &minio.Options{
+	minioClient, err := minio.New(details.Hostname, &minio.Options{
 		Creds:  credentials.NewStaticV4(cr.AccessKeyID, cr.SecretAccessKey, ""),
 		Secure: true,
 	})
 	if err != nil {
-		return fmt.Errorf("error initializing minio client: %s", err)
+		return fmt.Errorf("error initializing minio client: %w", err)
 	}
 
 	object, err := os.Open(obj.LocalFilePath)
@@ -42,7 +44,7 @@ func PutBucketObject(cr *pkgtypes.StateStoreCredentials, d *pkgtypes.StateStoreD
 		return err
 	}
 
-	n, err := minioClient.PutObject(ctx, d.Name, obj.RemoteFilePath, object, objectStat.Size(), minio.PutObjectOptions{ContentType: obj.ContentType})
+	n, err := minioClient.PutObject(ctx, details.Name, obj.RemoteFilePath, object, objectStat.Size(), minio.PutObjectOptions{ContentType: obj.ContentType})
 	if err != nil {
 		return err
 	}
@@ -61,19 +63,19 @@ func PutClusterObject(cr *pkgtypes.StateStoreCredentials, d *pkgtypes.StateStore
 		Secure: true,
 	})
 	if err != nil {
-		return fmt.Errorf("error initializing minio client: %s", err)
+		return fmt.Errorf("error initializing minio client: %w", err)
 	}
 
 	// Reference for cluster object output file
 	object, err := os.Open(obj.LocalFilePath)
 	if err != nil {
-		return fmt.Errorf("error during object local copy file lookup: %s", err)
+		return fmt.Errorf("error during object local copy file lookup: %w", err)
 	}
 	defer object.Close()
 
 	objectStat, err := object.Stat()
 	if err != nil {
-		return fmt.Errorf("error during object stat: %s", err)
+		return fmt.Errorf("error during object stat: %w", err)
 	}
 
 	// Put
@@ -86,7 +88,7 @@ func PutClusterObject(cr *pkgtypes.StateStoreCredentials, d *pkgtypes.StateStore
 		minio.PutObjectOptions{ContentType: obj.ContentType},
 	)
 	if err != nil {
-		return fmt.Errorf("error during object put: %s", err)
+		return fmt.Errorf("error during object put: %w", err)
 	}
 	log.Info().Msgf("uploaded cluster object %s to state store bucket %s successfully", obj.LocalFilePath, d.Name)
 
@@ -103,7 +105,7 @@ func GetClusterObject(cr *pkgtypes.StateStoreCredentials, d *pkgtypes.StateStore
 		Secure: secure,
 	})
 	if err != nil {
-		return fmt.Errorf("error initializing minio client: %s", err)
+		return fmt.Errorf("error initializing minio client: %w", err)
 	}
 
 	_, err = minioClient.BucketExists(ctx, d.Name)
@@ -116,23 +118,23 @@ func GetClusterObject(cr *pkgtypes.StateStoreCredentials, d *pkgtypes.StateStore
 	reader, err := minioClient.GetObject(ctx, d.Name, remoteFilePath, minio.GetObjectOptions{})
 	if err != nil {
 		log.Info().Msg(err.Error())
-		return fmt.Errorf("error retrieving cluster object from bucket: %s", err)
+		return fmt.Errorf("error retrieving cluster object from bucket: %w", err)
 	}
 	defer reader.Close()
 
 	// Write object to local file
 	localFile, err := os.Create(localFilePath)
 	if err != nil {
-		return fmt.Errorf("error during object local copy file create: %s", err)
+		return fmt.Errorf("error during object local copy file create: %w", err)
 	}
 	defer localFile.Close()
 
 	stat, err := reader.Stat()
 	if err != nil {
-		return fmt.Errorf("error during object stat: %s", err)
+		return fmt.Errorf("error during object stat: %w", err)
 	}
 	if _, err := io.CopyN(localFile, reader, stat.Size); err != nil {
-		return fmt.Errorf("error during object copy: %s", err)
+		return fmt.Errorf("error during object copy: %w", err)
 	}
 
 	return nil

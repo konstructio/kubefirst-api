@@ -108,8 +108,7 @@ func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster
 	}
 	envs["GOOGLE_APPLICATION_CREDENTIALS"] = fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir)
 
-	switch cl.GitProvider {
-	case "gitlab":
+	if cl.GitProvider == "gitlab" {
 		envs["TF_VAR_owner_group_id"] = fmt.Sprint(cl.GitlabOwnerGroupID)
 	}
 

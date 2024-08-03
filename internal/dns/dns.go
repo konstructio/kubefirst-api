@@ -66,7 +66,7 @@ func GetDomainNSRecords(domainName string) ([]string, error) {
 		return []string{}, fmt.Errorf("error checking NS record for domain %s: %s", domainName, err)
 	}
 
-	var foundNSRecords []string
+	foundNSRecords := make([]string, 0, len(records))
 	for _, rec := range records {
 		foundNSRecords = append(foundNSRecords, strings.TrimSuffix(rec.Ns, "."))
 	}

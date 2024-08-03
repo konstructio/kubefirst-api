@@ -172,8 +172,8 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	//* configure vault with terraform
-	//* vault port-forward
+	// * configure vault with terraform
+	// * vault port-forward
 	vaultStopChannel := make(chan struct{}, 1)
 	defer func() {
 		close(vaultStopChannel)
@@ -240,7 +240,7 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 		close(cluster1KubefirstApiStopChannel)
 	}()
 
-	//* export and import cluster
+	// * export and import cluster
 	err = ctrl.ExportClusterRecord()
 	if err != nil {
 		log.Error().Msgf("Error exporting cluster record: %s", err)

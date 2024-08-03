@@ -32,7 +32,7 @@ func (conf *VaultConfiguration) IterSecrets(
 	} else {
 		err := os.Remove(fileName)
 		if err != nil {
-			return fmt.Errorf("error deleting file: %s", err)
+			return fmt.Errorf("error deleting file: %w", err)
 		}
 	}
 
@@ -64,11 +64,11 @@ func (conf *VaultConfiguration) IterSecrets(
 
 	_, err = os.Create(fileName)
 	if err != nil {
-		return fmt.Errorf("error creating file: %s", err)
+		return fmt.Errorf("error creating file: %w", err)
 	}
 	f, err := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
-		return fmt.Errorf("error opening file: %s", err)
+		return fmt.Errorf("error opening file: %w", err)
 	}
 	defer f.Close()
 
@@ -77,12 +77,12 @@ func (conf *VaultConfiguration) IterSecrets(
 			if k == "VAULT_ADDR" {
 				_, err = f.WriteString(fmt.Sprintf("export %s=\"%v\"\n", k, endpoint))
 				if err != nil {
-					return fmt.Errorf("error writing to file: %s", err)
+					return fmt.Errorf("error writing to file: %w", err)
 				}
 			} else {
 				_, err = f.WriteString(fmt.Sprintf("export %s=\"%v\"\n", k, strings.TrimSuffix(v.(string), "\n")))
 				if err != nil {
-					return fmt.Errorf("error writing to file: %s", err)
+					return fmt.Errorf("error writing to file: %w", err)
 				}
 			}
 		}

@@ -70,7 +70,7 @@ type TLSConfig struct {
 }
 
 // Sync request ArgoCD to manual sync an application.
-func DeleteApplication(httpClient pkg.HTTPDoer, applicationName, argoCDToken, cascade string) (httpCodeResponse int, syncStatus string, Error error) {
+func DeleteApplication(httpClient pkg.HTTPDoer, applicationName, argoCDToken, cascade string) (int, string, error) {
 	params := url.Values{}
 	params.Add("cascade", cascade)
 	paramBody := strings.NewReader(params.Encode())

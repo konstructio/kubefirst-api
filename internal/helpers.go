@@ -62,7 +62,7 @@ func SetupViper(config *configs.Config, silent bool) error {
 
 		err = os.WriteFile(viperConfigFile, []byte(""), 0o700)
 		if err != nil {
-			return fmt.Errorf("unable to create blank config file, error is: %s", err)
+			return fmt.Errorf("unable to create blank config file, error is: %w", err)
 		}
 	}
 
@@ -73,7 +73,7 @@ func SetupViper(config *configs.Config, silent bool) error {
 	// if a config file is found, read it in.
 	err := viper.ReadInConfig()
 	if err != nil {
-		return fmt.Errorf("unable to read config file, error is: %s", err)
+		return fmt.Errorf("unable to read config file, error is: %w", err)
 	}
 
 	if !silent {
@@ -87,12 +87,12 @@ func SetupViper(config *configs.Config, silent bool) error {
 func CreateFile(fileName string, fileContent []byte) error {
 	file, err := os.Create(fileName)
 	if err != nil {
-		return fmt.Errorf("error creating file: %s", err)
+		return fmt.Errorf("error creating file: %w", err)
 	}
 	defer file.Close()
 	_, err = file.Write(fileContent)
 	if err != nil {
-		return fmt.Errorf("unable to write the file: %s", err)
+		return fmt.Errorf("unable to write the file: %w", err)
 	}
 	return nil
 }
@@ -259,7 +259,7 @@ func ReplaceFileContent(filPath string, oldContent string, newContent string) er
 		return err
 	}
 
-	updatedLine := strings.Replace(string(file), oldContent, newContent, -1)
+	updatedLine := strings.ReplaceAll(string(file), oldContent, newContent)
 
 	if err = os.WriteFile(filPath, []byte(updatedLine), 0); err != nil {
 		return err
@@ -368,14 +368,14 @@ func InformUser(message string, silentMode bool) {
 func OpenBrowser(url string) error {
 	switch runtime.GOOS {
 	case "linux":
-		//if err = exec.Command("xdg-open", url).Start(); err != nil {
+		// if err = exec.Command("xdg-open", url).Start(); err != nil {
 		//	return err
-		//}
+		// }
 		return nil
 	case "windows":
-		//if err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start(); err != nil {
+		// if err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start(); err != nil {
 		//	return err
-		//}
+		// }
 		return nil
 	case "darwin":
 		if err := exec.Command("open", url).Start(); err != nil {
@@ -570,7 +570,7 @@ func ResetK1Dir(k1Dir string) error {
 			return fmt.Errorf("unable to delete %q folder, error: %s", k1Dir+"/tools", err)
 		}
 	}
-	//* files
+	// * files
 	//! this might fail with an adjustment made to validate
 	if _, err := os.Stat(k1Dir + "/argocd-init-values.yaml"); !os.IsNotExist(err) {
 		err = os.Remove(k1Dir + "/argocd-init-values.yaml")

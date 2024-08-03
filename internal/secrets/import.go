@@ -44,12 +44,12 @@ func ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster, error) {
 
 	jsonData, err := json.Marshal(jsonString)
 	if err != nil {
-		return cluster, fmt.Errorf("error marshalling json: %s", err)
+		return cluster, fmt.Errorf("error marshalling json: %w", err)
 	}
 
 	err = json.Unmarshal([]byte(jsonData), &cluster)
 	if err != nil {
-		return cluster, fmt.Errorf("unable to cast cluster: %s", err)
+		return cluster, fmt.Errorf("unable to cast cluster: %w", err)
 	}
 
 	log.Info().Msgf("import cluster secret discovered for cluster %s", cluster.ClusterName)

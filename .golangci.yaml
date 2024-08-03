@@ -1,5 +1,7 @@
 run:
   tests: false
+  concurrency: 5
+  timeout: 3m
 
 linters:
   disable-all: true

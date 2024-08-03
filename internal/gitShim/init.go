@@ -43,7 +43,7 @@ func InitializeGitProvider(p *GitInitParameters) error {
 
 			if responseStatusCode == repositoryExistsStatusCode {
 				log.Info().Msgf("repository https://github.com/%s/%s exists", p.GithubOrg, repositoryName)
-				errorMsg = errorMsg + fmt.Sprintf("https://github.com/%s/%s\n\t", p.GithubOrg, repositoryName)
+				errorMsg += fmt.Sprintf("https://github.com/%s/%s\n\t", p.GithubOrg, repositoryName)
 				newRepositoryExists = true
 			} else if responseStatusCode == repositoryDoesNotExistStatusCode {
 				log.Info().Msgf("repository https://github.com/%s/%s does not exist, continuing", p.GithubOrg, repositoryName)
@@ -65,7 +65,7 @@ func InitializeGitProvider(p *GitInitParameters) error {
 
 			if responseStatusCode == teamExistsStatusCode {
 				log.Info().Msgf("team https://github.com/%s/%s exists", p.GithubOrg, teamName)
-				errorMsg = errorMsg + fmt.Sprintf("https://github.com/orgs/%s/teams/%s\n\t", p.GithubOrg, teamName)
+				errorMsg += fmt.Sprintf("https://github.com/orgs/%s/teams/%s\n\t", p.GithubOrg, teamName)
 				newTeamExists = true
 			} else if responseStatusCode == teamDoesNotExistStatusCode {
 				log.Info().Msgf("https://github.com/orgs/%s/teams/%s does not exist, continuing", p.GithubOrg, teamName)

@@ -24,7 +24,7 @@ func (c *VultrConfiguration) GetRegionalObjectStorageClusters() (int, error) {
 		Region: c.ObjectStorageRegion,
 	})
 	if err != nil {
-		return 0, fmt.Errorf("could not get object storage clusters: %s", err)
+		return 0, fmt.Errorf("could not get object storage clusters: %w", err)
 	}
 	var clid int = 0
 	for _, cluster := range clusters {
@@ -79,7 +79,7 @@ func (c *VultrConfiguration) DeleteObjectStorage(storeName string) error {
 		Region: c.ObjectStorageRegion,
 	})
 	if err != nil {
-		return fmt.Errorf("error listing object storage: %s", err)
+		return fmt.Errorf("error listing object storage: %w", err)
 	}
 
 	if len(res) == 0 {
@@ -88,7 +88,7 @@ func (c *VultrConfiguration) DeleteObjectStorage(storeName string) error {
 
 	err = c.Client.ObjectStorage.Delete(c.Context, res[0].ID)
 	if err != nil {
-		return fmt.Errorf("error deleting object storage: %s", err)
+		return fmt.Errorf("error deleting object storage: %w", err)
 	}
 
 	return nil
@@ -117,7 +117,7 @@ func (c *VultrConfiguration) CreateObjectStorageBucket(cr VultrBucketCredentials
 		Secure: useSSL,
 	})
 	if err != nil {
-		return fmt.Errorf("error initializing minio client for vultr: %s", err)
+		return fmt.Errorf("error initializing minio client for vultr: %w", err)
 	}
 
 	location := "us-east-1"

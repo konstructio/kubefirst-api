@@ -141,7 +141,7 @@ func (clctrl *ClusterController) HandleDomainLiveness(domainLiveness bool) error
 		}
 		msg := fmt.Sprintf("failed to verify domain liveness for domain %s", clctrl.DomainName)
 		if len(foundRecords) != 0 {
-			msg = msg + fmt.Sprintf(" - last result: %s - it may be necessary to wait for propagation", foundRecords)
+			msg += fmt.Sprintf(" - last result: %s - it may be necessary to wait for propagation", foundRecords)
 		}
 		return fmt.Errorf(msg)
 	} else {

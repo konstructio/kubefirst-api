@@ -43,7 +43,7 @@ func CreateClusterServiceList(clientSet *kubernetes.Clientset, clusterName strin
 
 		err := k8s.CreateSecretV2(clientSet, secretToCreate)
 		if err != nil {
-			return fmt.Errorf("error creating kubernetes service secret: %s", err)
+			return fmt.Errorf("error creating kubernetes service secret: %w", err)
 		}
 	}
 
@@ -103,12 +103,12 @@ func GetServices(clientSet *kubernetes.Clientset, clusterName string) (types.Clu
 
 	jsonData, err := json.Marshal(jsonString)
 	if err != nil {
-		return clusterServices, fmt.Errorf("error marshalling json: %s", err)
+		return clusterServices, fmt.Errorf("error marshalling json: %w", err)
 	}
 
 	err = json.Unmarshal([]byte(jsonData), &clusterServices)
 	if err != nil {
-		return clusterServices, fmt.Errorf("unable to cast environment: %s", err)
+		return clusterServices, fmt.Errorf("unable to cast environment: %w", err)
 	}
 
 	return clusterServices, nil

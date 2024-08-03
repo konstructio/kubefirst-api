@@ -19,7 +19,7 @@ import (
 func NewGitLabClient(token string, parentGroupName string) (GitLabWrapper, error) {
 	git, err := gitlab.NewClient(token)
 	if err != nil {
-		return GitLabWrapper{}, fmt.Errorf("error instantiating gitlab client: %s", err)
+		return GitLabWrapper{}, fmt.Errorf("error instantiating gitlab client: %w", err)
 	}
 
 	// Get parent group ID
@@ -34,7 +34,7 @@ func NewGitLabClient(token string, parentGroupName string) (GitLabWrapper, error
 			MinAccessLevel: &minAccessLevel,
 		})
 		if err != nil {
-			return GitLabWrapper{}, fmt.Errorf("could not get gitlab groups: %s", err)
+			return GitLabWrapper{}, fmt.Errorf("could not get gitlab groups: %w", err)
 		}
 		for _, group := range groups {
 			container = append(container, *group)
@@ -56,7 +56,7 @@ func NewGitLabClient(token string, parentGroupName string) (GitLabWrapper, error
 	// Get parent group path
 	group, _, err := git.Groups.GetGroup(gid, &gitlab.GetGroupOptions{})
 	if err != nil {
-		return GitLabWrapper{}, fmt.Errorf("could not get gitlab parent group path: %s", err)
+		return GitLabWrapper{}, fmt.Errorf("could not get gitlab parent group path: %w", err)
 	}
 
 	return GitLabWrapper{

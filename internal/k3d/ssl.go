@@ -44,12 +44,12 @@ func GenerateTLSSecrets(clientset *kubernetes.Clientset, config K3dConfig) error
 			log.Warn().Msgf("namespace %s already exists - skipping", app.Namespace)
 		}
 
-		//* generate certificate
+		// * generate certificate
 		fullAppAddress := app.AppName + "." + DomainName                      // example: app-name.kubefirst.dev
 		certFileName := config.MkCertPemDir + "/" + app.AppName + "-cert.pem" // example: app-name-cert.pem
 		keyFileName := config.MkCertPemDir + "/" + app.AppName + "-key.pem"   // example: app-name-key.pem
 
-		//* generate the mkcert
+		// * generate the mkcert
 		log.Info().Msgf("generating certificate %s.%s on %s", app.AppName, DomainName, config.MkCertClient)
 		_, _, err = pkg.ExecShellReturnStrings(
 			config.MkCertClient,
@@ -64,7 +64,7 @@ func GenerateTLSSecrets(clientset *kubernetes.Clientset, config K3dConfig) error
 			return err
 		}
 
-		//* read certificate files
+		// * read certificate files
 		certPem, err := os.ReadFile(fmt.Sprintf("%s/ssl/%s/pem/%s-cert.pem", config.K1Dir, DomainName, app.AppName))
 		if err != nil {
 			return fmt.Errorf("error reading %s file %s", fmt.Sprintf("%s/ssl/%s/pem/%s-cert.pem", config.K1Dir, DomainName, app.AppName), err)
@@ -119,12 +119,12 @@ func GenerateSingleTLSSecret(
 		log.Warn().Msgf("namespace %s already exists - skipping", ns)
 	}
 
-	//* generate certificate
+	// * generate certificate
 	fullAppAddress := app + "." + DomainName                      // example: app-name.kubefirst.dev
 	certFileName := config.MkCertPemDir + "/" + app + "-cert.pem" // example: app-name-cert.pem
 	keyFileName := config.MkCertPemDir + "/" + app + "-key.pem"   // example: app-name-key.pem
 
-	//* generate the mkcert
+	// * generate the mkcert
 	log.Info().Msgf("generating certificate %s.%s on %s", app, DomainName, config.MkCertClient)
 	_, _, err = pkg.ExecShellReturnStrings(
 		config.MkCertClient,
@@ -139,7 +139,7 @@ func GenerateSingleTLSSecret(
 		return err
 	}
 
-	//* read certificate files
+	// * read certificate files
 	certPem, err := os.ReadFile(fmt.Sprintf("%s/ssl/%s/pem/%s-cert.pem", config.K1Dir, DomainName, app))
 	if err != nil {
 		return fmt.Errorf("error reading %s file %s", fmt.Sprintf("%s/ssl/%s/pem/%s-cert.pem", config.K1Dir, DomainName, app), err)

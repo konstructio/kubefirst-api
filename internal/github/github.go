@@ -132,7 +132,7 @@ func (g GithubSession) AddSSHKey(keyTitle string, publicKey string) (*github.Key
 	log.Printf("Add SSH key to user account on behalf of kubefirst")
 	key, _, err := g.gitClient.Users.CreateKey(g.context, &github.Key{Title: &keyTitle, Key: &publicKey})
 	if err != nil {
-		return nil, fmt.Errorf("error add SSH Key: %s", err)
+		return nil, fmt.Errorf("error add SSH Key: %w", err)
 	}
 	return key, nil
 }
@@ -142,7 +142,7 @@ func (g GithubSession) RemoveSSHKey(keyId int64) error {
 	log.Printf("Remove SSH key to user account on behalf of kubefrist")
 	_, err := g.gitClient.Users.DeleteKey(g.context, keyId)
 	if err != nil {
-		return fmt.Errorf("error remiving SSH Key: %s", err)
+		return fmt.Errorf("error remiving SSH Key: %w", err)
 	}
 	return nil
 }

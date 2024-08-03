@@ -28,7 +28,7 @@ func (c *DigitaloceanConfiguration) GetKubernetesAssociatedResources(clusterName
 		}
 	}
 	if clusterID == "" {
-		return &godo.KubernetesAssociatedResources{}, fmt.Errorf("could not find cluster ID for cluster name %s", err)
+		return &godo.KubernetesAssociatedResources{}, fmt.Errorf("could not find cluster ID for cluster name %w", err)
 	}
 
 	resources, _, err := c.Client.Kubernetes.ListAssociatedResourcesForDeletion(c.Context, clusterID)

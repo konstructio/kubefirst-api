@@ -26,14 +26,14 @@ import (
 func (conf *GoogleConfiguration) ListContainerClusters() (*containerpb.ListClustersResponse, error) {
 	client, err := container.NewClusterManagerClient(conf.Context)
 	if err != nil {
-		return nil, fmt.Errorf("could not create google container client: %s", err)
+		return nil, fmt.Errorf("could not create google container client: %w", err)
 	}
 
 	clusters, err := client.ListClusters(conf.Context, &containerpb.ListClustersRequest{
 		Parent: fmt.Sprintf("projects/%s/locations/-", conf.Project),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error listing container clusters: %s", err)
+		return nil, fmt.Errorf("error listing container clusters: %w", err)
 	}
 
 	return clusters, nil
@@ -43,14 +43,14 @@ func (conf *GoogleConfiguration) ListContainerClusters() (*containerpb.ListClust
 func (conf *GoogleConfiguration) GetContainerCluster(clusterName string) (*containerpb.Cluster, error) {
 	client, err := container.NewClusterManagerClient(conf.Context)
 	if err != nil {
-		return nil, fmt.Errorf("could not create google container client: %s", err)
+		return nil, fmt.Errorf("could not create google container client: %w", err)
 	}
 
 	cluster, err := client.GetCluster(conf.Context, &containerpb.GetClusterRequest{
 		Name: fmt.Sprintf("projects/%s/locations/%s/clusters/%s", conf.Project, conf.Region, clusterName),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error getting container cluster: %s", err)
+		return nil, fmt.Errorf("error getting container cluster: %w", err)
 	}
 
 	return cluster, nil
@@ -60,19 +60,19 @@ func (conf *GoogleConfiguration) GetContainerCluster(clusterName string) (*conta
 func (conf *GoogleConfiguration) GetContainerClusterAuth(clusterName string, keyFile []byte) (*k8s.KubernetesClient, error) {
 	creds, err := google.CredentialsFromJSON(conf.Context, keyFile, gocontainer.CloudPlatformScope)
 	if err != nil {
-		return nil, fmt.Errorf("could not create google storage client credentials: %s", err)
+		return nil, fmt.Errorf("could not create google storage client credentials: %w", err)
 	}
 
 	client, err := container.NewClusterManagerClient(conf.Context, option.WithCredentials(creds))
 	if err != nil {
-		return nil, fmt.Errorf("could not create google container client: %s", err)
+		return nil, fmt.Errorf("could not create google container client: %w", err)
 	}
 
 	cluster, err := client.GetCluster(conf.Context, &containerpb.GetClusterRequest{
 		Name: fmt.Sprintf("projects/%s/locations/%s/clusters/%s", conf.Project, conf.Region, clusterName),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error getting container cluster: %s", err)
+		return nil, fmt.Errorf("error getting container cluster: %w", err)
 	}
 
 	// config := api.Config{
@@ -126,13 +126,13 @@ func (conf *GoogleConfiguration) GetContainerClusterAuth(clusterName string, key
 	// for clusterName := range config.Clusters {
 	// kubeConfig, err = clientcmd.NewNonInteractiveClientConfig(config, clusterName, &clientcmd.ConfigOverrides{CurrentContext: clusterName}, nil).ClientConfig()
 	// if err != nil {
-	// 	return nil, fmt.Errorf("error building kubernetes config: %s", err)
+	// 	return nil, fmt.Errorf("error building kubernetes config: %w", err)
 	// }
 
 	// Client Set
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return nil, fmt.Errorf("error buildling kubernetes clientset: %s", err)
+		return nil, fmt.Errorf("error buildling kubernetes clientset: %w", err)
 	}
 	// }
 

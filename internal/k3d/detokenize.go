@@ -8,7 +8,6 @@ package k3d
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -33,7 +32,7 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 			return err
 		}
 
-		if !!fi.IsDir() {
+		if fi.IsDir() {
 			return nil
 		}
 
@@ -43,52 +42,52 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 		if matched {
 			// ignore .git files
 			if !strings.Contains(path, "/.git/") {
-				read, err := ioutil.ReadFile(path)
+				read, err := os.ReadFile(path)
 				if err != nil {
 					return err
 				}
 
 				// todo reduce to terraform tokens by moving to helm chart?
 				newContents := string(read)
-				newContents = strings.Replace(newContents, "<ALERTS_EMAIL>", "your@email.com", -1) //
-				newContents = strings.Replace(newContents, "<ARGOCD_INGRESS_URL>", tokens.ArgocdIngressURL, -1)
-				newContents = strings.Replace(newContents, "<ARGO_WORKFLOWS_INGRESS_URL>", tokens.ArgoWorkflowsIngressURL, -1)
-				newContents = strings.Replace(newContents, "<ATLANTIS_ALLOW_LIST>", tokens.AtlantisAllowList, -1)
-				newContents = strings.Replace(newContents, "<ATLANTIS_INGRESS_URL>", tokens.AtlantisIngressURL, -1)
-				newContents = strings.Replace(newContents, "<CLUSTER_NAME>", tokens.ClusterName, -1)
-				newContents = strings.Replace(newContents, "<CLOUD_PROVIDER>", tokens.CloudProvider, -1)
-				newContents = strings.Replace(newContents, "<CLUSTER_ID>", tokens.ClusterId, -1)
-				newContents = strings.Replace(newContents, "<CLUSTER_TYPE>", tokens.ClusterType, -1)
-				newContents = strings.Replace(newContents, "<DOMAIN_NAME>", DomainName, -1)
-				newContents = strings.Replace(newContents, "<KUBEFIRST_TEAM>", tokens.KubefirstTeam, -1)
-				newContents = strings.Replace(newContents, "<KUBEFIRST_VERSION>", configs.K1Version, -1)
-				newContents = strings.Replace(newContents, "<KUBE_CONFIG_PATH>", tokens.KubeconfigPath, -1)
-				newContents = strings.Replace(newContents, "<METAPHOR_DEVELOPMENT_INGRESS_URL>", tokens.MetaphorDevelopmentIngressURL, -1)
-				newContents = strings.Replace(newContents, "<METAPHOR_STAGING_INGRESS_URL>", tokens.MetaphorStagingIngressURL, -1)
-				newContents = strings.Replace(newContents, "<METAPHOR_PRODUCTION_INGRESS_URL>", tokens.MetaphorProductionIngressURL, -1)
-				newContents = strings.Replace(newContents, "<GITHUB_HOST>", tokens.GithubHost, -1)
-				newContents = strings.Replace(newContents, "<GITHUB_OWNER>", strings.ToLower(tokens.GithubOwner), -1)
-				newContents = strings.Replace(newContents, "<GITHUB_USER>", tokens.GithubUser, -1)
-				newContents = strings.Replace(newContents, "<GIT_PROVIDER>", tokens.GitProvider, -1)
-				newContents = strings.Replace(newContents, "<GIT-PROTOCOL>", gitProtocol, -1)
-				newContents = strings.Replace(newContents, "<GITLAB_HOST>", tokens.GitlabHost, -1)
-				newContents = strings.Replace(newContents, "<GITLAB_OWNER>", tokens.GitlabOwner, -1)
-				newContents = strings.Replace(newContents, "<GITLAB_USER>", tokens.GitlabUser, -1)
-				newContents = strings.Replace(newContents, "<GITLAB_OWNER_GROUP_ID>", strconv.Itoa(tokens.GitlabOwnerGroupID), -1)
-				newContents = strings.Replace(newContents, "<VAULT_INGRESS_URL>", tokens.VaultIngressURL, -1)
-				newContents = strings.Replace(newContents, "<USE_TELEMETRY>", tokens.UseTelemetry, -1)
-				newContents = strings.Replace(newContents, "<K3D_DOMAIN>", DomainName, -1)
+				newContents = strings.ReplaceAll(newContents, "<ALERTS_EMAIL>", "your@email.com")
+				newContents = strings.ReplaceAll(newContents, "<ARGOCD_INGRESS_URL>", tokens.ArgocdIngressURL)
+				newContents = strings.ReplaceAll(newContents, "<ARGO_WORKFLOWS_INGRESS_URL>", tokens.ArgoWorkflowsIngressURL)
+				newContents = strings.ReplaceAll(newContents, "<ATLANTIS_ALLOW_LIST>", tokens.AtlantisAllowList)
+				newContents = strings.ReplaceAll(newContents, "<ATLANTIS_INGRESS_URL>", tokens.AtlantisIngressURL)
+				newContents = strings.ReplaceAll(newContents, "<CLUSTER_NAME>", tokens.ClusterName)
+				newContents = strings.ReplaceAll(newContents, "<CLOUD_PROVIDER>", tokens.CloudProvider)
+				newContents = strings.ReplaceAll(newContents, "<CLUSTER_ID>", tokens.ClusterId)
+				newContents = strings.ReplaceAll(newContents, "<CLUSTER_TYPE>", tokens.ClusterType)
+				newContents = strings.ReplaceAll(newContents, "<DOMAIN_NAME>", DomainName)
+				newContents = strings.ReplaceAll(newContents, "<KUBEFIRST_TEAM>", tokens.KubefirstTeam)
+				newContents = strings.ReplaceAll(newContents, "<KUBEFIRST_VERSION>", configs.K1Version)
+				newContents = strings.ReplaceAll(newContents, "<KUBE_CONFIG_PATH>", tokens.KubeconfigPath)
+				newContents = strings.ReplaceAll(newContents, "<METAPHOR_DEVELOPMENT_INGRESS_URL>", tokens.MetaphorDevelopmentIngressURL)
+				newContents = strings.ReplaceAll(newContents, "<METAPHOR_STAGING_INGRESS_URL>", tokens.MetaphorStagingIngressURL)
+				newContents = strings.ReplaceAll(newContents, "<METAPHOR_PRODUCTION_INGRESS_URL>", tokens.MetaphorProductionIngressURL)
+				newContents = strings.ReplaceAll(newContents, "<GITHUB_HOST>", tokens.GithubHost)
+				newContents = strings.ReplaceAll(newContents, "<GITHUB_OWNER>", strings.ToLower(tokens.GithubOwner))
+				newContents = strings.ReplaceAll(newContents, "<GITHUB_USER>", tokens.GithubUser)
+				newContents = strings.ReplaceAll(newContents, "<GIT_PROVIDER>", tokens.GitProvider)
+				newContents = strings.ReplaceAll(newContents, "<GIT-PROTOCOL>", gitProtocol)
+				newContents = strings.ReplaceAll(newContents, "<GITLAB_HOST>", tokens.GitlabHost)
+				newContents = strings.ReplaceAll(newContents, "<GITLAB_OWNER>", tokens.GitlabOwner)
+				newContents = strings.ReplaceAll(newContents, "<GITLAB_USER>", tokens.GitlabUser)
+				newContents = strings.ReplaceAll(newContents, "<GITLAB_OWNER_GROUP_ID>", strconv.Itoa(tokens.GitlabOwnerGroupID))
+				newContents = strings.ReplaceAll(newContents, "<VAULT_INGRESS_URL>", tokens.VaultIngressURL)
+				newContents = strings.ReplaceAll(newContents, "<USE_TELEMETRY>", tokens.UseTelemetry)
+				newContents = strings.ReplaceAll(newContents, "<K3D_DOMAIN>", DomainName)
 
-				newContents = strings.Replace(newContents, "<GITOPS_REPO_URL>", tokens.GitopsRepoURL, -1)
+				newContents = strings.ReplaceAll(newContents, "<GITOPS_REPO_URL>", tokens.GitopsRepoURL)
 
 				// Switch the repo url based on https flag
 				if gitProtocol == "https" {
-					newContents = strings.Replace(newContents, "<GIT_FQDN>", fmt.Sprintf("https://%v.com/", tokens.GitProvider), -1)
+					newContents = strings.ReplaceAll(newContents, "<GIT_FQDN>", fmt.Sprintf("https://%v.com/", tokens.GitProvider))
 				} else {
-					newContents = strings.Replace(newContents, "<GIT_FQDN>", fmt.Sprintf("git@%v.com:", tokens.GitProvider), -1)
+					newContents = strings.ReplaceAll(newContents, "<GIT_FQDN>", fmt.Sprintf("git@%v.com:", tokens.GitProvider))
 				}
 
-				err = ioutil.WriteFile(path, []byte(newContents), 0)
+				err = os.WriteFile(path, []byte(newContents), 0)
 				if err != nil {
 					return err
 				}
@@ -114,7 +113,7 @@ func postRunDetokenizeGitops(path string, tokens *GitopsDirectoryValues) filepat
 			return err
 		}
 
-		if !!fi.IsDir() {
+		if fi.IsDir() {
 			return nil
 		}
 
@@ -124,15 +123,15 @@ func postRunDetokenizeGitops(path string, tokens *GitopsDirectoryValues) filepat
 		if matched {
 			// ignore .git files
 			if !strings.Contains(path, "/.git/") {
-				read, err := ioutil.ReadFile(path)
+				read, err := os.ReadFile(path)
 				if err != nil {
 					return err
 				}
 
 				// change Minio post cluster launch to cluster svc address
 				newContents := string(read)
-				newContents = strings.Replace(newContents, fmt.Sprintf("https://minio.%s", DomainName), "http://minio.minio.svc.cluster.local:9000", -1)
-				err = ioutil.WriteFile(path, []byte(newContents), 0)
+				newContents = strings.ReplaceAll(newContents, fmt.Sprintf("https://minio.%s", DomainName), "http://minio.minio.svc.cluster.local:9000")
+				err = os.WriteFile(path, []byte(newContents), 0)
 				if err != nil {
 					return err
 				}
@@ -158,7 +157,7 @@ func detokenize(metaphorDir string, tokens *MetaphorTokenValues) filepath.WalkFu
 			return err
 		}
 
-		if !!fi.IsDir() {
+		if fi.IsDir() {
 			return nil
 		}
 
@@ -168,22 +167,22 @@ func detokenize(metaphorDir string, tokens *MetaphorTokenValues) filepath.WalkFu
 		if matched {
 			// ignore .git files
 			if !strings.Contains(path, "/.git/") {
-				read, err := ioutil.ReadFile(path)
+				read, err := os.ReadFile(path)
 				if err != nil {
 					return err
 				}
 
 				// todo reduce to terraform tokens by moving to helm chart?
 				newContents := string(read)
-				newContents = strings.Replace(newContents, "<METAPHOR_DEVELOPMENT_INGRESS_URL>", tokens.MetaphorDevelopmentIngressURL, -1)
-				newContents = strings.Replace(newContents, "<METAPHOR_STAGING_INGRESS_URL>", tokens.MetaphorStagingIngressURL, -1)
-				newContents = strings.Replace(newContents, "<METAPHOR_PRODUCTION_INGRESS_URL>", tokens.MetaphorProductionIngressURL, -1)
-				newContents = strings.Replace(newContents, "<CONTAINER_REGISTRY_URL>", tokens.ContainerRegistryURL, -1) // todo need to fix metaphor repo names
-				newContents = strings.Replace(newContents, "<DOMAIN_NAME>", tokens.DomainName, -1)
-				newContents = strings.Replace(newContents, "<CLOUD_REGION>", tokens.CloudRegion, -1)
-				newContents = strings.Replace(newContents, "<CLUSTER_NAME>", tokens.ClusterName, -1)
+				newContents = strings.ReplaceAll(newContents, "<METAPHOR_DEVELOPMENT_INGRESS_URL>", tokens.MetaphorDevelopmentIngressURL)
+				newContents = strings.ReplaceAll(newContents, "<METAPHOR_STAGING_INGRESS_URL>", tokens.MetaphorStagingIngressURL)
+				newContents = strings.ReplaceAll(newContents, "<METAPHOR_PRODUCTION_INGRESS_URL>", tokens.MetaphorProductionIngressURL)
+				newContents = strings.ReplaceAll(newContents, "<CONTAINER_REGISTRY_URL>", tokens.ContainerRegistryURL) // todo need to fix metaphor repo
+				newContents = strings.ReplaceAll(newContents, "<DOMAIN_NAME>", tokens.DomainName)
+				newContents = strings.ReplaceAll(newContents, "<CLOUD_REGION>", tokens.CloudRegion)
+				newContents = strings.ReplaceAll(newContents, "<CLUSTER_NAME>", tokens.ClusterName)
 
-				err = ioutil.WriteFile(path, []byte(newContents), 0)
+				err = os.WriteFile(path, []byte(newContents), 0)
 				if err != nil {
 					return err
 				}

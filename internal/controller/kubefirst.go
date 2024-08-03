@@ -88,7 +88,7 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 	err = k8s.CreateSecretV2(kcfg.Clientset, secret)
 	if err != nil {
 		clctrl.HandleError(err.Error())
-		return fmt.Errorf("unable to save secret to management cluster. %s", err)
+		return fmt.Errorf("unable to save secret to management cluster. %w", err)
 	}
 
 	return nil
@@ -153,8 +153,9 @@ func (clctrl *ClusterController) CreateVirtualClusters() error {
 	}
 
 	if res.StatusCode != http.StatusOK {
-		log.Error().Msgf("unable to create default clusters: %s %s", err, body)
-		clctrl.HandleError(err.Error())
+		s := fmt.Sprintf("unable to create default clusters: %s %s", err, body)
+		log.Error().Msgf(s)
+		clctrl.HandleError(s)
 		return err
 	}
 

@@ -8,7 +8,6 @@ package k3d
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -54,22 +53,22 @@ func resolveMinioLocal(path string) filepath.WalkFunc {
 			return err
 		}
 
-		if !!fi.IsDir() {
+		if fi.IsDir() {
 			return nil
 		}
 
 		// var matched bool
 		matched, _ := filepath.Match("*", fi.Name())
 		if matched {
-			read, err := ioutil.ReadFile(path)
+			read, err := os.ReadFile(path)
 			if err != nil {
 				return err
 			}
 
 			newContents := string(read)
-			newContents = strings.Replace(newContents, "http://minio.minio.svc.cluster.local:9000", "http://localhost:9000", -1)
+			newContents = strings.ReplaceAll(newContents, "http://minio.minio.svc.cluster.local:9000", "http://localhost:9000")
 
-			err = ioutil.WriteFile(path, []byte(newContents), 0)
+			err = os.WriteFile(path, []byte(newContents), 0)
 			if err != nil {
 				return err
 			}

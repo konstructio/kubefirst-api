@@ -298,7 +298,7 @@ func (conf *AWSConfiguration) GetRegions(region string) ([]string, error) {
 
 	regions, err := ec2Client.DescribeRegions(context.Background(), &ec2.DescribeRegionsInput{})
 	if err != nil {
-		return []string{}, fmt.Errorf("error listing regions: %s", err)
+		return []string{}, fmt.Errorf("error listing regions: %w", err)
 	}
 
 	for _, region := range regions.Regions {

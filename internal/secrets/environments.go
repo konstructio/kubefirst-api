@@ -90,7 +90,7 @@ func InsertEnvironment(clientSet *kubernetes.Clientset, env pkgtypes.Environment
 
 	err = k8s.CreateSecretV2(clientSet, secretToCreate)
 	if err != nil {
-		return environment, fmt.Errorf("error creating kubernetes environment secret: %s", err)
+		return environment, fmt.Errorf("error creating kubernetes environment secret: %w", err)
 	}
 
 	return environment, nil
@@ -145,7 +145,7 @@ func UpdateEnvironment(clientSet *kubernetes.Clientset, id string, env types.Env
 
 	err := k8s.UpdateSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_ENVIRONMENT_PREFIX, environmentToUpdate.Name), secretValuesMap)
 	if err != nil {
-		return fmt.Errorf("error creating kubernetes secret: %s", err)
+		return fmt.Errorf("error creating kubernetes secret: %w", err)
 	}
 
 	return nil

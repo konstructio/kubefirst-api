@@ -66,7 +66,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 		return err
 	}
 
-	// //* create teams and repositories in github
+	// // * create teams and repositories in github
 
 	telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.GitTerraformApplyStarted, "")
 
@@ -148,8 +148,7 @@ func (clctrl *ClusterController) GetRepoURL() (string, error) {
 	case "github":
 
 		// Define constant url based on flag input, only expecting 2 protocols
-		switch clctrl.GitProtocol {
-		case "ssh": //"ssh"
+		if clctrl.ProviderConfig.GitProtocol == "ssh" {
 			destinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
 		}
 	case "gitlab":

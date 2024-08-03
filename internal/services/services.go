@@ -7,13 +7,13 @@ See the LICENSE file for more details.
 package services
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	v1alpha1 "github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
@@ -547,10 +547,10 @@ func DetokenizeConfigKeys(serviceFilePath string, configKeys []pkgtypes.GitopsCa
 			}
 
 			for _, configKey := range configKeys {
-				data = []byte(strings.Replace(string(data), configKey.Name, configKey.Value, -1))
+				data = bytes.ReplaceAll(data, []byte(configKey.Name), []byte(configKey.Value))
 			}
 
-			err = ioutil.WriteFile(path, data, 0)
+			err = os.WriteFile(path, data, 0)
 			if err != nil {
 				return err
 			}

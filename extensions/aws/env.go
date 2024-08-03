@@ -103,8 +103,7 @@ func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster
 	envs["TF_VAR_kbot_ssh_private_key"] = cl.GitAuth.PrivateKey
 	envs["TF_VAR_kbot_ssh_public_key"] = cl.GitAuth.PublicKey
 
-	switch cl.GitProvider {
-	case "gitlab":
+	if cl.GitProvider == "gitlab" {
 		envs["TF_VAR_owner_group_id"] = fmt.Sprint(cl.GitlabOwnerGroupID)
 	}
 

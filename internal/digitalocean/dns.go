@@ -163,7 +163,7 @@ func (c *DigitaloceanConfiguration) DeleteDNSRecords(domainName string, dryRun b
 			msg := fmt.Sprintf("delete digitalocean dns record %s.%s [%s] %s", rec.Name, domainName, rec.Type, rec.Data)
 
 			if dryRun {
-				msg = msg + " [dry run]"
+				msg += " [dry run]"
 			}
 
 			log.Info().Msgf(msg)

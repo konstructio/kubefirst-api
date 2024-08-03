@@ -75,7 +75,7 @@ func StreamLogs(fileName string, ch chan types.LogMessage, errCh chan error, don
 	}
 	k1Dir := fmt.Sprintf("%s/.k1", homePath)
 
-	//* create log directory
+	// * create log directory
 	logsFolder := fmt.Sprintf("%s/logs", k1Dir)
 
 	logfile := fmt.Sprintf("%s/%s", logsFolder, fileName)

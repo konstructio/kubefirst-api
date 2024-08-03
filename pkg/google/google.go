@@ -26,12 +26,12 @@ func (conf *GoogleConfiguration) GetRegions() ([]string, error) {
 
 	creds, err := google.CredentialsFromJSON(conf.Context, []byte(conf.KeyFile), secretmanager.DefaultAuthScopes()...)
 	if err != nil {
-		return nil, fmt.Errorf("could not create google storage client credentials: %s", err)
+		return nil, fmt.Errorf("could not create google storage client credentials: %w", err)
 	}
 
 	client, err := compute.NewRegionsRESTClient(conf.Context, option.WithCredentials(creds))
 	if err != nil {
-		return []string{}, fmt.Errorf("could not create google compute client: %s", err)
+		return []string{}, fmt.Errorf("could not create google compute client: %w", err)
 	}
 	defer client.Close()
 
@@ -59,12 +59,12 @@ func (conf *GoogleConfiguration) GetZones() ([]string, error) {
 
 	creds, err := google.CredentialsFromJSON(conf.Context, []byte(conf.KeyFile), secretmanager.DefaultAuthScopes()...)
 	if err != nil {
-		return nil, fmt.Errorf("could not create google storage client credentials: %s", err)
+		return nil, fmt.Errorf("could not create google storage client credentials: %w", err)
 	}
 
 	client, err := compute.NewZonesRESTClient(conf.Context, option.WithCredentials(creds))
 	if err != nil {
-		return nil, fmt.Errorf("could not create google compute client: %s", err)
+		return nil, fmt.Errorf("could not create google compute client: %w", err)
 	}
 	defer client.Close()
 

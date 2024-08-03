@@ -126,7 +126,7 @@ func (conf *GoogleConfiguration) GetDNSDomains() ([]string, error) {
 
 	creds, err := google.CredentialsFromJSON(conf.Context, []byte(conf.KeyFile), secretmanager.DefaultAuthScopes()...)
 	if err != nil {
-		return nil, fmt.Errorf("could not create google storage client credentials: %s", err)
+		return nil, fmt.Errorf("could not create google storage client credentials: %w", err)
 	}
 
 	dnsService, err := googleDNS.NewService(conf.Context, option.WithCredentials(creds))
@@ -149,7 +149,7 @@ func (conf *GoogleConfiguration) GetDNSDomains() ([]string, error) {
 func (conf *GoogleConfiguration) ListInstances(zone string) ([]string, error) {
 	creds, err := google.CredentialsFromJSON(conf.Context, []byte(conf.KeyFile), secretmanager.DefaultAuthScopes()...)
 	if err != nil {
-		return nil, fmt.Errorf("could not create google storage client credentials: %s", err)
+		return nil, fmt.Errorf("could not create google storage client credentials: %w", err)
 	}
 
 	machineTypeClient, err := compute.NewMachineTypesRESTClient(context.Background(), option.WithCredentials(creds))

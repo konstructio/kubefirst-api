@@ -334,10 +334,18 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 	_, err = vaultClient.KVv2("secret").Put(context.Background(), "external-dns", map[string]interface{}{
 		"token": externalDnsToken,
 	})
+	if err != nil {
+		log.Error().Msgf("error writing secret to vault: %s", err)
+		return err
+	}
 
 	_, err = vaultClient.KVv2("secret").Put(context.Background(), "cloudflare", map[string]interface{}{
 		"origin-ca-api-key": cl.CloudflareAuth.OriginCaIssuerKey,
 	})
+	if err != nil {
+		log.Error().Msgf("error writing secret to vault: %s", err)
+		return err
+	}
 
 	// _, err = vaultClient.KVv2("secret").Put(context.Background(), "crossplane", map[string]interface{}{
 	// 	"username": cl.GitAuth.User,
@@ -355,11 +363,6 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 			return err
 		}
 		log.Info().Msg("successfully wrote google specific secrets to vault")
-	}
-
-	if err != nil {
-		log.Error().Msgf("error writing secret to vault: %s", err)
-		return err
 	}
 
 	log.Info().Msg("successfully wrote platform secrets to vault secret store")
@@ -417,7 +420,7 @@ func writeGoogleSecrets(homeDir string, vaultClient *vaultapi.Client) error {
 		return err
 	}
 
-	data["private_key"] = strings.Replace(data["private_key"].(string), "\n", "\\n", -1)
+	data["private_key"] = strings.ReplaceAll(data["private_key"].(string), "\n", "\\n")
 
 	_, err = vaultClient.KVv2("secret").Put(context.Background(), "gcp/application-default-credentials", data)
 	if err != nil {

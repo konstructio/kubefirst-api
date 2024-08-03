@@ -30,19 +30,19 @@ func PutClusterObject(cr *types.StateStoreCredentials, d *types.StateStoreDetail
 		Secure: true,
 	})
 	if err != nil {
-		return fmt.Errorf("error initializing minio client: %s", err)
+		return fmt.Errorf("error initializing minio client: %w", err)
 	}
 
 	// Reference for cluster object output file
 	object, err := os.Open(obj.LocalFilePath)
 	if err != nil {
-		return fmt.Errorf("error during object local copy file lookup: %s", err)
+		return fmt.Errorf("error during object local copy file lookup: %w", err)
 	}
 	defer object.Close()
 
 	objectStat, err := object.Stat()
 	if err != nil {
-		return fmt.Errorf("error during object stat: %s", err)
+		return fmt.Errorf("error during object stat: %w", err)
 	}
 
 	// Put
@@ -55,7 +55,7 @@ func PutClusterObject(cr *types.StateStoreCredentials, d *types.StateStoreDetail
 		minio.PutObjectOptions{ContentType: obj.ContentType},
 	)
 	if err != nil {
-		return fmt.Errorf("error during object put: %s", err)
+		return fmt.Errorf("error during object put: %w", err)
 	}
 	log.Info().Msgf("uploaded cluster object %s to state store bucket %s successfully", obj.LocalFilePath, d.Name)
 

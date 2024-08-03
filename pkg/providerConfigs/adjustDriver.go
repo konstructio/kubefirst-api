@@ -32,14 +32,14 @@ func AdjustGitopsRepo(
 	apexContentExists bool,
 	useCloudflareOriginIssuer bool,
 ) error {
-	//* clean up all other platforms
+	// * clean up all other platforms
 	for _, platform := range pkg.SupportedPlatforms {
 		if platform != fmt.Sprintf("%s-%s", cloudProvider, gitProvider) {
 			os.RemoveAll(gitopsRepoDir + "/" + platform)
 		}
 	}
 
-	//* copy options
+	// * copy options
 	opt := cp.Options{
 		Skip: func(src string) (bool, error) {
 			if strings.HasSuffix(src, ".git") {
@@ -84,7 +84,7 @@ func AdjustGitopsRepo(
 		}
 		os.RemoveAll(driverContent)
 
-		//* copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
+		// * copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
 		clusterContent := fmt.Sprintf("%s/templates/%s", gitopsRepoDir, clusterType)
 
 		// Remove apex content if apex content already exists
@@ -121,7 +121,7 @@ func AdjustGitopsRepo(
 		}
 		os.RemoveAll(driverContent)
 
-		//* copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
+		// * copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
 		clusterContent := fmt.Sprintf("%s/templates/%s", gitopsRepoDir, clusterType)
 
 		// Remove apex content if apex content already exists
@@ -158,7 +158,7 @@ func AdjustGitopsRepo(
 		}
 		os.RemoveAll(driverContent)
 
-		//* copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
+		// * copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
 		clusterContent := fmt.Sprintf("%s/templates/%s", gitopsRepoDir, clusterType)
 
 		// Remove apex content if apex content already exists
@@ -195,7 +195,7 @@ func AdjustGitopsRepo(
 		}
 		os.RemoveAll(driverContent)
 
-		//* copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
+		// * copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
 		clusterContent := fmt.Sprintf("%s/templates/%s", gitopsRepoDir, clusterType)
 
 		// Remove apex content if apex content already exists
@@ -232,7 +232,7 @@ func AdjustGitopsRepo(
 		}
 		os.RemoveAll(driverContent)
 
-		//* copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
+		// * copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
 		clusterContent := fmt.Sprintf("%s/templates/%s", gitopsRepoDir, clusterType)
 
 		// Remove apex content if apex content already exists
@@ -268,7 +268,7 @@ func AdjustGitopsRepo(
 		}
 		os.RemoveAll(driverContent)
 
-		//* copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
+		// * copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
 		clusterContent := fmt.Sprintf("%s/templates/%s", gitopsRepoDir, clusterType)
 
 		// Remove apex content if apex content already exists
@@ -305,7 +305,7 @@ func AdjustGitopsRepo(
 		}
 		os.RemoveAll(driverContent)
 
-		//* copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
+		// * copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
 		clusterContent := fmt.Sprintf("%s/templates/%s", gitopsRepoDir, clusterType)
 
 		// Remove apex content if apex content already exists
@@ -342,7 +342,7 @@ func AdjustGitopsRepo(
 		}
 		os.RemoveAll(driverContent)
 
-		//* copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
+		// * copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
 		clusterContent := fmt.Sprintf("%s/templates/%s", gitopsRepoDir, clusterType)
 
 		// Remove apex content if apex content already exists
@@ -379,7 +379,7 @@ func AdjustGitopsRepo(
 		}
 		os.RemoveAll(driverContent)
 
-		//* copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
+		// * copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
 		clusterContent := fmt.Sprintf("%s/templates/%s", gitopsRepoDir, clusterType)
 
 		// Remove apex content if apex content already exists
@@ -416,7 +416,7 @@ func AdjustGitopsRepo(
 		}
 		os.RemoveAll(driverContent)
 
-		//* copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
+		// * copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
 		clusterContent := fmt.Sprintf("%s/templates/%s", gitopsRepoDir, clusterType)
 
 		// Remove apex content if apex content already exists
@@ -453,7 +453,7 @@ func AdjustGitopsRepo(
 		}
 		os.RemoveAll(driverContent)
 
-		//* copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
+		// * copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
 		clusterContent := fmt.Sprintf("%s/templates/%s", gitopsRepoDir, clusterType)
 
 		// Remove apex content if apex content already exists
@@ -490,7 +490,7 @@ func AdjustGitopsRepo(
 		}
 		os.RemoveAll(driverContent)
 
-		//* copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
+		// * copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
 		clusterContent := fmt.Sprintf("%s/templates/%s", gitopsRepoDir, clusterType)
 
 		// Remove apex content if apex content already exists
@@ -527,7 +527,7 @@ func AdjustGitopsRepo(
 		}
 		os.RemoveAll(driverContent)
 
-		//* copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
+		// * copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
 		clusterContent := fmt.Sprintf("%s/templates/%s", gitopsRepoDir, clusterType)
 
 		// Remove apex content if apex content already exists
@@ -553,7 +553,7 @@ func AdjustGitopsRepo(
 		return nil
 	}
 
-	//* copy $cloudProvider-$gitProvider/* $HOME/.k1/gitops/
+	// * copy $cloudProvider-$gitProvider/* $HOME/.k1/gitops/
 	driverContent := fmt.Sprintf("%s/%s-%s/", gitopsRepoDir, cloudProvider, gitProvider)
 	err := cp.Copy(driverContent, gitopsRepoDir, opt)
 	if err != nil {
@@ -562,7 +562,7 @@ func AdjustGitopsRepo(
 	}
 	os.RemoveAll(driverContent)
 
-	//* copy $HOME/.k1/gitops/cluster-types/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
+	// * copy $HOME/.k1/gitops/cluster-types/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
 	clusterContent := fmt.Sprintf("%s/cluster-types/%s", gitopsRepoDir, clusterType)
 
 	// Remove apex content if apex content already exists
@@ -596,17 +596,17 @@ func AdjustMetaphorRepo(
 	gitProvider string,
 	k1Dir string,
 ) error {
-	//* create ~/.k1/metaphor
+	// * create ~/.k1/metaphor
 	metaphorDir := fmt.Sprintf("%s/metaphor", k1Dir)
 	os.Mkdir(metaphorDir, 0o700)
 
-	//* git init
+	// * git init
 	metaphorRepo, err := git.PlainInit(metaphorDir, false)
 	if err != nil {
 		return err
 	}
 
-	//* copy options
+	// * copy options
 	opt := cp.Options{
 		Skip: func(src string) (bool, error) {
 			if strings.HasSuffix(src, ".git") {
@@ -629,7 +629,7 @@ func AdjustMetaphorRepo(
 	// todo implement repo, err :- createMetaphor() which returns the metaphor repoository object, removes content from
 	// gitops and then allows gitops to commit during its sequence of ops
 	if strings.ToLower(fmt.Sprintf("akamai-%s", gitProvider)) == AKAMAI_GITHUB {
-		//* metaphor app source
+		// * metaphor app source
 		metaphorContent := fmt.Sprintf("%s/metaphor", gitopsRepoDir)
 		err = cp.Copy(metaphorContent, metaphorDir, opt)
 		if err != nil {
@@ -653,7 +653,7 @@ func AdjustMetaphorRepo(
 		// remove old git ref
 		err = metaphorRepo.Storer.RemoveReference(plumbing.NewBranchReferenceName("master"))
 		if err != nil {
-			return fmt.Errorf("error removing previous git ref: %s", err)
+			return fmt.Errorf("error removing previous git ref: %w", err)
 		}
 
 		// create remote
@@ -662,7 +662,7 @@ func AdjustMetaphorRepo(
 			URLs: []string{destinationMetaphorRepoURL},
 		})
 		if err != nil {
-			return fmt.Errorf("error creating remote for metaphor repository: %s", err)
+			return fmt.Errorf("error creating remote for metaphor repository: %w", err)
 		}
 
 		return nil
@@ -679,7 +679,7 @@ func AdjustMetaphorRepo(
 	// todo implement repo, err :- createMetaphor() which returns the metaphor repoository object, removes content from
 	// gitops and then allows gitops to commit during its sequence of ops
 	if strings.ToLower(fmt.Sprintf("aws-%s", gitProvider)) == AWS_GITHUB {
-		//* metaphor app source
+		// * metaphor app source
 		metaphorContent := fmt.Sprintf("%s/metaphor", gitopsRepoDir)
 		err = cp.Copy(metaphorContent, metaphorDir, opt)
 		if err != nil {
@@ -703,7 +703,7 @@ func AdjustMetaphorRepo(
 		// remove old git ref
 		err = metaphorRepo.Storer.RemoveReference(plumbing.NewBranchReferenceName("master"))
 		if err != nil {
-			return fmt.Errorf("error removing previous git ref: %s", err)
+			return fmt.Errorf("error removing previous git ref: %w", err)
 		}
 
 		// create remote
@@ -712,7 +712,7 @@ func AdjustMetaphorRepo(
 			URLs: []string{destinationMetaphorRepoURL},
 		})
 		if err != nil {
-			return fmt.Errorf("error creating remote for metaphor repository: %s", err)
+			return fmt.Errorf("error creating remote for metaphor repository: %w", err)
 		}
 
 		return nil
@@ -729,7 +729,7 @@ func AdjustMetaphorRepo(
 	// todo implement repo, err :- createMetaphor() which returns the metaphor repoository object, removes content from
 	// gitops and then allows gitops to commit during its sequence of ops
 	if strings.ToLower(fmt.Sprintf("aws-%s", gitProvider)) == AWS_GITLAB {
-		//* metaphor app source
+		// * metaphor app source
 		metaphorContent := fmt.Sprintf("%s/metaphor", gitopsRepoDir)
 		err = cp.Copy(metaphorContent, metaphorDir, opt)
 		if err != nil {
@@ -753,7 +753,7 @@ func AdjustMetaphorRepo(
 		// remove old git ref
 		err = metaphorRepo.Storer.RemoveReference(plumbing.NewBranchReferenceName("master"))
 		if err != nil {
-			return fmt.Errorf("error removing previous git ref: %s", err)
+			return fmt.Errorf("error removing previous git ref: %w", err)
 		}
 
 		// create remote
@@ -762,7 +762,7 @@ func AdjustMetaphorRepo(
 			URLs: []string{destinationMetaphorRepoURL},
 		})
 		if err != nil {
-			return fmt.Errorf("error creating remote for metaphor repository: %s", err)
+			return fmt.Errorf("error creating remote for metaphor repository: %w", err)
 		}
 
 		return nil
@@ -779,7 +779,7 @@ func AdjustMetaphorRepo(
 	// todo implement repo, err :- createMetaphor() which returns the metaphor repoository object, removes content from
 	// gitops and then allows gitops to commit during its sequence of ops
 	if strings.ToLower(fmt.Sprintf("civo-%s", gitProvider)) == CIVO_GITHUB {
-		//* metaphor app source
+		// * metaphor app source
 		metaphorContent := fmt.Sprintf("%s/metaphor", gitopsRepoDir)
 		err = cp.Copy(metaphorContent, metaphorDir, opt)
 		if err != nil {
@@ -803,7 +803,7 @@ func AdjustMetaphorRepo(
 		// remove old git ref
 		err = metaphorRepo.Storer.RemoveReference(plumbing.NewBranchReferenceName("master"))
 		if err != nil {
-			return fmt.Errorf("error removing previous git ref: %s", err)
+			return fmt.Errorf("error removing previous git ref: %w", err)
 		}
 
 		// create remote
@@ -812,7 +812,7 @@ func AdjustMetaphorRepo(
 			URLs: []string{destinationMetaphorRepoURL},
 		})
 		if err != nil {
-			return fmt.Errorf("error creating remote for metaphor repository: %s", err)
+			return fmt.Errorf("error creating remote for metaphor repository: %w", err)
 		}
 
 		return nil
@@ -829,7 +829,7 @@ func AdjustMetaphorRepo(
 	// todo implement repo, err :- createMetaphor() which returns the metaphor repoository object, removes content from
 	// gitops and then allows gitops to commit during its sequence of ops
 	if strings.ToLower(fmt.Sprintf("civo-%s", gitProvider)) == CIVO_GITLAB {
-		//* metaphor app source
+		// * metaphor app source
 		metaphorContent := fmt.Sprintf("%s/metaphor", gitopsRepoDir)
 		err = cp.Copy(metaphorContent, metaphorDir, opt)
 		if err != nil {
@@ -853,7 +853,7 @@ func AdjustMetaphorRepo(
 		// remove old git ref
 		err = metaphorRepo.Storer.RemoveReference(plumbing.NewBranchReferenceName("master"))
 		if err != nil {
-			return fmt.Errorf("error removing previous git ref: %s", err)
+			return fmt.Errorf("error removing previous git ref: %w", err)
 		}
 
 		// create remote
@@ -862,17 +862,17 @@ func AdjustMetaphorRepo(
 			URLs: []string{destinationMetaphorRepoURL},
 		})
 		if err != nil {
-			return fmt.Errorf("error creating remote for metaphor repository: %s", err)
+			return fmt.Errorf("error creating remote for metaphor repository: %w", err)
 		}
 
 		return nil
 
 	}
 
-	//* copy ci content
+	// * copy ci content
 	switch gitProvider {
 	case "github":
-		//* copy $HOME/.k1/gitops/ci/.github/* $HOME/.k1/metaphor/.github
+		// * copy $HOME/.k1/gitops/ci/.github/* $HOME/.k1/metaphor/.github
 		githubActionsFolderContent := fmt.Sprintf("%s/gitops/ci/.github", k1Dir)
 		log.Info().Msgf("copying github content: %s", githubActionsFolderContent)
 		err := cp.Copy(githubActionsFolderContent, fmt.Sprintf("%s/.github", metaphorDir), opt)
@@ -881,7 +881,7 @@ func AdjustMetaphorRepo(
 			return err
 		}
 	case "gitlab":
-		//* copy $HOME/.k1/gitops/ci/.gitlab-ci.yml/* $HOME/.k1/metaphor/.github
+		// * copy $HOME/.k1/gitops/ci/.gitlab-ci.yml/* $HOME/.k1/metaphor/.github
 		gitlabCIContent := fmt.Sprintf("%s/gitops/ci/.gitlab-ci.yml", k1Dir)
 		log.Info().Msgf("copying gitlab content: %s", gitlabCIContent)
 		err := cp.Copy(gitlabCIContent, fmt.Sprintf("%s/.gitlab-ci.yml", metaphorDir), opt)
@@ -891,7 +891,7 @@ func AdjustMetaphorRepo(
 		}
 	}
 
-	//* metaphor app source
+	// * metaphor app source
 	metaphorContent := fmt.Sprintf("%s/metaphor", gitopsRepoDir)
 	err = cp.Copy(metaphorContent, metaphorDir, opt)
 	if err != nil {
@@ -899,7 +899,7 @@ func AdjustMetaphorRepo(
 		return err
 	}
 
-	//* copy $HOME/.k1/gitops/ci/.argo/* $HOME/.k1/metaphor/.argo
+	// * copy $HOME/.k1/gitops/ci/.argo/* $HOME/.k1/metaphor/.argo
 	argoWorkflowsFolderContent := fmt.Sprintf("%s/gitops/ci/.argo", k1Dir)
 	log.Info().Msgf("copying argo workflows content: %s", argoWorkflowsFolderContent)
 	err = cp.Copy(argoWorkflowsFolderContent, fmt.Sprintf("%s/.argo", metaphorDir), opt)
@@ -908,7 +908,7 @@ func AdjustMetaphorRepo(
 		return err
 	}
 
-	//* copy $HOME/.k1/gitops/metaphor/Dockerfile $HOME/.k1/metaphor/build/Dockerfile
+	// * copy $HOME/.k1/gitops/metaphor/Dockerfile $HOME/.k1/metaphor/build/Dockerfile
 	dockerfileContent := fmt.Sprintf("%s/Dockerfile", metaphorDir)
 	os.Mkdir(metaphorDir+"/build", 0o700)
 	log.Info().Msgf("copying dockerfile content: %s", argoWorkflowsFolderContent)
@@ -934,7 +934,7 @@ func AdjustMetaphorRepo(
 	// remove old git ref
 	err = metaphorRepo.Storer.RemoveReference(plumbing.NewBranchReferenceName("master"))
 	if err != nil {
-		return fmt.Errorf("error removing previous git ref: %s", err)
+		return fmt.Errorf("error removing previous git ref: %w", err)
 	}
 
 	// create remote
@@ -943,7 +943,7 @@ func AdjustMetaphorRepo(
 		URLs: []string{destinationMetaphorRepoURL},
 	})
 	if err != nil {
-		return fmt.Errorf("error creating remote for metaphor repository: %s", err)
+		return fmt.Errorf("error creating remote for metaphor repository: %w", err)
 	}
 
 	return nil
@@ -968,7 +968,7 @@ func PrepareGitRepositories(
 	gitProtocol string,
 	useCloudflareOriginIssuer bool,
 ) error {
-	//* clone the gitops-template repo
+	// * clone the gitops-template repo
 	gitopsRepo, err := gitClient.CloneRefSetMain(gitopsTemplateBranch, gitopsDir, gitopsTemplateURL)
 	if err != nil {
 		log.Panic().Msgf("error opening repo at: %s, err: %v", gitopsDir, err)
@@ -976,7 +976,7 @@ func PrepareGitRepositories(
 	log.Info().Msg("gitops repository clone complete")
 
 	// ADJUST CONTENT
-	//* adjust the content for the gitops repo
+	// * adjust the content for the gitops repo
 	err = AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsDir, gitProvider, k1Dir, apexContentExists, useCloudflareOriginIssuer)
 	if err != nil {
 		log.Info().Msgf("err: %v", err)
@@ -984,37 +984,37 @@ func PrepareGitRepositories(
 	}
 
 	// DETOKENIZE
-	//* detokenize the gitops repo
+	// * detokenize the gitops repo
 	DetokenizeGitGitops(gitopsDir, gitopsTokens, gitProtocol, useCloudflareOriginIssuer)
 	if err != nil {
 		return err
 	}
 
 	// ADJUST CONTENT
-	//* adjust the content for the metaphor repo
+	// * adjust the content for the metaphor repo
 	err = AdjustMetaphorRepo(destinationMetaphorRepoURL, gitopsDir, gitProvider, k1Dir)
 	if err != nil {
 		return err
 	}
 
 	// DETOKENIZE
-	//* detokenize the metaphor repo
+	// * detokenize the metaphor repo
 	DetokenizeGitMetaphor(metaphorDir, metaphorTokens)
 	if err != nil {
 		return err
 	}
 
 	// COMMIT
-	//* commit initial gitops-template content
+	// * commit initial gitops-template content
 	err = gitClient.Commit(gitopsRepo, "committing initial detokenized gitops-template repo content")
 	if err != nil {
 		return err
 	}
 
-	//* commit initial metaphor content
+	// * commit initial metaphor content
 	metaphorRepo, err := git.PlainOpen(metaphorDir)
 	if err != nil {
-		return fmt.Errorf("error opening metaphor git repository: %s", err)
+		return fmt.Errorf("error opening metaphor git repository: %w", err)
 	}
 
 	err = gitClient.Commit(metaphorRepo, "committing initial detokenized metaphor repo content")
@@ -1023,13 +1023,13 @@ func PrepareGitRepositories(
 	}
 
 	// ADD REMOTE(S)
-	//* add new remote for gitops repo
+	// * add new remote for gitops repo
 	err = gitClient.AddRemote(destinationGitopsRepoURL, gitProvider, gitopsRepo)
 	if err != nil {
 		return err
 	}
 
-	//* add new remote for metaphor repo
+	// * add new remote for metaphor repo
 	err = gitClient.AddRemote(destinationMetaphorRepoURL, gitProvider, metaphorRepo)
 	if err != nil {
 		return err

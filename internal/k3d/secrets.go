@@ -13,7 +13,6 @@ import (
 
 	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	"github.com/rs/zerolog/log"
-
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -70,7 +69,7 @@ func AddK3DSecrets(
 	// Create secrets
 
 	// swap secret data based on https flag
-	secretData := map[string][]byte{}
+	var secretData map[string][]byte
 
 	if strings.Contains(destinationGitopsRepoURL, "https") {
 		// http basic auth

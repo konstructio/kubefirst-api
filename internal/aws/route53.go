@@ -127,7 +127,7 @@ func (conf *AWSConfiguration) GetHostedZoneID(hostedZoneName string) (string, er
 		},
 	)
 	if err != nil {
-		return "", fmt.Errorf("error listing hosted zones: %s", err)
+		return "", fmt.Errorf("error listing hosted zones: %w", err)
 	}
 
 	var hostedZoneId string
@@ -163,7 +163,7 @@ func (conf *AWSConfiguration) GetHostedZones() ([]string, error) {
 	route53Client := route53.NewFromConfig(conf.Config)
 	hostedZones, err := route53Client.ListHostedZones(context.Background(), &route53.ListHostedZonesInput{})
 	if err != nil {
-		return nil, fmt.Errorf("error listing hosted zones: %s", err)
+		return nil, fmt.Errorf("error listing hosted zones: %w", err)
 	}
 
 	var domainList []string

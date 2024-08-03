@@ -21,14 +21,14 @@ import (
 )
 
 func AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsRepoDir, gitProvider, k1Dir string, removeAtlantis bool, installKubefirstPro bool) error {
-	//* clean up all other platforms
+	// * clean up all other platforms
 	for _, platform := range pkg.SupportedPlatforms {
 		if platform != fmt.Sprintf("%s-%s", CloudProvider, gitProvider) {
 			os.RemoveAll(gitopsRepoDir + "/" + platform)
 		}
 	}
 
-	//* copy options
+	// * copy options
 	opt := cp.Options{
 		Skip: func(src string) (bool, error) {
 			if strings.HasSuffix(src, ".git") {
@@ -41,7 +41,7 @@ func AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsRepoDir, gi
 		},
 	}
 
-	//* copy $cloudProvider-$gitProvider/* $HOME/.k1/gitops/
+	// * copy $cloudProvider-$gitProvider/* $HOME/.k1/gitops/
 	driverContent := fmt.Sprintf("%s/%s-%s/", gitopsRepoDir, CloudProvider, gitProvider)
 	err := cp.Copy(driverContent, gitopsRepoDir, opt)
 	if err != nil {
@@ -50,7 +50,7 @@ func AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsRepoDir, gi
 	}
 	os.RemoveAll(driverContent)
 
-	//* copy $HOME/.k1/gitops/cluster-types/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
+	// * copy $HOME/.k1/gitops/cluster-types/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
 	clusterContent := fmt.Sprintf("%s/cluster-types/%s", gitopsRepoDir, clusterType)
 	err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/%s", gitopsRepoDir, clusterName), opt)
 	if err != nil {
@@ -92,17 +92,17 @@ func AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsRepoDir, gi
 }
 
 func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvider, k1Dir string) error {
-	//* create ~/.k1/metaphor
+	// * create ~/.k1/metaphor
 	metaphorDir := fmt.Sprintf("%s/metaphor", k1Dir)
 	os.Mkdir(metaphorDir, 0o700)
 
-	//* git init
+	// * git init
 	metaphorRepo, err := git.PlainInit(metaphorDir, false)
 	if err != nil {
 		return err
 	}
 
-	//* copy options
+	// * copy options
 	opt := cp.Options{
 		Skip: func(src string) (bool, error) {
 			if strings.HasSuffix(src, ".git") {
@@ -115,7 +115,7 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 		},
 	}
 
-	//* metaphor app source
+	// * metaphor app source
 	metaphorContent := fmt.Sprintf("%s/metaphor", gitopsRepoDir)
 	err = cp.Copy(metaphorContent, metaphorDir, opt)
 	if err != nil {
@@ -123,10 +123,10 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 		return err
 	}
 
-	//* copy ci content
+	// * copy ci content
 	switch gitProvider {
 	case "github":
-		//* copy $HOME/.k1/gitops/ci/.github/* $HOME/.k1/metaphor/.github
+		// * copy $HOME/.k1/gitops/ci/.github/* $HOME/.k1/metaphor/.github
 		githubActionsFolderContent := fmt.Sprintf("%s/gitops/ci/.github", k1Dir)
 		log.Info().Msgf("copying github content: %s", githubActionsFolderContent)
 		err := cp.Copy(githubActionsFolderContent, fmt.Sprintf("%s/.github", metaphorDir), opt)
@@ -135,7 +135,7 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 			return err
 		}
 	case "gitlab":
-		//* copy $HOME/.k1/gitops/ci/.gitlab-ci.yml/* $HOME/.k1/metaphor/.github
+		// * copy $HOME/.k1/gitops/ci/.gitlab-ci.yml/* $HOME/.k1/metaphor/.github
 		gitlabCIContent := fmt.Sprintf("%s/gitops/ci/.gitlab-ci.yml", k1Dir)
 		log.Info().Msgf("copying gitlab content: %s", gitlabCIContent)
 		err := cp.Copy(gitlabCIContent, fmt.Sprintf("%s/.gitlab-ci.yml", metaphorDir), opt)
@@ -145,7 +145,7 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 		}
 	}
 
-	//* copy $HOME/.k1/gitops/ci/.argo/* $HOME/.k1/metaphor/.argo
+	// * copy $HOME/.k1/gitops/ci/.argo/* $HOME/.k1/metaphor/.argo
 	argoWorkflowsFolderContent := fmt.Sprintf("%s/gitops/ci/.argo", k1Dir)
 	log.Info().Msgf("copying argo workflows content: %s", argoWorkflowsFolderContent)
 	err = cp.Copy(argoWorkflowsFolderContent, fmt.Sprintf("%s/.argo", metaphorDir), opt)
@@ -154,7 +154,7 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 		return err
 	}
 
-	//* copy $HOME/.k1/gitops/metaphor/Dockerfile $HOME/.k1/metaphor/build/Dockerfile
+	// * copy $HOME/.k1/gitops/metaphor/Dockerfile $HOME/.k1/metaphor/build/Dockerfile
 	dockerfileContent := fmt.Sprintf("%s/Dockerfile", metaphorDir)
 	os.Mkdir(metaphorDir+"/build", 0o700)
 	log.Info().Msgf("copying dockerfile content: %s", argoWorkflowsFolderContent)
@@ -181,12 +181,16 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 	// remove old git ref
 	err = metaphorRepo.Storer.RemoveReference(plumbing.NewBranchReferenceName("master"))
 	if err != nil {
-		return fmt.Errorf("error removing previous git ref: %s", err)
+		return fmt.Errorf("error removing previous git ref: %w", err)
 	}
 	// create remote
 	_, err = metaphorRepo.CreateRemote(&config.RemoteConfig{
 		Name: "origin",
 		URLs: []string{destinationMetaphorRepoGitURL},
 	})
+	if err != nil {
+		return fmt.Errorf("error creating remote: %w", err)
+	}
+
 	return nil
 }

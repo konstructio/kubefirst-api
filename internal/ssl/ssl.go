@@ -69,7 +69,7 @@ func Backup(backupDir, domainName, k1Dir, kubeconfigPath string) error {
 		return err
 	}
 
-	//* corev1 secret resources
+	// * corev1 secret resources
 	secrets, err := clientset.CoreV1().Secrets("").List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -93,7 +93,7 @@ func Backup(backupDir, domainName, k1Dir, kubeconfigPath string) error {
 			log.Info().Msgf("writing file: %s\n\n", fileName)
 			yamlContent, err := yaml.Marshal(secret)
 			if err != nil {
-				return fmt.Errorf("unable to marshal yaml: %s", err)
+				return fmt.Errorf("unable to marshal yaml: %w", err)
 			}
 			pkg.CreateFile(fileName, yamlContent)
 
