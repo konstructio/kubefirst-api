@@ -44,5 +44,4 @@ func detokenizeterraform(path string, clctrl *ClusterController) filepath.WalkFu
 
 		return nil
 	})
-
 }

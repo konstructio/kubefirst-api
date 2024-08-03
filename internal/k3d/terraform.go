@@ -62,7 +62,7 @@ type GithubTerraformEnvs struct {
 func TerraformPrep(config *K3dConfig) error {
 
 	path := config.GitopsDir + "/terraform"
-	log.Info().Msgf("Repooo is %s", path)
+	log.Info().Msgf("Repo is %s", path)
 	err := filepath.Walk(path, detokenizeterraform(path, config))
 	if err != nil {
 		return err

@@ -155,7 +155,7 @@ func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, name
 	deploy, err := clientset.AppsV1().Deployments(namespace).Get(ctx, deployment_name, metav1.GetOptions{})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to get deployment %q: %w", deployment_name, err)
 	}
 
 	if deploy.Spec.Template.ObjectMeta.Annotations == nil {
@@ -231,7 +231,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			return err
 		}
 
-		log.Info().Msgf("successfull in restarting\n")
+		log.Info().Msg("successfull in restarting\n")
 
 		retryAttempts := 2
 		for attempt := 1; attempt <= retryAttempts; attempt++ {
