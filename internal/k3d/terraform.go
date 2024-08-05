@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package k3d
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -62,10 +63,16 @@ type GithubTerraformEnvs struct {
 func TerraformPrep(config *K3dConfig) error {
 
 	path := config.GitopsDir + "/terraform"
+	github_runner_path := config.GitopsDir + "/registry/components"
 	log.Info().Msgf("Repo is %s", path)
 	err := filepath.Walk(path, detokenizeterraform(path, config))
 	if err != nil {
-		return err
+		return fmt.Errorf("Error in detokenizing terrform : %w", err)
+	}
+	log.Info().Msg("Applying to github runner")
+	err = filepath.Walk(github_runner_path, detokenizeterraform(github_runner_path, config))
+	if err != nil {
+		return fmt.Errorf("Error in Detokenizing github runner : %w", err)
 	}
 	return nil
 }
