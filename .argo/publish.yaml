@@ -112,34 +112,6 @@ spec:
                 - name: chartDir
                   value: 'charts/kubefirst'
 
-        - - name: publish-macro-helm-chart
-            templateRef:
-              name: cwft-helm
-              template: publish-chart
-              clusterScope: true
-            arguments:
-              artifacts:
-                - name: repo-source
-                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
-              parameters:
-                - name: appName
-                  value: charts # sets workingDir
-                - name: chartDir
-                  value: 'charts/kubefirst'
-
-        - - name: get-current-macro-chart-version
-            templateRef:
-              name: cwft-helm
-              template: get-macro-chart-version
-              clusterScope: true
-            arguments:
-              artifacts:
-                - name: repo-source
-                  from: '{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}'
-              parameters:
-                - name: chartDir
-                  value: "charts/kubefirst"
-
         - - name: pull-commit-push-tag-charts
             templateRef:
               name: cwft-git
@@ -151,11 +123,10 @@ spec:
                   from: '{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}'
               parameters:
                 - name: commitMessage
-                  value: 'tagged {{workflow.parameters.appName}} in charts kubefirst-v{{steps.get-current-macro-chart-version.outputs.result}}'
+                  value: 'tagged {{workflow.parameters.appName}} in charts kubefirst-v{{steps.get-initial-chart-version.outputs.result}}-rc.{{workflow.parameters.shortSha}}}}'
                 - name: gitUrlNoProtocol
                   value: '{{workflow.parameters.gitUrlNoProtocol}}'
                 - name: repoName
                   value: 'charts'
                 - name: tag
-                  value: 'kubefirst-v{{steps.get-current-macro-chart-version.outputs.result}}'
-
+                  value: 'kubefirst-v{{steps.get-initial-chart-version.outputs.result}}-rc.{{workflow.parameters.shortSha}}}}'
