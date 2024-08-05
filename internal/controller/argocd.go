@@ -150,12 +150,12 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 	return nil
 }
 
-func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, namespace string, deployment_name string) error {
+func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, namespace, deploymentName string) error {
 
-	deploy, err := clientset.AppsV1().Deployments(namespace).Get(ctx, deployment_name, metav1.GetOptions{})
+	deploy, err := clientset.AppsV1().Deployments(namespace).Get(ctx, deploymentName, metav1.GetOptions{})
 
 	if err != nil {
-		return fmt.Errorf("unable to get deployment %q: %w", deployment_name, err)
+		return fmt.Errorf("unable to get deployment %q: %w", deploymentName, err)
 	}
 
 	if deploy.Spec.Template.ObjectMeta.Annotations == nil {

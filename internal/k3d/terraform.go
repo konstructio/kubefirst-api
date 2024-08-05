@@ -77,30 +77,25 @@ func detokenizeterraform(path string, config *K3dConfig) filepath.WalkFunc {
 			return nil
 		}
 
-		matched, _ := filepath.Match("*", fi.Name())
-
-		if matched {
-
-			read, err := os.ReadFile(path)
-			if err != nil {
-				return err
-			}
-
-			replacer := strings.NewReplacer(
-				"<ADMIN_TEAM>", config.AdminTeamName,
-				"<DEVELOPER_TEAM>", config.DeveloperTeamName,
-				"<METAPHOR_REPO_NAME>", config.MetaphorRepoName,
-				"<GIT_REPO_NAME>", config.GitopsRepoName,
-			)
-
-			newContents := replacer.Replace(string(read))
-
-			err = os.WriteFile(path, []byte(newContents), 0)
-			if err != nil {
-				return err
-			}
-
+		read, err := os.ReadFile(path)
+		if err != nil {
+			return err
 		}
+
+		replacer := strings.NewReplacer(
+			"<ADMIN_TEAM>", config.AdminTeamName,
+			"<DEVELOPER_TEAM>", config.DeveloperTeamName,
+			"<METAPHOR_REPO_NAME>", config.MetaphorRepoName,
+			"<GIT_REPO_NAME>", config.GitopsRepoName,
+		)
+
+		newContents := replacer.Replace(string(read))
+
+		err = os.WriteFile(path, []byte(newContents), 0)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 

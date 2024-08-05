@@ -276,7 +276,7 @@ func ReplaceFileContent(filPath string, oldContent string, newContent string) er
 // UpdateTerraformS3BackendForK8sAddress during the installation process, Terraform must reach port-forwarded resources
 // to be able to communicate with the services. When Kubefirst finish the installation, and Terraform needs to
 // communicate with the services, it must use the internal Kubernetes addresses.
-func UpdateTerraformS3BackendForK8sAddress(k1Dir string, gitopsRepoName string) error {
+func UpdateTerraformS3BackendForK8sAddress(k1Dir, gitopsRepoName string) error {
 
 	// todo: create a function for file content replacement
 	vaultMainFile := fmt.Sprintf("%s/%s/terraform/vault/main.tf", k1Dir, gitopsRepoName)
