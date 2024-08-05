@@ -7,7 +7,7 @@ See the LICENSE file for more details.
 package k3d
 
 import (
-	pkg "github.com/kubefirst/kubefirst-api/internal"
+	pkg "github.com/konstructio/kubefirst-api/internal"
 	"io/ioutil"
 	"os"
 	"path/filepath"

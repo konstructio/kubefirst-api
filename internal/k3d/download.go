@@ -14,7 +14,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func DownloadTools(clusterName string, gitProvider string, gitOwner string, toolsDir string, gitProtocol string, gitopsRepoName string, metaphorRepoName string, adminTeamName string, developerTeamName string) error {
 func DownloadTools(clusterName, gitProvider, gitOwner, toolsDir, gitProtocol, gitopsRepoName, metaphorRepoName, adminTeamName, developerTeamName string) error {
 
 	config := GetConfig(clusterName, gitProvider, gitOwner, gitProtocol, gitopsRepoName, metaphorRepoName, adminTeamName, developerTeamName)
