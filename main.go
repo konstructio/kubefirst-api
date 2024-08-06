@@ -37,7 +37,7 @@ func main() {
 
 	log.Info().Msg("checking for cluster import secret for management cluster")
 	// Import if needed
-	importedCluster, err := secrets.ImportClusterIfEmpty(true)
+	importedCluster, err := secrets.ImportClusterIfEmpty()
 	if err != nil {
 		log.Fatal().Msg(err.Error())
 	}

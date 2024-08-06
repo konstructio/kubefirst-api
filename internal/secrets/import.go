@@ -17,7 +17,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster, error) {
+func ImportClusterIfEmpty() (pkgtypes.Cluster, error) {
 	// find the secret in mgmt cluster's kubefirst namespace and read import payload and clustername
 	cluster := pkgtypes.Cluster{}
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
