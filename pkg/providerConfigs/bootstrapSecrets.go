@@ -39,7 +39,7 @@ func BootstrapMgmtCluster(
 	}
 
 	log.Info().Msg("creating service accounts")
-	err = ServiceAccounts(clientset, cloudflareAPIToken)
+	err = ServiceAccounts(clientset)
 	if err != nil {
 		return fmt.Errorf("error creating service accounts: %w", err)
 	}
@@ -176,7 +176,7 @@ func K8sNamespaces(clientset kubernetes.Interface) error {
 	return nil
 }
 
-func ServiceAccounts(clientset kubernetes.Interface, cloudflareAPIToken string) error {
+func ServiceAccounts(clientset kubernetes.Interface) error {
 	automountServiceAccountToken := true
 
 	// Create service accounts
@@ -194,11 +194,11 @@ func ServiceAccounts(clientset kubernetes.Interface, cloudflareAPIToken string) 
 	}
 
 	for _, serviceAccount := range createServiceAccounts {
-		_, err := clientset.CoreV1().ServiceAccounts(serviceAccount.ObjectMeta.Namespace).Get(context.TODO(), serviceAccount.ObjectMeta.Name, metav1.GetOptions{})
+		_, err := clientset.CoreV1().ServiceAccounts(serviceAccount.ObjectMeta.Namespace).Get(context.Background(), serviceAccount.ObjectMeta.Name, metav1.GetOptions{})
 		if err == nil {
 			log.Info().Msgf("kubernetes service account %s/%s already created - skipping", serviceAccount.Namespace, serviceAccount.Name)
 		} else if strings.Contains(err.Error(), "not found") {
-			_, err = clientset.CoreV1().ServiceAccounts(serviceAccount.ObjectMeta.Namespace).Create(context.TODO(), serviceAccount, metav1.CreateOptions{})
+			_, err = clientset.CoreV1().ServiceAccounts(serviceAccount.ObjectMeta.Namespace).Create(context.Background(), serviceAccount, metav1.CreateOptions{})
 			if err != nil {
 				log.Error().Msgf("error creating kubernetes service account %s/%s: %s", serviceAccount.Namespace, serviceAccount.Name, err)
 				return err

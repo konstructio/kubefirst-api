@@ -26,7 +26,6 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
-	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	log "github.com/rs/zerolog/log"
 	"github.com/thanhpk/randstr"
@@ -369,12 +368,7 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 			}
 		}
 
-		// create service accounts
-		var token string
-		if (clctrl.CloudflareAuth != pkgtypes.CloudflareAuth{}) {
-			token = clctrl.CloudflareAuth.APIToken
-		}
-		err = providerConfigs.ServiceAccounts(clientSet, token)
+		err = providerConfigs.ServiceAccounts(clientSet)
 		if err != nil {
 			return err
 		}
