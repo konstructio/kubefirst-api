@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package gitClient // nolint:revive // allowed temporarily during code reorg
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/go-git/go-git/v5"
@@ -46,10 +47,11 @@ func AppendFile(cloudType string, reponame string, filename string) bool {
 
 // GitAddWithFilter Check workdir for files to commit
 // filter out the undersired ones based on context
-func GitAddWithFilter(cloudType string, reponame string, w *git.Worktree) error {
+func GitAddWithFilter(w *git.Worktree) error {
 	status, err := w.Status()
 	if err != nil {
 		log.Debug().Msgf("error getting worktree status: %s", err)
+		return fmt.Errorf("error getting worktree status: %w", err)
 	}
 
 	for file, s := range status {
@@ -58,8 +60,10 @@ func GitAddWithFilter(cloudType string, reponame string, w *git.Worktree) error 
 			_, err = w.Add(file)
 			if err != nil {
 				log.Error().Err(err).Msgf("error getting worktree status: %s", err)
+				return fmt.Errorf("error adding file %s: %w", file, err)
 			}
 		}
 	}
+
 	return nil
 }
