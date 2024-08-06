@@ -80,6 +80,8 @@ Be sure that you do not change the default port for the console (3000), and the 
 
 ## Prerequisites for local development
 
+> A [.devcontainer](https://containers.dev/) configuration is provided to allow for a full-featured development environment.
+
 For local development, we need to have a k3d cluster where the kubefirst api can store information in secrets
 
 - Download [k3d](https://k3d.io/)
