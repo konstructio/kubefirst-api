@@ -306,7 +306,7 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 	clientSet := kcfg.Clientset
 
 	// create namespaces
-	err = providerConfigs.K8sNamespaces(clientSet)
+	err = providerConfigs.Namespaces(clientSet)
 	if err != nil {
 		return err
 	}

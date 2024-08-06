@@ -128,7 +128,7 @@ func PrepareGitRepositories(
 	log.Info().Msg("gitops repository clone complete")
 
 	// * adjust the content for the gitops repo
-	err = AdjustGitopsRepo(CloudProvider, clusterName, clusterType, gitopsDir, gitProvider, k1Dir, removeAtlantis, true)
+	err = AdjustGitopsRepo(CloudProvider, clusterName, clusterType, gitopsDir, gitProvider, removeAtlantis, true)
 	if err != nil {
 		log.Info().Msgf("err: %v", err)
 		return err
@@ -182,15 +182,9 @@ func PrepareGitRepositories(
 	return nil
 }
 
-func PostRunPrepareGitopsRepository(clusterName string,
-	// destinationGitopsRepoGitURL string,
-	gitopsDir string,
-	// gitopsRepo *git.Repository,
-	tokens *GitopsDirectoryValues,
-) error {
-	err := postRunDetokenizeGitGitops(gitopsDir, tokens)
-	if err != nil {
-		return err
+func PostRunPrepareGitopsRepository(clusterName, gitopsDir string, tokens *GitopsDirectoryValues) error {
+	if err := postRunDetokenizeGitGitops(gitopsDir); err != nil {
+		return fmt.Errorf("error walking path %q: %w", gitopsDir, err)
 	}
 	return nil
 }

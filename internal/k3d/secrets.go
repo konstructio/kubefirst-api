@@ -17,30 +17,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func AddK3DSecrets(
-	atlantisWebhookSecret string,
-	kbotPublicKey string,
-	destinationGitopsRepoURL string,
-	kbotPrivateKey string,
-	gitProvider string,
-	gitUser string,
-	gitOwner string,
-	kubeconfigPath string,
-	tokenValue string,
-) error {
+func AddK3DSecrets(kbotPublicKey, destinationGitopsRepoURL, kbotPrivateKey, gitProvider, gitUser, gitOwner, kubeconfigPath, tokenValue string) error {
 	clientset, err := k8s.GetClientSet(kubeconfigPath)
 	if err != nil {
 		log.Info().Msg("error getting kubernetes clientset")
+		return fmt.Errorf("error getting kubernetes clientset: %w", err)
 	}
-
-	// Set git provider token value
-	// var containerRegistryHost string
-	// switch gitProvider {
-	// case "github":
-	// 	containerRegistryHost = "https://ghcr.io/"
-	// case "gitlab":
-	// 	containerRegistryHost = "registry.gitlab.io"
-	// }
 
 	// todo audit
 	newNamespaces := []string{
