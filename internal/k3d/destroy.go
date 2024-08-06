@@ -38,7 +38,7 @@ func DeleteK3dCluster(clusterName string, k1Dir string, k3dClient string) error 
 // useful when destroying a local lucster
 func ResolveMinioLocal(path string) error {
 	log.Info().Msgf("attempting to prepare terraform files pre-destroy...")
-	err := filepath.Walk(path, resolveMinioLocal(path))
+	err := filepath.Walk(path, resolveMinioLocal())
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func ResolveMinioLocal(path string) error {
 }
 
 // resolveMinioLocal
-func resolveMinioLocal(path string) filepath.WalkFunc {
+func resolveMinioLocal() filepath.WalkFunc {
 	return filepath.WalkFunc(func(path string, fi os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -57,22 +57,19 @@ func resolveMinioLocal(path string) filepath.WalkFunc {
 			return nil
 		}
 
-		// var matched bool
-		matched, _ := filepath.Match("*", fi.Name())
-		if matched {
-			read, err := os.ReadFile(path)
-			if err != nil {
-				return err
-			}
-
-			newContents := string(read)
-			newContents = strings.ReplaceAll(newContents, "http://minio.minio.svc.cluster.local:9000", "http://localhost:9000")
-
-			err = os.WriteFile(path, []byte(newContents), 0)
-			if err != nil {
-				return err
-			}
+		read, err := os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("error reading file %s: %w", path, err)
 		}
+
+		newContents := string(read)
+		newContents = strings.ReplaceAll(newContents, "http://minio.minio.svc.cluster.local:9000", "http://localhost:9000")
+
+		err = os.WriteFile(path, []byte(newContents), 0)
+		if err != nil {
+			return fmt.Errorf("error writing file %s: %w", path, err)
+		}
+
 		return nil
 	})
 }
