@@ -25,7 +25,6 @@ func BootstrapGoogleMgmtCluster(
 ) error {
 	err := providerConfig.BootstrapMgmtCluster(
 		clientset,
-		cl.GitProvider,
 		cl.GitAuth.User,
 		destinationGitopsRepoURL,
 		cl.GitProtocol,

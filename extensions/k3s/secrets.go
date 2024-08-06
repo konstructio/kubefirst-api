@@ -22,7 +22,6 @@ import (
 func BootstrapK3sMgmtCluster(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster, destinationGitopsRepoURL string) error {
 	err := providerConfig.BootstrapMgmtCluster(
 		clientset,
-		cl.GitProvider,
 		cl.GitAuth.User,
 		destinationGitopsRepoURL,
 		cl.GitProtocol,

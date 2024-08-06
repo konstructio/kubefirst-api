@@ -19,8 +19,7 @@ import (
 )
 
 func BootstrapMgmtCluster(
-	clientset *kubernetes.Clientset,
-	gitProvider string,
+	clientset kubernetes.Interface,
 	gitUser string,
 	destinationGitopsRepoURL string,
 	gitProtocol string,
@@ -36,13 +35,13 @@ func BootstrapMgmtCluster(
 	log.Info().Msg("creating namespaces")
 	err := K8sNamespaces(clientset)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating namespaces: %w", err)
 	}
 
 	log.Info().Msg("creating service accounts")
 	err = ServiceAccounts(clientset, cloudflareAPIToken)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating service accounts: %w", err)
 	}
 	// Create secrets
 	// swap secret data based on https flag
@@ -144,7 +143,7 @@ func BootstrapMgmtCluster(
 	return nil
 }
 
-func K8sNamespaces(clientset *kubernetes.Clientset) error {
+func K8sNamespaces(clientset kubernetes.Interface) error {
 	// Create namespace
 	// Skip if it already exists
 	newNamespaces := []string{
@@ -177,7 +176,7 @@ func K8sNamespaces(clientset *kubernetes.Clientset) error {
 	return nil
 }
 
-func ServiceAccounts(clientset *kubernetes.Clientset, cloudflareAPIToken string) error {
+func ServiceAccounts(clientset kubernetes.Interface, cloudflareAPIToken string) error {
 	automountServiceAccountToken := true
 
 	// Create service accounts
