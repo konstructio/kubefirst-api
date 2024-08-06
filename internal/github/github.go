@@ -13,9 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/google/go-github/v45/github"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/oauth2"
 )
 
@@ -28,9 +27,6 @@ type Session struct {
 
 // New - Create a new client for github wrapper
 func New(token string) Session {
-	if token == "" {
-		log.Fatal().Msg("Unauthorized: No token present")
-	}
 	var gSession Session
 	gSession.context = context.Background()
 	gSession.staticToken = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
@@ -173,12 +169,6 @@ func (g Session) RemoveSSHKeyByPublicKey(user string, publicKey string) error {
 	}
 
 	return nil
-}
-
-// IsRepoInUse - Verify if a repo exists
-func (g Session) IsRepoInUse(org string, name string) (bool, error) {
-	log.Printf("check if a repo is in use already")
-	return false, nil
 }
 
 func (g Session) CreatePR(

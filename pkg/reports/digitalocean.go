@@ -17,7 +17,7 @@ import (
 )
 
 // DigitaloceanHandoffScreen prints the handoff screen
-func DigitaloceanHandoffScreen(argocdAdminPassword, clusterName, domainName string, gitOwner string, config *providerConfigs.ProviderConfig, silentMode bool) {
+func DigitaloceanHandoffScreen(clusterName, domainName, gitOwner string, config *providerConfigs.ProviderConfig, silentMode bool) {
 	// prepare data for the handoff report
 	if silentMode {
 		log.Printf("[#99] Silent mode enabled, LocalHandoffScreen skipped, please check ~/.kubefirst file for your cluster and service credentials.")
