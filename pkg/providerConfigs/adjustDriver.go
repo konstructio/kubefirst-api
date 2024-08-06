@@ -28,7 +28,6 @@ func AdjustGitopsRepo(
 	clusterType string,
 	gitopsRepoDir string,
 	gitProvider string,
-	k1Dir string,
 	apexContentExists bool,
 	useCloudflareOriginIssuer bool,
 ) error {
@@ -977,7 +976,7 @@ func PrepareGitRepositories(
 
 	// ADJUST CONTENT
 	// * adjust the content for the gitops repo
-	err = AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsDir, gitProvider, k1Dir, apexContentExists, useCloudflareOriginIssuer)
+	err = AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsDir, gitProvider, apexContentExists, useCloudflareOriginIssuer)
 	if err != nil {
 		log.Info().Msgf("err: %v", err)
 		return err
@@ -985,22 +984,19 @@ func PrepareGitRepositories(
 
 	// DETOKENIZE
 	// * detokenize the gitops repo
-	DetokenizeGitGitops(gitopsDir, gitopsTokens, gitProtocol, useCloudflareOriginIssuer)
-	if err != nil {
+	if err := DetokenizeGitGitops(gitopsDir, gitopsTokens, gitProtocol, useCloudflareOriginIssuer); err != nil {
 		return err
 	}
 
 	// ADJUST CONTENT
 	// * adjust the content for the metaphor repo
-	err = AdjustMetaphorRepo(destinationMetaphorRepoURL, gitopsDir, gitProvider, k1Dir)
-	if err != nil {
+	if err := AdjustMetaphorRepo(destinationMetaphorRepoURL, gitopsDir, gitProvider, k1Dir); err != nil {
 		return err
 	}
 
 	// DETOKENIZE
 	// * detokenize the metaphor repo
-	DetokenizeGitMetaphor(metaphorDir, metaphorTokens)
-	if err != nil {
+	if err := DetokenizeGitMetaphor(metaphorDir, metaphorTokens); err != nil {
 		return err
 	}
 
