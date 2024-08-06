@@ -20,7 +20,7 @@ func BootstrapVultrMgmtCluster(clientset kubernetes.Interface, cl *pkgtypes.Clus
 		GitUser:                  cl.GitAuth.User,
 		DestinationGitopsRepoURL: destinationGitopsRepoURL,
 		GitProtocol:              cl.GitProtocol,
-		CloudflareAPIToken:       cl.CloudflareAuth.Token,
+		CloudflareAPIToken:       cl.CloudflareAuth.APIToken,
 		CloudAuth:                cl.VultrAuth.Token,
 		DNSProvider:              cl.DNSProvider,
 		CloudProvider:            cl.CloudProvider,

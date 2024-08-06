@@ -21,7 +21,7 @@ func BootstrapK3sMgmtCluster(clientset kubernetes.Interface, cl *pkgtypes.Cluste
 		GitUser:                  cl.GitAuth.User,
 		DestinationGitopsRepoURL: destinationGitopsRepoURL,
 		GitProtocol:              cl.GitProtocol,
-		CloudflareAPIToken:       cl.CloudflareAuth.Token,
+		CloudflareAPIToken:       cl.CloudflareAuth.APIToken,
 		CloudAuth:                "",
 		DNSProvider:              cl.DNSProvider,
 		CloudProvider:            cl.CloudProvider,
