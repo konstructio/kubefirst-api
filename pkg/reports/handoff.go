@@ -39,7 +39,7 @@ Note:
   {{- if .CustomOwnerName }}
   {{ .CustomOwnerName | caser }}: {{ .GitOwner }}
   {{- else }}
-  Owner{{ end }}: {{ .GitOwner }}
+  Owner: {{ .GitOwner }}
   {{- end }}
   Repos:
    {{ .DestinationGitopsRepo }}
