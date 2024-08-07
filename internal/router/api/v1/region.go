@@ -73,14 +73,20 @@ func PostRegions(c *gin.Context) {
 				Config: aws.NewEKSServiceAccountClientV1(),
 			}
 		} else {
-			awsConf = &awsinternal.Configuration{
-				Config: awsinternal.NewAwsV3(
-					regionListRequest.CloudRegion,
-					regionListRequest.AWSAuth.AccessKeyID,
-					regionListRequest.AWSAuth.SecretAccessKey,
-					regionListRequest.AWSAuth.SessionToken,
-				),
+			conf, err := awsinternal.NewAwsV3(
+				regionListRequest.CloudRegion,
+				regionListRequest.AWSAuth.AccessKeyID,
+				regionListRequest.AWSAuth.SecretAccessKey,
+				regionListRequest.AWSAuth.SessionToken,
+			)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: fmt.Sprintf("error creating aws client: %s", err),
+				})
+				return
 			}
+
+			awsConf = &awsinternal.Configuration{Config: conf}
 		}
 
 		regions, err := awsConf.GetRegions(regionListRequest.CloudRegion)

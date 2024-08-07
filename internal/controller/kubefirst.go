@@ -48,7 +48,7 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 	cluster, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		log.Error().Msgf("Error exporting cluster record: %s", err)
-		clctrl.HandleError(err.Error())
+		clctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
@@ -74,7 +74,7 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 
 	bytes, err := json.Marshal(cluster)
 	if err != nil {
-		clctrl.HandleError(err.Error())
+		clctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
@@ -87,7 +87,7 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 
 	err = k8s.CreateSecretV2(kcfg.Clientset, secret)
 	if err != nil {
-		clctrl.HandleError(err.Error())
+		clctrl.UpdateClusterOnError(err.Error())
 		return fmt.Errorf("unable to save secret to management cluster. %w", err)
 	}
 
@@ -114,7 +114,7 @@ func (clctrl *ClusterController) CreateVirtualClusters() error {
 	err := pkg.IsAppAvailable(fmt.Sprintf("%s/api/proxyHealth", consoleCloudURL), "kubefirst api")
 	if err != nil {
 		log.Error().Msgf("unable to wait for kubefirst console: %s", err)
-		clctrl.HandleError(err.Error())
+		clctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
@@ -134,7 +134,7 @@ func (clctrl *ClusterController) CreateVirtualClusters() error {
 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/proxy", consoleCloudURL), bytes.NewReader(payload))
 	if err != nil {
 		log.Error().Msgf("unable to create default clusters: %s", err)
-		clctrl.HandleError(err.Error())
+		clctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 	req.Header.Add("Content-Type", "application/json")
@@ -143,7 +143,7 @@ func (clctrl *ClusterController) CreateVirtualClusters() error {
 	res, err := httpClient.Do(req)
 	if err != nil {
 		log.Error().Msgf("unable to create default clusters: %s", err)
-		clctrl.HandleError(err.Error())
+		clctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
@@ -155,7 +155,7 @@ func (clctrl *ClusterController) CreateVirtualClusters() error {
 	if res.StatusCode != http.StatusOK {
 		s := fmt.Sprintf("unable to create default clusters: %s %s", err, body)
 		log.Error().Msgf(s)
-		clctrl.HandleError(s)
+		clctrl.UpdateClusterOnError(s)
 		return err
 	}
 

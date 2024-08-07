@@ -52,16 +52,16 @@ func (g Session) CreateWebhookRepo(org, repo, hookName, hookURL, hookSecret stri
 		return fmt.Errorf("error when creating a webhook: %v", err)
 	}
 
-	log.Printf("Successfully created hook (id): %v", hook.GetID())
-
+	log.Info().Msgf("Successfully created hook (id: %v)", hook.GetID())
 	return nil
 }
 
 // CreatePrivateRepo - Use github API to create a private repo
 func (g Session) CreatePrivateRepo(org string, name string, description string) error {
 	if name == "" {
-		log.Fatal().Msg("No name: New repos must be given a name")
+		return fmt.Errorf("no name: New repos must be given a name")
 	}
+
 	isPrivate := true
 	autoInit := true
 	r := &github.Repository{
@@ -70,11 +70,13 @@ func (g Session) CreatePrivateRepo(org string, name string, description string) 
 		Description: &description,
 		AutoInit:    &autoInit,
 	}
+
 	repo, _, err := g.gitClient.Repositories.Create(g.context, org, r)
 	if err != nil {
-		return fmt.Errorf("error creating private repo: %s - %s", name, err)
+		return fmt.Errorf("error creating private repo %q: %w", name, err)
 	}
-	log.Printf("Successfully created new repo: %v\n", repo.GetName())
+
+	log.Info().Msgf("Successfully created new repo: %q", repo.GetName())
 	return nil
 }
 
@@ -84,41 +86,47 @@ func (g Session) RemoveRepo(owner string, name string) (*github.Response, error)
 	if owner == "" {
 		return nil, fmt.Errorf("a repository owner is required")
 	}
+
 	if name == "" {
 		return nil, fmt.Errorf("a repository name is required")
 	}
 
 	resp, err := g.gitClient.Repositories.Delete(g.context, owner, name)
 	if err != nil {
-		return resp, fmt.Errorf("error removing private repo: %s - %s", name, err)
+		return resp, fmt.Errorf("error removing private repo %q: %w", name, err)
 	}
-	log.Printf("Successfully removed repo: %v\n", name)
+
+	log.Info().Msgf("Successfully removed repo: %v", name)
 	return resp, nil
 }
 
 // RemoveTeam - Remove  a team
 func (g Session) RemoveTeam(owner string, team string) error {
 	if team == "" {
-		log.Fatal().Msg("No name: repos must be given a name")
+		return fmt.Errorf("team name is required")
 	}
+
 	_, err := g.gitClient.Teams.DeleteTeamBySlug(g.context, owner, team)
 	if err != nil {
-		return fmt.Errorf("error removing team: %s - %s", team, err)
+		return fmt.Errorf("error removing team %q: %w", team, err)
 	}
-	log.Printf("Successfully removed team: %v\n", team)
+
+	log.Info().Msgf("Successfully removed team: %v", team)
 	return nil
 }
 
 // GetRepo - Returns  a repo
 func (g Session) GetRepo(owner string, name string) (*github.Repository, error) {
 	if name == "" {
-		log.Fatal().Msg("No name: repos must be given a name")
+		return nil, fmt.Errorf("get repo: name is empty")
 	}
+
 	repo, _, err := g.gitClient.Repositories.Get(g.context, owner, name)
 	if err != nil {
-		return nil, fmt.Errorf("error removing private repo: %s - %s", name, err)
+		return nil, fmt.Errorf("error removing private repo %q: %w", name, err)
 	}
-	log.Printf("Successfully removed repo: %v\n", repo.GetName())
+
+	log.Info().Msgf("Successfully fetched repo: %q", repo.GetName())
 	return repo, nil
 }
 
@@ -320,9 +328,7 @@ func (g Session) ListRepoWebhooks(owner string, repo string) ([]*github.Hook, er
 		if err != nil {
 			return []*github.Hook{}, err
 		}
-		for _, hook := range hooks {
-			container = append(container, hook)
-		}
+		container = append(container, hooks...)
 		nextPage = resp.NextPage
 	}
 	return container, nil

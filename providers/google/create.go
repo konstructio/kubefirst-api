@@ -50,63 +50,63 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 
 	err = ctrl.DownloadTools(ctrl.ProviderConfig.ToolsDir)
 	if err != nil {
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
 	err = ctrl.DomainLivenessTest()
 	if err != nil {
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
 	err = ctrl.StateStoreCredentials()
 	if err != nil {
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
 	// Checks for existing repos
 	err = ctrl.GitInit()
 	if err != nil {
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
 	err = ctrl.InitializeBot()
 	if err != nil {
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
 	// Where detokeinization happens
 	err = ctrl.RepositoryPrep()
 	if err != nil {
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
 	err = ctrl.RunGitTerraform()
 	if err != nil {
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
 	err = ctrl.RepositoryPush()
 	if err != nil {
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
 	err = ctrl.CreateCluster()
 	if err != nil {
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
 	err = ctrl.DetokenizeKMSKeyID()
 	if err != nil {
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
@@ -119,19 +119,19 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 
 	err = ctrl.WaitForClusterReady()
 	if err != nil {
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
 	err = ctrl.InstallArgoCD()
 	if err != nil {
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
 	err = ctrl.InitializeArgoCD()
 	if err != nil {
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
@@ -144,7 +144,7 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 
 	err = ctrl.ClusterSecretsBootstrap()
 	if err != nil {
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
@@ -162,13 +162,13 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 
 	err = ctrl.DeployRegistryApplication()
 	if err != nil {
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
 	err = ctrl.WaitForVault()
 	if err != nil {
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
@@ -190,25 +190,25 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 
 	err = ctrl.InitializeVault()
 	if err != nil {
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
 	err = ctrl.RunVaultTerraform()
 	if err != nil {
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
 	err = ctrl.WriteVaultSecrets()
 	if err != nil {
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
 	err = ctrl.RunUsersTerraform()
 	if err != nil {
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
@@ -223,7 +223,7 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 	)
 	if err != nil {
 		log.Error().Msgf("Error finding crossplane Deployment: %s", err)
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 	log.Info().Msg("waiting on dns, tls certificates from letsencrypt and remaining sync waves.\n this may take up to 60 minutes but regularly completes in under 20 minutes")
@@ -231,7 +231,7 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 	if err != nil {
 		log.Error().Msgf("Error waiting for all Apps to sync ready state: %s", err)
 
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
@@ -273,14 +273,14 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 	)
 	if err != nil {
 		log.Error().Msgf("Error finding kubefirst api Deployment: %s", err)
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, kubefirstAPI, 300)
 	if err != nil {
 		log.Error().Msgf("Error waiting for kubefirst-api to transition to Running: %s", err)
 
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 
@@ -295,14 +295,14 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 	)
 	if err != nil {
 		log.Error().Msgf("Error finding argocd Deployment: %s", err)
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, argocdDeployment, 3600)
 	if err != nil {
 		log.Error().Msgf("Error waiting for argocd deployment to enter Ready state: %s", err)
 
-		ctrl.HandleError(err.Error())
+		ctrl.UpdateClusterOnError(err.Error())
 		return err
 	}
 

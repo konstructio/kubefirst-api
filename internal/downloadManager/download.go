@@ -16,20 +16,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
+	pkg "github.com/kubefirst/kubefirst-api/internal"
 	"github.com/rs/zerolog/log"
 )
-
-// client sets a custom client with short timeouts for headers, tls handshakes
-// and expect continue to prevent hogging resources if the endpoint misbehaves
-var client = &http.Client{
-	Transport: &http.Transport{
-		TLSHandshakeTimeout:   10 * time.Second,
-		ResponseHeaderTimeout: 10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-	},
-}
 
 // DownloadFile Downloads a file from the "url" parameter, localFilename is the file destination in the local machine.
 func DownloadFile(localFilename string, url string) error {
@@ -41,7 +31,7 @@ func DownloadFile(localFilename string, url string) error {
 	defer out.Close()
 
 	// get data
-	resp, err := client.Get(url)
+	resp, err := pkg.CustomClient.Get(url)
 	if err != nil {
 		return fmt.Errorf("unable to perform GET request to %q: %s", url, err)
 	}

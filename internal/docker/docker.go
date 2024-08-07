@@ -41,7 +41,7 @@ func (docker DockerClientWrapper) CheckDockerReady() (bool, error) {
 	_, err := docker.Client.Info(context.Background())
 	if err != nil {
 		log.Error().Msgf("error determining docker readiness: %s", err)
-		return false, err
+		return false, fmt.Errorf("error determining docker readiness: %s", err)
 	}
 
 	return true, nil

@@ -318,14 +318,17 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	// Instantiate provider clients and copy cluster controller to cluster type
 	switch clctrl.CloudProvider {
 	case "aws":
-		clctrl.AwsClient = &awsinternal.Configuration{
-			Config: awsinternal.NewAwsV3(
-				clctrl.CloudRegion,
-				clctrl.AWSAuth.AccessKeyID,
-				clctrl.AWSAuth.SecretAccessKey,
-				clctrl.AWSAuth.SessionToken,
-			),
+		conf, err := awsinternal.NewAwsV3(
+			clctrl.CloudRegion,
+			clctrl.AWSAuth.AccessKeyID,
+			clctrl.AWSAuth.SecretAccessKey,
+			clctrl.AWSAuth.SessionToken,
+		)
+		if err != nil {
+			return fmt.Errorf("unable to create AWS client: %w", err)
 		}
+
+		clctrl.AwsClient = &awsinternal.Configuration{Config: conf}
 	case "google":
 		clctrl.GoogleClient = google.GoogleConfiguration{
 			Context: context.Background(),
@@ -451,14 +454,14 @@ func (clctrl *ClusterController) GetCurrentClusterRecord() (types.Cluster, error
 	return cl, nil
 }
 
-// HandleError implements an error handler for cluster controller objects
-func (clctrl *ClusterController) HandleError(condition string) error {
+// UpdateClusterOnError implements an error handler for cluster controller objects
+func (clctrl *ClusterController) UpdateClusterOnError(condition string) error {
 	clctrl.Cluster.InProgress = false
 	clctrl.Cluster.Status = constants.ClusterStatusError
 	clctrl.Cluster.LastCondition = condition
 
-	err := secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
-	if err != nil {
+	log.Error().Msgf("unexpected error: %s", condition)
+	if err := secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster); err != nil {
 		return err
 	}
 

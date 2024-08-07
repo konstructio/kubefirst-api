@@ -81,14 +81,20 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 				Config: aws.NewEKSServiceAccountClientV1(),
 			}
 		} else {
-			awsConf = &awsinternal.Configuration{
-				Config: awsinternal.NewAwsV3(
-					instanceSizesRequest.CloudRegion,
-					instanceSizesRequest.AWSAuth.AccessKeyID,
-					instanceSizesRequest.AWSAuth.SecretAccessKey,
-					instanceSizesRequest.AWSAuth.SessionToken,
-				),
+			conf, err := awsinternal.NewAwsV3(
+				instanceSizesRequest.CloudRegion,
+				instanceSizesRequest.AWSAuth.AccessKeyID,
+				instanceSizesRequest.AWSAuth.SecretAccessKey,
+				instanceSizesRequest.AWSAuth.SessionToken,
+			)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
+					Message: fmt.Sprintf("error creating aws client: %v", err),
+				})
+				return
 			}
+
+			awsConf = &awsinternal.Configuration{Config: conf}
 		}
 
 		instanceSizes, err := awsConf.ListInstanceSizesForRegion()

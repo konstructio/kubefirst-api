@@ -8,6 +8,7 @@ package httpCommon
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -30,7 +31,7 @@ func ResolveAddress(address string) error {
 
 	_, err := httpClient.Get(address)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to resolve address %q: %s", address, err)
 	}
 
 	return nil

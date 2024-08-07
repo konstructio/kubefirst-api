@@ -141,13 +141,19 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEv
 
 	if cl.CloudTerraformApplyCheck || cl.CloudTerraformApplyFailedCheck {
 		if !cl.ArgoCDDeleteRegistryCheck {
+			conf, err := awsinternal.NewAwsV3(
+				cl.CloudRegion,
+				cl.AWSAuth.AccessKeyID,
+				cl.AWSAuth.SecretAccessKey,
+				cl.AWSAuth.SessionToken,
+			)
+			if err != nil {
+				errors.HandleClusterError(cl, err.Error())
+				return fmt.Errorf("error creating aws client: %w", err)
+			}
+
 			awsClient := &awsinternal.Configuration{
-				Config: awsinternal.NewAwsV3(
-					cl.CloudRegion,
-					cl.AWSAuth.AccessKeyID,
-					cl.AWSAuth.SecretAccessKey,
-					cl.AWSAuth.SessionToken,
-				),
+				Config: conf,
 			}
 			kcfg := awsext.CreateEKSKubeconfig(&awsClient.Config, cl.ClusterName)
 

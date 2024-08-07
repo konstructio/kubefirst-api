@@ -93,14 +93,21 @@ func PostDomains(c *gin.Context) {
 			})
 			return
 		}
-		awsConf := &awsinternal.Configuration{
-			Config: awsinternal.NewAwsV3(
-				domainListRequest.CloudRegion,
-				domainListRequest.AWSAuth.AccessKeyID,
-				domainListRequest.AWSAuth.SecretAccessKey,
-				domainListRequest.AWSAuth.SessionToken,
-			),
+
+		conf, err := awsinternal.NewAwsV3(
+			domainListRequest.CloudRegion,
+			domainListRequest.AWSAuth.AccessKeyID,
+			domainListRequest.AWSAuth.SecretAccessKey,
+			domainListRequest.AWSAuth.SessionToken,
+		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
+				Message: fmt.Sprintf("error creating aws client: %v", err),
+			})
+			return
 		}
+
+		awsConf := &awsinternal.Configuration{Config: conf}
 
 		domains, err := awsConf.GetHostedZones()
 		if err != nil {

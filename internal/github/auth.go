@@ -20,7 +20,7 @@ const (
 	githubAPIURL = "https://api.github.com"
 )
 
-var requiredScopes = []string{
+var requiredScopes = [...]string{
 	"admin:org",
 	"admin:public_key",
 	"admin:repo_hook",
@@ -37,18 +37,20 @@ func VerifyTokenPermissions(githubToken string) error {
 	req, err := http.NewRequest(http.MethodGet, githubAPIURL, nil)
 	if err != nil {
 		log.Info().Msg("error setting github owner permissions request")
+		return fmt.Errorf("unable to create request to verify token permissions: %w", err)
 	}
+
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", githubToken))
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := pkg.CustomClient.Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error calling GitHub API %q: %s", req.URL.String(), err)
 	}
-
 	defer res.Body.Close()
+
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading GitHub's response body for %q: %w", req.URL.String(), err)
 	}
 
 	if res.StatusCode != http.StatusOK {
