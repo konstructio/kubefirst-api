@@ -33,14 +33,25 @@ import (
 
 // DeleteGoogleCluster
 func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEvent) error {
-	// Instantiate google config
-	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.Token, "")
+	// Instantiate provider config
+	config, err := providerConfigs.GetConfig(
+		cl.ClusterName,
+		cl.DomainName,
+		cl.GitProvider,
+		cl.GitAuth.Owner,
+		cl.GitProtocol,
+		cl.CloudflareAuth.APIToken,
+		cl.CloudflareAuth.OriginCaIssuerKey,
+	)
+	if err != nil {
+		return fmt.Errorf("error getting provider config: %w", err)
+	}
 
 	kcfg := utils.GetKubernetesClient(cl.ClusterName)
 
 	cl.Status = constants.ClusterStatusDeleting
-	err := secrets.UpdateCluster(kcfg.Clientset, *cl)
-	if err != nil {
+
+	if err := secrets.UpdateCluster(kcfg.Clientset, *cl); err != nil {
 		return err
 	}
 

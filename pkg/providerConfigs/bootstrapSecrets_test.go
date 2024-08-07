@@ -56,7 +56,7 @@ func TestK8sNamespaces(t *testing.T) {
 			}
 
 			// Run the function
-			err := K8sNamespaces(clientset)
+			err := Namespaces(clientset)
 
 			// Check for error
 			if (err != nil) != tt.wantErr {

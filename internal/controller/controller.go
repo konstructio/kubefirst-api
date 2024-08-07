@@ -254,25 +254,60 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	// Instantiate provider configuration
 	switch clctrl.CloudProvider {
 	case "akamai":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.APIToken, clctrl.CloudflareAuth.OriginCaIssuerKey)
+		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.APIToken, clctrl.CloudflareAuth.OriginCaIssuerKey)
+		if err != nil {
+			return fmt.Errorf("unable to get configuration: %w", err)
+		}
+
+		clctrl.ProviderConfig = *conf
 		clctrl.ProviderConfig.AkamaiToken = clctrl.AkamaiAuth.Token
 	case "aws":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		if err != nil {
+			return fmt.Errorf("unable to get configuration: %w", err)
+		}
+
+		clctrl.ProviderConfig = *conf
 	case "civo":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.APIToken, clctrl.CloudflareAuth.OriginCaIssuerKey)
+		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.APIToken, clctrl.CloudflareAuth.OriginCaIssuerKey)
+		if err != nil {
+			return fmt.Errorf("unable to get configuration: %w", err)
+		}
+
+		clctrl.ProviderConfig = *conf
 		clctrl.ProviderConfig.CivoToken = clctrl.CivoAuth.Token
 	case "google":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		if err != nil {
+			return fmt.Errorf("unable to get configuration: %w", err)
+		}
+
+		clctrl.ProviderConfig = *conf
 		clctrl.ProviderConfig.GoogleAuth = clctrl.GoogleAuth.KeyFile
 		clctrl.ProviderConfig.GoogleProject = clctrl.GoogleAuth.ProjectID
 	case "digitalocean":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		if err != nil {
+			return fmt.Errorf("unable to get configuration: %w", err)
+		}
+
+		clctrl.ProviderConfig = *conf
 		clctrl.ProviderConfig.DigitaloceanToken = clctrl.DigitaloceanAuth.Token
 	case "vultr":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		if err != nil {
+			return fmt.Errorf("unable to get configuration: %w", err)
+		}
+
+		clctrl.ProviderConfig = *conf
 		clctrl.ProviderConfig.VultrToken = clctrl.VultrAuth.Token
 	case "k3s":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		if err != nil {
+			return fmt.Errorf("unable to get configuration: %w", err)
+		}
+
+		clctrl.ProviderConfig = *conf
 		clctrl.ProviderConfig.K3sServersPrivateIps = clctrl.K3sAuth.K3sServersPrivateIps
 		clctrl.ProviderConfig.K3sServersPublicIps = clctrl.K3sAuth.K3sServersPublicIps
 		clctrl.ProviderConfig.K3sSSHPrivateKey = clctrl.K3sAuth.K3sSSHPrivateKey

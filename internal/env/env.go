@@ -3,7 +3,7 @@ package env
 import (
 	env "github.com/caarlos0/env/v10"
 	"github.com/joho/godotenv"
-	log "github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 )
 
 type Env struct {
