@@ -159,7 +159,7 @@ func returnArgoCDApplicationStatus(clientset kubernetes.Interface, applicationNa
 	}
 
 	// Unmarshal JSON API response to map[string]interface{}
-	var resp *v1alpha1.Application
+	var resp v1alpha1.Application
 	if err := json.Unmarshal(data, &resp); err != nil {
 		log.Error().Msgf("error converting argocd application data: %s", err)
 		return health.HealthStatusUnknown, err
