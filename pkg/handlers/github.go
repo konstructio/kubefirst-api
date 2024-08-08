@@ -9,6 +9,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -165,7 +166,7 @@ func (handler GitHubHandler) GetGitHubUser(gitHubAccessToken string) (string, er
 	}
 
 	if len(githubUser.Login) == 0 {
-		return "", fmt.Errorf("unable to retrieve username via GitHub API")
+		return "", errors.New("unable to retrieve username via GitHub API")
 	}
 
 	log.Info().Msgf("GitHub user: %s", githubUser.Login)
@@ -211,7 +212,7 @@ func (handler GitHubHandler) CheckGithubOrganizationPermissions(githubToken, git
 
 	if gitHubOrganizationRole.Role != "admin" {
 		errMsg := fmt.Sprintf("Authenticated user (via GITHUB_TOKEN) doesn't have adequate permissions.\n Make sure they are an `Owner` in %s.\n Current role: %s", githubOwner, gitHubOrganizationRole.Role)
-		return fmt.Errorf(errMsg)
+		return errors.New(errMsg)
 	}
 
 	return nil

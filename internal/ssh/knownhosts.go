@@ -8,6 +8,7 @@ package ssh
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -23,7 +24,7 @@ func GetHostKey(host string) (ssh.PublicKey, error) {
 	// ~/.ssh/known_hosts
 	file, err := os.Open(filepath.Join(os.Getenv("HOME"), ".ssh", "known_hosts"))
 	if err != nil {
-		return nil, fmt.Errorf("file does not exist")
+		return nil, errors.New("file does not exist")
 	}
 	defer file.Close()
 

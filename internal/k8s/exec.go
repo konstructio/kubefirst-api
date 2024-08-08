@@ -8,6 +8,7 @@ package k8s
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -200,7 +201,7 @@ func ReturnDeploymentObject(clientset *kubernetes.Clientset, matchLabel string, 
 			}
 		case <-time.After(time.Duration(timeoutSeconds) * time.Second):
 			log.Error().Msg("the Deployment was not created within the timeout period")
-			return nil, fmt.Errorf("the Deployment was not created within the timeout period")
+			return nil, errors.New("the Deployment was not created within the timeout period")
 		}
 	}
 }

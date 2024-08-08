@@ -46,7 +46,7 @@ func BootstrapMgmtCluster(clientset kubernetes.Interface, opts BootstrapOptions)
 		// http basic auth
 		secretData = map[string]string{
 			"type":     "git",
-			"name":     fmt.Sprintf("%s-gitops", opts.GitUser),
+			"name":     opts.GitUser + "-gitops",
 			"url":      opts.DestinationGitopsRepoURL,
 			"username": opts.GitUser,
 			"password": opts.HTTPSPassword,
@@ -55,7 +55,7 @@ func BootstrapMgmtCluster(clientset kubernetes.Interface, opts BootstrapOptions)
 		// ssh
 		secretData = map[string]string{
 			"type":          "git",
-			"name":          fmt.Sprintf("%s-gitops", opts.GitUser),
+			"name":          opts.GitUser + "-gitops",
 			"url":           opts.DestinationGitopsRepoURL,
 			"sshPrivateKey": opts.SSHToken,
 		}
@@ -70,7 +70,7 @@ func BootstrapMgmtCluster(clientset kubernetes.Interface, opts BootstrapOptions)
 			Contents:    secretData,
 		},
 		{
-			Name:      fmt.Sprintf("%s-auth", opts.DNSProvider),
+			Name:      opts.DNSProvider + "-auth",
 			Namespace: "external-dns",
 			Contents:  map[string]string{fmt.Sprintf("%s-auth", opts.DNSProvider): opts.CloudAuth, "cf-api-token": opts.CloudflareAPIToken},
 		},

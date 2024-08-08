@@ -8,6 +8,7 @@ package credentials
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -29,7 +30,7 @@ func EvalAuth(expectedCloudProvider string, expectedGitProvider string) (bool, e
 
 	switch {
 	case flags.CloudProvider == "" || flags.GitProvider == "":
-		return false, fmt.Errorf("could not parse cloud and git provider information from config")
+		return false, errors.New("could not parse cloud and git provider information from config")
 	case flags.CloudProvider != expectedCloudProvider:
 		return false, fmt.Errorf("it looks like the current deployed platform is %s - try running this command for that provider", flags.CloudProvider)
 	}

@@ -10,7 +10,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/civo/civogo"
@@ -218,11 +217,7 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryE
 		case "github":
 			tfEnvs = civoext.GetGithubTerraformEnvs(tfEnvs, cl)
 		case "gitlab":
-			gid, err := strconv.Atoi(fmt.Sprint(cl.GitlabOwnerGroupID))
-			if err != nil {
-				return fmt.Errorf("couldn't convert gitlab group id to int: %w", err)
-			}
-			tfEnvs = civoext.GetGitlabTerraformEnvs(tfEnvs, gid, cl)
+			tfEnvs = civoext.GetGitlabTerraformEnvs(tfEnvs, cl.GitlabOwnerGroupID, cl)
 		}
 		err = terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {

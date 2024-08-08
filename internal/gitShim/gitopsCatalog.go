@@ -8,7 +8,7 @@ package gitShim // nolint:revive // allowed during code reorg
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"io"
 
 	"github.com/google/go-github/v52/github"
@@ -79,7 +79,7 @@ func (gh *GitHubClient) ReadGitopsCatalogIndex(contents []*github.RepositoryCont
 		}
 	}
 
-	return []byte{}, fmt.Errorf("index.yaml not found in gitops catalog repository")
+	return []byte{}, errors.New("index.yaml not found in gitops catalog repository")
 }
 
 // ReadGitopsCatalogAppDirectory reads the file content in a gitops catalog app directory

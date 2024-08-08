@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package gitShim // nolint:revive // allowing name during code cleanup
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/kubefirst/kubefirst-api/internal/github"
@@ -50,7 +51,7 @@ func InitializeGitProvider(p *GitInitParameters) error {
 			}
 		}
 		if newRepositoryExists {
-			return fmt.Errorf(errorMsg)
+			return errors.New(errorMsg)
 		}
 
 		newTeamExists := false
@@ -72,7 +73,7 @@ func InitializeGitProvider(p *GitInitParameters) error {
 			}
 		}
 		if newTeamExists {
-			return fmt.Errorf(errorMsg)
+			return errors.New(errorMsg)
 		}
 	case "gitlab":
 		gitlabClient, err := gitlab.NewGitLabClient(p.GitToken, p.GitlabGroup)

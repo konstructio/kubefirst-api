@@ -74,7 +74,6 @@ linters:
     - spancheck
     - sqlclosecheck
     - stylecheck
-    - tagalign
     - tenv
     - testableexamples
     - testifylint
@@ -89,3 +88,11 @@ linters:
     - whitespace
     - wrapcheck
     - zerologlint
+
+linters-settings:
+  perfsprint:
+    int-conversion: false
+    err-error: false
+    errorf: true
+    sprintf1: true
+    strconcat: false

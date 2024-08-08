@@ -9,7 +9,6 @@ package vultr
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	terraformext "github.com/kubefirst/kubefirst-api/extensions/terraform"
@@ -238,11 +237,7 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 		case "github":
 			tfEnvs = vultrext.GetGithubTerraformEnvs(tfEnvs, cl)
 		case "gitlab":
-			gid, err := strconv.Atoi(fmt.Sprint(cl.GitlabOwnerGroupID))
-			if err != nil {
-				return fmt.Errorf("couldn't convert gitlab group id to int: %w", err)
-			}
-			tfEnvs = vultrext.GetGitlabTerraformEnvs(tfEnvs, gid, cl)
+			tfEnvs = vultrext.GetGitlabTerraformEnvs(tfEnvs, cl.GitlabOwnerGroupID, cl)
 		}
 		err = terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
