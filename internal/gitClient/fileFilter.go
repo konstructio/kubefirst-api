@@ -4,7 +4,7 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package gitClient // nolint:revive // allowed temporarily during code reorg
+package gitClient //nolint:revive // allowed temporarily during code reorg
 
 import (
 	"fmt"
@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// AppendFile verify if a file must be appended to commited gitops
+// AppendFile verify if a file must be appended to committed gitops
 // meant to help exclude undesired state files to be pushed to gitops
 func AppendFile(cloudType string, reponame string, filename string) bool {
 	// result := true

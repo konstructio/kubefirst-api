@@ -48,7 +48,7 @@ func (conf *Configuration) GetRegions() ([]string, error) {
 		if err != nil {
 			return []string{}, err
 		}
-		regionList = append(regionList, *pair.Name)
+		regionList = append(regionList, pair.GetName())
 	}
 
 	return regionList, nil
@@ -81,7 +81,7 @@ func (conf *Configuration) GetZones() ([]string, error) {
 		if err != nil {
 			return []string{}, err
 		}
-		zoneList = append(zoneList, *pair.Name)
+		zoneList = append(zoneList, pair.GetName())
 	}
 
 	return zoneList, nil

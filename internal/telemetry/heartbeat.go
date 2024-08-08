@@ -35,7 +35,6 @@ func HeartbeatWorkloadClusters(event telemetry.TelemetryEvent) error {
 		if cluster.Status == constants.ClusterStatusProvisioned {
 			for _, workloadCluster := range cluster.WorkloadClusters {
 				if workloadCluster.Status == constants.ClusterStatusProvisioned {
-
 					telemetryEvent := telemetry.TelemetryEvent{
 						CliVersion:        event.CliVersion,
 						CloudProvider:     workloadCluster.CloudProvider,

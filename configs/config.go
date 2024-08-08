@@ -208,7 +208,7 @@ func ReadConfig() *Config {
 	// AWS SDK client will take it in advance
 	err = os.Setenv("AWS_SDK_LOAD_CONFIG", "1")
 	if err != nil {
-		log.Error().Msgf("unable to set AWS_SDK_LOAD_CONFIG enviroment value, error is: %v", err)
+		log.Error().Msgf("unable to set AWS_SDK_LOAD_CONFIG environment value, error is: %v", err)
 	}
 
 	return &config

@@ -4,7 +4,7 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package providerConfigs // nolint:revive // allowed during refactoring
+package providerConfigs //nolint:revive // allowed during refactoring
 
 import (
 	"encoding/json"
@@ -47,7 +47,6 @@ func detokenizeGitops(tokens *GitopsDirectoryValues, gitProtocol string, useClou
 
 		// ignore .git files
 		if !strings.Contains(path, "/.git/") {
-
 			read, err := os.ReadFile(path)
 			if err != nil {
 				return err
@@ -277,7 +276,6 @@ func detokenizeGitopsMetaphor(tokens *MetaphorTokenValues) filepath.WalkFunc {
 
 		// ignore .git files
 		if !strings.Contains(path, "/.git/") {
-
 			read, err := os.ReadFile(path)
 			if err != nil {
 				return err

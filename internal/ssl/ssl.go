@@ -35,7 +35,6 @@ func Restore(backupDir, kubeconfigPath string) error {
 	}
 
 	for _, secret := range sslSecretFiles {
-
 		// file is named with convention $namespace-$secretName.yaml
 		//  todo link to backup source code
 		namespace := strings.Split(secret.Name(), "-")[0]
@@ -95,7 +94,6 @@ func Backup(backupDir, kubeconfigPath string) error {
 				return fmt.Errorf("unable to marshal yaml: %w", err)
 			}
 			pkg.CreateFile(fileName, yamlContent)
-
 		} else {
 			log.Info().Msgf("skipping secret: %s", secret.Name)
 		}

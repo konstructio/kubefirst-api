@@ -65,12 +65,12 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 
 	err = gitShim.PrepareGitEnvironment(cl, tmpGitopsDir)
 	if err != nil {
-		log.Fatal().Msgf("an error ocurred preparing git environment %s %s", tmpGitopsDir, err)
+		log.Fatal().Msgf("an error occurred preparing git environment %s %s", tmpGitopsDir, err)
 	}
 
 	err = gitShim.PrepareGitOpsCatalog(tmpGitopsCatalogDir)
 	if err != nil {
-		log.Fatal().Msgf("an error ocurred preparing gitops catalog environment %s %s", tmpGitopsDir, err)
+		log.Fatal().Msgf("an error occurred preparing gitops catalog environment %s %s", tmpGitopsDir, err)
 	}
 
 	gitopsRepo, _ := git.PlainOpen(tmpGitopsDir)
@@ -315,7 +315,7 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string, def pkgtypes.Gitops
 
 		err = gitShim.PrepareGitEnvironment(cl, tmpGitopsDir)
 		if err != nil {
-			log.Fatal().Msgf("an error ocurred preparing git environment %s %s", tmpGitopsDir, err)
+			log.Fatal().Msgf("an error occurred preparing git environment %s %s", tmpGitopsDir, err)
 		}
 
 		gitopsRepo, _ = git.PlainOpen(tmpGitopsDir)
@@ -349,7 +349,7 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string, def pkgtypes.Gitops
 			return fmt.Errorf("cluster %s - error deleting file: %s", clusterName, err)
 		}
 
-		// removing componentes service folder
+		// removing components service folder
 		_, err = os.Stat(componentsServiceFolder)
 		if err != nil {
 			return fmt.Errorf("folder %s does not exist in repository", componentsServiceFolder)
@@ -409,7 +409,7 @@ func ValidateService(cl *pkgtypes.Cluster, serviceName string, def *pkgtypes.Git
 
 	err = gitShim.PrepareGitEnvironment(cl, tmpGitopsDir)
 	if err != nil {
-		log.Fatal().Msgf("an error ocurred preparing git environment %s %s", tmpGitopsDir, err)
+		log.Fatal().Msgf("an error occurred preparing git environment %s %s", tmpGitopsDir, err)
 	}
 
 	gitopsRepo, _ = git.PlainOpen(tmpGitopsDir)

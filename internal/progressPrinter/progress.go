@@ -4,7 +4,7 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package progressPrinter // nolint:revive // allowing during code reorg
+package progressPrinter //nolint:revive // allowing during code reorg
 
 import (
 	"flag"
@@ -114,13 +114,13 @@ func LogMessage(message string) {
 	instance.pw.Log(message)
 }
 
-// AddTracker Add Tracker (prefered way)
+// AddTracker Add Tracker (preferred way)
 // Return a string for the key to be used on future uses
 // Sample of usage:
 //
 //	progressPrinter.AddTracker("step-base", "Apply Base ", 3)
 //
-// no need to instanciate, it is a singleton, only one instance already started before use.
+// no need to instantiate, it is a singleton, only one instance already started before use.
 func AddTracker(key string, title string, total int64) string {
 	instance.Trackers[key] = &ActionTracker{Tracker: CreateTracker(title, total)}
 	return key
@@ -132,7 +132,7 @@ func TotalOfTrackers() int {
 }
 
 // IncrementTracker Increments a tracker based on the provided key
-// if key is unkown it will error out.
+// if key is unknown it will error out.
 // Sample of usage:
 //
 //	progressPrinter.IncrementTracker("step-base", 1)

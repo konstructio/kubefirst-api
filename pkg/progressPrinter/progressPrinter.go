@@ -1,4 +1,4 @@
-// nolint:revive // allowing temporarily for better code organization
+//nolint:revive // allowing temporarily for better code organization
 package progressPrinter
 
 import internal "github.com/kubefirst/kubefirst-api/internal/progressPrinter"

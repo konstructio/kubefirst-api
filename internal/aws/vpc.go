@@ -49,7 +49,7 @@ func (conf *Configuration) CheckAvailabilityZones(region string) (bool, error) {
 			log.Error().Msgf("error getting valid aws regions - skipping: %s", err)
 		}
 
-		// nolint:revive // error message is meant to be displayed
+		//nolint:revive // error message is meant to be displayed
 		return false, fmt.Errorf(
 			"aws region %s has %v availability zones - kubefirst requires at least %v - please select a different region\n\nthe following regions are compatible:\n\n%v\n",
 			region,

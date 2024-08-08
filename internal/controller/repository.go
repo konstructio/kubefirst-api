@@ -227,7 +227,6 @@ func (clctrl *ClusterController) RepositoryPush() error {
 	}
 
 	if !cl.GitopsPushedCheck {
-
 		gitopsDir := clctrl.ProviderConfig.GitopsDir
 		metaphorDir := clctrl.ProviderConfig.MetaphorDir
 

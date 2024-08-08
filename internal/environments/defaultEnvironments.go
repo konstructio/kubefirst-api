@@ -170,7 +170,6 @@ func callAPIEE(payload types.WorkloadClusterSet) error {
 
 		log.Info().Msgf("cluster %s created. result: %s", cluster.ClusterName, string(body))
 		time.Sleep(20 * time.Second)
-
 	}
 	return nil
 }

@@ -335,7 +335,6 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 			Project: def.GoogleAuth.ProjectID,
 			Region:  clctrl.CloudRegion,
 		}
-
 	}
 
 	// Write cluster record if it doesn't exist
@@ -378,7 +377,6 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	}
 
 	if !recordExists {
-
 		if env.K1LocalDebug == "true" {
 			err = utils.CreateKubefirstNamespace(clctrl.KubernetesClient)
 			if err != nil {

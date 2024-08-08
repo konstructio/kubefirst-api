@@ -40,7 +40,6 @@ func (clctrl *ClusterController) CreateCluster() error {
 	}
 
 	if !cl.CloudTerraformApplyCheck || cl.CloudTerraformApplyFailedCheck {
-
 		log.Info().Msg("creating aws cloud resources with terraform")
 		tfEntrypoint := clctrl.ProviderConfig.GitopsDir + fmt.Sprintf("/terraform/%s", clctrl.CloudProvider)
 		tfEnvs := map[string]string{}

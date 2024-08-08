@@ -393,7 +393,6 @@ func IsConsoleUIAvailable(url string) error {
 	attempts := 10
 	httpClient := http.DefaultClient
 	for i := 0; i < attempts; i++ {
-
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			log.Printf("unable to reach %q (%d/%d)", url, i+1, attempts)
@@ -423,7 +422,6 @@ func IsAppAvailable(url string, appname string) error {
 	attempts := 60
 	httpClient := http.DefaultClient
 	for i := 0; i < attempts; i++ {
-
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			log.Printf("unable to reach %q (%d/%d)", url, i+1, attempts)

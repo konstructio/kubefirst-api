@@ -5,7 +5,7 @@ This program is licensed under MIT.
 See the LICENSE file for more details.
 */
 
-// nolint:revive // allowing package name objectStorage
+//nolint:revive // allowing package name objectStorage
 package objectStorage
 
 import (

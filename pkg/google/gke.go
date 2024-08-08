@@ -83,15 +83,15 @@ func (conf *Configuration) GetContainerClusterAuth(clusterName string, keyFile [
 	// 	Contexts:   map[string]*api.Context{},
 	// }
 
-	name := fmt.Sprintf("gke_%s_%s_%s", conf.Project, cluster.Location, cluster.Name)
-	cert, err := base64.StdEncoding.DecodeString(cluster.MasterAuth.ClusterCaCertificate)
+	name := fmt.Sprintf("gke_%s_%s_%s", conf.Project, cluster.GetLocation(), cluster.GetName())
+	cert, err := base64.StdEncoding.DecodeString(cluster.GetMasterAuth().GetClusterCaCertificate())
 	if err != nil {
-		return nil, fmt.Errorf("invalid certificate cluster=%s cert=%s: %w", name, cluster.MasterAuth.ClusterCaCertificate, err)
+		return nil, fmt.Errorf("invalid certificate cluster=%s cert=%s: %w", name, cluster.GetMasterAuth().GetClusterCaCertificate(), err)
 	}
 
 	// Rest Config
 	config := &rest.Config{
-		Host: cluster.Endpoint,
+		Host: cluster.GetEndpoint(),
 		TLSClientConfig: rest.TLSClientConfig{
 			CAData: cert,
 		},

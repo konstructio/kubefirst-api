@@ -96,7 +96,7 @@ func ExecShellWithVars(osvars map[string]string, command string, args ...string)
 		doneOut <- true
 	}()
 	go func() {
-		// STD Err should not be supressed, as it prevents to troubleshoot issues in case something fails.
+		// STD Err should not be suppressed, as it prevents to troubleshoot issues in case something fails.
 		// On linux StdErr > StdOut by design in terms of priority.
 		for msg := range stdErr {
 			log.Warn().Msgf("ERR: %s", msg)

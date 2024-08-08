@@ -1,4 +1,4 @@
-package gitClient // nolint:revive // allowing temporarily for better code organization
+package gitClient //nolint:revive // allowing temporarily for better code organization
 
 import "github.com/kubefirst/kubefirst-api/internal/gitClient"
 

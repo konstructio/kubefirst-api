@@ -181,7 +181,7 @@ func PostRegions(c *gin.Context) {
 		regionListResponse.Regions = regions
 
 	case "k3s":
-		regionListResponse.Regions = []string{"on-premise (compatibilty-mode)"}
+		regionListResponse.Regions = []string{"on-premise (compatibility-mode)"}
 
 	case "akamai":
 		tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: regionListRequest.AkamaiAuth.Token})

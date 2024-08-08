@@ -159,7 +159,6 @@ func (c *Configuration) DeleteDNSRecords(domainName string, dryRun bool) error {
 
 	for _, rec := range records {
 		if rec.Type == "A" || rec.Type == "TXT" {
-
 			msg := fmt.Sprintf("delete digitalocean dns record %s.%s [%s] %s", rec.Name, domainName, rec.Type, rec.Data)
 
 			if dryRun {

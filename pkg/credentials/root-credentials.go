@@ -166,7 +166,7 @@ func printAuthData(messageHeader string, params map[string]string) string {
 	createAuthData.WriteString("\n\n")
 
 	if len(params) == 0 {
-		createAuthData.WriteString("No credentials were retrived.")
+		createAuthData.WriteString("No credentials were retrieved.")
 	}
 	for object, auth := range params {
 		createAuthData.WriteString(fmt.Sprintf("%s: %s\n\n", object, auth))

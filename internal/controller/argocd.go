@@ -31,7 +31,6 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 	}
 
 	if !cl.ArgoCDInstallCheck {
-
 		var kcfg *k8s.KubernetesClient
 
 		switch clctrl.CloudProvider {
