@@ -235,9 +235,9 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
-	cluster1KubefirstApiStopChannel := make(chan struct{}, 1)
+	stopCh := make(chan struct{}, 1)
 	defer func() {
-		close(cluster1KubefirstApiStopChannel)
+		close(stopCh)
 	}()
 
 	// * export and import cluster
@@ -245,22 +245,22 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 	if err != nil {
 		log.Error().Msgf("Error exporting cluster record: %s", err)
 		return err
-	} else {
-		ctrl.Cluster.Status = constants.ClusterStatusProvisioned
-		ctrl.Cluster.InProgress = false
-		err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
-		if err != nil {
-			return err
-		}
+	}
 
-		log.Info().Msg("cluster creation complete")
+	ctrl.Cluster.Status = constants.ClusterStatusProvisioned
+	ctrl.Cluster.InProgress = false
+	err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
+	if err != nil {
+		return err
+	}
 
-		// Create default service entries
-		cl, _ := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
-		err = services.AddDefaultServices(&cl)
-		if err != nil {
-			log.Error().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
-		}
+	log.Info().Msg("cluster creation complete")
+
+	// Create default service entries
+	cl, _ := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
+	err = services.AddDefaultServices(&cl)
+	if err != nil {
+		log.Error().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
 	}
 
 	log.Info().Msg("waiting for kubefirst-api Deployment to transition to Running")

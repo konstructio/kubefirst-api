@@ -12,7 +12,7 @@ import (
 )
 
 // googleHandoffScreen prints the handoff screen
-func GoogleHandoffScreen(argocdAdminPassword, clusterName, domainName string, gitOwner string, config *providerConfigs.ProviderConfig, silentMode bool) {
+func GoogleHandoffScreen(clusterName, domainName string, gitOwner string, config *providerConfigs.ProviderConfig, silentMode bool) {
 	renderHandoff(Opts{
 		ClusterName:             clusterName,
 		DomainName:              domainName,

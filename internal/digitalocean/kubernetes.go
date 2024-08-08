@@ -15,7 +15,7 @@ import (
 )
 
 // GetKubernetesAssociatedResources returns resources associated with a digitalocean Kubernetes cluster
-func (c *DigitaloceanConfiguration) GetKubernetesAssociatedResources(clusterName string) (*godo.KubernetesAssociatedResources, error) {
+func (c *Configuration) GetKubernetesAssociatedResources(clusterName string) (*godo.KubernetesAssociatedResources, error) {
 	clusters, _, err := c.Client.Kubernetes.List(c.Context, &godo.ListOptions{})
 	if err != nil {
 		return &godo.KubernetesAssociatedResources{}, err
@@ -40,7 +40,7 @@ func (c *DigitaloceanConfiguration) GetKubernetesAssociatedResources(clusterName
 }
 
 // DeleteKubernetesClusterVolumes iterates over resource volumes and deletes them
-func (c *DigitaloceanConfiguration) DeleteKubernetesClusterVolumes(resources *godo.KubernetesAssociatedResources) error {
+func (c *Configuration) DeleteKubernetesClusterVolumes(resources *godo.KubernetesAssociatedResources) error {
 	if len(resources.Volumes) == 0 {
 		return fmt.Errorf("no volumes are available for deletion with the provided parameters")
 	}

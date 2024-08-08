@@ -132,7 +132,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 	case "gitops": // repo name
 
 		var externalDNSProviderTokenEnvName, externalDNSProviderSecretKey string
-		if clctrl.DnsProvider == "cloudflare" {
+		if clctrl.DNSProvider == "cloudflare" {
 			externalDNSProviderTokenEnvName = "CF_API_TOKEN"
 			externalDNSProviderSecretKey = "cf-api-token"
 		} else {
@@ -217,7 +217,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			ClusterID: clctrl.ClusterID,
 
 			// external-dns optionality to provide cloudflare support regardless of cloud provider
-			ExternalDNSProviderName:         clctrl.DnsProvider,
+			ExternalDNSProviderName:         clctrl.DNSProvider,
 			ExternalDNSProviderTokenEnvName: externalDNSProviderTokenEnvName,
 			ExternalDNSProviderSecretName:   fmt.Sprintf("%s-auth", clctrl.CloudProvider),
 			ExternalDNSProviderSecretKey:    externalDNSProviderSecretKey,

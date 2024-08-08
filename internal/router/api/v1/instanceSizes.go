@@ -117,7 +117,7 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 			return
 		}
 
-		digitaloceanConf := digitalocean.DigitaloceanConfiguration{
+		digitaloceanConf := digitalocean.Configuration{
 			Client:  digitalocean.NewDigitalocean(instanceSizesRequest.DigitaloceanAuth.Token),
 			Context: context.Background(),
 		}
@@ -176,7 +176,7 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 			return
 		}
 
-		googleConf := google.GoogleConfiguration{
+		googleConf := google.Configuration{
 			Context: context.Background(),
 			Project: instanceSizesRequest.GoogleAuth.ProjectID,
 			Region:  instanceSizesRequest.CloudRegion,

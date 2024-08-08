@@ -241,25 +241,19 @@ func (conf *Configuration) TestHostedZoneLivenessWithTxtRecords(hostedZoneName s
 				break
 			}
 
-			// If there was an error looking up the record...
-			if err != nil {
-				// ... then retry with a backup resolver
-				ips, err = utils.BackupResolver.LookupTXT(context.Background(), route53RecordName)
+			// If there was an error looking up the record then retry with a backup resolver
+			ips, err = utils.BackupResolver.LookupTXT(context.Background(), route53RecordName)
 
-				// And check too if the record was found
-				if err == nil {
-					log.Info().Msgf("found %q in TXT record values with IP: %v", route53RecordName, ips)
-					ch <- true
-					break
-				}
-
-				// If the record was not found, log the error and retry
-
-				if err != nil {
-					log.Warn().Msgf("attempt %d of %d resolving %q, retrying in %ds", i, retries, route53RecordName, retryInterval)
-					time.Sleep(time.Duration(int32(retryInterval)) * time.Second)
-				}
+			// And check too if the record was found
+			if err == nil {
+				log.Info().Msgf("found %q in TXT record values with IP: %v", route53RecordName, ips)
+				ch <- true
+				break
 			}
+
+			// If the record was not found, log the error and retry
+			log.Warn().Msgf("attempt %d of %d resolving %q, retrying in %ds", i, retries, route53RecordName, retryInterval)
+			time.Sleep(time.Duration(int32(retryInterval)) * time.Second)
 		}
 
 		// If the record was not found after all retries, close the channel
@@ -314,7 +308,7 @@ func NewAwsV3(region string, accessKeyID string, secretAccessKey string, session
 }
 
 // GetRegions lists all available regions
-func (conf *Configuration) GetRegions(region string) ([]string, error) {
+func (conf *Configuration) GetRegions() ([]string, error) {
 	ec2Client := ec2.NewFromConfig(conf.Config)
 
 	regions, err := ec2Client.DescribeRegions(context.Background(), &ec2.DescribeRegionsInput{})

@@ -22,7 +22,7 @@ import (
 )
 
 // TestDomainLiveness checks Civo DNS for the liveness test record
-func (c *Configuration) TestDomainLiveness(domainName string, domainID string, region string) bool {
+func (c *Configuration) TestDomainLiveness(domainName string, domainID string) bool {
 	civoRecordName := fmt.Sprintf("kubefirst-liveness.%s", domainName)
 	civoRecordValue := "domain record propagated"
 
@@ -113,7 +113,7 @@ func GetDomainApexContent(domainName string) bool {
 }
 
 // GetDNSInfo try to reach the provided domain
-func (c *Configuration) GetDNSInfo(domainName string, region string) (string, error) {
+func (c *Configuration) GetDNSInfo(domainName string) (string, error) {
 	log.Info().Msg("GetDNSInfo (working...)")
 
 	civoDNSDomain, err := c.Client.FindDNSDomain(domainName)
@@ -126,7 +126,7 @@ func (c *Configuration) GetDNSInfo(domainName string, region string) (string, er
 }
 
 // GetDNSDomains lists all available DNS domains
-func (c *Configuration) GetDNSDomains(region string) ([]string, error) {
+func (c *Configuration) GetDNSDomains() ([]string, error) {
 	var domainList []string
 
 	domains, err := c.Client.ListDNSDomains()
@@ -142,7 +142,7 @@ func (c *Configuration) GetDNSDomains(region string) ([]string, error) {
 }
 
 // GetRegions lists all available regions
-func (c *Configuration) GetRegions(region string) ([]string, error) {
+func (c *Configuration) GetRegions() ([]string, error) {
 	var regionList []string
 
 	regions, err := c.Client.ListRegions()

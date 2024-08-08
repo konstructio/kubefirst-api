@@ -306,10 +306,7 @@ func PostCreateCluster(c *gin.Context) {
 
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
-	var inCluster bool = false
-	if env.InCluster == "true" {
-		inCluster = true
-	}
+	inCluster := env.InCluster == "true"
 
 	if inCluster {
 		kcfg := utils.GetKubernetesClient("")
@@ -685,7 +682,7 @@ func GetClusterKubeConfig(c *gin.Context) {
 		})
 
 	case "digitalocean":
-		digitaloceanConf := digioceanruntime.DigitaloceanConfiguration{
+		digitaloceanConf := digioceanruntime.Configuration{
 			Client:  digioceanruntime.NewDigitalocean(kubeConfigRequest.DigitaloceanAuth.Token),
 			Context: context.Background(),
 		}

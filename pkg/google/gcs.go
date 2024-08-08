@@ -18,7 +18,7 @@ import (
 )
 
 // CreateBucket creates a GCS bucket
-func (conf *GoogleConfiguration) CreateBucket(bucketName string, keyFile []byte) (*storage.BucketAttrs, error) {
+func (conf *Configuration) CreateBucket(bucketName string, keyFile []byte) (*storage.BucketAttrs, error) {
 	creds, err := google.CredentialsFromJSON(conf.Context, keyFile, secretmanager.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, fmt.Errorf("could not create google storage client credentials: %w", err)
@@ -52,7 +52,7 @@ func (conf *GoogleConfiguration) CreateBucket(bucketName string, keyFile []byte)
 }
 
 // DeleteBucket deletes a GCS bucket
-func (conf *GoogleConfiguration) DeleteBucket(bucketName string, keyFile []byte) error {
+func (conf *Configuration) DeleteBucket(bucketName string, keyFile []byte) error {
 	creds, err := google.CredentialsFromJSON(conf.Context, keyFile, secretmanager.DefaultAuthScopes()...)
 	if err != nil {
 		return fmt.Errorf("could not create google storage client credentials: %w", err)
@@ -76,7 +76,7 @@ func (conf *GoogleConfiguration) DeleteBucket(bucketName string, keyFile []byte)
 }
 
 // ListBuckets lists all GCS buckets for a project
-func (conf *GoogleConfiguration) ListBuckets(keyFile []byte) ([]*storage.BucketAttrs, error) {
+func (conf *Configuration) ListBuckets(keyFile []byte) ([]*storage.BucketAttrs, error) {
 	creds, err := google.CredentialsFromJSON(conf.Context, keyFile, secretmanager.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, fmt.Errorf("could not create google storage client credentials: %w", err)

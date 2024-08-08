@@ -26,16 +26,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-// CustomClient sets a custom client with short timeouts for headers, tls handshakes
-// and expect continue to prevent hogging resources if the endpoint misbehaves
-var CustomClient = &http.Client{
-	Transport: &http.Transport{
-		TLSHandshakeTimeout:   10 * time.Second,
-		ResponseHeaderTimeout: 10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-	},
-}
-
 func CreateDirIfNotExist(dir string) error {
 	if _, err := os.Stat(dir); errors.Is(err, fs.ErrNotExist) {
 		err = os.Mkdir(dir, 0o777)

@@ -1,4 +1,4 @@
-package downloadManager
+package downloadManager // nolint:revive // allowed for temporary
 
 import internal "github.com/kubefirst/kubefirst-api/internal/downloadManager"
 

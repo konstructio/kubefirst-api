@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	pkg "github.com/kubefirst/kubefirst-api/internal"
+	"github.com/kubefirst/kubefirst-api/internal/httpCommon"
 	"github.com/rs/zerolog/log"
 )
 
@@ -42,7 +43,7 @@ func VerifyTokenPermissions(githubToken string) error {
 
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", githubToken))
 
-	res, err := pkg.CustomClient.Do(req)
+	res, err := httpCommon.CustomHTTPClient(false).Do(req)
 	if err != nil {
 		return fmt.Errorf("error calling GitHub API %q: %s", req.URL.String(), err)
 	}

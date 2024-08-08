@@ -113,7 +113,7 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		// https://raw.githubusercontent.com/cert-manager/cert-manager/v1.11.0/deploy/crds/crd-certificates.yaml
 		// add certificates, and clusterissuers
 		log.Info().Msgf("found %d tls secrets to restore", len(secretsFilesToRestore))
-		ssl.Restore(ctrl.ProviderConfig.SSLBackupDir, ctrl.DomainName, ctrl.ProviderConfig.Kubeconfig)
+		ssl.Restore(ctrl.ProviderConfig.SSLBackupDir, ctrl.ProviderConfig.Kubeconfig)
 	} else {
 		log.Info().Msg("no files found in secrets directory, continuing")
 	}
@@ -216,13 +216,12 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		log.Error().Msgf("Error exporting cluster record: %s", err)
 		ctrl.UpdateClusterOnError(err.Error())
 		return err
-	} else {
-		// Create default service entries
-		cl, _ := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
-		err = services.AddDefaultServices(&cl)
-		if err != nil {
-			log.Error().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
-		}
+	}
+	// Create default service entries
+	cl, _ := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
+	err = services.AddDefaultServices(&cl)
+	if err != nil {
+		log.Error().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
 	}
 
 	log.Info().Msg("waiting for kubefirst-api Deployment to transition to Running")

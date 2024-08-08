@@ -4,7 +4,7 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package progressPrinter
+package progressPrinter // nolint:revive // allowing during code reorg
 
 import (
 	"flag"
@@ -43,6 +43,8 @@ var (
 //			progressPrinter.GetInstance()
 //			progressPrinter.SetupProgress(5) // Number of bars for the entire run.
 //	}
+//
+//nolint:revive // allowing during code reorg
 func GetInstance() *progressPrinter {
 	once.Do(func() {
 		instance = &progressPrinter{}
@@ -134,6 +136,6 @@ func TotalOfTrackers() int {
 // Sample of usage:
 //
 //	progressPrinter.IncrementTracker("step-base", 1)
-func IncrementTracker(key string, value int64) {
+func IncrementTracker(key string) {
 	instance.Trackers[key].Tracker.Increment(int64(1))
 }

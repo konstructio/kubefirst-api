@@ -10,7 +10,7 @@ import (
 	"context"
 	"fmt"
 
-	kube "github.com/kubefirst/kubefirst-api/pkg/kubernetes"
+	kube "github.com/kubefirst/kubefirst-api/internal/kubernetes"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/rs/zerolog/log"
 	"k8s.io/client-go/kubernetes"
@@ -127,7 +127,7 @@ func ServiceAccounts(client kubernetes.Interface) error {
 	return nil
 }
 
-func BootstrapSecrets(client kubernetes.Interface, cl *pkgtypes.Cluster, additionalSecrets ...kube.Secret) error {
+func BootstrapSecrets(client kubernetes.Interface, cl *pkgtypes.Cluster, extraSecret ...kube.Secret) error {
 	var externalDNSToken string
 	switch cl.DNSProvider {
 	case "akamai":
@@ -156,6 +156,8 @@ func BootstrapSecrets(client kubernetes.Interface, cl *pkgtypes.Cluster, additio
 		{Name: "cloudflare-creds", Namespace: "vault", Contents: map[string]string{"origin-ca-api-key": cl.CloudflareAuth.OriginCaIssuerKey}},
 		{Name: "kubefirst-state", Namespace: "kubefirst", Contents: map[string]string{"console-tour": "false"}},
 	}
+
+	createSecrets = append(createSecrets, extraSecret...)
 
 	if err := kube.CreateSecretsIfNotExist(context.Background(), client, createSecrets); err != nil {
 		log.Error().Msgf("error creating secrets: %s", err)

@@ -100,7 +100,7 @@ func (c *Configuration) GetAccessCredentials(credentialName string, region strin
 }
 
 // DeleteAccessCredentials deletes object store credentials
-func (c *Configuration) DeleteAccessCredentials(credentialName string, region string) error {
+func (c *Configuration) DeleteAccessCredentials(credentialName string) error {
 	creds, err := c.checkKubefirstCredentials(credentialName)
 	if err != nil && err != errNoCredsFound {
 		log.Info().Msg(err.Error())

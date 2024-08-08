@@ -15,14 +15,14 @@ import (
 )
 
 const (
-	KUBEFIRST_ENVIRONMENTS_SECRET_NAME = "kubefirst-environments"
-	KUBEFIRST_ENVIRONMENT_PREFIX       = "kubefirst-environment"
+	KubefirstEnvironmentSecretName = "kubefirst-environments"
+	kubefirstEnvironmentPrefix     = "kubefirst-environment"
 )
 
 // GetEnvironments
 func GetEnvironments(clientSet *kubernetes.Clientset) ([]pkgtypes.Environment, error) {
 	environmentList := []pkgtypes.Environment{}
-	environmentReferenceList, _ := GetSecretReference(clientSet, KUBEFIRST_ENVIRONMENTS_SECRET_NAME)
+	environmentReferenceList, _ := GetSecretReference(clientSet, KubefirstEnvironmentSecretName)
 	for _, environmentName := range environmentReferenceList.List {
 		environment, _ := GetEnvironment(clientSet, environmentName)
 		if environment.Name != "" {
@@ -37,7 +37,7 @@ func GetEnvironments(clientSet *kubernetes.Clientset) ([]pkgtypes.Environment, e
 func GetEnvironment(clientSet *kubernetes.Clientset, name string) (pkgtypes.Environment, error) {
 	environment := pkgtypes.Environment{}
 
-	kubefirstSecrets, _ := k8s.ReadSecretV2Old(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_ENVIRONMENT_PREFIX, name))
+	kubefirstSecrets, _ := k8s.ReadSecretV2Old(clientSet, "kubefirst", fmt.Sprintf("%s-%s", kubefirstEnvironmentPrefix, name))
 	jsonString, _ := MapToStructuredJSON(kubefirstSecrets)
 
 	jsonData, err := json.Marshal(jsonString)
@@ -63,15 +63,15 @@ func InsertEnvironment(clientSet *kubernetes.Clientset, env pkgtypes.Environment
 		CreationTimestamp: env.CreationTimestamp,
 	}
 
-	_, err := GetSecretReference(clientSet, KUBEFIRST_ENVIRONMENTS_SECRET_NAME)
+	_, err := GetSecretReference(clientSet, KubefirstEnvironmentSecretName)
 
 	if err != nil {
-		CreateSecretReference(clientSet, KUBEFIRST_ENVIRONMENTS_SECRET_NAME, pkgtypes.SecretListReference{
+		CreateSecretReference(clientSet, KubefirstEnvironmentSecretName, pkgtypes.SecretListReference{
 			Name: "environments",
 			List: []string{env.Name},
 		})
 	} else {
-		err := AddSecretReferenceItem(clientSet, KUBEFIRST_ENVIRONMENTS_SECRET_NAME, env.Name)
+		err := AddSecretReferenceItem(clientSet, KubefirstEnvironmentSecretName, env.Name)
 		if err != nil {
 			return environment, err
 		}
@@ -82,7 +82,7 @@ func InsertEnvironment(clientSet *kubernetes.Clientset, env pkgtypes.Environment
 
 	secretToCreate := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-%s", KUBEFIRST_ENVIRONMENT_PREFIX, env.Name),
+			Name:      fmt.Sprintf("%s-%s", kubefirstEnvironmentPrefix, env.Name),
 			Namespace: "kubefirst",
 		},
 		Data: secretValuesMap,
@@ -98,7 +98,7 @@ func InsertEnvironment(clientSet *kubernetes.Clientset, env pkgtypes.Environment
 
 func DeleteEnvironment(clientSet *kubernetes.Clientset, envID string) error {
 	objectID, _ := primitive.ObjectIDFromHex(envID)
-	environmentSecretReference, _ := GetSecretReference(clientSet, KUBEFIRST_ENVIRONMENTS_SECRET_NAME)
+	environmentSecretReference, _ := GetSecretReference(clientSet, KubefirstEnvironmentSecretName)
 	environmentToDelete := pkgtypes.Environment{}
 
 	for _, environmentName := range environmentSecretReference.List {
@@ -109,12 +109,12 @@ func DeleteEnvironment(clientSet *kubernetes.Clientset, envID string) error {
 		}
 	}
 
-	err := DeleteSecretReference(clientSet, KUBEFIRST_ENVIRONMENTS_SECRET_NAME, environmentToDelete.Name)
+	err := DeleteSecretReference(clientSet, KubefirstEnvironmentSecretName, environmentToDelete.Name)
 	if err != nil {
 		return fmt.Errorf("error deleting environment %s reference", environmentToDelete.Name)
 	}
 
-	err = k8s.DeleteSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_ENVIRONMENT_PREFIX, environmentToDelete.Name))
+	err = k8s.DeleteSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", kubefirstEnvironmentPrefix, environmentToDelete.Name))
 	if err != nil {
 		return fmt.Errorf("error deleting environment %s: %s", environmentToDelete.Name, err)
 	}
@@ -126,7 +126,7 @@ func DeleteEnvironment(clientSet *kubernetes.Clientset, envID string) error {
 
 func UpdateEnvironment(clientSet *kubernetes.Clientset, id string, env types.EnvironmentUpdateRequest) error {
 	objectID, _ := primitive.ObjectIDFromHex(id)
-	environmentSecretReference, _ := GetSecretReference(clientSet, KUBEFIRST_ENVIRONMENTS_SECRET_NAME)
+	environmentSecretReference, _ := GetSecretReference(clientSet, KubefirstEnvironmentSecretName)
 	environmentToUpdate := pkgtypes.Environment{}
 
 	for _, environmentName := range environmentSecretReference.List {
@@ -143,7 +143,7 @@ func UpdateEnvironment(clientSet *kubernetes.Clientset, id string, env types.Env
 	bytes, _ := json.Marshal(environmentToUpdate)
 	secretValuesMap, _ := ParseJSONToMap(string(bytes))
 
-	err := k8s.UpdateSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_ENVIRONMENT_PREFIX, environmentToUpdate.Name), secretValuesMap)
+	err := k8s.UpdateSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", kubefirstEnvironmentPrefix, environmentToUpdate.Name), secretValuesMap)
 	if err != nil {
 		return fmt.Errorf("error creating kubernetes secret: %w", err)
 	}

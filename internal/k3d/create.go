@@ -182,7 +182,7 @@ func PrepareGitRepositories(
 	return nil
 }
 
-func PostRunPrepareGitopsRepository(clusterName, gitopsDir string, tokens *GitopsDirectoryValues) error {
+func PostRunPrepareGitopsRepository(gitopsDir string) error {
 	if err := postRunDetokenizeGitGitops(gitopsDir); err != nil {
 		return fmt.Errorf("error walking path %q: %w", gitopsDir, err)
 	}

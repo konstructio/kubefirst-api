@@ -25,7 +25,7 @@ import (
 )
 
 // TestHostedZoneLiveness checks DNS for the liveness test record
-func (conf *GoogleConfiguration) TestHostedZoneLiveness(hostedZoneName string) bool {
+func (conf *Configuration) TestHostedZoneLiveness(hostedZoneName string) bool {
 	recordName := fmt.Sprintf("kubefirst-liveness.%s.", hostedZoneName)
 	recordValue := "domain record propagated"
 
@@ -121,7 +121,7 @@ func (conf *GoogleConfiguration) TestHostedZoneLiveness(hostedZoneName string) b
 	return true
 }
 
-func (conf *GoogleConfiguration) GetDNSDomains() ([]string, error) {
+func (conf *Configuration) GetDNSDomains() ([]string, error) {
 	var zoneNames []string
 
 	creds, err := google.CredentialsFromJSON(conf.Context, []byte(conf.KeyFile), secretmanager.DefaultAuthScopes()...)
@@ -146,7 +146,7 @@ func (conf *GoogleConfiguration) GetDNSDomains() ([]string, error) {
 	return zoneNames, nil
 }
 
-func (conf *GoogleConfiguration) ListInstances(zone string) ([]string, error) {
+func (conf *Configuration) ListInstances(zone string) ([]string, error) {
 	creds, err := google.CredentialsFromJSON(conf.Context, []byte(conf.KeyFile), secretmanager.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, fmt.Errorf("could not create google storage client credentials: %w", err)

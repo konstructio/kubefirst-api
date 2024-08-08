@@ -31,7 +31,7 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 	if !cl.DomainLivenessCheck {
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.DomainLivenessStarted, "")
 
-		switch clctrl.DnsProvider {
+		switch clctrl.DNSProvider {
 		case "aws":
 			domainLiveness := clctrl.AwsClient.TestHostedZoneLiveness(clctrl.DomainName)
 
@@ -46,14 +46,14 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 			}
 
 			// domain id
-			domainID, err := civoConf.GetDNSInfo(clctrl.DomainName, clctrl.CloudRegion)
+			domainID, err := civoConf.GetDNSInfo(clctrl.DomainName)
 			if err != nil {
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.DomainLivenessFailed, err.Error())
 				log.Info().Msg(err.Error())
 			}
 
 			log.Info().Msgf("domainId: %s", domainID)
-			domainLiveness := civoConf.TestDomainLiveness(clctrl.DomainName, domainID, clctrl.CloudRegion)
+			domainLiveness := civoConf.TestDomainLiveness(clctrl.DomainName, domainID)
 
 			err = clctrl.HandleDomainLiveness(domainLiveness)
 			if err != nil {
@@ -78,7 +78,7 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 				return err
 			}
 		case "digitalocean":
-			digitaloceanConf := digitalocean.DigitaloceanConfiguration{
+			digitaloceanConf := digitalocean.Configuration{
 				Client:  digitalocean.NewDigitalocean(cl.DigitaloceanAuth.Token),
 				Context: context.Background(),
 			}

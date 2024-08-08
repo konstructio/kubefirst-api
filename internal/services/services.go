@@ -10,8 +10,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -105,10 +103,10 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 		fullDomainName = cl.DomainName
 	}
 
-	vaultUrl := fmt.Sprintf("https://vault.%s", fullDomainName)
+	vaultURL := fmt.Sprintf("https://vault.%s", fullDomainName)
 
 	if cl.CloudProvider == "k3d" {
-		vaultUrl = "http://vault.vault.svc:8200"
+		vaultURL = "http://vault.vault.svc:8200"
 	}
 
 	// If there are secret values, create a vault secret
@@ -128,7 +126,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 		}
 
 		vaultClient, err := vaultapi.NewClient(&vaultapi.Config{
-			Address: vaultUrl,
+			Address: vaultURL,
 		})
 		if err != nil {
 			return fmt.Errorf("cluster %s - error initializing vault client: %s", clusterName, err)
@@ -241,8 +239,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 		argoCDHost = "http://argocd-server.argocd.svc.cluster.local"
 	}
 
-	httpClient := http.Client{Timeout: time.Second * 10}
-	argoCDToken, err := argocd.GetArgocdTokenV2(&httpClient, argoCDHost, "admin", cl.ArgoCDPassword)
+	argoCDToken, err := argocd.GetArgocdTokenV2(argoCDHost, "admin", cl.ArgoCDPassword)
 	if err != nil {
 		log.Warn().Msgf("error getting argocd token: %s", err)
 		return err
@@ -540,7 +537,7 @@ func DetokenizeConfigKeys(serviceFilePath string, configKeys []pkgtypes.GitopsCa
 		}
 
 		if !info.IsDir() {
-			data, err := ioutil.ReadFile(path)
+			data, err := os.ReadFile(path)
 			if err != nil {
 				return err
 			}
@@ -560,12 +557,12 @@ func DetokenizeConfigKeys(serviceFilePath string, configKeys []pkgtypes.GitopsCa
 
 func getRegistryPath(clusterName string, cloudProvider string, isTemplate bool) string {
 	if isTemplate && cloudProvider != "k3d" {
-		return fmt.Sprintf("templates/%s", clusterName)
+		return filepath.Join("templates", clusterName)
 	}
 
 	if cloudProvider == "k3d" {
-		return fmt.Sprintf("registry/%s", clusterName)
-	} else {
-		return fmt.Sprintf("registry/clusters/%s", clusterName)
+		return filepath.Join("clusters", clusterName)
 	}
+
+	return filepath.Join("registry", "clusters", clusterName)
 }

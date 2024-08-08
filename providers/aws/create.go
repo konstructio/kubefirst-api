@@ -222,25 +222,24 @@ func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 	if err := ctrl.ExportClusterRecord(); err != nil {
 		log.Error().Msgf("Error exporting cluster record: %s", err)
 		return fmt.Errorf("error exporting cluster record: %w", err)
-	} else {
-		ctrl.Cluster.Status = constants.ClusterStatusProvisioned
-		ctrl.Cluster.InProgress = false
+	}
+	ctrl.Cluster.Status = constants.ClusterStatusProvisioned
+	ctrl.Cluster.InProgress = false
 
-		if err := secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster); err != nil {
-			return fmt.Errorf("error updating cluster status: %w", err)
-		}
+	if err := secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster); err != nil {
+		return fmt.Errorf("error updating cluster status: %w", err)
+	}
 
-		log.Info().Msg("cluster creation complete")
+	log.Info().Msg("cluster creation complete")
 
-		// Create default service entries
-		cl, err := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
-		if err != nil {
-			return fmt.Errorf("error getting cluster for default service entries registration: %w", err)
-		}
+	// Create default service entries
+	cl, err := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
+	if err != nil {
+		return fmt.Errorf("error getting cluster for default service entries registration: %w", err)
+	}
 
-		if err := services.AddDefaultServices(&cl); err != nil {
-			log.Error().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
-		}
+	if err := services.AddDefaultServices(&cl); err != nil {
+		log.Error().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
 	}
 
 	log.Info().Msg("waiting for kubefirst-api Deployment to transition to Running")

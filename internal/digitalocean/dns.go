@@ -18,7 +18,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (c *DigitaloceanConfiguration) TestDomainLiveness(domainName string) bool {
+func (c *Configuration) TestDomainLiveness(domainName string) bool {
 	doRecordName := "kubefirst-liveness"
 	doRecordValue := "domain record propagated"
 
@@ -87,7 +87,7 @@ func (c *DigitaloceanConfiguration) TestDomainLiveness(domainName string) bool {
 }
 
 // GetDNSRecords retrieves DNS records
-func (c *DigitaloceanConfiguration) GetDNSRecords(domainName string) ([]godo.DomainRecord, error) {
+func (c *Configuration) GetDNSRecords(domainName string) ([]godo.DomainRecord, error) {
 	records, _, err := c.Client.Domains.Records(c.Context, domainName, &godo.ListOptions{})
 	if err != nil {
 		log.Error().Msgf("error getting digitalocean dns records for domain %s: %s", domainName, err)
@@ -98,7 +98,7 @@ func (c *DigitaloceanConfiguration) GetDNSRecords(domainName string) ([]godo.Dom
 }
 
 // GetDNSInfo determines whether or not a domain exists within digitalocean
-func (c *DigitaloceanConfiguration) GetDNSInfo(domainName string) (string, error) {
+func (c *Configuration) GetDNSInfo(domainName string) (string, error) {
 	log.Info().Msg("GetDNSInfo (working...)")
 
 	doDNSDomain, _, err := c.Client.Domains.Get(c.Context, domainName)
@@ -134,7 +134,7 @@ func GetDomainApexContent(domainName string) bool {
 }
 
 // GetDNSDomains lists all available DNS domains
-func (c *DigitaloceanConfiguration) GetDNSDomains() ([]string, error) {
+func (c *Configuration) GetDNSDomains() ([]string, error) {
 	var domainList []string
 
 	domains, _, err := c.Client.Domains.List(c.Context, &godo.ListOptions{})
@@ -150,7 +150,7 @@ func (c *DigitaloceanConfiguration) GetDNSDomains() ([]string, error) {
 }
 
 // DeleteDNSRecords deletes provided DNS records
-func (c *DigitaloceanConfiguration) DeleteDNSRecords(domainName string, dryRun bool) error {
+func (c *Configuration) DeleteDNSRecords(domainName string, dryRun bool) error {
 	records, _, err := c.Client.Domains.Records(c.Context, domainName, &godo.ListOptions{})
 	if err != nil {
 		log.Error().Msgf("error getting digitalocean dns records for domain %s: %s", domainName, err)

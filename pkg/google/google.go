@@ -21,7 +21,7 @@ import (
 )
 
 // GetRegions lists all available regions
-func (conf *GoogleConfiguration) GetRegions() ([]string, error) {
+func (conf *Configuration) GetRegions() ([]string, error) {
 	var regionList []string
 
 	creds, err := google.CredentialsFromJSON(conf.Context, []byte(conf.KeyFile), secretmanager.DefaultAuthScopes()...)
@@ -54,7 +54,7 @@ func (conf *GoogleConfiguration) GetRegions() ([]string, error) {
 	return regionList, nil
 }
 
-func (conf *GoogleConfiguration) GetZones() ([]string, error) {
+func (conf *Configuration) GetZones() ([]string, error) {
 	var zoneList []string
 
 	creds, err := google.CredentialsFromJSON(conf.Context, []byte(conf.KeyFile), secretmanager.DefaultAuthScopes()...)

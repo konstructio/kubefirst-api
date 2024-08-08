@@ -12,7 +12,7 @@ import (
 )
 
 // VultrHandoffScreen prints the handoff screen
-func VultrHandoffScreen(argocdAdminPassword, clusterName, domainName string, gitOwner string, config *providerConfigs.ProviderConfig, silentMode bool) {
+func VultrHandoffScreen(clusterName, domainName string, gitOwner string, config *providerConfigs.ProviderConfig, silentMode bool) {
 	renderHandoff(Opts{
 		ClusterName:             clusterName,
 		DomainName:              domainName,

@@ -87,12 +87,12 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				ID:              creds.ID,
 			}
 		case "digitalocean":
-			digitaloceanConf := digitalocean.DigitaloceanConfiguration{
+			digitaloceanConf := digitalocean.Configuration{
 				Client:  digitalocean.NewDigitalocean(cl.DigitaloceanAuth.Token),
 				Context: context.Background(),
 			}
 
-			creds := digitalocean.DigitaloceanSpacesCredentials{
+			creds := digitalocean.SpacesCredentials{
 				AccessKey:       cl.DigitaloceanAuth.SpacesKey,
 				SecretAccessKey: cl.DigitaloceanAuth.SpacesSecret,
 				Endpoint:        fmt.Sprintf("%s.digitaloceanspaces.com", "nyc3"),
@@ -210,7 +210,7 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 
 			linodego.NewClient(oauth2Client)
 
-			akamaiConf := akamai.AkamaiConfiguration{
+			akamaiConf := akamai.Configuration{
 				Client:  linodego.NewClient(oauth2Client),
 				Context: context.Background(),
 			}

@@ -21,6 +21,7 @@ func EvalDestroy(expectedCloudProvider string, expectedGitProvider string) (bool
 	setupComplete := viper.GetBool("kubefirst.setup-complete")
 
 	if !setupComplete {
+		// nolint:revive // this error is printed to the user
 		return false, fmt.Errorf(
 			"there are no active kubefirst platforms to destroy.\n\tTo get started, run: kubefirst %s create -h\n",
 			expectedCloudProvider,

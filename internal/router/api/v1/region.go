@@ -89,7 +89,7 @@ func PostRegions(c *gin.Context) {
 			awsConf = &awsinternal.Configuration{Config: conf}
 		}
 
-		regions, err := awsConf.GetRegions(regionListRequest.CloudRegion)
+		regions, err := awsConf.GetRegions()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: err.Error(),
@@ -109,7 +109,7 @@ func PostRegions(c *gin.Context) {
 			Context: context.Background(),
 		}
 
-		regions, err := civoConf.GetRegions(regionListRequest.CloudRegion)
+		regions, err := civoConf.GetRegions()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: err.Error(),
@@ -124,7 +124,7 @@ func PostRegions(c *gin.Context) {
 			})
 			return
 		}
-		digitaloceanConf := digitalocean.DigitaloceanConfiguration{
+		digitaloceanConf := digitalocean.Configuration{
 			Client:  digitalocean.NewDigitalocean(regionListRequest.DigitaloceanAuth.Token),
 			Context: context.Background(),
 		}
@@ -164,7 +164,7 @@ func PostRegions(c *gin.Context) {
 			})
 			return
 		}
-		googleConf := google.GoogleConfiguration{
+		googleConf := google.Configuration{
 			Context: context.Background(),
 			Project: regionListRequest.GoogleAuth.ProjectID,
 			Region:  regionListRequest.CloudRegion,

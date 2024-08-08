@@ -161,7 +161,7 @@ func PostDomains(c *gin.Context) {
 			Context: context.Background(),
 		}
 
-		domains, err := civoConf.GetDNSDomains(domainListRequest.CloudRegion)
+		domains, err := civoConf.GetDNSDomains()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: err.Error(),
@@ -176,7 +176,7 @@ func PostDomains(c *gin.Context) {
 			})
 			return
 		}
-		digitaloceanConf := digitalocean.DigitaloceanConfiguration{
+		digitaloceanConf := digitalocean.Configuration{
 			Client:  digitalocean.NewDigitalocean(domainListRequest.DigitaloceanAuth.Token),
 			Context: context.Background(),
 		}
@@ -217,7 +217,7 @@ func PostDomains(c *gin.Context) {
 			return
 		}
 
-		googleConf := google.GoogleConfiguration{
+		googleConf := google.Configuration{
 			Context: context.Background(),
 			Project: domainListRequest.GoogleAuth.ProjectID,
 			Region:  domainListRequest.CloudRegion,

@@ -9,11 +9,11 @@ import (
 )
 
 // CreateObjectStorageBucketAndKeys creates object store and access credentials
-func (c *AkamaiConfiguration) CreateObjectStorageBucketAndKeys(clusterName string) (*AkamaiBucketAndKeysConfiguration, error) {
+func (c *Configuration) CreateObjectStorageBucketAndKeys(clusterName string) (*BucketAndKeysConfiguration, error) {
 	// todo get rid of hardcode default
-	DEFAULT_CLUSTER := "us-east-1"
+	defaultCluster := "us-east-1"
 	bucket, err := c.Client.CreateObjectStorageBucket(context.Background(), linodego.ObjectStorageBucketCreateOptions{
-		Cluster: DEFAULT_CLUSTER,
+		Cluster: defaultCluster,
 		Label:   clusterName,
 	})
 	if err != nil {
@@ -25,7 +25,7 @@ func (c *AkamaiConfiguration) CreateObjectStorageBucketAndKeys(clusterName strin
 		BucketAccess: &[]linodego.ObjectStorageKeyBucketAccess{
 			{
 				BucketName:  clusterName,
-				Cluster:     DEFAULT_CLUSTER,
+				Cluster:     defaultCluster,
 				Permissions: "read_write",
 			},
 		},
@@ -47,5 +47,5 @@ func (c *AkamaiConfiguration) CreateObjectStorageBucketAndKeys(clusterName strin
 		Name:            bucket.Label,
 	}
 
-	return &AkamaiBucketAndKeysConfiguration{stateStoreData, stateStoreCredentialsData}, nil
+	return &BucketAndKeysConfiguration{stateStoreData, stateStoreCredentialsData}, nil
 }

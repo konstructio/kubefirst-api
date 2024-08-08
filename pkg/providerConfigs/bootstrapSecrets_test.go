@@ -65,22 +65,3 @@ func TestK8sNamespaces(t *testing.T) {
 		})
 	}
 }
-
-func TestFoo(t *testing.T) {
-	t.Run("want to have foo", func(t *testing.T) {
-		a := 1
-		_ = a
-	})
-	t.Run("want to have foo", func(t *testing.T) {
-		a := 1
-		_ = a
-	})
-	t.Run("want to have foo", func(t *testing.T) {
-		a := 1
-		_ = a
-	})
-	t.Run("want to have foo", func(t *testing.T) {
-		a := 1
-		_ = a
-	})
-}

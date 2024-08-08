@@ -12,7 +12,7 @@ import (
 )
 
 // AwsHandoffScreen prints the handoff screen
-func AwsHandoffScreen(argocdAdminPassword, clusterName, domainName string, gitOwner string, config *providerConfigs.ProviderConfig, silentMode bool) {
+func AwsHandoffScreen(clusterName, domainName string, gitOwner string, config *providerConfigs.ProviderConfig, silentMode bool) {
 	renderHandoff(Opts{
 		ClusterName:             clusterName,
 		DomainName:              domainName,

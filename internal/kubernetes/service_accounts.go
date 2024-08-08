@@ -38,6 +38,14 @@ func CreateServiceAccountsIfNotExist(ctx context.Context, k8s kubernetes.Interfa
 	return nil
 }
 
+func DeleteServiceAccount(ctx context.Context, k8s kubernetes.Interface, sa ServiceAccount) error {
+	err := k8s.CoreV1().ServiceAccounts(sa.Namespace).Delete(ctx, sa.Name, metav1.DeleteOptions{})
+	if err != nil {
+		return fmt.Errorf("error deleting service account %s in namespace %s: %w", sa.Name, sa.Namespace, err)
+	}
+	return nil
+}
+
 func createServiceAccount(opts ServiceAccount) *v1.ServiceAccount {
 	serviceAccount := &v1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{

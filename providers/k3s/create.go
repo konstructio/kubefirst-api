@@ -112,7 +112,7 @@ func CreateK3sCluster(definition *pkgtypes.ClusterDefinition) error {
 		// https://raw.githubusercontent.com/cert-manager/cert-manager/v1.11.0/deploy/crds/crd-certificates.yaml
 		// add certificates, and clusterissuers
 		log.Info().Msgf("found %d tls secrets to restore", len(secretsFilesToRestore))
-		ssl.Restore(ctrl.ProviderConfig.SSLBackupDir, ctrl.DomainName, ctrl.ProviderConfig.Kubeconfig)
+		ssl.Restore(ctrl.ProviderConfig.SSLBackupDir, ctrl.ProviderConfig.Kubeconfig)
 	} else {
 		log.Info().Msg("no files found in secrets directory, continuing")
 	}

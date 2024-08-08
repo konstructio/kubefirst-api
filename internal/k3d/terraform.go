@@ -10,7 +10,7 @@ import (
 	pkg "github.com/kubefirst/kubefirst-api/internal"
 )
 
-func GetGithubTerraformEnvs(config *K3dConfig, envs map[string]string) map[string]string {
+func GetGithubTerraformEnvs(config *Config, envs map[string]string) map[string]string {
 	if envs == nil {
 		envs = make(map[string]string)
 	}
@@ -24,7 +24,7 @@ func GetGithubTerraformEnvs(config *K3dConfig, envs map[string]string) map[strin
 	return envs
 }
 
-func GetUsersTerraformEnvs(config *K3dConfig, envs map[string]string) map[string]string {
+func GetUsersTerraformEnvs(config *Config, envs map[string]string) map[string]string {
 	if envs == nil {
 		envs = make(map[string]string)
 	}
@@ -40,7 +40,7 @@ func GetUsersTerraformEnvs(config *K3dConfig, envs map[string]string) map[string
 	return envs
 }
 
-func GetVaultTerraformEnvs(config *K3dConfig, envs map[string]string) map[string]string {
+func GetVaultTerraformEnvs(config *Config, envs map[string]string) map[string]string {
 	if envs == nil {
 		envs = make(map[string]string)
 	}

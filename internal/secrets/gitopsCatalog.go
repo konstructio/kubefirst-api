@@ -20,7 +20,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-const KUBEFIRST_CATALOG_SECRET_NAME = "kubefirst-catalog"
+const kubefirstCatalogSecretName = "kubefirst-catalog"
 
 // CreateGitopsCatalogApps
 func CreateGitopsCatalogApps(clientSet *kubernetes.Clientset, catalogApps types.GitopsCatalogApps) error {
@@ -29,7 +29,7 @@ func CreateGitopsCatalogApps(clientSet *kubernetes.Clientset, catalogApps types.
 
 	secretToCreate := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      KUBEFIRST_CATALOG_SECRET_NAME,
+			Name:      kubefirstCatalogSecretName,
 			Namespace: "kubefirst",
 		},
 		Data: secretValuesMap,
@@ -47,7 +47,7 @@ func CreateGitopsCatalogApps(clientSet *kubernetes.Clientset, catalogApps types.
 func GetGitopsCatalogApps(clientSet *kubernetes.Clientset) (types.GitopsCatalogApps, error) {
 	catalogApps := types.GitopsCatalogApps{}
 
-	kubefirstSecrets, err := k8s.ReadSecretV2Old(clientSet, "kubefirst", KUBEFIRST_CATALOG_SECRET_NAME)
+	kubefirstSecrets, err := k8s.ReadSecretV2Old(clientSet, "kubefirst", kubefirstCatalogSecretName)
 	if err != nil {
 		return catalogApps, err
 	}
@@ -104,7 +104,7 @@ func UpdateGitopsCatalogApps(clientSet *kubernetes.Clientset) error {
 		bytes, _ := json.Marshal(catalogApps)
 		secretValuesMap, _ := ParseJSONToMap(string(bytes))
 
-		err = k8s.UpdateSecretV2(clientSet, "kubefirst", KUBEFIRST_CATALOG_SECRET_NAME, secretValuesMap)
+		err = k8s.UpdateSecretV2(clientSet, "kubefirst", kubefirstCatalogSecretName, secretValuesMap)
 		if err != nil {
 			return fmt.Errorf("error creating kubernetes secret: %w", err)
 		}

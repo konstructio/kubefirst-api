@@ -4,7 +4,7 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package httpCommon
+package httpCommon // nolint:revive // allowed during code reorg
 
 import (
 	"crypto/tls"
@@ -13,14 +13,25 @@ import (
 	"time"
 )
 
-// CustomHttpClient - creates a http client based on k1 standards
+// CustomHTTPClient - creates a http client based on k1 standards
 // allowInsecure defines: tls.Config{InsecureSkipVerify: allowInsecure}
-func CustomHttpClient(allowInsecure bool) *http.Client {
+func CustomHTTPClient(allowInsecure bool, conntimeout ...time.Duration) *http.Client {
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
 	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: allowInsecure}
+
+	timeout := 90 * time.Minute
+	if len(conntimeout) > 0 {
+		timeout = conntimeout[0]
+	}
+
 	httpClient := http.Client{
-		Transport: customTransport,
-		Timeout:   time.Second * 90,
+		Transport: &http.Transport{
+			TLSHandshakeTimeout:   10 * time.Second,
+			ResponseHeaderTimeout: 10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+			TLSClientConfig:       customTransport.TLSClientConfig,
+		},
+		Timeout: timeout,
 	}
 	return &httpClient
 }

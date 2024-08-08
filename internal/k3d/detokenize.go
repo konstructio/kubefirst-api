@@ -53,7 +53,7 @@ func detokenizeGitops(tokens *GitopsDirectoryValues, gitProtocol string) filepat
 			newContents = strings.ReplaceAll(newContents, "<ATLANTIS_INGRESS_URL>", tokens.AtlantisIngressURL)
 			newContents = strings.ReplaceAll(newContents, "<CLUSTER_NAME>", tokens.ClusterName)
 			newContents = strings.ReplaceAll(newContents, "<CLOUD_PROVIDER>", tokens.CloudProvider)
-			newContents = strings.ReplaceAll(newContents, "<CLUSTER_ID>", tokens.ClusterId)
+			newContents = strings.ReplaceAll(newContents, "<CLUSTER_ID>", tokens.ClusterID)
 			newContents = strings.ReplaceAll(newContents, "<CLUSTER_TYPE>", tokens.ClusterType)
 			newContents = strings.ReplaceAll(newContents, "<DOMAIN_NAME>", DomainName)
 			newContents = strings.ReplaceAll(newContents, "<KUBEFIRST_TEAM>", tokens.KubefirstTeam)

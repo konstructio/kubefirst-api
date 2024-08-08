@@ -20,7 +20,7 @@ func ListZonesForRegion(c *gin.Context) {
 		return
 	}
 
-	googleConf := google.GoogleConfiguration{
+	googleConf := google.Configuration{
 		Context: context.Background(),
 		Project: zonesListRequest.GoogleAuth.ProjectID,
 		Region:  zonesListRequest.CloudRegion,

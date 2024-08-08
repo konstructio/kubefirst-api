@@ -63,9 +63,8 @@ func ImportClusterIfEmpty() (pkgtypes.Cluster, error) {
 		log.Info().Msgf("inserted cluster record to db. adding default services. %s", cluster.ClusterName)
 
 		return cluster, nil
-	} else {
-		log.Info().Msgf("cluster record for %s already exists - skipping", cluster.ClusterName)
 	}
 
+	log.Info().Msgf("cluster record for %s already exists - skipping", cluster.ClusterName)
 	return pkgtypes.Cluster{}, nil
 }

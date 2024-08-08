@@ -20,7 +20,7 @@ import (
 )
 
 // GenerateTLSSecrets generates default certificates for k3d
-func GenerateTLSSecrets(clientset *kubernetes.Clientset, config K3dConfig) error {
+func GenerateTLSSecrets(clientset *kubernetes.Clientset, config Config) error {
 	sslPemDir := config.MkCertPemDir
 	if _, err := os.Stat(sslPemDir); os.IsNotExist(err) {
 		err := os.MkdirAll(sslPemDir, os.ModePerm)
@@ -102,7 +102,7 @@ func GenerateTLSSecrets(clientset *kubernetes.Clientset, config K3dConfig) error
 // GenerateSingleTLSSecret creates a single certificate for a host for k3d
 func GenerateSingleTLSSecret(
 	clientset *kubernetes.Clientset,
-	config K3dConfig,
+	config Config,
 	app string,
 	ns string,
 ) error {

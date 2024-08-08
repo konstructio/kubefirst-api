@@ -23,7 +23,7 @@ import (
 )
 
 // ListContainerClusters
-func (conf *GoogleConfiguration) ListContainerClusters() (*containerpb.ListClustersResponse, error) {
+func (conf *Configuration) ListContainerClusters() (*containerpb.ListClustersResponse, error) {
 	client, err := container.NewClusterManagerClient(conf.Context)
 	if err != nil {
 		return nil, fmt.Errorf("could not create google container client: %w", err)
@@ -40,7 +40,7 @@ func (conf *GoogleConfiguration) ListContainerClusters() (*containerpb.ListClust
 }
 
 // GetContainerCluster
-func (conf *GoogleConfiguration) GetContainerCluster(clusterName string) (*containerpb.Cluster, error) {
+func (conf *Configuration) GetContainerCluster(clusterName string) (*containerpb.Cluster, error) {
 	client, err := container.NewClusterManagerClient(conf.Context)
 	if err != nil {
 		return nil, fmt.Errorf("could not create google container client: %w", err)
@@ -57,7 +57,7 @@ func (conf *GoogleConfiguration) GetContainerCluster(clusterName string) (*conta
 }
 
 // GetContainerClusterAuth
-func (conf *GoogleConfiguration) GetContainerClusterAuth(clusterName string, keyFile []byte) (*k8s.KubernetesClient, error) {
+func (conf *Configuration) GetContainerClusterAuth(clusterName string, keyFile []byte) (*k8s.KubernetesClient, error) {
 	creds, err := google.CredentialsFromJSON(conf.Context, keyFile, gocontainer.CloudPlatformScope)
 	if err != nil {
 		return nil, fmt.Errorf("could not create google storage client credentials: %w", err)

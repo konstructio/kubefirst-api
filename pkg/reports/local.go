@@ -11,7 +11,7 @@ import (
 )
 
 // LocalHandoffScreenV2 prints the handoff screen
-func LocalHandoffScreenV2(argocdAdminPassword, clusterName, gitDestDescriptor string, gitOwner string, config *k3d.K3dConfig, silentMode bool) {
+func LocalHandoffScreenV2(clusterName, gitDestDescriptor string, gitOwner string, config *k3d.Config, silentMode bool) {
 	renderHandoff(Opts{
 		ClusterName:             clusterName,
 		DomainName:              k3d.DomainName,

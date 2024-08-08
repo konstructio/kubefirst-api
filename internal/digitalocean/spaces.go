@@ -15,7 +15,7 @@ import (
 )
 
 // CreateSpaceBucket
-func (c *DigitaloceanConfiguration) CreateSpaceBucket(cr DigitaloceanSpacesCredentials, bucketName string) error {
+func (c *Configuration) CreateSpaceBucket(cr SpacesCredentials, bucketName string) error {
 	ctx := context.Background()
 	useSSL := true
 

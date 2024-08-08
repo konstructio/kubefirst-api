@@ -41,7 +41,7 @@ type ClusterController struct {
 	ClusterType               string
 	DomainName                string
 	SubdomainName             string
-	DnsProvider               string
+	DNSProvider               string
 	UseCloudflareOriginIssuer bool
 	AlertsEmail               string
 
@@ -82,7 +82,7 @@ type ClusterController struct {
 	ECR                   bool
 
 	// http
-	HttpClient *http.Client
+	Client *http.Client
 
 	// repositories
 	Repositories []string
@@ -108,7 +108,7 @@ type ClusterController struct {
 
 	// Provider clients
 	AwsClient    *awsinternal.Configuration
-	GoogleClient google.GoogleConfiguration
+	GoogleClient google.Configuration
 	Kcfg         *k8s.KubernetesClient
 	Cluster      types.Cluster
 }
@@ -182,9 +182,9 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	clctrl.ClusterID = clusterID
 	clctrl.DomainName = def.DomainName
 	clctrl.SubdomainName = def.SubdomainName
-	clctrl.DnsProvider = def.DNSProvider
+	clctrl.DNSProvider = def.DNSProvider
 	clctrl.ClusterType = def.Type
-	clctrl.HttpClient = http.DefaultClient
+	clctrl.Client = http.DefaultClient
 	clctrl.NodeType = def.NodeType
 	clctrl.NodeCount = def.NodeCount
 	clctrl.PostInstallCatalogApps = def.PostInstallCatalogApps
@@ -330,7 +330,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 
 		clctrl.AwsClient = &awsinternal.Configuration{Config: conf}
 	case "google":
-		clctrl.GoogleClient = google.GoogleConfiguration{
+		clctrl.GoogleClient = google.Configuration{
 			Context: context.Background(),
 			Project: def.GoogleAuth.ProjectID,
 			Region:  clctrl.CloudRegion,
@@ -349,7 +349,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		CloudRegion:            clctrl.CloudRegion,
 		DomainName:             clctrl.DomainName,
 		SubdomainName:          clctrl.SubdomainName,
-		DNSProvider:            clctrl.DnsProvider,
+		DNSProvider:            clctrl.DNSProvider,
 		ClusterID:              clctrl.ClusterID,
 		ECR:                    clctrl.ECR,
 		ClusterType:            clctrl.ClusterType,
@@ -401,7 +401,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 func (clctrl *ClusterController) SetGitTokens(def types.ClusterDefinition) error {
 	switch def.GitProvider {
 	case "github":
-		gitHubService := services.NewGitHubService(clctrl.HttpClient)
+		gitHubService := services.NewGitHubService(clctrl.Client)
 		gitHubHandler := handlers.NewGitHubHandler(gitHubService)
 
 		clctrl.GitHost = "github.com"

@@ -124,7 +124,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 			if err != nil {
 				return err
 			}
-			err = kcfg.ApplyObjects("", output)
+			err = kcfg.ApplyObjects(output)
 			if err != nil {
 				return err
 			}
@@ -134,7 +134,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 			if err != nil {
 				return err
 			}
-			_, err = k8s.WaitForJobComplete(kcfg.Clientset, job, 240)
+			_, err = k8s.WaitForJobComplete(kcfg.Clientset, job.Name, job.Namespace, 240)
 			if err != nil {
 				msg := fmt.Sprintf("could not run vault unseal job: %s", err)
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.VaultInitializationFailed, err.Error())
@@ -274,22 +274,22 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 		return err
 	}
 
-	var externalDnsToken string
+	var externalDNSToken string
 	switch cl.DNSProvider {
 	case "akamai":
-		externalDnsToken = cl.AkamaiAuth.Token
+		externalDNSToken = cl.AkamaiAuth.Token
 	case "civo":
-		externalDnsToken = cl.CivoAuth.Token
+		externalDNSToken = cl.CivoAuth.Token
 	case "vultr":
-		externalDnsToken = cl.VultrAuth.Token
+		externalDNSToken = cl.VultrAuth.Token
 	case "digitalocean":
-		externalDnsToken = cl.DigitaloceanAuth.Token
+		externalDNSToken = cl.DigitaloceanAuth.Token
 	case "aws":
-		externalDnsToken = "implement with cluster management"
+		externalDNSToken = "implement with cluster management"
 	case "google":
-		externalDnsToken = "implement with cluster management"
+		externalDNSToken = "implement with cluster management"
 	case "cloudflare":
-		externalDnsToken = cl.CloudflareAuth.APIToken
+		externalDNSToken = cl.CloudflareAuth.APIToken
 	}
 	//
 	var kcfg *k8s.KubernetesClient
@@ -332,7 +332,7 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 	}
 
 	_, err = vaultClient.KVv2("secret").Put(context.Background(), "external-dns", map[string]interface{}{
-		"token": externalDnsToken,
+		"token": externalDNSToken,
 	})
 	if err != nil {
 		log.Error().Msgf("error writing secret to vault: %s", err)

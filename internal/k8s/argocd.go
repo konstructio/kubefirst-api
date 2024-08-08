@@ -44,10 +44,12 @@ func VerifyArgoCDReadiness(clientset *kubernetes.Clientset, highAvailabilityEnab
 	)
 	if err != nil {
 		log.Info().Msgf("Error finding ArgoCD server deployment: %s", err)
+		return false, fmt.Errorf("error finding ArgoCD server deployment: %w", err)
 	}
 	_, err = WaitForDeploymentReady(clientset, argoCDServerDeployment, timeoutSeconds)
 	if err != nil {
 		log.Info().Msgf("Error waiting for ArgoCD server deployment ready state: %s", err)
+		return false, fmt.Errorf("error waiting for ArgoCD server deployment ready state: %w", err)
 	}
 
 	// Wait for additional ArgoCD Pods to transition to Running

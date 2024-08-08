@@ -17,7 +17,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	pkg "github.com/kubefirst/kubefirst-api/internal"
+	"github.com/kubefirst/kubefirst-api/internal/httpCommon"
 	"github.com/rs/zerolog/log"
 )
 
@@ -31,7 +31,7 @@ func DownloadFile(localFilename string, url string) error {
 	defer out.Close()
 
 	// get data
-	resp, err := pkg.CustomClient.Get(url)
+	resp, err := httpCommon.CustomHTTPClient(false, 0).Get(url)
 	if err != nil {
 		return fmt.Errorf("unable to perform GET request to %q: %s", url, err)
 	}

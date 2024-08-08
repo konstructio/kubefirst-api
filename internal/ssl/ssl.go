@@ -9,7 +9,6 @@ package ssl
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -24,8 +23,8 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func Restore(backupDir, domainName, kubeconfigPath string) error {
-	sslSecretFiles, err := ioutil.ReadDir(backupDir + "/secrets")
+func Restore(backupDir, kubeconfigPath string) error {
+	sslSecretFiles, err := os.ReadDir(backupDir + "/secrets")
 	if err != nil {
 		return err
 	}
@@ -63,7 +62,7 @@ func Restore(backupDir, domainName, kubeconfigPath string) error {
 	return nil
 }
 
-func Backup(backupDir, domainName, k1Dir, kubeconfigPath string) error {
+func Backup(backupDir, kubeconfigPath string) error {
 	clientset, err := k8s.GetClientSet(kubeconfigPath)
 	if err != nil {
 		return err

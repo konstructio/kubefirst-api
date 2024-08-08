@@ -9,7 +9,7 @@ package k3s
 import (
 	"fmt"
 
-	kube "github.com/kubefirst/kubefirst-api/pkg/kubernetes"
+	kube "github.com/kubefirst/kubefirst-api/internal/kubernetes"
 	providerConfig "github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/rs/zerolog/log"

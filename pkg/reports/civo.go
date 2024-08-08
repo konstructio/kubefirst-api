@@ -12,7 +12,7 @@ import (
 )
 
 // CivoHandoffScreen prints the handoff screen
-func CivoHandoffScreen(argocdAdminPassword, clusterName, domainName string, gitOwner string, config *providerConfigs.ProviderConfig, silentMode bool) {
+func CivoHandoffScreen(clusterName, domainName string, gitOwner string, config *providerConfigs.ProviderConfig, silentMode bool) {
 	renderHandoff(Opts{
 		ClusterName:             clusterName,
 		DomainName:              domainName,

@@ -17,7 +17,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func AddK3DSecrets(kbotPublicKey, destinationGitopsRepoURL, kbotPrivateKey, gitProvider, gitUser, gitOwner, kubeconfigPath, tokenValue string) error {
+func AddK3DSecrets(destinationGitopsRepoURL, kbotPrivateKey, gitProvider, gitUser, kubeconfigPath, tokenValue string) error {
 	clientset, err := k8s.GetClientSet(kubeconfigPath)
 	if err != nil {
 		log.Info().Msg("error getting kubernetes clientset")

@@ -49,21 +49,20 @@ func GetLogs(c *gin.Context) {
 
 	// Stream logs
 	logs := make(chan types.LogMessage)
-	done := make(chan struct{})
 	errCh := make(chan error)
 	go func() {
-		err := StreamLogs(c.Request.Context(), fileName, logs, errCh, done)
+		err := StreamLogs(c.Request.Context(), fileName, logs)
 		if err != nil {
 			errCh <- err
 		}
 	}()
 
 	// Stream logs to client using SSE
-	streamLogsToClient(c, logs, errCh, done)
+	streamLogsToClient(c, logs, errCh)
 }
 
 // StreamLogs redirects stdout logs to the stream via SSE
-func StreamLogs(ctx context.Context, fileName string, ch chan types.LogMessage, errCh chan error, done chan struct{}) error {
+func StreamLogs(ctx context.Context, fileName string, ch chan types.LogMessage) error {
 	homePath, err := os.UserHomeDir()
 	if err != nil {
 		log.Info().Msgf("error getting user home directory: %s", err.Error())
@@ -103,7 +102,7 @@ func StreamLogs(ctx context.Context, fileName string, ch chan types.LogMessage, 
 }
 
 // streamLogsToClient
-func streamLogsToClient(c *gin.Context, logs chan types.LogMessage, errCh chan error, done chan struct{}) {
+func streamLogsToClient(c *gin.Context, logs chan types.LogMessage, errCh chan error) {
 	for {
 		select {
 		// received new log line in go channel
@@ -116,7 +115,6 @@ func streamLogsToClient(c *gin.Context, logs chan types.LogMessage, errCh chan e
 			return
 			// channel should be closed
 		case <-c.Writer.CloseNotify():
-			close(done)
 			return
 		}
 	}
