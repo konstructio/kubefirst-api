@@ -166,8 +166,7 @@ func (conf *Configuration) GetHostedZones() ([]string, error) {
 		return nil, fmt.Errorf("error listing hosted zones: %w", err)
 	}
 
-	var domainList []string
-
+	domainList := make([]string, 0, len(hostedZones.HostedZones))
 	for _, domain := range hostedZones.HostedZones {
 		domainList = append(domainList, *domain.Name)
 	}

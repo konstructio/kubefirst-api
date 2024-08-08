@@ -12,12 +12,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/civo/civogo"
 	"github.com/kubefirst/kubefirst-api/internal/dns"
+	"github.com/kubefirst/kubefirst-api/internal/httpCommon"
 	"github.com/rs/zerolog/log"
 )
 
@@ -92,21 +92,19 @@ func (c *Configuration) TestDomainLiveness(domainName string, domainID string) b
 // GetDomainApexContent determines whether or not a target domain features
 // a host responding at zone apex
 func GetDomainApexContent(domainName string) bool {
-	timeout := time.Duration(5 * time.Second)
-	client := http.Client{
-		Timeout: timeout,
-	}
-
+	client := httpCommon.CustomHTTPClient(false, 5*time.Second)
 	exists := false
 	for _, proto := range []string{"http", "https"} {
 		fqdn := fmt.Sprintf("%s://%s", proto, domainName)
-		_, err := client.Get(fqdn)
+		resp, err := client.Get(fqdn)
 		if err != nil {
 			log.Warn().Msgf("domain %s has no apex content", fqdn)
-		} else {
-			log.Info().Msgf("domain %s has apex content", fqdn)
-			exists = true
+			continue
 		}
+		defer resp.Body.Close()
+
+		log.Info().Msgf("domain %s has apex content", fqdn)
+		exists = true
 	}
 
 	return exists
@@ -127,13 +125,12 @@ func (c *Configuration) GetDNSInfo(domainName string) (string, error) {
 
 // GetDNSDomains lists all available DNS domains
 func (c *Configuration) GetDNSDomains() ([]string, error) {
-	var domainList []string
-
 	domains, err := c.Client.ListDNSDomains()
 	if err != nil {
-		return []string{}, err
+		return nil, err
 	}
 
+	domainList := make([]string, 0, len(domains))
 	for _, domain := range domains {
 		domainList = append(domainList, domain.Name)
 	}
@@ -143,18 +140,17 @@ func (c *Configuration) GetDNSDomains() ([]string, error) {
 
 // GetRegions lists all available regions
 func (c *Configuration) GetRegions() ([]string, error) {
-	var regionList []string
-
 	regions, err := c.Client.ListRegions()
 	if err != nil {
 		return []string{}, err
 	}
 
+	regionsList := make([]string, 0, len(regions))
 	for _, region := range regions {
-		regionList = append(regionList, region.Code)
+		regionsList = append(regionsList, region.Code)
 	}
 
-	return regionList, nil
+	return regionsList, nil
 }
 
 func (c *Configuration) ListInstanceSizes() ([]string, error) {

@@ -85,8 +85,8 @@ func GenerateTLSSecrets(clientset *kubernetes.Clientset, config Config) error {
 					Namespace: app.Namespace,
 				},
 				Data: map[string][]byte{
-					"tls.crt": []byte(certPem),
-					"tls.key": []byte(keyPem),
+					"tls.crt": certPem,
+					"tls.key": keyPem,
 				},
 			}, metav1.CreateOptions{})
 			if err != nil {

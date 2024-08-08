@@ -15,7 +15,6 @@ linters:
     - asciicheck
     - bidichk
     - bodyclose
-    - containedctx
     - contextcheck
     - decorder
     - dogsled
@@ -32,7 +31,6 @@ linters:
     - gocheckcompilerdirectives
     - gochecknoglobals
     - gochecksumtype
-    - goconst
     - gocritic
     - gocyclo
     - gofmt
@@ -96,3 +94,19 @@ linters-settings:
     errorf: true
     sprintf1: true
     strconcat: false
+
+  gosec:
+    confidence: medium
+    excludes:
+      - G107 # Potential HTTP request made with variable url: these are often false positives or intentional
+      - G110 # Decompression bombs: we can check these manually when submitting code
+      - G306 # Poor file permissions used when creating a directory: we can check these manually when submitting code
+      - G404 # Use of weak random number generator (math/rand instead of crypto/rand): we can live with these
+
+  stylecheck:
+    checks:
+      - "all"
+      - "-ST1003" # this is covered by a different linter
+
+  gocyclo:
+    min-complexity: 60

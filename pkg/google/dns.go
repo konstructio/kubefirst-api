@@ -122,8 +122,6 @@ func (conf *Configuration) TestHostedZoneLiveness(hostedZoneName string) bool {
 }
 
 func (conf *Configuration) GetDNSDomains() ([]string, error) {
-	var zoneNames []string
-
 	creds, err := google.CredentialsFromJSON(conf.Context, []byte(conf.KeyFile), secretmanager.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, fmt.Errorf("could not create google storage client credentials: %w", err)
@@ -131,14 +129,15 @@ func (conf *Configuration) GetDNSDomains() ([]string, error) {
 
 	dnsService, err := googleDNS.NewService(conf.Context, option.WithCredentials(creds))
 	if err != nil {
-		return zoneNames, err
+		return nil, err
 	}
 
 	zones, err := dnsService.ManagedZones.List(conf.Project).Do()
 	if err != nil {
-		return zoneNames, err
+		return nil, err
 	}
 
+	zoneNames := make([]string, 0, len(zones.ManagedZones))
 	for _, zone := range zones.ManagedZones {
 		zoneNames = append(zoneNames, strings.TrimRight(zone.DnsName, "."))
 	}

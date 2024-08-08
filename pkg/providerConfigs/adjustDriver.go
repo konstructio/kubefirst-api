@@ -4,7 +4,7 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package providerConfigs //nolint:revive // allowing temporarily for better code organization
+package providerConfigs //nolint:revive,stylecheck // allowing temporarily for better code organization
 
 import (
 	"fmt"
@@ -44,19 +44,18 @@ func removeAllWithLogger(path string) {
 	}
 }
 
-var opt = cp.Options{
-	Skip: func(src string) (bool, error) {
-		if strings.HasSuffix(src, ".git") {
-			return true, nil
-		} else if strings.Index(src, "/.terraform") > 0 {
-			return true, nil
-		}
-		// Add more stuff to be ignored here
-		return false, nil
-	},
-}
-
 func adjustGitOpsRepoForProvider(cloudProvider, gitProvider, gitopsRepoDir, clusterType, clusterName string, apexContentExists, isK3D bool) error {
+	opt := cp.Options{
+		Skip: func(src string) (bool, error) {
+			if strings.HasSuffix(src, ".git") {
+				return true, nil
+			} else if strings.Index(src, "/.terraform") > 0 {
+				return true, nil
+			}
+			// Add more stuff to be ignored here
+			return false, nil
+		},
+	}
 	driverContent := fmt.Sprintf("%s/%s-%s/", gitopsRepoDir, cloudProvider, gitProvider)
 
 	if err := cp.Copy(driverContent, gitopsRepoDir, opt); err != nil {
@@ -167,6 +166,18 @@ func AdjustGitopsRepo(
 }
 
 func copyContents(source, destination string, createPath bool) error {
+	opt := cp.Options{
+		Skip: func(src string) (bool, error) {
+			if strings.HasSuffix(src, ".git") {
+				return true, nil
+			} else if strings.Index(src, "/.terraform") > 0 {
+				return true, nil
+			}
+			// Add more stuff to be ignored here
+			return false, nil
+		},
+	}
+
 	if createPath {
 		target := filepath.Dir(destination)
 		if err := os.MkdirAll(target, 0o700); err != nil {

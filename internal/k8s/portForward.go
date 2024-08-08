@@ -88,7 +88,7 @@ func PortForwardPod(clientset *kubernetes.Clientset, req PortForwardAPodRequest)
 	for _, pod := range podList.Items {
 		// pick the first pod found to be running
 		if pod.Status.Phase == v1.PodRunning && strings.HasPrefix(pod.Name, req.Pod.Name) {
-			runningPod = &pod
+			runningPod = pod.DeepCopy()
 			break
 		}
 	}

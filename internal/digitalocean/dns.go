@@ -10,11 +10,11 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"net/http"
 	"time"
 
 	"github.com/digitalocean/godo"
 	"github.com/kubefirst/kubefirst-api/internal/dns"
+	"github.com/kubefirst/kubefirst-api/internal/httpCommon"
 	"github.com/rs/zerolog/log"
 )
 
@@ -113,11 +113,7 @@ func (c *Configuration) GetDNSInfo(domainName string) (string, error) {
 // GetDomainApexContent determines whether or not a target domain features
 // a host responding at zone apex
 func GetDomainApexContent(domainName string) bool {
-	timeout := time.Duration(5 * time.Second)
-	client := http.Client{
-		Timeout: timeout,
-	}
-
+	client := httpCommon.CustomHTTPClient(false, 5*time.Second)
 	exists := false
 	for _, proto := range []string{"http", "https"} {
 		fqdn := fmt.Sprintf("%s://%s", proto, domainName)
@@ -135,13 +131,12 @@ func GetDomainApexContent(domainName string) bool {
 
 // GetDNSDomains lists all available DNS domains
 func (c *Configuration) GetDNSDomains() ([]string, error) {
-	var domainList []string
-
 	domains, _, err := c.Client.Domains.List(c.Context, &godo.ListOptions{})
 	if err != nil {
 		return []string{}, err
 	}
 
+	domainList := make([]string, 0, len(domains))
 	for _, domain := range domains {
 		domainList = append(domainList, domain.Name)
 	}

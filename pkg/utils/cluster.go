@@ -3,7 +3,6 @@ package pkg
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	pkg "github.com/kubefirst/kubefirst-api/internal"
+	"github.com/kubefirst/kubefirst-api/internal/httpCommon"
 	"github.com/kubefirst/kubefirst-api/pkg/types"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -79,10 +79,6 @@ func ExportCluster(cl types.Cluster) error {
 		URL:  "/cluster/import",
 	}
 
-	customTransport := http.DefaultTransport.(*http.Transport).Clone()
-	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	httpClient := http.Client{Transport: customTransport}
-
 	payload, err := json.Marshal(requestObject)
 	if err != nil {
 		return fmt.Errorf("error marshalling request object: %w", err)
@@ -98,7 +94,7 @@ func ExportCluster(cl types.Cluster) error {
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
 
-	res, err := httpClient.Do(req)
+	res, err := httpCommon.CustomHTTPClient(true).Do(req)
 	if err != nil {
 		log.Info().Msgf("error %s", err)
 		return fmt.Errorf("error sending request to %q: %w", url, err)

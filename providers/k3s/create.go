@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package k3s
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/kubefirst/kubefirst-api/internal/constants"
@@ -196,24 +197,23 @@ func CreateK3sCluster(definition *pkgtypes.ClusterDefinition) error {
 		3600,
 	)
 	if err != nil {
-		log.Fatal().Msgf("Error finding crossplane Deployment: %s", err)
+		log.Error().Msgf("Error finding crossplane Deployment: %s", err)
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error finding crossplane Deployment: %w", err)
 	}
 	log.Info().Msgf("waiting on dns, tls certificates from letsencrypt and remaining sync waves.\n this may take up to 60 minutes but regularly completes in under 20 minutes")
 	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, crossplaneDeployment, 3600)
 	if err != nil {
-		log.Fatal().Msgf("Error waiting for all Apps to sync ready state: %s", err)
-
+		log.Error().Msgf("Error waiting for all Apps to sync ready state: %s", err)
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error waiting for all Apps to sync ready state: %w", err)
 	}
 
 	// * export and import cluster
 	err = ctrl.ExportClusterRecord()
 	if err != nil {
-		log.Fatal().Msgf("Error exporting cluster record: %s", err)
-		return err
+		log.Error().Msgf("Error exporting cluster record: %s", err)
+		return fmt.Errorf("error exporting cluster record: %w", err)
 	}
 
 	ctrl.Cluster.InProgress = false
@@ -229,7 +229,8 @@ func CreateK3sCluster(definition *pkgtypes.ClusterDefinition) error {
 	cl, _ := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
 	err = services.AddDefaultServices(&cl)
 	if err != nil {
-		log.Fatal().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
+		log.Error().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
+		return fmt.Errorf("error adding default service entries for cluster %s: %w", cl.ClusterName, err)
 	}
 
 	log.Info().Msg("waiting for kubefirst-api Deployment to transition to Running")
@@ -241,16 +242,15 @@ func CreateK3sCluster(definition *pkgtypes.ClusterDefinition) error {
 		1200,
 	)
 	if err != nil {
-		log.Fatal().Msgf("Error finding kubefirst api Deployment: %s", err)
+		log.Error().Msgf("Error finding kubefirst api Deployment: %s", err)
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error finding kubefirst api Deployment: %w", err)
 	}
 	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, kubefirstAPI, 300)
 	if err != nil {
-		log.Fatal().Msgf("Error waiting for kubefirst-api to transition to Running: %s", err)
-
+		log.Error().Msgf("Error waiting for kubefirst-api to transition to Running: %s", err)
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error waiting for kubefirst-api to transition to Running: %w", err)
 	}
 
 	// Wait for last sync wave app transition to Running

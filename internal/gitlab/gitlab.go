@@ -23,7 +23,7 @@ func NewGitLabClient(token string, parentGroupName string) (*Wrapper, error) {
 	}
 
 	// Get parent group ID
-	minAccessLevel := gitlab.AccessLevelValue(gitlab.DeveloperPermissions)
+	minAccessLevel := gitlab.DeveloperPermissions
 	container := make([]gitlab.Group, 0)
 	for nextPage := 1; nextPage > 0; {
 		groups, resp, err := git.Groups.ListGroups(&gitlab.ListGroupsOptions{

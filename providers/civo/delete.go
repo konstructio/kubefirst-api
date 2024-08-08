@@ -7,9 +7,7 @@ See the LICENSE file for more details.
 package civo
 
 import (
-	"crypto/tls"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/civo/civogo"
@@ -20,6 +18,7 @@ import (
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/errors"
 	gitlab "github.com/kubefirst/kubefirst-api/internal/gitlab"
+	"github.com/kubefirst/kubefirst-api/internal/httpCommon"
 	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
@@ -176,11 +175,9 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryE
 
 				log.Info().Msgf("port-forward to argocd is available at %s", providerConfigs.ArgocdPortForwardURL)
 
-				customTransport := http.DefaultTransport.(*http.Transport).Clone()
-				customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-				argocdHTTPClient := http.Client{Transport: customTransport}
+				client := httpCommon.CustomHTTPClient(true)
 				log.Info().Msg("deleting the registry application")
-				httpCode, _, err := argocd.DeleteApplication(&argocdHTTPClient, config.RegistryAppName, argocdAuthToken, "true")
+				httpCode, _, err := argocd.DeleteApplication(client, config.RegistryAppName, argocdAuthToken, "true")
 				if err != nil {
 					errors.HandleClusterError(cl, err.Error())
 					return err

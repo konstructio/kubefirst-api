@@ -97,7 +97,7 @@ func Unzip(zipFilepath string, unzipDirectory string) error {
 	defer archive.Close()
 
 	for _, f := range archive.File {
-		filePath := filepath.Join(unzipDirectory, f.Name)
+		filePath := filepath.Join(unzipDirectory, filepath.Clean(f.Name))
 		log.Info().Msgf("unzipping file %s", filePath)
 
 		if !strings.HasPrefix(filePath, filepath.Clean(unzipDirectory)+string(os.PathSeparator)) {

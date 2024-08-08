@@ -51,7 +51,7 @@ func ReadConfigMapV2(kubeConfigPath string, namespace string, configMapName stri
 
 	parsedSecretData := make(map[string]string)
 	for key, value := range configMap.Data {
-		parsedSecretData[key] = string(value)
+		parsedSecretData[key] = value
 	}
 
 	return parsedSecretData, nil
@@ -188,8 +188,10 @@ func ReturnDeploymentObject(clientset *kubernetes.Clientset, matchLabel string, 
 			if !ok {
 				// Error if the channel closes
 				log.Error().Msgf("error waiting for %s Deployment to be created: %s", matchLabelValue, err)
-				return nil, fmt.Errorf("error waiting for %s Deployment to be created: %s", matchLabelValue, err)
+				return nil, fmt.Errorf("error waiting for %s Deployment to be created: %w", matchLabelValue, err)
 			}
+
+			//nolint:forcetypeassert // we are confident this is a Deployment
 			if event.
 				Object.(*appsv1.Deployment).Status.Replicas > 0 {
 				spec, err := clientset.AppsV1().Deployments(namespace).List(context.Background(), deploymentListOptions)
@@ -239,6 +241,8 @@ func ReturnPodObject(kubeConfigPath string, matchLabel string, matchLabelValue s
 				log.Error().Msgf("error waiting for %s Pod to be created: %s", matchLabelValue, err)
 				return nil, err
 			}
+
+			//nolint:forcetypeassert // we are confident this is a Pod
 			if event.
 				Object.(*v1.Pod).Status.Phase == "Pending" {
 				spec, err := clientset.CoreV1().Pods(namespace).List(context.Background(), podListOptions)
@@ -248,6 +252,8 @@ func ReturnPodObject(kubeConfigPath string, matchLabel string, matchLabelValue s
 				}
 				return &spec.Items[0], nil
 			}
+
+			//nolint:forcetypeassert // we are confident this is a Pod
 			if event.
 				Object.(*v1.Pod).Status.Phase == "Running" {
 				spec, err := clientset.CoreV1().Pods(namespace).List(context.Background(), podListOptions)

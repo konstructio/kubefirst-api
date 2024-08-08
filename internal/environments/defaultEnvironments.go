@@ -145,30 +145,37 @@ func callAPIEE(payload types.WorkloadClusterSet) error {
 		req.Header.Add("Content-Type", "application/json")
 		req.Header.Add("Accept", "application/json")
 
-		res, err := httpClient.Do(req)
-		timer := 0
-		for err != nil {
-			if timer > 12 {
-				log.Error().Msgf("error in http call to api ee: api url (%s) did not come up within 2 minutes %s", req.URL, err.Error())
-			} else {
-				res, err = httpClient.Do(req)
+		counter := 0
+		maxTries := 12
+		output := bytes.Buffer{}
+		for {
+			res, err := httpClient.Do(req)
+			if err != nil {
+				if counter > maxTries {
+					log.Error().Msgf("error in http call to API EE: url (%s) did not come up within 2 minutes %s", req.URL, err.Error())
+					return fmt.Errorf("error in http call to API EE: url %q did not come up within 2 minutes: %w", req.URL, err)
+				}
+				counter++
+				time.Sleep(10 * time.Second)
+				continue
 			}
-			timer++
-			time.Sleep(10 * time.Second)
-		}
-		defer res.Body.Close()
+			defer res.Body.Close()
 
-		if res.StatusCode != http.StatusAccepted {
-			log.Error().Msgf("unable to create default workload clusters and default environments %s: \n request: %s", res.Status, res.Request.URL)
-			return fmt.Errorf("unable to create default workload clusters and default environments %q: %s", res.Status, res.Request.URL)
+			if res.StatusCode == http.StatusAccepted {
+				// if we got a 201 but we can't read the page's body,
+				// we still got a cluster, so we should ignore the error
+				io.Copy(&output, res.Body)
+				break
+			}
+
+			// if we get a non-201 status code, we need to retry unless we exceed the counter
+			if counter > maxTries {
+				log.Error().Msgf("unable to create default workload clusters and default environments %s: \n request: %s", res.Status, res.Request.URL)
+				return fmt.Errorf("unable to create default workload clusters and default environments: API returned status %q", res.Status)
+			}
 		}
 
-		body, err := io.ReadAll(res.Body)
-		if err != nil {
-			return fmt.Errorf("unable to read response body: %w", err)
-		}
-
-		log.Info().Msgf("cluster %s created. result: %s", cluster.ClusterName, string(body))
+		log.Info().Msgf("cluster %q created: details: %s", cluster.ClusterName, output.String())
 		time.Sleep(20 * time.Second)
 	}
 	return nil

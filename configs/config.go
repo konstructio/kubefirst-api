@@ -29,6 +29,8 @@ const (
 
 // K1Version is used on version command. The value is dynamically updated on build time via ldflag. Built Kubefirst
 // versions will follow semver value like 1.9.0, when not using the built version, "development" is used.
+//
+//nolint:gochecknoglobals // used to store the version of the built binary
 var K1Version = DefaultK1Version
 
 // Config host application configuration

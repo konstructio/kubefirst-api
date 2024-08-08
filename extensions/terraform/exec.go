@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package terraform
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -45,8 +46,7 @@ func ExecShellWithVars(osvars map[string]string, command string, args ...string)
 	cmd.Env = allvars
 
 	if err := cmd.Run(); err != nil {
-		if exitError, ok := err.(*exec.ExitError); ok {
-			log.Error().Msgf("command %s failed with exit code %d", command, exitError.ExitCode())
+		if exitError := new(exec.ExitError); errors.As(err, &exitError) {
 			return fmt.Errorf("command %s failed with exit code %d", command, exitError.ExitCode())
 		}
 

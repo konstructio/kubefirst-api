@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -29,8 +30,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-var decUnstructured = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
-
 // ApplyObjects parses a structured Kubernetes-compatible yaml file and applies
 // its objects to a target Kubernetes cluster
 func (kcl KubernetesClient) ApplyObjects(yamlData [][]byte) error {
@@ -48,6 +47,7 @@ func (kcl KubernetesClient) ApplyObjects(yamlData [][]byte) error {
 	}
 
 	mapper := restmapper.NewDeferredDiscoveryRESTMapper(memory.NewMemCacheClient(dc))
+	decUnstructured := yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 
 	for _, resource := range yamlData {
 		// Decode YAML manifest into unstructured.Unstructured
@@ -87,7 +87,7 @@ func (kcl KubernetesClient) ApplyObjects(yamlData [][]byte) error {
 			FieldManager: "kubefirst",
 		})
 		if err != nil {
-			return fmt.Errorf("error applying %s/%s: %s", gvk.Kind, obj.GetName(), err)
+			return fmt.Errorf("error applying %s/%s: %w", gvk.Kind, obj.GetName(), err)
 		}
 
 		log.Info().Msgf("applied %s %s", gvk.Kind, obj.GetName())
@@ -134,7 +134,7 @@ func (kcl KubernetesClient) SplitYAMLFile(yamlData *bytes.Buffer) ([][]byte, err
 	for {
 		var value interface{}
 		err := dec.Decode(&value)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 

@@ -15,13 +15,11 @@ import (
 
 // GetRegions lists all available regions
 func (c *Configuration) GetRegions() ([]string, error) {
-	var regionList []string
-
 	regions, _, err := c.Client.Regions.List(c.Context, &godo.ListOptions{})
 	if err != nil {
-		return []string{}, err
+		return nil, err
 	}
-
+	regionList := make([]string, 0, len(regions))
 	for _, region := range regions {
 		regionList = append(regionList, region.Slug)
 	}
@@ -36,7 +34,7 @@ func (c *Configuration) ListInstances() ([]string, error) {
 		return nil, err
 	}
 
-	var instanceNames []string
+	instanceNames := make([]string, 0, len(instances))
 	for _, instance := range instances {
 		instanceNames = append(instanceNames, instance.Slug)
 	}

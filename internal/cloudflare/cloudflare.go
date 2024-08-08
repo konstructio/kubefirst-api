@@ -19,13 +19,12 @@ import (
 
 // GetDNSDomains lists all available DNS domains
 func (c *Configuration) GetDNSDomains() ([]string, error) {
-	var domainList []string
-
 	zones, err := c.Client.ListZones(c.Context)
 	if err != nil {
 		return []string{}, err
 	}
 
+	domainList := make([]string, 0, len(zones))
 	for _, domain := range zones {
 		domainList = append(domainList, domain.Name)
 	}
@@ -35,13 +34,12 @@ func (c *Configuration) GetDNSDomains() ([]string, error) {
 
 // GetDNSDomains lists all available DNS domains
 func (c *Configuration) GetDNSRecord() ([]string, error) {
-	var domainList []string
-
 	zones, err := c.Client.ListZones(c.Context)
 	if err != nil {
-		return []string{}, err
+		return nil, err
 	}
 
+	domainList := make([]string, 0, len(zones))
 	for _, domain := range zones {
 		domainList = append(domainList, domain.Name)
 	}

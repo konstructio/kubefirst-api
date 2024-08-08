@@ -10,10 +10,10 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"net/http"
 	"time"
 
 	"github.com/kubefirst/kubefirst-api/internal/dns"
+	"github.com/kubefirst/kubefirst-api/internal/httpCommon"
 	"github.com/rs/zerolog/log"
 	"github.com/vultr/govultr/v3"
 )
@@ -113,11 +113,7 @@ func (c *Configuration) GetDNSInfo(domainName string) (string, error) {
 // GetDomainApexContent determines whether or not a target domain features
 // a host responding at zone apex
 func GetDomainApexContent(domainName string) bool {
-	timeout := time.Duration(5 * time.Second)
-	client := http.Client{
-		Timeout: timeout,
-	}
-
+	client := httpCommon.CustomHTTPClient(false, 5*time.Second)
 	exists := false
 	for _, proto := range []string{"http", "https"} {
 		fqdn := fmt.Sprintf("%s://%s", proto, domainName)
@@ -135,13 +131,12 @@ func GetDomainApexContent(domainName string) bool {
 
 // GetDNSDomains lists all available DNS domains
 func (c *Configuration) GetDNSDomains() ([]string, error) {
-	var domainList []string
-
 	domains, _, _, err := c.Client.Domain.List(c.Context, &govultr.ListOptions{})
 	if err != nil {
 		return []string{}, err
 	}
 
+	domainList := make([]string, 0, len(domains))
 	for _, domain := range domains {
 		domainList = append(domainList, domain.Domain)
 	}
@@ -151,13 +146,12 @@ func (c *Configuration) GetDNSDomains() ([]string, error) {
 
 // GetRegions lists all available regions
 func (c *Configuration) GetRegions() ([]string, error) {
-	var regionList []string
-
 	regions, _, _, err := c.Client.Region.List(c.Context, &govultr.ListOptions{})
 	if err != nil {
-		return []string{}, err
+		return nil, err
 	}
 
+	regionList := make([]string, 0, len(regions))
 	for _, region := range regions {
 		regionList = append(regionList, region.ID)
 	}
@@ -174,7 +168,7 @@ func (c *Configuration) ListInstances() ([]string, error) {
 		return nil, err
 	}
 
-	var planNames []string
+	planNames := make([]string, 0, len(plans))
 	for _, plan := range plans {
 		planNames = append(planNames, plan.ID)
 	}

@@ -58,8 +58,7 @@ func SetupViper(config *configs.Config, silent bool) error {
 			log.Printf("Config file not found, creating a blank one: %s \n", viperConfigFile)
 		}
 
-		err = os.WriteFile(viperConfigFile, []byte(""), 0o700)
-		if err != nil {
+		if err := os.WriteFile(viperConfigFile, []byte(""), 0o600); err != nil {
 			return fmt.Errorf("unable to create blank config file, error is: %w", err)
 		}
 	}
@@ -233,8 +232,14 @@ func AwaitHostNTimes(url string, times int, gracePeriod time.Duration) {
 	log.Printf("AwaitHostNTimes %d called with grace period of: %d seconds", times, gracePeriod)
 	max := times
 	for i := 0; i < max; i++ {
-		resp, _ := http.Get(url)
-		if resp != nil && resp.StatusCode == 200 {
+		resp, err := http.Get(url)
+		if err != nil {
+			log.Printf("error: %s", err)
+			time.Sleep(time.Second * 10)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode == 200 {
 			log.Printf("%s resolved, %s second grace period required...", url, gracePeriod)
 			time.Sleep(time.Second * gracePeriod)
 			return
@@ -405,6 +410,7 @@ func IsConsoleUIAvailable(url string) error {
 			time.Sleep(5 * time.Second)
 			continue
 		}
+		defer resp.Body.Close()
 
 		if resp.StatusCode == http.StatusOK {
 			log.Info().Msg("console UI is up and running")
@@ -434,6 +440,7 @@ func IsAppAvailable(url string, appname string) error {
 			time.Sleep(5 * time.Second)
 			continue
 		}
+		defer resp.Body.Close()
 
 		if resp.StatusCode == http.StatusOK {
 			log.Info().Msgf("%s is up and running", appname)

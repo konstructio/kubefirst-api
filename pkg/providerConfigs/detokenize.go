@@ -80,7 +80,7 @@ func detokenizeGitops(tokens *GitopsDirectoryValues, gitProtocol string, useClou
 			newContents = strings.ReplaceAll(newContents, "<WORKLOAD_CLUSTER_TERRAFORM_MODULE_URL>", tokens.WorkloadClusterTerraformModuleURL)
 			newContents = strings.ReplaceAll(newContents, "<WORKLOAD_CLUSTER_BOOTSTRAP_TERRAFORM_MODULE_URL>", tokens.WorkloadClusterBootstrapTerraformModuleURL)
 			newContents = strings.ReplaceAll(newContents, "<NODE_TYPE>", tokens.NodeType)
-			newContents = strings.ReplaceAll(newContents, "<NODE_COUNT>", fmt.Sprintf("%d", tokens.NodeCount))
+			newContents = strings.ReplaceAll(newContents, "<NODE_COUNT>", strconv.Itoa(tokens.NodeCount))
 
 			// AWS
 			newContents = strings.ReplaceAll(newContents, "<AWS_ACCOUNT_ID>", tokens.AwsAccountID)
