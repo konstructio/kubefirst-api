@@ -22,7 +22,10 @@ const kubefirstServicesPrefix = "kubefirst-service"
 
 // CreateClusterServiceList adds an entry for a cluster to the service list
 func CreateClusterServiceList(clientSet *kubernetes.Clientset, clusterName string) error {
-	clusterServices, _ := GetServices(clientSet, clusterName)
+	clusterServices, err := GetServices(clientSet, clusterName)
+	if err != nil {
+		return fmt.Errorf("error creating kubernetes service secret: %w", err)
+	}
 
 	if clusterServices.ClusterName == "" {
 		clusterServices = types.ClusterServiceList{
@@ -48,7 +51,6 @@ func CreateClusterServiceList(clientSet *kubernetes.Clientset, clusterName strin
 	}
 
 	log.Info().Msgf("cluster service list record for %s already exists - skipping", clusterName)
-
 	return nil
 }
 
@@ -56,6 +58,10 @@ func CreateClusterServiceList(clientSet *kubernetes.Clientset, clusterName strin
 func DeleteClusterServiceListEntry(clientSet *kubernetes.Clientset, clusterName string, def *types.Service) error {
 	// Find
 	clusterServices, err := GetServices(clientSet, clusterName)
+	if err != nil {
+		return fmt.Errorf("error deleting service list entry %s: %s", def.Name, err)
+	}
+
 	filteredServiceList := []types.Service{}
 
 	for _, service := range clusterServices.Services {
@@ -67,7 +73,14 @@ func DeleteClusterServiceListEntry(clientSet *kubernetes.Clientset, clusterName 
 	clusterServices.Services = filteredServiceList
 
 	bytes, err := json.Marshal(clusterServices)
-	secretValuesMap, _ := ParseJSONToMap(string(bytes))
+	if err != nil {
+		return fmt.Errorf("error marshalling json: %w", err)
+	}
+
+	secretValuesMap, err := ParseJSONToMap(string(bytes))
+	if err != nil {
+		return fmt.Errorf("error parsing json: %w", err)
+	}
 
 	err = k8s.UpdateSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", kubefirstServicesPrefix, clusterName), secretValuesMap)
 	if err != nil {
@@ -75,7 +88,6 @@ func DeleteClusterServiceListEntry(clientSet *kubernetes.Clientset, clusterName 
 	}
 
 	log.Info().Msgf("service deleted: %v", def.Name)
-
 	return nil
 }
 
@@ -98,8 +110,14 @@ func GetServices(clientSet *kubernetes.Clientset, clusterName string) (types.Clu
 	clusterServices := types.ClusterServiceList{}
 
 	kubefirstSecrets, err := k8s.ReadSecretV2Old(clientSet, "kubefirst", fmt.Sprintf("%s-%s", kubefirstServicesPrefix, clusterName))
+	if err != nil {
+		return clusterServices, fmt.Errorf("error reading kubernetes service secret %s: %w", clusterName, err)
+	}
 
 	jsonString, err := MapToStructuredJSON(kubefirstSecrets)
+	if err != nil {
+		return clusterServices, fmt.Errorf("error parsing json: %w", err)
+	}
 
 	jsonData, err := json.Marshal(jsonString)
 	if err != nil {
@@ -118,10 +136,21 @@ func GetServices(clientSet *kubernetes.Clientset, clusterName string) (types.Clu
 func InsertClusterServiceListEntry(clientSet *kubernetes.Clientset, clusterName string, def *types.Service) error {
 	// Find
 	clusterServices, err := GetServices(clientSet, clusterName)
+	if err != nil {
+		return fmt.Errorf("error adding service list entry %s: %s", def.Name, err)
+	}
+
 	clusterServices.Services = append(clusterServices.Services, *def)
 
 	bytes, err := json.Marshal(clusterServices)
-	secretValuesMap, _ := ParseJSONToMap(string(bytes))
+	if err != nil {
+		return fmt.Errorf("error marshalling json: %w", err)
+	}
+
+	secretValuesMap, err := ParseJSONToMap(string(bytes))
+	if err != nil {
+		return fmt.Errorf("error parsing json: %w", err)
+	}
 
 	err = k8s.UpdateSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", kubefirstServicesPrefix, clusterName), secretValuesMap)
 	if err != nil {
@@ -129,6 +158,5 @@ func InsertClusterServiceListEntry(clientSet *kubernetes.Clientset, clusterName 
 	}
 
 	log.Info().Msgf("service added: %v", def.Name)
-
 	return nil
 }

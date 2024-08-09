@@ -47,7 +47,6 @@ linters:
     - interfacebloat
     - ireturn
     - loggercheck
-    - maintidx
     - makezero
     - mirror
     - misspell
@@ -94,6 +93,11 @@ linters-settings:
     errorf: true
     sprintf1: true
     strconcat: false
+
+  ireturn:
+    allow:
+      - ssh.PublicKey
+      - tea.Model
 
   gosec:
     confidence: medium

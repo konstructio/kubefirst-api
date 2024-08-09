@@ -21,8 +21,7 @@ import (
 func CreateTokensFromDatabaseRecord(cl *pkgtypes.Cluster, registryPath string, secretStoreRef string, project string, clusterDestination string, environment string, clusterName string) *providerConfigs.GitopsDirectoryValues {
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
-	fullDomainName := ""
-
+	var fullDomainName string
 	if cl.SubdomainName != "" {
 		fullDomainName = fmt.Sprintf("%s.%s", cl.SubdomainName, cl.DomainName)
 	} else {
