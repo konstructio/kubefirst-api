@@ -167,13 +167,10 @@ func ReturnDeploymentObject(client kubernetes.Interface, matchLabel string, matc
 
 	timeout := time.Duration(timeoutSeconds) * time.Second
 	var deployment *appsv1.Deployment
-	labelSelector := map[string]string{
-		matchLabel: matchLabelValue,
-	}
 
 	err := wait.PollImmediate(15*time.Second, timeout, func() (bool, error) {
 		deployments, err := client.AppsV1().Deployments(namespace).List(context.Background(), metav1.ListOptions{
-			LabelSelector: metav1.FormatLabelSelector(metav1.SetAsLabelSelector(labelSelector)),
+			LabelSelector: fmt.Sprintf("%s=%s", matchLabel, matchLabelValue),
 		})
 		if err != nil {
 			// if we couldn't connect, ask to try again
