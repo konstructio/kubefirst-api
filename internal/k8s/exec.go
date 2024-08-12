@@ -215,7 +215,7 @@ func ReturnDeploymentObject(clientset *kubernetes.Clientset, matchLabel string, 
 				spec, err := clientset.AppsV1().Deployments(namespace).List(context.Background(), deploymentListOptions)
 				if err != nil {
 					log.Error().Msgf("Error when searching for Deployment: %s", err)
-					return nil, err
+					return nil, fmt.Errorf("Error when searching for Deployment: %w", err)
 				}
 				return &spec.Items[0], nil
 			}
