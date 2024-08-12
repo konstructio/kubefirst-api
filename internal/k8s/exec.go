@@ -182,18 +182,14 @@ func ReturnDeploymentObject(clientset *kubernetes.Clientset, matchLabel string, 
 		// Attempt to watch the deployment
 		objWatch, err = clientset.AppsV1().Deployments(namespace).Watch(context.Background(), deploymentListOptions)
 
-		// Check if the timeout has been reached
-		if time.Since(startTime) > timeout {
-			if err != nil {
-				log.Printf("Error when attempting to watch Deployment: %s", err)
-			} else {
-				log.Printf("Timeout reached while watching for Deployment")
-			}
-			return nil, fmt.Errorf("timeout reached while watching for Deployment")
-		}
-
 		if err == nil {
 			break
+		}
+
+		// Check if the timeout has been reached
+		if time.Since(startTime) > timeout {
+			log.Printf("Error when attempting to watch Deployment: %s", err)
+			return nil, fmt.Errorf("timeout reached while watching for Deployment")
 		}
 
 		log.Printf("Error when attempting to watch Deployment: %s. Retrying...", err)
