@@ -26,14 +26,14 @@ func DownloadFile(localFilename string, url string) error {
 	// create local file
 	out, err := os.Create(localFilename)
 	if err != nil {
-		return fmt.Errorf("unable to create local file %q: %s", localFilename, err)
+		return fmt.Errorf("unable to create local file %q: %w", localFilename, err)
 	}
 	defer out.Close()
 
 	// get data
-	resp, err := httpCommon.CustomHTTPClient(false, 0).Get(url)
+	resp, err := httpCommon.CustomHTTPClient(false, 0).Get(url) //nolint:noctx // client enforces limits
 	if err != nil {
-		return fmt.Errorf("unable to perform GET request to %q: %s", url, err)
+		return fmt.Errorf("unable to perform GET request to %q: %w", url, err)
 	}
 	defer resp.Body.Close()
 
@@ -44,7 +44,7 @@ func DownloadFile(localFilename string, url string) error {
 
 	// writer the body to the file
 	if _, err := io.Copy(out, resp.Body); err != nil {
-		return fmt.Errorf("unable to write downloaded contents to file %q: %s", localFilename, err)
+		return fmt.Errorf("unable to write downloaded contents to file %q: %w", localFilename, err)
 	}
 
 	return nil

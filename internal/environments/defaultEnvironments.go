@@ -31,8 +31,7 @@ func NewEnvironment(envDef types.Environment) (types.Environment, error) {
 
 	kcfg := utils.GetKubernetesClient("TODO: Secrets")
 	newEnv, err := secrets.InsertEnvironment(kcfg.Clientset, envDef)
-
-	return newEnv, err
+	return newEnv, fmt.Errorf("error creating new environment in db: %w", err)
 }
 
 func CreateDefaultClusters(mgmtCluster types.Cluster) error {

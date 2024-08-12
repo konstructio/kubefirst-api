@@ -17,6 +17,7 @@ import (
 // CustomHTTPClient - creates a http client based on k1 standards
 // allowInsecure defines: tls.Config{InsecureSkipVerify: allowInsecure}
 func CustomHTTPClient(allowInsecure bool, conntimeout ...time.Duration) *http.Client {
+	//nolint:forcetypeassert // we are cloning the default transport
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
 
 	//nolint:gosec // allowInsecure is a user input and something we want to allow
@@ -42,7 +43,7 @@ func CustomHTTPClient(allowInsecure bool, conntimeout ...time.Duration) *http.Cl
 // ResolveAddress returns whether or not an address is resolvable
 func ResolveAddress(address string) error {
 	httpClient := CustomHTTPClient(false, 10*time.Second)
-	resp, err := httpClient.Get(address)
+	resp, err := httpClient.Get(address) //nolint:noctx // client enforces limits
 	if err != nil {
 		return fmt.Errorf("unable to resolve address %q: %s", address, err)
 	}

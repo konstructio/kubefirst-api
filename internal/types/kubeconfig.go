@@ -6,7 +6,7 @@ import (
 
 type KubeconfigRequest struct {
 	VCluster         bool                      `json:"vcluster,omitempty"`
-	ClusterName      string                    `json:"cluster_name,required"`
+	ClusterName      string                    `json:"cluster_name"`
 	ManagClusterName string                    `json:"man_clust_name,omitempty"`
 	CloudRegion      string                    `json:"cloud_region,omitempty"`
 	CivoAuth         pkgtypes.CivoAuth         `json:"civo_auth,omitempty"`

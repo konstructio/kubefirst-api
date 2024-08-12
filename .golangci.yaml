@@ -29,7 +29,6 @@ linters:
     - forcetypeassert
     - ginkgolinter
     - gocheckcompilerdirectives
-    - gochecknoglobals
     - gochecksumtype
     - gocritic
     - gocyclo
@@ -54,7 +53,6 @@ linters:
     - nakedret
     - nilerr
     - nilnil
-    - noctx
     - nolintlint
     - nonamedreturns
     - nosprintfhostport
@@ -80,7 +78,6 @@ linters:
     - unconvert
     - unparam
     - usestdlibvars
-    - varnamelen
     - wastedassign
     - whitespace
     - wrapcheck
@@ -96,6 +93,10 @@ linters-settings:
 
   ireturn:
     allow:
+      - anon
+      - error
+      - empty
+      - stdlib
       - ssh.PublicKey
       - tea.Model
 
