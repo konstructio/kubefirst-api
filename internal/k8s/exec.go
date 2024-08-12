@@ -18,6 +18,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
@@ -170,14 +171,33 @@ func ReturnDeploymentObject(clientset *kubernetes.Clientset, matchLabel string, 
 
 	log.Info().Msgf("waiting for %s Deployment to be created", matchLabelValue)
 
-	// Create watch operation
-	objWatch, err := clientset.
-		AppsV1().
-		Deployments(namespace).
-		Watch(context.Background(), deploymentListOptions)
-	if err != nil {
-		log.Error().Msgf("error when attempting to search for Deployment: %s", err)
-		return nil, err
+	var objWatch watch.Interface
+	var err error
+
+	timeout := 20 * time.Second
+	startTime := time.Now()
+
+	// Create watch operation with retries
+	for {
+		// Attempt to watch the deployment
+		objWatch, err = clientset.AppsV1().Deployments(namespace).Watch(context.Background(), deploymentListOptions)
+
+		// Check if the timeout has been reached
+		if time.Since(startTime) > timeout {
+			if err != nil {
+				log.Printf("Error when attempting to watch Deployment: %s", err)
+			} else {
+				log.Printf("Timeout reached while watching for Deployment")
+			}
+			return nil, fmt.Errorf("timeout reached while watching for Deployment")
+		}
+
+		if err == nil {
+			break
+		}
+
+		log.Printf("Error when attempting to watch Deployment: %s. Retrying...", err)
+		time.Sleep(1 * time.Second)
 	}
 
 	objChan := objWatch.ResultChan()
