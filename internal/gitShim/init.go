@@ -78,14 +78,16 @@ func InitializeGitProvider(p *GitInitParameters) error {
 	case "gitlab":
 		gitlabClient, err := gitlab.NewGitLabClient(p.GitToken, p.GitlabGroup)
 		if err != nil {
-			return err
+			return fmt.Errorf("couldn't create gitlab client: %w", err)
 		}
 
 		// Check for existing base projects
 		projects, err := gitlabClient.GetProjects()
 		if err != nil {
 			log.Error().Msgf("couldn't get gitlab projects: %s", err)
+			return fmt.Errorf("couldn't get gitlab projects: %w", err)
 		}
+
 		for _, repositoryName := range p.Repositories {
 			for _, project := range projects {
 				if project.Name == repositoryName {
@@ -99,7 +101,9 @@ func InitializeGitProvider(p *GitInitParameters) error {
 		subgroups, err := gitlabClient.GetSubGroups()
 		if err != nil {
 			log.Error().Msgf("couldn't get gitlab subgroups for group %s: %s", p.GitOwner, err)
+			return fmt.Errorf("couldn't get gitlab subgroups for group %s: %w", p.GitOwner, err)
 		}
+
 		for _, teamName := range p.Repositories {
 			for _, sg := range subgroups {
 				if sg.Name == teamName {

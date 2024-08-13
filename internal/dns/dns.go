@@ -42,7 +42,7 @@ func VerifyProviderDNS(cloudProvider, domainName string, nameServers []string) e
 
 	foundNSRecords, err := GetDomainNSRecords(domainName)
 	if err != nil {
-		return fmt.Errorf("error checking NS record for domain %q: %s", domainName, err)
+		return fmt.Errorf("error checking NS record for domain %q: %w", domainName, err)
 	}
 
 	for _, reqrec := range nameServers {
@@ -62,7 +62,7 @@ func GetDomainNSRecords(domainName string) ([]string, error) {
 
 	records, err := dig.NS(domainName)
 	if err != nil {
-		return nil, fmt.Errorf("error checking NS record for domain %q: %s", domainName, err)
+		return nil, fmt.Errorf("error checking NS record for domain %q: %w", domainName, err)
 	}
 
 	foundNSRecords := make([]string, 0, len(records))

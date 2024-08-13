@@ -40,7 +40,7 @@ func GetHostKey(host string) (ssh.PublicKey, error) {
 
 			hostKey, _, _, _, err = ssh.ParseAuthorizedKey(scanner.Bytes())
 			if err != nil {
-				return nil, fmt.Errorf("error parsing %q: %v", fields[2], err)
+				return nil, fmt.Errorf("error parsing %q: %w", fields[2], err)
 			}
 			break
 		}

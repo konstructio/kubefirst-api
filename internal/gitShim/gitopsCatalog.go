@@ -9,6 +9,7 @@ package gitShim //nolint:revive // allowed during code reorg
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/google/go-github/v52/github"
@@ -28,7 +29,7 @@ func (gh *GitHubClient) GetGitopsCatalogRepo() (*github.Repository, error) {
 		KubefirstGitopsCatalogRepository,
 	)
 	if err != nil {
-		return &github.Repository{}, err
+		return nil, fmt.Errorf("error getting gitops catalog repository: %w", err)
 	}
 
 	return repo, nil
@@ -45,7 +46,7 @@ func (gh *GitHubClient) ReadGitopsCatalogRepoContents() ([]*github.RepositoryCon
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting gitops catalog repository contents: %w", err)
 	}
 
 	return directoryContent, nil
@@ -61,7 +62,7 @@ func (gh *GitHubClient) ReadGitopsCatalogRepoDirectory(path string) ([]*github.R
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting gitops catalog repository directory contents: %w", err)
 	}
 
 	return directoryContent, nil
@@ -112,7 +113,7 @@ func (gh *GitHubClient) ReadGitopsCatalogAppDirectory(contents []*github.Reposit
 
 // readFileContents parses the contents of a file in a GitHub repository
 func (gh *GitHubClient) readFileContents(content *github.RepositoryContent) ([]byte, error) {
-	rc, _, err := gh.Client.Repositories.DownloadContents(
+	rc, resp, err := gh.Client.Repositories.DownloadContents(
 		context.Background(),
 		KubefirstGitHubOrganization,
 		KubefirstGitopsCatalogRepository,
@@ -120,13 +121,17 @@ func (gh *GitHubClient) readFileContents(content *github.RepositoryContent) ([]b
 		nil,
 	)
 	if err != nil {
-		return []byte{}, err
+		return nil, fmt.Errorf("error downloading file contents: %w", err)
 	}
 	defer rc.Close()
 
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("error downloading file contents: %d", resp.StatusCode)
+	}
+
 	b, err := io.ReadAll(rc)
 	if err != nil {
-		return []byte{}, err
+		return nil, fmt.Errorf("error reading file contents: %w", err)
 	}
 
 	return b, nil
