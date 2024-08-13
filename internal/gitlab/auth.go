@@ -41,7 +41,7 @@ func VerifyTokenPermissions(gitlabToken string) error {
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to read response body: %w", err)
 	}
 
 	if res.StatusCode != http.StatusOK {
@@ -58,7 +58,7 @@ func VerifyTokenPermissions(gitlabToken string) error {
 	}
 
 	if err := json.Unmarshal(body, &response); err != nil {
-		return err
+		return fmt.Errorf("unable to unmarshal response body: %w", err)
 	}
 
 	// api allows all access so we won't need to check the rest

@@ -22,7 +22,7 @@ func DetokenizeGitGitops(path string, tokens *GitopsDirectoryValues, gitProtocol
 	fn := detokenizeGitops(tokens, gitProtocol, useCloudflareOriginIssuer)
 	err := filepath.Walk(path, fn)
 	if err != nil {
-		return err
+		return fmt.Errorf("error walking path: %w", err)
 	}
 
 	return nil

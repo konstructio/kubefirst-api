@@ -15,7 +15,6 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -30,7 +29,7 @@ func CreateDirIfNotExist(dir string) error {
 	if _, err := os.Stat(dir); errors.Is(err, fs.ErrNotExist) {
 		err = os.Mkdir(dir, 0o777)
 		if err != nil {
-			return err
+			return fmt.Errorf("unable to create directory %q: %w", dir, err)
 		}
 	}
 	return nil
@@ -55,7 +54,7 @@ func SetupViper(config *configs.Config, silent bool) error {
 
 	if _, err := os.Stat(viperConfigFile); errors.Is(err, os.ErrNotExist) {
 		if !silent {
-			log.Printf("Config file not found, creating a blank one: %s \n", viperConfigFile)
+			log.Info().Msgf("Config file not found, creating a blank one: %s \n", viperConfigFile)
 		}
 
 		if err := os.WriteFile(viperConfigFile, []byte(""), 0o600); err != nil {
@@ -92,14 +91,6 @@ func CreateFile(fileName string, fileContent []byte) error {
 		return fmt.Errorf("unable to write the file: %w", err)
 	}
 	return nil
-}
-
-// CreateFullPath - Create path and its parents
-func CreateFullPath(p string) (*os.File, error) {
-	if err := os.MkdirAll(filepath.Dir(p), 0o777); err != nil {
-		return nil, err
-	}
-	return os.Create(p)
 }
 
 func randSeq(n int) string {
@@ -149,7 +140,7 @@ func RemoveSubDomain(fullURL string) (string, error) {
 	// build URL
 	fullPathURL, err := url.ParseRequestURI(fullURL)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("the fullURL (%s) is invalid", fullURL)
 	}
 
 	splitHost := strings.Split(fullPathURL.Host, ".")
@@ -185,6 +176,15 @@ func IsValidURL(rawURL string) error {
 	if err != nil || parsedURL == nil {
 		return fmt.Errorf("the URL (%s) is invalid, error = %v", rawURL, err)
 	}
+
+	if parsedURL.Scheme == "" || parsedURL.Host == "" {
+		return fmt.Errorf("the URL (%s) is invalid", rawURL)
+	}
+
+	if !parsedURL.IsAbs() {
+		return fmt.Errorf("the URL (%s) is invalid: needs an absolute URL", rawURL)
+	}
+
 	return nil
 }
 
@@ -259,13 +259,13 @@ func AwaitHostNTimes(url string, times int, gracePeriod time.Duration) {
 func ReplaceFileContent(filPath string, oldContent string, newContent string) error {
 	file, err := os.ReadFile(filPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to read file %q: %w", filPath, err)
 	}
 
 	updatedLine := strings.ReplaceAll(string(file), oldContent, newContent)
 
 	if err = os.WriteFile(filPath, []byte(updatedLine), 0); err != nil {
-		return err
+		return fmt.Errorf("unable to write file %q: %w", filPath, err)
 	}
 
 	return nil
@@ -457,7 +457,7 @@ func IsAppAvailable(url string, appname string) error {
 func OpenLogFile(path string) (*os.File, error) {
 	logFile, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o644)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to open log file %q: %w", path, err)
 	}
 
 	return logFile, nil
@@ -467,12 +467,12 @@ func OpenLogFile(path string) (*os.File, error) {
 func GetFileContent(filePath string) ([]byte, error) {
 	// check if file exists
 	if _, err := os.Stat(filePath); err != nil && os.IsNotExist(err) {
-		return nil, err
+		return nil, fmt.Errorf("file %q does not exist", filePath)
 	}
 
 	byteData, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to read file %q: %w", filePath, err)
 	}
 
 	return byteData, nil

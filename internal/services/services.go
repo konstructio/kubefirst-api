@@ -52,28 +52,34 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 	// Remove gitops dir
 	err := os.RemoveAll(tmpGitopsDir)
 	if err != nil {
-		log.Fatal().Msgf("error removing gitops dir %s: %s", tmpGitopsDir, err)
-		return err
+		log.Error().Msgf("error removing gitops dir %s: %s", tmpGitopsDir, err)
+		return fmt.Errorf("cluster %s - error removing gitops dir %s: %w", cl.ClusterName, tmpGitopsDir, err)
 	}
 
 	// Remove gitops catalog dir
 	err = os.RemoveAll(tmpGitopsCatalogDir)
 	if err != nil {
-		log.Fatal().Msgf("error removing gitops dir %s: %s", tmpGitopsCatalogDir, err)
-		return err
+		log.Error().Msgf("error removing gitops dir %s: %s", tmpGitopsCatalogDir, err)
+		return fmt.Errorf("cluster %s - error removing gitops dir %s: %w", cl.ClusterName, tmpGitopsCatalogDir, err)
 	}
 
 	err = gitShim.PrepareGitEnvironment(cl, tmpGitopsDir)
 	if err != nil {
-		log.Fatal().Msgf("an error occurred preparing git environment %s %s", tmpGitopsDir, err)
+		log.Error().Msgf("an error occurred preparing git environment %s %s", tmpGitopsDir, err)
+		return fmt.Errorf("cluster %s - error preparing git environment %s: %w", cl.ClusterName, tmpGitopsDir, err)
 	}
 
 	err = gitShim.PrepareGitOpsCatalog(tmpGitopsCatalogDir)
 	if err != nil {
-		log.Fatal().Msgf("an error occurred preparing gitops catalog environment %s %s", tmpGitopsDir, err)
+		log.Error().Msgf("an error occurred preparing gitops catalog environment %s %s", tmpGitopsDir, err)
+		return fmt.Errorf("cluster %s - error preparing gitops catalog environment %s: %w", cl.ClusterName, tmpGitopsCatalogDir, err)
 	}
 
-	gitopsRepo, _ := git.PlainOpen(tmpGitopsDir)
+	gitopsRepo, err := git.PlainOpen(tmpGitopsDir)
+	if err != nil {
+		log.Error().Msgf("error opening gitops repo: %s", err)
+		return fmt.Errorf("cluster %s - error opening gitops repo: %w", cl.ClusterName, err)
+	}
 
 	clusterName := cl.ClusterName
 	secretStoreRef := "vault-kv-secret"
@@ -121,22 +127,22 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 
 		// Get token
 		existingKubernetesSecret, err := k8s.ReadSecretV2(kcfg.Clientset, vault.VaultNamespace, vault.VaultSecretName)
-		if err != nil || existingKubernetesSecret == nil {
-			return fmt.Errorf("cluster %s - error getting vault token: %s", clusterName, err)
+		if err != nil {
+			return fmt.Errorf("cluster %s - error getting vault token: %w", clusterName, err)
 		}
 
 		vaultClient, err := vaultapi.NewClient(&vaultapi.Config{
 			Address: vaultURL,
 		})
 		if err != nil {
-			return fmt.Errorf("cluster %s - error initializing vault client: %s", clusterName, err)
+			return fmt.Errorf("cluster %s - error initializing vault client: %w", clusterName, err)
 		}
 
 		vaultClient.SetToken(existingKubernetesSecret["root-token"])
 
 		resp, err := vaultClient.KVv2("secret").Put(context.Background(), appDef.Name, s)
 		if err != nil {
-			return fmt.Errorf("cluster %s - error putting vault secret: %s", clusterName, err)
+			return fmt.Errorf("cluster %s - error putting vault secret: %w", clusterName, err)
 		}
 
 		log.Info().Msgf("cluster %s - created vault secret data for application %s %s", clusterName, appDef.Name, resp.VersionMetadata.CreatedTime)
@@ -153,7 +159,8 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 		},
 	)
 	if err != nil {
-		log.Warn().Msgf("cluster %s - error pulling gitops repo: %s", clusterName, err)
+		log.Error().Msgf("cluster %s - error pulling gitops repo: %s", clusterName, err)
+		return fmt.Errorf("cluster %s - error pulling gitops repo: %w", clusterName, err)
 	}
 
 	if !req.IsTemplate {
@@ -163,13 +170,13 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 		// Detokenize App Template
 		err = providerConfigs.DetokenizeGitGitops(catalogServiceFolder, gitopsKubefirstTokens, cl.GitProtocol, cl.CloudflareAuth.OriginCaIssuerKey != "")
 		if err != nil {
-			return fmt.Errorf("cluster %s - error opening file: %s", clusterName, err)
+			return fmt.Errorf("cluster %s - error opening file: %w", clusterName, err)
 		}
 
 		// Detokenize Config Keys
 		err = DetokenizeConfigKeys(catalogServiceFolder, req.ConfigKeys)
 		if err != nil {
-			return fmt.Errorf("cluster %s - error opening file: %s", clusterName, err)
+			return fmt.Errorf("cluster %s - error opening file: %w", clusterName, err)
 		}
 	}
 
@@ -179,13 +186,13 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 	err = cp.Copy(catalogServiceFolder, clusterRegistryPath, cp.Options{})
 	if err != nil {
 		log.Error().Msgf("Error populating gitops repository with catalog components content: %s. error: %s", serviceName, err.Error())
-		return err
+		return fmt.Errorf("cluster %s - error copying catalog components content: %w", clusterName, err)
 	}
 
 	// Commit to gitops repository
 	err = gitClient.Commit(gitopsRepo, fmt.Sprintf("adding %s to the cluster %s on behalf of %s", serviceName, clusterName, req.User))
 	if err != nil {
-		return fmt.Errorf("cluster %s - error committing service file: %s", clusterName, err)
+		return fmt.Errorf("cluster %s - error committing service file: %w", clusterName, err)
 	}
 	err = gitopsRepo.Push(&git.PushOptions{
 		RemoteName: "origin",
@@ -196,16 +203,19 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 		Force: true,
 	})
 	if err != nil {
-		return fmt.Errorf("cluster %s - error pushing commit for service file: %s", clusterName, err)
+		return fmt.Errorf("cluster %s - error pushing commit for service file: %w", clusterName, err)
 	}
 
-	existingService, _ := secrets.GetServices(kcfg.Clientset, clusterName)
+	existingService, err := secrets.GetServices(kcfg.Clientset, clusterName)
+	if err != nil {
+		return fmt.Errorf("cluster %s - error getting services: %w", clusterName, err)
+	}
 
 	if existingService.ClusterName == "" {
 		// Add to list
 		err = secrets.CreateClusterServiceList(kcfg.Clientset, clusterName)
 		if err != nil {
-			return err
+			return fmt.Errorf("cluster %s - error creating service list: %w", clusterName, err)
 		}
 	}
 
@@ -220,7 +230,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 		CreatedBy:   req.User,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("cluster %s - error inserting service list entry: %w", clusterName, err)
 	}
 
 	if excludeArgoSync || req.IsTemplate {
@@ -230,7 +240,7 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 	// Wait for ArgoCD application sync
 	argocdClient, err := argocdapi.NewForConfig(kcfg.RestConfig)
 	if err != nil {
-		return err
+		return fmt.Errorf("cluster %s - error creating argocd client: %w", clusterName, err)
 	}
 
 	// Sync registry
@@ -242,12 +252,12 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 	argoCDToken, err := argocd.GetArgocdTokenV2(argoCDHost, "admin", cl.ArgoCDPassword)
 	if err != nil {
 		log.Warn().Msgf("error getting argocd token: %s", err)
-		return err
+		return fmt.Errorf("cluster %s - error getting argocd token: %w", clusterName, err)
 	}
 	err = argocd.RefreshRegistryApplication(argoCDHost, argoCDToken)
 	if err != nil {
 		log.Warn().Msgf("error refreshing registry application: %s", err)
-		return err
+		return fmt.Errorf("cluster %s - error refreshing registry application: %w", clusterName, err)
 	}
 
 	// Wait for app to be created
@@ -299,7 +309,7 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string, def pkgtypes.Gitops
 	// Remove from list
 	svc, err := secrets.GetService(kcfg.Clientset, clusterName, serviceName)
 	if err != nil {
-		return fmt.Errorf("cluster %s - error finding service: %s", clusterName, err)
+		return fmt.Errorf("cluster %s - error finding service: %w", clusterName, err)
 	}
 
 	if !def.SkipFiles {
@@ -309,13 +319,14 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string, def pkgtypes.Gitops
 		// Remove gitops dir
 		err = os.RemoveAll(tmpGitopsDir)
 		if err != nil {
-			log.Fatal().Msgf("error removing gitops dir %s: %s", tmpGitopsDir, err)
-			return err
+			log.Error().Msgf("error removing gitops dir %s: %s", tmpGitopsDir, err)
+			return fmt.Errorf("cluster %s - error removing gitops dir %s: %w", cl.ClusterName, tmpGitopsDir, err)
 		}
 
 		err = gitShim.PrepareGitEnvironment(cl, tmpGitopsDir)
 		if err != nil {
-			log.Fatal().Msgf("an error occurred preparing git environment %s %s", tmpGitopsDir, err)
+			log.Error().Msgf("an error occurred preparing git environment %s %s", tmpGitopsDir, err)
+			return fmt.Errorf("cluster %s - error preparing git environment %s: %w", cl.ClusterName, tmpGitopsDir, err)
 		}
 
 		gitopsRepo, _ = git.PlainOpen(tmpGitopsDir)
@@ -336,33 +347,34 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string, def pkgtypes.Gitops
 		)
 		if err != nil {
 			log.Warn().Msgf("cluster %s - error pulling gitops repo: %s", clusterName, err)
+			return fmt.Errorf("cluster %s - error pulling gitops repo: %w", clusterName, err)
 		}
 
 		// removing registry service file
 		_, err = os.Stat(serviceFile)
 		if err != nil {
-			return fmt.Errorf("file %s does not exist in repository", serviceFile)
+			return fmt.Errorf("unable to stat service file %q: %w", serviceFile, err)
 		}
 
 		err := os.Remove(serviceFile)
 		if err != nil {
-			return fmt.Errorf("cluster %s - error deleting file: %s", clusterName, err)
+			return fmt.Errorf("cluster %s - error deleting file: %w", clusterName, err)
 		}
 
 		// removing components service folder
 		_, err = os.Stat(componentsServiceFolder)
 		if err != nil {
-			return fmt.Errorf("folder %s does not exist in repository", componentsServiceFolder)
+			return fmt.Errorf("unable to stat service folder %q: %w", componentsServiceFolder, err)
 		}
 
 		if err := os.RemoveAll(componentsServiceFolder); err != nil {
-			return fmt.Errorf("cluster %s - error deleting components folder: %s", clusterName, err)
+			return fmt.Errorf("cluster %s - error deleting components folder: %w", clusterName, err)
 		}
 
 		// Commit to gitops repository
 		err = gitClient.Commit(gitopsRepo, fmt.Sprintf("removing %s from the cluster %s on behalf of %s", serviceName, clusterName, def.User))
 		if err != nil {
-			return fmt.Errorf("cluster %s - error deleting service file: %s", clusterName, err)
+			return fmt.Errorf("cluster %s - error deleting service file: %w", clusterName, err)
 		}
 
 		err = gitopsRepo.Push(&git.PushOptions{
@@ -373,13 +385,13 @@ func DeleteService(cl *pkgtypes.Cluster, serviceName string, def pkgtypes.Gitops
 			},
 		})
 		if err != nil {
-			return fmt.Errorf("cluster %s - error pushing commit for service file: %s", clusterName, err)
+			return fmt.Errorf("cluster %s - error pushing commit for service file: %w", clusterName, err)
 		}
 	}
 
 	err = secrets.DeleteClusterServiceListEntry(kcfg.Clientset, clusterName, &svc)
 	if err != nil {
-		return err
+		return fmt.Errorf("cluster %s - error deleting service list entry: %w", clusterName, err)
 	}
 
 	return nil
@@ -403,16 +415,21 @@ func ValidateService(cl *pkgtypes.Cluster, serviceName string, def *pkgtypes.Git
 	// Remove gitops dir
 	err := os.RemoveAll(tmpGitopsDir)
 	if err != nil {
-		log.Fatal().Msgf("error removing gitops dir %s: %s", tmpGitopsDir, err)
-		return false, err
+		log.Error().Msgf("error removing gitops dir %s: %s", tmpGitopsDir, err)
+		return false, fmt.Errorf("cluster %s - error removing gitops dir %s: %w", cl.ClusterName, tmpGitopsDir, err)
 	}
 
 	err = gitShim.PrepareGitEnvironment(cl, tmpGitopsDir)
 	if err != nil {
-		log.Fatal().Msgf("an error occurred preparing git environment %s %s", tmpGitopsDir, err)
+		log.Error().Msgf("an error occurred preparing git environment %s %s", tmpGitopsDir, err)
+		return false, fmt.Errorf("cluster %s - error preparing git environment %s: %w", cl.ClusterName, tmpGitopsDir, err)
 	}
 
-	gitopsRepo, _ = git.PlainOpen(tmpGitopsDir)
+	gitopsRepo, err = git.PlainOpen(tmpGitopsDir)
+	if err != nil {
+		log.Error().Msgf("error opening gitops repo: %s", err)
+		return false, fmt.Errorf("cluster %s - error opening gitops repo: %w", cl.ClusterName, err)
+	}
 
 	registryPath := getRegistryPath(clusterName, cl.CloudProvider, def.IsTemplate)
 
@@ -429,6 +446,7 @@ func ValidateService(cl *pkgtypes.Cluster, serviceName string, def *pkgtypes.Git
 	)
 	if err != nil {
 		log.Warn().Msgf("cluster %s - error pulling gitops repo: %s", clusterName, err)
+		return false, fmt.Errorf("cluster %s - error pulling gitops repo: %w", clusterName, err)
 	}
 
 	// removing registry service file
@@ -446,7 +464,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 
 	err := secrets.CreateClusterServiceList(kcfg.Clientset, cl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("cluster %s - error creating service list: %w", cl.ClusterName, err)
 	}
 
 	var fullDomainName string
@@ -523,7 +541,7 @@ func AddDefaultServices(cl *pkgtypes.Cluster) error {
 	for _, svc := range defaults {
 		err := secrets.InsertClusterServiceListEntry(kcfg.Clientset, cl.ClusterName, &svc)
 		if err != nil {
-			return err
+			return fmt.Errorf("cluster %s - error inserting service list entry: %w", cl.ClusterName, err)
 		}
 	}
 

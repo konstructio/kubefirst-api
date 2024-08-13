@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/rs/zerolog/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,7 +14,7 @@ func ReadSecretV2Old(clientset *kubernetes.Clientset, namespace string, secretNa
 	secret, err := clientset.CoreV1().Secrets(namespace).Get(context.Background(), secretName, metav1.GetOptions{})
 	if err != nil {
 		log.Warn().Msgf("no secret found: %s\n", err)
-		return map[string]interface{}{}, err
+		return nil, fmt.Errorf("no secret found: %w", err)
 	}
 
 	parsedSecretData := make(map[string]interface{})
@@ -29,7 +30,7 @@ func DeleteSecretV2(clientset *kubernetes.Clientset, namespace string, secretNam
 	err := clientset.CoreV1().Secrets(namespace).Delete(context.Background(), secretName, metav1.DeleteOptions{})
 	if err != nil {
 		log.Error().Msgf("error deleting secret: %s\n", err)
-		return err
+		return fmt.Errorf("error deleting secret: %w", err)
 	}
 	return nil
 }
@@ -38,7 +39,7 @@ func DeleteSecretV2(clientset *kubernetes.Clientset, namespace string, secretNam
 func UpdateSecretV2(clientset *kubernetes.Clientset, namespace string, secretName string, secretValues map[string][]byte) error {
 	currentSecret, err := clientset.CoreV1().Secrets(namespace).Get(context.Background(), secretName, metav1.GetOptions{})
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting secret: %w", err)
 	}
 
 	currentSecret.Data = secretValues
@@ -49,7 +50,7 @@ func UpdateSecretV2(clientset *kubernetes.Clientset, namespace string, secretNam
 		metav1.UpdateOptions{},
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating secret: %w", err)
 	}
 
 	log.Info().Msgf("updated Secret %s in Namespace %s\n", currentSecret.Name, currentSecret.Namespace)

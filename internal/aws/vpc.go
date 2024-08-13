@@ -34,7 +34,7 @@ func (conf *Configuration) CheckAvailabilityZones(region string) (bool, error) {
 		&ec2.DescribeAvailabilityZonesInput{},
 	)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("error getting availability zones for region %s: %w", region, err)
 	}
 
 	numAavailabilityZones := len(availabilityZones.AvailabilityZones)
@@ -72,7 +72,7 @@ func (conf *Configuration) ListCompatibleRegions() ([]string, error) {
 		&ec2.DescribeRegionsInput{},
 	)
 	if err != nil {
-		return []string{}, err
+		return nil, fmt.Errorf("error getting aws regions: %w", err)
 	}
 
 	filterName := "region-name"
@@ -93,7 +93,7 @@ func (conf *Configuration) ListCompatibleRegions() ([]string, error) {
 			},
 		)
 		if err != nil {
-			return []string{}, err
+			return nil, fmt.Errorf("error getting availability zones for region %s: %w", *region.RegionName, err)
 		}
 
 		if len(availabilityZones.AvailabilityZones) >= minimumAvailabilityZones {

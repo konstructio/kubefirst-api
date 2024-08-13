@@ -8,6 +8,7 @@ package wrappers
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/kubefirst/kubefirst-api/pkg/handlers"
 )
@@ -21,7 +22,7 @@ func AuthenticateGitHubUserWrapper(gitHubAccessToken string, gitHubHandler *hand
 
 	gitHubAccessToken, err := gitHubHandler.AuthenticateUser()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error authenticating user: %w", err)
 	}
 
 	if gitHubAccessToken == "" {

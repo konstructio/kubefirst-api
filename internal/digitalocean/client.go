@@ -23,7 +23,7 @@ func NewDigitalocean(digitalOceanToken string) *godo.Client {
 func (c *Configuration) ValidateRegion(region string) error {
 	regions, _, err := c.Client.Regions.List(c.Context, &godo.ListOptions{})
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting regions: %w", err)
 	}
 
 	regionSlugs := make([]string, 0)

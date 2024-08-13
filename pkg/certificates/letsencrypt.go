@@ -15,7 +15,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/kubefirst/kubefirst-api/internal/httpCommon"
 	"github.com/kubefirst/kubefirst-api/pkg/reports"
+	"github.com/rs/zerolog/log"
 )
 
 const letsDebugHost = "https://letsdebug.net/certwatch-query"
@@ -35,19 +37,16 @@ func CheckCertificateUsage(domain string) error {
 	q.Add("q", query)
 	req.URL.RawQuery = q.Encode()
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := httpCommon.CustomHTTPClient(false).Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to check certificate usage: %w", err)
 	}
 	defer resp.Body.Close()
 
-	var output Response
-
 	// Decode response into struct
-	err = json.NewDecoder(resp.Body).Decode(&output)
-	if err != nil {
-		return err
+	var output Response
+	if err := json.NewDecoder(resp.Body).Decode(&output); err != nil {
+		return fmt.Errorf("unable to decode response: %w", err)
 	}
 
 	// Iterate over returned certificates
@@ -55,11 +54,13 @@ func CheckCertificateUsage(domain string) error {
 	for _, result := range output.Results {
 		sDec, err := base64.StdEncoding.DecodeString(result.Der)
 		if err != nil {
-			fmt.Println(err)
+			log.Error().Msgf("unable to decode certificate: %s", err)
+			return fmt.Errorf("unable to decode certificate: %w", err)
 		}
 		cert, err := x509.ParseCertificate(sDec)
 		if err != nil {
-			return err
+			log.Error().Msgf("unable to parse certificate: %s", err)
+			return fmt.Errorf("unable to parse certificate: %w", err)
 		}
 		detail := CertificateDetail{
 			Issued:         cert.NotBefore,

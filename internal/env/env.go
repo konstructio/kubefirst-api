@@ -1,6 +1,8 @@
 package env
 
 import (
+	"fmt"
+
 	env "github.com/caarlos0/env/v10"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
@@ -36,9 +38,8 @@ func GetEnv(silent bool) (Env, error) {
 	}
 
 	environment := Env{}
-	err = env.Parse(&environment)
-	if err != nil {
-		return Env{}, err
+	if err := env.Parse(&environment); err != nil {
+		return Env{}, fmt.Errorf("error parsing environment variables: %w", err)
 	}
 
 	return environment, nil

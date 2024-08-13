@@ -26,7 +26,7 @@ func AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsRepoDir, gi
 		if platform != fmt.Sprintf("%s-%s", CloudProvider, gitProvider) {
 			if err := os.RemoveAll(gitopsRepoDir + "/" + platform); err != nil {
 				// logging the error but ignoring it
-				log.Info().Msgf("Error removing %q: %s", platform, err.Error())
+				log.Error().Msgf("Error removing %q: %s", platform, err.Error())
 			}
 		}
 	}
@@ -47,28 +47,28 @@ func AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsRepoDir, gi
 	driverContent := fmt.Sprintf("%s/%s-%s/", gitopsRepoDir, CloudProvider, gitProvider)
 	err := cp.Copy(driverContent, gitopsRepoDir, opt)
 	if err != nil {
-		log.Info().Msgf("Error populating gitops repository with driver content: %s. error: %s", driverContent, err.Error())
+		log.Error().Msgf("Error populating gitops repository with driver content: %s. error: %s", driverContent, err.Error())
 		return fmt.Errorf("error populating gitops repository with driver content: %s. error: %w", driverContent, err)
 	}
 
 	if err := os.RemoveAll(driverContent); err != nil {
 		// logging the error but ignoring it
-		log.Info().Msgf("Error removing %q: %s", driverContent, err.Error())
+		log.Error().Msgf("Error removing %q: %s", driverContent, err.Error())
 	}
 
 	// * copy $HOME/.k1/gitops/cluster-types/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
 	clusterContent := fmt.Sprintf("%s/cluster-types/%s", gitopsRepoDir, clusterType)
 	err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/%s", gitopsRepoDir, clusterName), opt)
 	if err != nil {
-		log.Info().Msgf("Error populating cluster content with %s. error: %s", clusterContent, err.Error())
+		log.Error().Msgf("Error populating cluster content with %s. error: %s", clusterContent, err.Error())
 		return fmt.Errorf("error populating cluster content with %s. error: %w", clusterContent, err)
 	}
 
 	if err := os.RemoveAll(fmt.Sprintf("%s/cluster-types", gitopsRepoDir)); err != nil {
-		log.Info().Msgf("Error removing %q: %s", fmt.Sprintf("%s/cluster-types", gitopsRepoDir), err.Error())
+		log.Error().Msgf("Error removing %q: %s", fmt.Sprintf("%s/cluster-types", gitopsRepoDir), err.Error())
 	}
 	if err := os.RemoveAll(fmt.Sprintf("%s/services", gitopsRepoDir)); err != nil {
-		log.Info().Msgf("Error removing %q: %s", fmt.Sprintf("%s/services", gitopsRepoDir), err.Error())
+		log.Error().Msgf("Error removing %q: %s", fmt.Sprintf("%s/services", gitopsRepoDir), err.Error())
 	}
 
 	registryLocation := fmt.Sprintf("%s/registry/%s", gitopsRepoDir, clusterName)
@@ -77,7 +77,7 @@ func AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsRepoDir, gi
 		if gitProvider == "gitlab" {
 			amdGitlabRunnerFileLocation := fmt.Sprintf("%s/components/gitlab-runner/application.yaml", registryLocation)
 			if err := os.Remove(amdGitlabRunnerFileLocation); err != nil {
-				log.Info().Msgf("Error removing %q: %s", amdGitlabRunnerFileLocation, err.Error())
+				log.Error().Msgf("Error removing %q: %s", amdGitlabRunnerFileLocation, err.Error())
 			}
 		}
 	} else {
@@ -85,7 +85,7 @@ func AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsRepoDir, gi
 		if gitProvider == "gitlab" {
 			armGitlabRunnerFileLocation := fmt.Sprintf("%s/components/gitlab-runner/application-arm.yaml", registryLocation)
 			if err := os.Remove(armGitlabRunnerFileLocation); err != nil {
-				log.Info().Msgf("Error removing %q: %s", armGitlabRunnerFileLocation, err.Error())
+				log.Error().Msgf("Error removing %q: %s", armGitlabRunnerFileLocation, err.Error())
 			}
 		}
 	}
@@ -95,17 +95,17 @@ func AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsRepoDir, gi
 		kubefirstRegistryLocation := fmt.Sprintf("%s/kubefirst.yaml", registryLocation)
 
 		if err := os.RemoveAll(kubefirstComponentsLocation); err != nil {
-			log.Info().Msgf("Error removing %q: %s", kubefirstComponentsLocation, err.Error())
+			log.Error().Msgf("Error removing %q: %s", kubefirstComponentsLocation, err.Error())
 		}
 		if err := os.Remove(kubefirstRegistryLocation); err != nil {
-			log.Info().Msgf("Error removing %q: %s", kubefirstRegistryLocation, err.Error())
+			log.Error().Msgf("Error removing %q: %s", kubefirstRegistryLocation, err.Error())
 		}
 	}
 
 	if removeAtlantis {
 		atlantisRegistryFileLocation := fmt.Sprintf("%s/atlantis.yaml", registryLocation)
 		if err := os.Remove(atlantisRegistryFileLocation); err != nil {
-			log.Info().Msgf("Error removing %q: %s", atlantisRegistryFileLocation, err.Error())
+			log.Error().Msgf("Error removing %q: %s", atlantisRegistryFileLocation, err.Error())
 		}
 	}
 
@@ -120,7 +120,7 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 	// * git init
 	metaphorRepo, err := git.PlainInit(metaphorDir, false)
 	if err != nil {
-		return err
+		return fmt.Errorf("error initializing metaphor repo: %w", err)
 	}
 
 	// * copy options
@@ -140,8 +140,8 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 	metaphorContent := fmt.Sprintf("%s/metaphor", gitopsRepoDir)
 	err = cp.Copy(metaphorContent, metaphorDir, opt)
 	if err != nil {
-		log.Info().Msgf("Error populating metaphor content with %s. error: %s", metaphorContent, err.Error())
-		return err
+		log.Error().Msgf("Error populating metaphor content with %s. error: %s", metaphorContent, err.Error())
+		return fmt.Errorf("error populating metaphor content with %s. error: %w", metaphorContent, err)
 	}
 
 	// * copy ci content
@@ -152,8 +152,8 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 		log.Info().Msgf("copying github content: %s", githubActionsFolderContent)
 		err := cp.Copy(githubActionsFolderContent, fmt.Sprintf("%s/.github", metaphorDir), opt)
 		if err != nil {
-			log.Info().Msgf("error populating metaphor repository with %s: %s", githubActionsFolderContent, err)
-			return err
+			log.Error().Msgf("error populating metaphor repository with %s: %s", githubActionsFolderContent, err)
+			return fmt.Errorf("error populating metaphor repository with %s: %w", githubActionsFolderContent, err)
 		}
 	case "gitlab":
 		// * copy $HOME/.k1/gitops/ci/.gitlab-ci.yml/* $HOME/.k1/metaphor/.github
@@ -161,8 +161,8 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 		log.Info().Msgf("copying gitlab content: %s", gitlabCIContent)
 		err := cp.Copy(gitlabCIContent, fmt.Sprintf("%s/.gitlab-ci.yml", metaphorDir), opt)
 		if err != nil {
-			log.Info().Msgf("error populating metaphor repository with %s: %s", gitlabCIContent, err)
-			return err
+			log.Error().Msgf("error populating metaphor repository with %s: %s", gitlabCIContent, err)
+			return fmt.Errorf("error populating metaphor repository with %s: %w", gitlabCIContent, err)
 		}
 	}
 
@@ -171,8 +171,8 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 	log.Info().Msgf("copying argo workflows content: %s", argoWorkflowsFolderContent)
 	err = cp.Copy(argoWorkflowsFolderContent, fmt.Sprintf("%s/.argo", metaphorDir), opt)
 	if err != nil {
-		log.Info().Msgf("error populating metaphor repository with %s: %s", argoWorkflowsFolderContent, err)
-		return err
+		log.Error().Msgf("error populating metaphor repository with %s: %s", argoWorkflowsFolderContent, err)
+		return fmt.Errorf("error populating metaphor repository with %s: %w", argoWorkflowsFolderContent, err)
 	}
 
 	// * copy $HOME/.k1/gitops/metaphor/Dockerfile $HOME/.k1/metaphor/build/Dockerfile
@@ -191,12 +191,12 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 	// commit
 	err = gitClient.Commit(metaphorRepo, "committing initial detokenized metaphor repo content")
 	if err != nil {
-		return err
+		return fmt.Errorf("error committing initial detokenized metaphor repo content: %w", err)
 	}
 
 	metaphorRepo, err = gitClient.SetRefToMainBranch(metaphorRepo)
 	if err != nil {
-		return err
+		return fmt.Errorf("error setting ref to main branch: %w", err)
 	}
 
 	// remove old git ref

@@ -55,7 +55,7 @@ func (clctrl *ClusterController) CreateCluster() error {
 			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, &cl)
 			iamCaller, err := clctrl.AwsClient.GetCallerIdentity()
 			if err != nil {
-				return err
+				return fmt.Errorf("error getting aws caller identity: %w", err)
 			}
 			tfEnvs["TF_VAR_aws_account_id"] = *iamCaller.Account
 			tfEnvs["TF_VAR_use_ecr"] = strconv.FormatBool(clctrl.ECR) // Flag out the ecr terraform
@@ -80,20 +80,22 @@ func (clctrl *ClusterController) CreateCluster() error {
 		err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Error().Msgf("error applying cloud terraform: %s", err)
+
 			log.Info().Msg("sleeping 10 seconds before retrying terraform execution once more")
 			time.Sleep(10 * time.Second)
+
 			err = terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.TerraformClient, tfEntrypoint, tfEnvs)
 			if err != nil {
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.CloudTerraformApplyFailed, err.Error())
-				msg := fmt.Sprintf("error creating %s resources with terraform %s: %s", clctrl.CloudProvider, tfEntrypoint, err)
-				log.Error().Msg(msg)
 				clctrl.Cluster.CloudTerraformApplyFailedCheck = true
-				err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
-				if err != nil {
+
+				if err := secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster); err != nil {
 					telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.CloudTerraformApplyFailed, err.Error())
 					return err
 				}
-				return fmt.Errorf(msg)
+
+				log.Error().Msgf("error creating %s resources with terraform %s: %s", clctrl.CloudProvider, tfEntrypoint, err)
+				return fmt.Errorf("error creating %s resources with terraform %s: %w", clctrl.CloudProvider, tfEntrypoint, err)
 			}
 		}
 
@@ -238,7 +240,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 		case "aws":
 			iamCaller, err := clctrl.AwsClient.GetCallerIdentity()
 			if err != nil {
-				return err
+				return fmt.Errorf("error getting aws caller identity: %w", err)
 			}
 
 			// to be added to general tokens struct
@@ -299,7 +301,7 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 		var err error
 		kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
 		if err != nil {
-			return err
+			return fmt.Errorf("error getting google container cluster auth: %w", err)
 		}
 	}
 	clientSet := kcfg.Clientset
@@ -322,7 +324,7 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 			err := akamaiext.BootstrapAkamaiMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
 			if err != nil {
 				log.Error().Msgf("error adding kubernetes secrets for bootstrap: %s", err)
-				return err
+				return fmt.Errorf("error adding kubernetes secrets for bootstrap: %w", err)
 			}
 		case "aws":
 			err := awsext.BootstrapAWSMgmtCluster(
@@ -333,37 +335,37 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 			)
 			if err != nil {
 				log.Error().Msgf("error adding kubernetes secrets for bootstrap: %s", err)
-				return err
+				return fmt.Errorf("error adding kubernetes secrets for bootstrap: %w", err)
 			}
 		case "civo":
 			err := civoext.BootstrapCivoMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
 			if err != nil {
 				log.Error().Msgf("error adding kubernetes secrets for bootstrap: %s", err)
-				return err
+				return fmt.Errorf("error adding kubernetes secrets for bootstrap: %w", err)
 			}
 		case "google":
 			err := googleext.BootstrapGoogleMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
 			if err != nil {
 				log.Error().Msgf("error adding kubernetes secrets for bootstrap: %s", err)
-				return err
+				return fmt.Errorf("error adding kubernetes secrets for bootstrap: %w", err)
 			}
 		case "digitalocean":
 			err := digitaloceanext.BootstrapDigitaloceanMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
 			if err != nil {
 				log.Error().Msgf("error adding kubernetes secrets for bootstrap: %s", err)
-				return err
+				return fmt.Errorf("error adding kubernetes secrets for bootstrap: %w", err)
 			}
 		case "vultr":
 			err := vultrext.BootstrapVultrMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
 			if err != nil {
 				log.Error().Msgf("error adding kubernetes secrets for bootstrap: %s", err)
-				return err
+				return fmt.Errorf("error adding kubernetes secrets for bootstrap: %w", err)
 			}
 		case "k3s":
 			err := k3sext.BootstrapK3sMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
 			if err != nil {
-				log.Fatal().Msgf("error adding kubernetes secrets for bootstrap: %s", err)
-				return err
+				log.Error().Msgf("error adding kubernetes secrets for bootstrap: %s", err)
+				return fmt.Errorf("error adding kubernetes secrets for bootstrap: %w", err)
 			}
 		}
 
@@ -403,7 +405,7 @@ func (clctrl *ClusterController) ContainerRegistryAuth() (string, error) {
 		containerRegistryAuthToken, err := gitShim.CreateContainerRegistrySecret(&containerRegistryAuth)
 		if err != nil {
 			log.Error().Msgf("error generating container registry authentication: %s", err)
-			return "", err
+			return "", fmt.Errorf("error generating container registry authentication: %w", err)
 		}
 
 		return containerRegistryAuthToken, nil
@@ -413,7 +415,7 @@ func (clctrl *ClusterController) ContainerRegistryAuth() (string, error) {
 		var err error
 		kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("error getting google container cluster auth: %w", err)
 		}
 	}
 
@@ -430,7 +432,7 @@ func (clctrl *ClusterController) ContainerRegistryAuth() (string, error) {
 	containerRegistryAuthToken, err := gitShim.CreateContainerRegistrySecret(&containerRegistryAuth)
 	if err != nil {
 		log.Error().Msgf("error generating container registry authentication: %s", err)
-		return "", err
+		return "", fmt.Errorf("error generating container registry authentication: %w", err)
 	}
 
 	return containerRegistryAuthToken, nil
@@ -449,7 +451,7 @@ func (clctrl *ClusterController) WaitForClusterReady() error {
 		var err error
 		kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
 		if err != nil {
-			return err
+			return fmt.Errorf("error getting google container cluster auth: %w", err)
 		}
 	}
 
@@ -466,7 +468,7 @@ func (clctrl *ClusterController) WaitForClusterReady() error {
 		)
 		if err != nil {
 			log.Error().Msgf("error finding CoreDNS deployment: %s", err)
-			return err
+			return fmt.Errorf("error finding CoreDNS deployment: %w", err)
 		}
 	case "google":
 		dnsDeployment, err = k8s.ReturnDeploymentObject(
@@ -478,14 +480,14 @@ func (clctrl *ClusterController) WaitForClusterReady() error {
 		)
 		if err != nil {
 			log.Error().Msgf("error finding CoreDNS deployment: %s", err)
-			return err
+			return fmt.Errorf("error finding CoreDNS deployment: %w", err)
 		}
 	}
 
 	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, dnsDeployment, 120)
 	if err != nil {
 		log.Error().Msgf("error waiting for CoreDNS deployment ready state: %s", err)
-		return err
+		return fmt.Errorf("error waiting for CoreDNS deployment ready state: %w", err)
 	}
 
 	return nil

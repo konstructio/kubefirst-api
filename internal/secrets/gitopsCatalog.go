@@ -55,10 +55,13 @@ func GetGitopsCatalogApps(clientSet *kubernetes.Clientset) (types.GitopsCatalogA
 
 	kubefirstSecrets, err := k8s.ReadSecretV2Old(clientSet, "kubefirst", kubefirstCatalogSecretName)
 	if err != nil {
-		return catalogApps, err
+		return catalogApps, fmt.Errorf("error reading kubernetes secret: %w", err)
 	}
 
-	jsonString, _ := MapToStructuredJSON(kubefirstSecrets)
+	jsonString, err := MapToStructuredJSON(kubefirstSecrets)
+	if err != nil {
+		return catalogApps, fmt.Errorf("error parsing json: %w", err)
+	}
 
 	jsonData, err := json.Marshal(jsonString)
 	if err != nil {
@@ -75,7 +78,10 @@ func GetGitopsCatalogApps(clientSet *kubernetes.Clientset) (types.GitopsCatalogA
 
 // GetGitopsCatalogAppsByCloudProvider
 func GetGitopsCatalogAppsByCloudProvider(clientSet *kubernetes.Clientset, cloudProvider string, gitProvider string) (types.GitopsCatalogApps, error) {
-	result, _ := GetGitopsCatalogApps(clientSet)
+	result, err := GetGitopsCatalogApps(clientSet)
+	if err != nil {
+		return result, fmt.Errorf("error getting gitops catalog apps: %w", err)
+	}
 
 	filteredApps := []types.GitopsCatalogApp{}
 

@@ -46,22 +46,21 @@ func ClusterCreate(clusterName string, k1Dir string, k3dClient string, kubeconfi
 		"--port", "443:443@loadbalancer",
 	)
 	if err != nil {
-		log.Info().Msg("error creating k3d cluster")
-		log.Info().Msgf(" err: %s %s %s", errLineOne, errLineTwo, err)
-		return err
+		log.Error().Msgf("error creating k3d cluster: %s %s %s", errLineOne, errLineTwo, err)
+		return fmt.Errorf("error creating k3d cluster: %s %s %w", errLineOne, errLineTwo, err)
 	}
 
 	time.Sleep(20 * time.Second)
 
 	kConfigString, _, err := pkg.ExecShellReturnStrings(k3dClient, "kubeconfig", "get", clusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting kubeconfig: %w", err)
 	}
 
 	err = os.WriteFile(kubeconfig, []byte(kConfigString), 0o644)
 	if err != nil {
 		log.Error().Err(err).Msg("error updating config")
-		return fmt.Errorf("error updating config")
+		return fmt.Errorf("error updating config: %w", err)
 	}
 
 	return nil
@@ -84,20 +83,20 @@ func ClusterCreateConsoleAPI(clusterName string, k1Dir string, k3dClient string,
 	)
 	if err != nil {
 		log.Info().Msg("error creating k3d cluster")
-		return err
+		return fmt.Errorf("error creating k3d cluster: %w", err)
 	}
 
 	time.Sleep(20 * time.Second)
 
 	kConfigString, _, err := pkg.ExecShellReturnStrings(k3dClient, "kubeconfig", "get", clusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting kubeconfig: %w", err)
 	}
 
 	err = os.WriteFile(kubeconfig, []byte(kConfigString), 0o644)
 	if err != nil {
 		log.Error().Err(err).Msg("error updating config")
-		return fmt.Errorf("error updating config")
+		return fmt.Errorf("error updating config: %w", err)
 	}
 
 	return nil
@@ -123,8 +122,10 @@ func PrepareGitRepositories(
 	// * clone the gitops-template repo
 	gitopsRepo, err := gitClient.CloneRefSetMain(gitopsTemplateBranch, gitopsDir, gitopsTemplateURL)
 	if err != nil {
-		log.Panic().Msgf("error opening repo at: %s, err: %v", gitopsDir, err)
+		log.Error().Msgf("error opening repo at: %s, err: %v", gitopsDir, err)
+		return fmt.Errorf("error opening repo at: %s, err: %w", gitopsDir, err)
 	}
+
 	log.Info().Msg("gitops repository clone complete")
 
 	// * adjust the content for the gitops repo
@@ -143,7 +144,7 @@ func PrepareGitRepositories(
 	// * add new remote
 	err = gitClient.AddRemote(destinationGitopsRepoURL, gitProvider, gitopsRepo)
 	if err != nil {
-		return err
+		return fmt.Errorf("error adding remote: %w", err)
 	}
 
 	// ! metaphor
@@ -159,24 +160,28 @@ func PrepareGitRepositories(
 		return err
 	}
 
-	metaphorRepo, _ := git.PlainOpen(metaphorDir)
+	metaphorRepo, err := git.PlainOpen(metaphorDir)
+	if err != nil {
+		return fmt.Errorf("error opening metaphor repo: %w", err)
+	}
+
 	// * commit initial gitops-template content
 	err = gitClient.Commit(metaphorRepo, "committing initial detokenized metaphor repo content")
 	if err != nil {
-		return err
+		return fmt.Errorf("error committing initial detokenized metaphor repo content: %w", err)
 	}
 
 	// * add new remote
 	err = gitClient.AddRemote(destinationMetaphorRepoURL, gitProvider, metaphorRepo)
 	if err != nil {
-		return err
+		return fmt.Errorf("error adding remote: %w", err)
 	}
 
 	// * commit initial gitops-template content
 	// commit after metaphor content has been removed from gitops
 	err = gitClient.Commit(gitopsRepo, "committing initial detokenized gitops-template repo content")
 	if err != nil {
-		return err
+		return fmt.Errorf("error committing initial detokenized gitops-template repo content: %w", err)
 	}
 
 	return nil

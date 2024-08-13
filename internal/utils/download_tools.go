@@ -16,7 +16,7 @@ func DownloadTools(kubectlClientPath, kubectlClientVersion, localOs, localArchit
 	// create folder if it doesn't exist
 	err := pkg.CreateDirIfNotExist(toolsDirPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating tools dir: %w", err)
 	}
 
 	group := errgroup.Group{}
@@ -85,7 +85,7 @@ func DownloadTools(kubectlClientPath, kubectlClientVersion, localOs, localArchit
 	})
 
 	if err := group.Wait(); err != nil {
-		return err
+		return fmt.Errorf("error downloading tools: %w", err)
 	}
 
 	return nil

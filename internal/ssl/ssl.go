@@ -26,12 +26,12 @@ import (
 func Restore(backupDir, kubeconfigPath string) error {
 	sslSecretFiles, err := os.ReadDir(backupDir + "/secrets")
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading directory: %w", err)
 	}
 
 	clientset, err := k8s.GetClientSet(kubeconfigPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting clientset: %w", err)
 	}
 
 	for _, secret := range sslSecretFiles {
@@ -42,19 +42,19 @@ func Restore(backupDir, kubeconfigPath string) error {
 
 		f, err := os.ReadFile(backupDir + "/secrets/" + secret.Name())
 		if err != nil {
-			return err
+			return fmt.Errorf("error reading file %q: %w", secret.Name(), err)
 		}
 
 		secretData := &v1.SecretApplyConfiguration{}
 
 		err = yaml.Unmarshal(f, secretData)
 		if err != nil {
-			return err
+			return fmt.Errorf("error unmarshalling yaml: %w", err)
 		}
 
 		sec, err := clientset.CoreV1().Secrets(namespace).Apply(context.Background(), secretData, metav1.ApplyOptions{FieldManager: "application/apply-patch"})
 		if err != nil {
-			return err
+			return fmt.Errorf("error applying secret: %w", err)
 		}
 		log.Info().Msgf("created secret: %s", sec.Name)
 	}
@@ -64,13 +64,13 @@ func Restore(backupDir, kubeconfigPath string) error {
 func Backup(backupDir, kubeconfigPath string) error {
 	clientset, err := k8s.GetClientSet(kubeconfigPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting clientset: %w", err)
 	}
 
 	// * corev1 secret resources
 	secrets, err := clientset.CoreV1().Secrets("").List(context.Background(), metav1.ListOptions{})
 	if err != nil {
-		return err
+		return fmt.Errorf("error listing secrets: %w", err)
 	}
 
 	for _, secret := range secrets.Items {
@@ -93,7 +93,9 @@ func Backup(backupDir, kubeconfigPath string) error {
 			if err != nil {
 				return fmt.Errorf("unable to marshal yaml: %w", err)
 			}
-			pkg.CreateFile(fileName, yamlContent)
+			if err := pkg.CreateFile(fileName, yamlContent); err != nil {
+				return fmt.Errorf("error creating file: %w", err)
+			}
 		} else {
 			log.Info().Msgf("skipping secret: %s", secret.Name)
 		}

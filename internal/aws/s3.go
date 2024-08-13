@@ -84,12 +84,12 @@ func (conf *Configuration) DeleteBucket(bucketName string) error {
 }
 
 func (conf *Configuration) ListBuckets() (*s3.ListBucketsOutput, error) {
-	fmt.Println("listing buckets")
+	log.Info().Msg("listing s3 buckets")
 	s3Client := s3.NewFromConfig(conf.Config)
 
 	buckets, err := s3Client.ListBuckets(context.Background(), &s3.ListBucketsInput{})
 	if err != nil {
-		return &s3.ListBucketsOutput{}, err
+		return nil, fmt.Errorf("error listing s3 buckets: %s", err)
 	}
 
 	return buckets, nil

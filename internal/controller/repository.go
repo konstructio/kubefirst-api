@@ -28,7 +28,7 @@ import (
 func (clctrl *ClusterController) RepositoryPrep() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting cluster: %w", err)
 	}
 
 	useCloudflareOriginIssuer := false
@@ -62,7 +62,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				useCloudflareOriginIssuer,
 			)
 			if err != nil {
-				return err
+				return fmt.Errorf("error preparing git repositories: %w", err)
 			}
 		case "aws":
 			err := providerConfigs.PrepareGitRepositories(
@@ -84,7 +84,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				useCloudflareOriginIssuer,
 			)
 			if err != nil {
-				return err
+				return fmt.Errorf("error preparing git repositories: %w", err)
 			}
 		case "civo":
 			err := providerConfigs.PrepareGitRepositories(
@@ -106,7 +106,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				useCloudflareOriginIssuer,
 			)
 			if err != nil {
-				return err
+				return fmt.Errorf("error preparing git repositories: %w", err)
 			}
 		case "google":
 			err := providerConfigs.PrepareGitRepositories(
@@ -128,7 +128,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				useCloudflareOriginIssuer,
 			)
 			if err != nil {
-				return err
+				return fmt.Errorf("error preparing git repositories: %w", err)
 			}
 		case "digitalocean":
 			err = providerConfigs.PrepareGitRepositories(
@@ -150,7 +150,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				useCloudflareOriginIssuer,
 			)
 			if err != nil {
-				return err
+				return fmt.Errorf("error preparing git repositories: %w", err)
 			}
 		case "vultr":
 			err = providerConfigs.PrepareGitRepositories(
@@ -172,7 +172,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				useCloudflareOriginIssuer,
 			)
 			if err != nil {
-				return err
+				return fmt.Errorf("error preparing git repositories: %w", err)
 			}
 
 		case "k3s":
@@ -195,7 +195,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				useCloudflareOriginIssuer,
 			)
 			if err != nil {
-				return err
+				return fmt.Errorf("error preparing git repositories: %w", err)
 			}
 		}
 
@@ -210,7 +210,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 		clctrl.Cluster.GitopsReadyCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating cluster: %w", err)
 		}
 
 		log.Info().Msg("gitops repository initialized")

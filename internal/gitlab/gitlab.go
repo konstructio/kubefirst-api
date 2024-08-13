@@ -96,7 +96,7 @@ func (gl *Wrapper) GetProjectID(projectName string) (int, error) {
 			},
 		})
 		if err != nil {
-			return 0, err
+			return 0, fmt.Errorf("could not get project ID for project %s: %w", projectName, err)
 		}
 		for _, project := range projects {
 			container = append(container, *project)
@@ -125,7 +125,7 @@ func (gl *Wrapper) GetProjects() ([]gitlab.Project, error) {
 			},
 		})
 		if err != nil {
-			return []gitlab.Project{}, err
+			return nil, fmt.Errorf("could not get projects for parent group %d: %w", gl.ParentGroupID, err)
 		}
 		for _, project := range projects {
 			// Skip deleted projects
@@ -150,7 +150,7 @@ func (gl *Wrapper) GetSubGroups() ([]gitlab.Group, error) {
 			},
 		})
 		if err != nil {
-			return []gitlab.Group{}, err
+			return nil, fmt.Errorf("could not get subgroups for parent group %d: %w", gl.ParentGroupID, err)
 		}
 		for _, subgroup := range subgroups {
 			container = append(container, *subgroup)

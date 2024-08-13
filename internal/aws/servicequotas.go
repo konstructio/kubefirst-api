@@ -8,6 +8,7 @@ package aws
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
@@ -21,7 +22,7 @@ func (conf *Configuration) ListQuotas() (*servicequotas.GetServiceQuotaOutput, e
 		ServiceCode: aws.String("s3"),
 	})
 	if err != nil {
-		return &servicequotas.GetServiceQuotaOutput{}, err
+		return nil, fmt.Errorf("error getting service quotas: %w", err)
 	}
 
 	return quota, nil

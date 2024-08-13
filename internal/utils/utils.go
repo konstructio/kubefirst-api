@@ -31,7 +31,9 @@ func CreateK1Directory(clusterName string) {
 	homePath, err := os.UserHomeDir()
 	if err != nil {
 		log.Info().Msg(err.Error())
+		return
 	}
+
 	k1Dir := fmt.Sprintf("%s/.k1/%s", homePath, clusterName)
 	if _, err := os.Stat(k1Dir); os.IsNotExist(err) {
 		err := os.MkdirAll(k1Dir, os.ModePerm)
@@ -67,6 +69,7 @@ func ReadFileContentType(filePath string) (string, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		log.Error().Msg(err.Error())
+		return "", fmt.Errorf("error opening file %q: %w", filePath, err)
 	}
 	defer f.Close()
 
@@ -75,7 +78,7 @@ func ReadFileContentType(filePath string) (string, error) {
 
 	_, err = f.Read(buffer)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error reading file: %s", err)
 	}
 
 	// Use the net/http package's handy DectectContentType function. Always returns a valid

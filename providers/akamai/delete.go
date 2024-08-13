@@ -52,7 +52,7 @@ func DeleteAkamaiCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 	cl.Status = constants.ClusterStatusDeleting
 
 	if err := secrets.UpdateCluster(kcfg.Clientset, *cl); err != nil {
-		return err
+		return fmt.Errorf("error updating cluster status: %w", err)
 	}
 
 	tfEnvs := map[string]string{}
@@ -69,7 +69,7 @@ func DeleteAkamaiCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 		case "gitlab":
 			gitlabClient, err := gitlab.NewGitLabClient(cl.GitAuth.Token, cl.GitAuth.Owner)
 			if err != nil {
-				return err
+				return fmt.Errorf("error creating gitlab client: %w", err)
 			}
 
 			// Before removing Terraform resources, remove any container registry repositories
@@ -109,7 +109,7 @@ func DeleteAkamaiCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 		if err != nil {
 			log.Info().Msgf("error executing terraform destroy %s", tfEntrypoint)
 			errors.HandleClusterError(cl, err.Error())
-			return err
+			return fmt.Errorf("error executing terraform destroy %s: %w", tfEntrypoint, err)
 		}
 
 		log.Info().Msgf("%s resources terraform destroyed", cl.GitProvider)
@@ -117,7 +117,7 @@ func DeleteAkamaiCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 		cl.GitTerraformApplyCheck = false
 		err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating cluster: %w", err)
 		}
 	}
 
@@ -129,18 +129,18 @@ func DeleteAkamaiCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 
 			client, err := civogo.NewClient(cl.AkamaiAuth.Token, cl.CloudRegion)
 			if err != nil {
-				return fmt.Errorf(err.Error())
+				return fmt.Errorf("error creating civo client: %w", err)
 			}
 
 			cluster, err := client.FindKubernetesCluster(cl.ClusterName)
 			if err != nil {
-				return err
+				return fmt.Errorf("error finding civo kubernetes cluster: %w", err)
 			}
 			log.Info().Msg("cluster name: " + cluster.ID)
 
 			clusterVolumes, err := client.ListVolumesForCluster(cluster.ID)
 			if err != nil {
-				return err
+				return fmt.Errorf("error listing volumes for cluster: %w", err)
 			}
 
 			// Only port-forward to ArgoCD and delete registry if ArgoCD was installed
@@ -165,13 +165,13 @@ func DeleteAkamaiCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 
 				secData, err := k8s.ReadSecretV2(kcfg.Clientset, "argocd", "argocd-initial-admin-secret")
 				if err != nil {
-					return err
+					return fmt.Errorf("error reading argocd secret: %w", err)
 				}
 				argocdPassword := secData["password"]
 
 				argocdAuthToken, err := argocd.GetArgoCDToken("admin", argocdPassword)
 				if err != nil {
-					return err
+					return fmt.Errorf("error getting argocd token: %w", err)
 				}
 
 				log.Info().Msgf("port-forward to argocd is available at %s", providerConfigs.ArgocdPortForwardURL)
@@ -181,7 +181,7 @@ func DeleteAkamaiCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 				httpCode, _, err := argocd.DeleteApplication(client, config.RegistryAppName, argocdAuthToken, "true")
 				if err != nil {
 					errors.HandleClusterError(cl, err.Error())
-					return err
+					return fmt.Errorf("error deleting argocd application: %w", err)
 				}
 				log.Info().Msgf("http status code %d", httpCode)
 			}
@@ -190,7 +190,7 @@ func DeleteAkamaiCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 				log.Info().Msg("removing volume with name: " + vol.Name)
 				_, err := client.DeleteVolume(vol.ID)
 				if err != nil {
-					return err
+					return fmt.Errorf("error deleting volume: %w", err)
 				}
 				log.Info().Msg("volume " + vol.ID + " deleted")
 			}
@@ -202,7 +202,7 @@ func DeleteAkamaiCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 			cl.ArgoCDDeleteRegistryCheck = true
 			err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 			if err != nil {
-				return err
+				return fmt.Errorf("error updating cluster: %w", err)
 			}
 		}
 
@@ -225,7 +225,7 @@ func DeleteAkamaiCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 		if err != nil {
 			log.Printf("error executing terraform destroy %s", tfEntrypoint)
 			errors.HandleClusterError(cl, err.Error())
-			return err
+			return fmt.Errorf("error executing terraform destroy %s: %w", tfEntrypoint, err)
 		}
 		log.Info().Msg("civo resources terraform destroyed")
 
@@ -233,7 +233,7 @@ func DeleteAkamaiCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 		cl.CloudTerraformApplyFailedCheck = false
 		err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating cluster: %w", err)
 		}
 	}
 
@@ -241,7 +241,7 @@ func DeleteAkamaiCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 	if cl.GitProvider == "gitlab" {
 		gitlabClient, err := gitlab.NewGitLabClient(cl.GitAuth.Token, cl.GitAuth.Owner)
 		if err != nil {
-			return err
+			return fmt.Errorf("error creating gitlab client: %w", err)
 		}
 		log.Info().Msg("attempting to delete managed ssh key...")
 		err = gitlabClient.DeleteUserSSHKey("kbot-ssh-key")
@@ -255,12 +255,12 @@ func DeleteAkamaiCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 	cl.Status = constants.ClusterStatusDeleted
 	err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating cluster: %w", err)
 	}
 
 	err = pkg.ResetK1Dir(config.K1Dir)
 	if err != nil {
-		return err
+		return fmt.Errorf("error resetting k1 directory: %w", err)
 	}
 
 	return nil

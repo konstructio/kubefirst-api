@@ -51,7 +51,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 	cl.Status = constants.ClusterStatusDeleting
 
 	if err := secrets.UpdateCluster(kcfg.Clientset, *cl); err != nil {
-		return err
+		return fmt.Errorf("error updating cluster status: %w", err)
 	}
 
 	switch cl.GitProvider {
@@ -67,14 +67,14 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 			if err != nil {
 				log.Error().Msgf("error executing terraform destroy %s", tfEntrypoint)
 				errors.HandleClusterError(cl, err.Error())
-				return err
+				return fmt.Errorf("error executing terraform destroy %s: %w", tfEntrypoint, err)
 			}
 			log.Info().Msg("github resources terraform destroyed")
 
 			cl.GitTerraformApplyCheck = false
 			err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 			if err != nil {
-				return err
+				return fmt.Errorf("error updating cluster: %w", err)
 			}
 		}
 	case "gitlab":
@@ -82,7 +82,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 			log.Info().Msg("destroying gitlab resources with terraform")
 			gitlabClient, err := gitlab.NewGitLabClient(cl.GitAuth.Token, cl.GitAuth.Owner)
 			if err != nil {
-				return err
+				return fmt.Errorf("error creating gitlab client: %w", err)
 			}
 
 			// Before removing Terraform resources, remove any container registry repositories
@@ -122,7 +122,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 			if err != nil {
 				log.Error().Msgf("error executing terraform destroy %s", tfEntrypoint)
 				errors.HandleClusterError(cl, err.Error())
-				return err
+				return fmt.Errorf("error executing terraform destroy %s: %w", tfEntrypoint, err)
 			}
 
 			log.Info().Msg("gitlab resources terraform destroyed")
@@ -130,7 +130,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 			cl.GitTerraformApplyCheck = false
 			err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 			if err != nil {
-				return err
+				return fmt.Errorf("error updating cluster: %w", err)
 			}
 		}
 	}
@@ -174,13 +174,13 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 
 				secData, err := k8s.ReadSecretV2(kcfg.Clientset, "argocd", "argocd-initial-admin-secret")
 				if err != nil {
-					return err
+					return fmt.Errorf("error reading argocd secret: %w", err)
 				}
 				argocdPassword := secData["password"]
 
 				argocdAuthToken, err := argocd.GetArgoCDToken("admin", argocdPassword)
 				if err != nil {
-					return err
+					return fmt.Errorf("error getting argocd token: %w", err)
 				}
 
 				log.Info().Msgf("port-forward to argocd is available at %s", providerConfigs.ArgocdPortForwardURL)
@@ -190,7 +190,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 				httpCode, _, err := argocd.DeleteApplication(client, config.RegistryAppName, argocdAuthToken, "true")
 				if err != nil {
 					errors.HandleClusterError(cl, err.Error())
-					return err
+					return fmt.Errorf("error deleting registry application: %w", err)
 				}
 				log.Info().Msgf("http status code %d", httpCode)
 			}
@@ -202,7 +202,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 			cl.ArgoCDDeleteRegistryCheck = true
 			err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 			if err != nil {
-				return err
+				return fmt.Errorf("error updating cluster: %w", err)
 			}
 		}
 
@@ -226,7 +226,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 		if err != nil {
 			log.Error().Msgf("error executing terraform destroy %s", tfEntrypoint)
 			errors.HandleClusterError(cl, err.Error())
-			return err
+			return fmt.Errorf("error executing terraform destroy %s: %w", tfEntrypoint, err)
 		}
 		log.Info().Msg("google resources terraform destroyed")
 
@@ -234,7 +234,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 		cl.CloudTerraformApplyFailedCheck = false
 		err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating cluster status: %w", err)
 		}
 	}
 
@@ -242,7 +242,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 	if cl.GitProvider == "gitlab" {
 		gitlabClient, err := gitlab.NewGitLabClient(cl.GitAuth.Token, cl.GitAuth.Owner)
 		if err != nil {
-			return err
+			return fmt.Errorf("error creating gitlab client: %w", err)
 		}
 		log.Info().Msgf("attempting to delete managed ssh key...")
 		err = gitlabClient.DeleteUserSSHKey("kbot-ssh-key")
@@ -256,12 +256,12 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 	cl.Status = constants.ClusterStatusDeleted
 	err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating cluster status: %w", err)
 	}
 
 	err = pkg.ResetK1Dir(config.K1Dir)
 	if err != nil {
-		return err
+		return fmt.Errorf("error resetting k1 directory: %w", err)
 	}
 
 	return nil

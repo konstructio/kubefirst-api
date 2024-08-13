@@ -66,7 +66,7 @@ func ClonePrivateRepo(gitRef string, repoLocalPath string, repoURL string, userN
 		},
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error cloning private repo: %w", err)
 	}
 
 	return repo, nil
@@ -134,8 +134,8 @@ func AddRemote(newGitRemoteURL, remoteName string, repo *git.Repository) error {
 func Commit(repo *git.Repository, commitMsg string) error {
 	w, err := repo.Worktree()
 	if err != nil {
-		log.Info().Msgf("error getting worktree: %s", err)
-		return err
+		log.Error().Msgf("error getting worktree: %s", err)
+		return fmt.Errorf("error getting worktree: %w", err)
 	}
 
 	log.Info().Msg(commitMsg)
@@ -149,8 +149,8 @@ func Commit(repo *git.Repository, commitMsg string) error {
 		},
 	})
 	if err != nil {
-		log.Info().Msgf("error committing in repo: %s", err)
-		return err
+		log.Error().Msgf("error committing in repo: %s", err)
+		return fmt.Errorf("error committing in repo: %w", err)
 	}
 
 	return nil

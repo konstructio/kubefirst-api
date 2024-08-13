@@ -110,7 +110,7 @@ func PortForwardPod(clientset *kubernetes.Clientset, req PortForwardAPodRequest)
 	}
 	transport, upgrader, err := spdy.RoundTripperFor(req.RestConfig)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not create round tripper: %w", err)
 	}
 
 	dialer := spdy.NewDialer(
@@ -135,12 +135,12 @@ func PortForwardPod(clientset *kubernetes.Clientset, req PortForwardAPodRequest)
 		nil,
 		nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not create port forward: %w", err)
 	}
 
 	err = fw.ForwardPorts()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not forward ports: %w", err)
 	}
 
 	return nil

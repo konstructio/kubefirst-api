@@ -17,7 +17,7 @@ import (
 func (c *Configuration) GetRegions() ([]string, error) {
 	regions, _, err := c.Client.Regions.List(c.Context, &godo.ListOptions{})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting regions: %w", err)
 	}
 	regionList := make([]string, 0, len(regions))
 	for _, region := range regions {
@@ -31,7 +31,7 @@ func (c *Configuration) ListInstances() ([]string, error) {
 	maxItemsPerPage := 200
 	instances, _, err := c.Client.Sizes.List(context.Background(), &godo.ListOptions{PerPage: maxItemsPerPage})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting instances: %w", err)
 	}
 
 	instanceNames := make([]string, 0, len(instances))
@@ -45,7 +45,7 @@ func (c *Configuration) ListInstances() ([]string, error) {
 func (c *Configuration) GetKubeconfig(clusterName string) ([]byte, error) {
 	clusters, _, err := c.Client.Kubernetes.List(context.Background(), &godo.ListOptions{})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting clusters: %w", err)
 	}
 
 	var clusterID string
@@ -62,7 +62,7 @@ func (c *Configuration) GetKubeconfig(clusterName string) ([]byte, error) {
 
 	config, _, err := c.Client.Kubernetes.GetKubeConfig(context.Background(), clusterID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting kubeconfig: %w", err)
 	}
 
 	return config.KubeconfigYAML, nil

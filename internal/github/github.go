@@ -155,7 +155,7 @@ func (g Session) RemoveSSHKey(keyID int64) error {
 func (g Session) RemoveSSHKeyByPublicKey(user string, publicKey string) error {
 	keys, resp, err := g.gitClient.Users.ListKeys(g.context, user, &github.ListOptions{})
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to retrieve ssh keys: %w", err)
 	}
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("unable to retrieve ssh keys, http code is: %d", resp.StatusCode)
@@ -202,7 +202,7 @@ func (g Session) CreatePR(
 		&prData,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating pull request: %w", err)
 	}
 
 	log.Info().Msgf("pull request create response http code: %d", resp.StatusCode)
@@ -223,7 +223,7 @@ func (g Session) CommentPR(pullRequesrt *github.PullRequest, gitHubUser string, 
 		&issueComment,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating pull request comment: %w", err)
 	}
 	log.Printf("pull request comment response http code: %d", resp.StatusCode)
 
@@ -244,7 +244,7 @@ func (g Session) SearchWordInPullRequestComment(gitHubUser string,
 		&github.IssueListCommentsOptions{},
 	)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("error listing comments: %w", err)
 	}
 
 	if r.StatusCode != http.StatusOK {
@@ -307,14 +307,13 @@ func (g Session) DeleteRepositoryWebhook(owner string, repository string, url st
 	if hookID != 0 {
 		_, err := g.gitClient.Repositories.DeleteHook(g.context, owner, repository, hookID)
 		if err != nil {
-			return err
+			return fmt.Errorf("error deleting hook %s/%s/%s: %w", owner, repository, url, err)
 		}
 		log.Info().Msgf("deleted hook %s/%s/%s", owner, repository, url)
-	} else {
-		return fmt.Errorf("hook %s/%s/%s not found", owner, repository, url)
+		return nil
 	}
 
-	return nil
+	return fmt.Errorf("hook %s/%s/%s not found", owner, repository, url)
 }
 
 // ListRepoWebhooks returns all webhooks for a repository
@@ -326,7 +325,7 @@ func (g Session) ListRepoWebhooks(owner string, repo string) ([]*github.Hook, er
 			PerPage: 10,
 		})
 		if err != nil {
-			return []*github.Hook{}, err
+			return nil, fmt.Errorf("error listing hooks: %w", err)
 		}
 		container = append(container, hooks...)
 		nextPage = resp.NextPage

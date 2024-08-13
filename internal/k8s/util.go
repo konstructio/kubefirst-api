@@ -21,7 +21,7 @@ import (
 func ReturnJobObject(clientset *kubernetes.Clientset, namespace string, jobName string) (*batchv1.Job, error) {
 	job, err := clientset.BatchV1().Jobs(namespace).Get(context.Background(), jobName, metav1.GetOptions{})
 	if err != nil {
-		return &batchv1.Job{}, err
+		return nil, fmt.Errorf("error getting Job: %w", err)
 	}
 
 	return job, nil

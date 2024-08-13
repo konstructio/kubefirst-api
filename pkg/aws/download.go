@@ -9,12 +9,12 @@ package aws
 import (
 	"fmt"
 	"os"
-	"sync"
 
 	pkg "github.com/kubefirst/kubefirst-api/internal"
 	"github.com/kubefirst/kubefirst-api/internal/downloadManager"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/sync/errgroup"
 )
 
 func DownloadTools(awsConfig *providerConfigs.ProviderConfig, kubectlClientVersion string, terraformClientVersion string) error {
@@ -23,17 +23,12 @@ func DownloadTools(awsConfig *providerConfigs.ProviderConfig, kubectlClientVersi
 	// create folder if it doesn't exist
 	err := pkg.CreateDirIfNotExist(awsConfig.ToolsDir)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating tools dir: %w", err)
 	}
 
-	errorChannel := make(chan error)
-	wgDone := make(chan bool)
-	// create a waiting group (translating: create a queue of functions, and only pass the wg.Wait() function down
-	// bellow after all the wg.Add(3) functions are done (wg.Done)
-	var wg sync.WaitGroup
-	wg.Add(2)
+	eg := errgroup.Group{}
 
-	go func() {
+	eg.Go(func() error {
 		kubectlDownloadURL := fmt.Sprintf(
 			"https://dl.k8s.io/release/%s/bin/%s/%s/kubectl",
 			kubectlClientVersion,
@@ -43,27 +38,24 @@ func DownloadTools(awsConfig *providerConfigs.ProviderConfig, kubectlClientVersi
 		log.Info().Msgf("Downloading kubectl from: %s", kubectlDownloadURL)
 		err = downloadManager.DownloadFile(awsConfig.KubectlClient, kubectlDownloadURL)
 		if err != nil {
-			errorChannel <- err
-			return
+			return fmt.Errorf("error downloading kubectl file: %w", err)
 		}
 
-		err = os.Chmod(awsConfig.KubectlClient, 0o755)
-		if err != nil {
-			errorChannel <- err
-			return
+		if err := os.Chmod(awsConfig.KubectlClient, 0o755); err != nil {
+			return fmt.Errorf("failed to chmod kubectl: %w", err)
 		}
 
 		kubectlStdOut, kubectlStdErr, err := pkg.ExecShellReturnStrings(awsConfig.KubectlClient, "version", "--client=true", "-oyaml")
 		log.Info().Msgf("-> kubectl version:\n\t%s\n\t%s\n", kubectlStdOut, kubectlStdErr)
 		if err != nil {
-			errorChannel <- fmt.Errorf("failed to call kubectlVersionCmd.Run(): %v", err)
-			return
+			return fmt.Errorf("failed to call kubectl version: %w", err)
 		}
-		wg.Done()
-		log.Info().Msg("Kubectl download finished")
-	}()
 
-	go func() {
+		log.Info().Msg("Kubectl download finished")
+		return nil
+	})
+
+	eg.Go(func() error {
 		terraformDownloadURL := fmt.Sprintf(
 			"https://releases.hashicorp.com/terraform/%s/terraform_%s_%s_%s.zip",
 			terraformClientVersion,
@@ -75,44 +67,33 @@ func DownloadTools(awsConfig *providerConfigs.ProviderConfig, kubectlClientVersi
 		terraformDownloadZipPath := fmt.Sprintf("%s/terraform.zip", awsConfig.ToolsDir)
 		err = downloadManager.DownloadFile(terraformDownloadZipPath, terraformDownloadURL)
 		if err != nil {
-			errorChannel <- fmt.Errorf("error downloading terraform file, %v", err)
-			return
+			return fmt.Errorf("error downloading terraform file, %w", err)
 		}
 
 		downloadManager.Unzip(terraformDownloadZipPath, awsConfig.ToolsDir)
 
 		err = os.Chmod(awsConfig.ToolsDir, 0o777)
 		if err != nil {
-			errorChannel <- err
-			return
+			return fmt.Errorf("failed to chmod %q: %w", awsConfig.ToolsDir, err)
 		}
 
 		err = os.Chmod(fmt.Sprintf("%s/terraform", awsConfig.ToolsDir), 0o755)
 		if err != nil {
-			errorChannel <- err
-			return
+			return fmt.Errorf("failed to chmod %q: %w", awsConfig.ToolsDir, err)
 		}
 		err = os.RemoveAll(fmt.Sprintf("%s/terraform.zip", awsConfig.ToolsDir))
 		if err != nil {
-			errorChannel <- err
-			return
+			return fmt.Errorf("failed to remove terraform.zip: %w", err)
 		}
-		// todo output terraform client version to be consistent with others
-		wg.Done()
+
 		log.Info().Msg("Terraform download finished")
-	}()
-
-	go func() {
-		wg.Wait()
-		close(wgDone)
-	}()
-
-	select {
-	case <-wgDone:
-		log.Info().Msg("downloads finished")
 		return nil
-	case err = <-errorChannel:
-		close(errorChannel)
-		return err
+	})
+
+	if err := eg.Wait(); err != nil {
+		return fmt.Errorf("error downloading tools: %w", err)
 	}
+
+	log.Info().Msg("downloads finished")
+	return nil
 }

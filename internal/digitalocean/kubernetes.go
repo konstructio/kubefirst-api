@@ -18,7 +18,7 @@ import (
 func (c *Configuration) GetKubernetesAssociatedResources(clusterName string) (*godo.KubernetesAssociatedResources, error) {
 	clusters, _, err := c.Client.Kubernetes.List(c.Context, &godo.ListOptions{})
 	if err != nil {
-		return &godo.KubernetesAssociatedResources{}, err
+		return nil, fmt.Errorf("error listing kubernetes clusters: %w", err)
 	}
 
 	var clusterID string
@@ -28,12 +28,12 @@ func (c *Configuration) GetKubernetesAssociatedResources(clusterName string) (*g
 		}
 	}
 	if clusterID == "" {
-		return &godo.KubernetesAssociatedResources{}, fmt.Errorf("could not find cluster ID for cluster name %w", err)
+		return nil, fmt.Errorf("could not find cluster ID for cluster name %w", err)
 	}
 
 	resources, _, err := c.Client.Kubernetes.ListAssociatedResourcesForDeletion(c.Context, clusterID)
 	if err != nil {
-		return &godo.KubernetesAssociatedResources{}, err
+		return nil, fmt.Errorf("error listing associated resources: %w", err)
 	}
 
 	return resources, nil
@@ -50,7 +50,7 @@ func (c *Configuration) DeleteKubernetesClusterVolumes(resources *godo.Kubernete
 		for i := 0; i < 24; i++ {
 			voldata, _, err := c.Client.Storage.GetVolume(c.Context, vol.ID)
 			if err != nil {
-				return err
+				return fmt.Errorf("error getting volume %s: %w", vol.ID, err)
 			}
 			if len(voldata.DropletIDs) != 0 {
 				log.Info().Msgf("volume %s is still attached to droplet(s) - waiting...", vol.ID)
@@ -64,6 +64,7 @@ func (c *Configuration) DeleteKubernetesClusterVolumes(resources *godo.Kubernete
 		_, err := c.Client.Storage.DeleteVolume(c.Context, vol.ID)
 		if err != nil {
 			log.Error().Msgf("error deleting volume %s: %s", vol.ID, err)
+			return fmt.Errorf("error deleting volume %s: %w", vol.ID, err)
 		}
 		log.Info().Msg("volume " + vol.ID + " deleted")
 	}

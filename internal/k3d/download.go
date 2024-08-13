@@ -38,7 +38,7 @@ func DownloadTools(clusterName string, gitProvider string, gitOwner string, tool
 
 	err = os.Chmod(config.K3dClient, 0o755)
 	if err != nil {
-		return err
+		return fmt.Errorf("error while trying to chmod k3d: %w", err)
 	}
 
 	// * kubectl
@@ -56,7 +56,7 @@ func DownloadTools(clusterName string, gitProvider string, gitOwner string, tool
 
 	err = os.Chmod(config.KubectlClient, 0o755)
 	if err != nil {
-		return err
+		return fmt.Errorf("error while trying to chmod kubectl: %w", err)
 	}
 
 	// * mkcert
@@ -75,7 +75,7 @@ func DownloadTools(clusterName string, gitProvider string, gitOwner string, tool
 	}
 	err = os.Chmod(config.MkCertClient, 0o755)
 	if err != nil {
-		return err
+		return fmt.Errorf("error while trying to chmod mkcert: %w", err)
 	}
 
 	// * terraform

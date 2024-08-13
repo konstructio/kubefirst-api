@@ -24,7 +24,7 @@ func (c *Configuration) CreateStorageBucket(accessKeyID string, bucketName strin
 		MaxSizeGB:   500,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating object store %s: %w", bucketName, err)
 	}
 
 	return bucket, nil
@@ -61,7 +61,7 @@ func (c *Configuration) DeleteStorageBucket(bucketName string) error {
 func (c *Configuration) GetAccessCredentials(credentialName string, region string) (*civogo.ObjectStoreCredential, error) {
 	creds, err := c.checkKubefirstCredentials(credentialName)
 	if err != nil && err != errNoCredsFound {
-		log.Info().Msg(err.Error())
+		log.Error().Msg(err.Error())
 		return nil, fmt.Errorf("error fetching object store credentials: %w", err)
 	}
 
@@ -102,8 +102,8 @@ func (c *Configuration) GetAccessCredentials(credentialName string, region strin
 // DeleteAccessCredentials deletes object store credentials
 func (c *Configuration) DeleteAccessCredentials(credentialName string) error {
 	creds, err := c.checkKubefirstCredentials(credentialName)
-	if err != nil && err != errNoCredsFound {
-		log.Info().Msg(err.Error())
+	if err != nil && !errors.Is(err, errNoCredsFound) {
+		log.Error().Msg(err.Error())
 		return fmt.Errorf("error fetching object store credentials: %w", err)
 	}
 
@@ -127,7 +127,7 @@ func (c *Configuration) checkKubefirstCredentials(credentialName string) (*civog
 	log.Info().Msgf("looking for credential: %s", credentialName)
 	remoteCredentials, err := c.Client.ListObjectStoreCredentials()
 	if err != nil {
-		log.Info().Msg(err.Error())
+		log.Error().Msg(err.Error())
 		return nil, fmt.Errorf("error fetching object store credentials: %w", err)
 	}
 
@@ -148,7 +148,7 @@ func (c *Configuration) createAccessCredentials(credentialName string, region st
 		Region: region,
 	})
 	if err != nil {
-		log.Info().Msgf("error creating object store credentials: %s", err.Error())
+		log.Error().Msgf("error creating object store credentials: %s", err.Error())
 		return nil, fmt.Errorf("error creating object store credentials: %w", err)
 	}
 	return creds, nil

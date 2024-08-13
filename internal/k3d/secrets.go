@@ -92,7 +92,7 @@ func AddK3DSecrets(destinationGitopsRepoURL, kbotPrivateKey, gitProvider, gitUse
 			_, err = clientset.CoreV1().Secrets(secret.ObjectMeta.Namespace).Create(context.TODO(), secret, metav1.CreateOptions{})
 			if err != nil {
 				log.Error().Msgf("error creating kubernetes secret %s/%s: %s", secret.Namespace, secret.Name, err)
-				return err
+				return fmt.Errorf("error creating kubernetes secret %s/%s: %w", secret.Namespace, secret.Name, err)
 			}
 			log.Info().Msgf("created kubernetes secret: %s/%s", secret.Namespace, secret.Name)
 		}
@@ -121,7 +121,7 @@ func AddK3DSecrets(destinationGitopsRepoURL, kbotPrivateKey, gitProvider, gitUse
 			_, err = clientset.CoreV1().ServiceAccounts(serviceAccount.ObjectMeta.Namespace).Create(context.TODO(), serviceAccount, metav1.CreateOptions{})
 			if err != nil {
 				log.Error().Msgf("error creating kubernetes service account %s/%s: %s", serviceAccount.Namespace, serviceAccount.Name, err)
-				return err
+				return fmt.Errorf("error creating kubernetes service account %s/%s: %w", serviceAccount.Namespace, serviceAccount.Name, err)
 			}
 			log.Info().Msgf("created kubernetes service account: %s/%s", serviceAccount.Namespace, serviceAccount.Name)
 		}

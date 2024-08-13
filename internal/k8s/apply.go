@@ -120,7 +120,7 @@ func (kcl KubernetesClient) KustomizeBuild(kustomizationDirectory string) (*byte
 func (kcl KubernetesClient) ReadYAMLFile(filepath string) (string, error) {
 	dat, err := os.ReadFile(filepath)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error reading file %q: %w", filepath, err)
 	}
 
 	return string(dat), nil

@@ -91,7 +91,7 @@ func (c *Configuration) GetDNSRecords(domainName string) ([]govultr.DomainRecord
 	records, _, _, err := c.Client.DomainRecord.List(c.Context, domainName, &govultr.ListOptions{})
 	if err != nil {
 		log.Error().Msgf("error getting vultr dns records for domain %s: %s", domainName, err)
-		return []govultr.DomainRecord{}, err
+		return nil, fmt.Errorf("error getting vultr dns records for domain %s: %w", domainName, err)
 	}
 
 	return records, nil
@@ -103,8 +103,8 @@ func (c *Configuration) GetDNSInfo(domainName string) (string, error) {
 
 	vultrDNSDomain, _, err := c.Client.Domain.Get(c.Context, domainName)
 	if err != nil {
-		log.Info().Msg(err.Error())
-		return "", err
+		log.Error().Msgf("error getting vultr dns domain %s: %s", domainName, err)
+		return "", fmt.Errorf("error getting vultr dns domain %s: %w", domainName, err)
 	}
 
 	return vultrDNSDomain.Domain, nil
@@ -133,7 +133,7 @@ func GetDomainApexContent(domainName string) bool {
 func (c *Configuration) GetDNSDomains() ([]string, error) {
 	domains, _, _, err := c.Client.Domain.List(c.Context, &govultr.ListOptions{})
 	if err != nil {
-		return []string{}, err
+		return nil, fmt.Errorf("error getting vultr dns domains: %w", err)
 	}
 
 	domainList := make([]string, 0, len(domains))
@@ -148,7 +148,7 @@ func (c *Configuration) GetDNSDomains() ([]string, error) {
 func (c *Configuration) GetRegions() ([]string, error) {
 	regions, _, _, err := c.Client.Region.List(c.Context, &govultr.ListOptions{})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting vultr regions: %w", err)
 	}
 
 	regionList := make([]string, 0, len(regions))
@@ -165,7 +165,7 @@ func (c *Configuration) ListInstances() ([]string, error) {
 		Region: c.Region,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting vultr plans: %w", err)
 	}
 
 	planNames := make([]string, 0, len(plans))

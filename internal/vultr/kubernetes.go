@@ -18,14 +18,14 @@ func (c *Configuration) GetKubernetesAssociatedBlockStorage(clusterName string, 
 	// Probably needs pagination
 	allBlockStorage, _, _, err := c.Client.BlockStorage.List(c.Context, &govultr.ListOptions{})
 	if err != nil {
-		return []govultr.BlockStorage{}, err
+		return nil, fmt.Errorf("error listing block storage resources: %w", err)
 	}
 
 	if !returnAll {
 		// Return only volumes associated with droplets part of the target cluster's node pool
 		clusters, _, _, err := c.Client.Kubernetes.ListClusters(c.Context, &govultr.ListOptions{})
 		if err != nil {
-			return []govultr.BlockStorage{}, err
+			return nil, fmt.Errorf("error listing Kubernetes clusters: %w", err)
 		}
 
 		var clusterID string
@@ -35,12 +35,12 @@ func (c *Configuration) GetKubernetesAssociatedBlockStorage(clusterName string, 
 			}
 		}
 		if clusterID == "" {
-			return []govultr.BlockStorage{}, fmt.Errorf("could not find cluster ID for cluster name %s", clusterName)
+			return nil, fmt.Errorf("could not find cluster ID for cluster name %s", clusterName)
 		}
 
 		cluster, _, err := c.Client.Kubernetes.GetCluster(c.Context, clusterID)
 		if err != nil {
-			return []govultr.BlockStorage{}, err
+			return nil, err
 		}
 
 		// Construct a slice of node IDs associated with a cluster's node pool
@@ -82,7 +82,7 @@ func (c *Configuration) DeleteBlockStorage(blockStorage []govultr.BlockStorage) 
 		log.Info().Msg("removing block storage with name: " + blst.Label)
 		err := c.Client.BlockStorage.Delete(c.Context, blst.ID)
 		if err != nil {
-			return err
+			return fmt.Errorf("error deleting block storage resource: %w", err)
 		}
 		log.Info().Msg("volume " + blst.ID + " deleted")
 	}
@@ -93,7 +93,7 @@ func (c *Configuration) DeleteBlockStorage(blockStorage []govultr.BlockStorage) 
 func (c *Configuration) GetKubeconfig(clusterName string) (string, error) {
 	clusters, _, _, err := c.Client.Kubernetes.ListClusters(c.Context, &govultr.ListOptions{})
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error listing Kubernetes clusters: %w", err)
 	}
 
 	var clusterID string
@@ -110,7 +110,7 @@ func (c *Configuration) GetKubeconfig(clusterName string) (string, error) {
 
 	kubeConfig, _, err := c.Client.Kubernetes.GetKubeConfig(c.Context, clusterID)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error getting kubeconfig: %w", err)
 	}
 
 	return kubeConfig.KubeConfig, nil

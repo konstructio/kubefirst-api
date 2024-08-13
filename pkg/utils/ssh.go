@@ -46,11 +46,12 @@ func EvalSSHKey(req *types.EvalSSHKeyRequest) error {
 	if req.GitProvider == "gitlab" {
 		gitlabClient, err := gitlab.NewGitLabClient(req.GitToken, req.GitlabGroupFlag)
 		if err != nil {
-			return err
+			return fmt.Errorf("error creating gitlab client: %w", err)
 		}
 		keys, err := gitlabClient.GetUserSSHKeys()
 		if err != nil {
-			log.Fatal().Msgf("unable to check for ssh keys in gitlab: %s", err.Error())
+			log.Error().Msgf("unable to check for ssh keys in gitlab: %s", err.Error())
+			return fmt.Errorf("error checking for ssh keys in gitlab: %w", err)
 		}
 
 		keyName := "kbot-ssh-key"
@@ -73,7 +74,8 @@ func EvalSSHKey(req *types.EvalSSHKeyRequest) error {
 			log.Info().Msgf("creating ssh key %s...", keyName)
 			err := gitlabClient.AddUserSSHKey(keyName, viper.GetString("kbot.public-key"))
 			if err != nil {
-				log.Fatal().Msgf("error adding ssh key %s: %s", keyName, err.Error())
+				log.Error().Msgf("error adding ssh key %s: %s", keyName, err.Error())
+				return fmt.Errorf("error adding ssh key %s: %w", keyName, err)
 			}
 			viper.Set("kbot.gitlab-user-based-ssh-key-title", keyName)
 			viper.WriteConfig()

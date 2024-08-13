@@ -40,35 +40,35 @@ func (c *Configuration) GetRegionalObjectStorageClusters() (int, error) {
 }
 
 // CreateObjectStorage creates a Vultr object storage resource
-func (c *Configuration) CreateObjectStorage(storeName string) (govultr.ObjectStorage, error) {
+func (c *Configuration) CreateObjectStorage(storeName string) (*govultr.ObjectStorage, error) {
 	// Get cluster id of object storage cluster for region
 	clid, err := c.GetRegionalObjectStorageClusters()
 	if err != nil {
-		return govultr.ObjectStorage{}, err
+		return nil, fmt.Errorf("could not get object storage clusters: %w", err)
 	}
 
 	objst, _, err := c.Client.ObjectStorage.Create(c.Context, clid, storeName)
 	if err != nil {
-		return govultr.ObjectStorage{}, err
+		return nil, fmt.Errorf("error creating object storage: %w", err)
 	}
 
 	log.Info().Msgf("waiting for vultr object storage %s to be ready", storeName)
 	for i := 0; i < 60; i++ {
 		obj, _, err := c.Client.ObjectStorage.Get(c.Context, objst.ID)
 		if err != nil {
-			return govultr.ObjectStorage{}, err
+			return nil, fmt.Errorf("error getting object storage: %w", err)
 		}
 		switch {
 		case obj.Status == "active":
 			log.Info().Msgf("vultr object storage %s ready", storeName)
-			return *obj, nil
+			return obj, nil
 		case i == 120:
-			return govultr.ObjectStorage{}, fmt.Errorf("vultr object storage %s is not active", storeName)
+			return nil, fmt.Errorf("vultr object storage %s is not active", storeName)
 		}
 		time.Sleep(time.Second * 1)
 	}
 
-	return govultr.ObjectStorage{}, err
+	return nil, err
 }
 
 // DeleteObjectStorage deletes a Vultr object storage resource
@@ -100,7 +100,7 @@ func (c *Configuration) GetObjectStorage() ([]govultr.ObjectStorage, error) {
 		Region: c.ObjectStorageRegion,
 	})
 	if err != nil {
-		return []govultr.ObjectStorage{}, err
+		return nil, fmt.Errorf("error listing object storage: %w", err)
 	}
 
 	return objst, nil

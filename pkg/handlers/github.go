@@ -19,6 +19,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	pkg "github.com/kubefirst/kubefirst-api/internal"
+	"github.com/kubefirst/kubefirst-api/internal/httpCommon"
 	"github.com/kubefirst/kubefirst-api/internal/services"
 	"github.com/kubefirst/kubefirst-api/pkg/reports"
 )
@@ -63,31 +64,25 @@ func (handler GitHubHandler) AuthenticateUser() (string, error) {
 		"scope":     "repo public_repo admin:repo_hook admin:org admin:public_key admin:org_hook user project delete_repo write:packages admin:gpg_key workflow",
 	})
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error marshalling request body: %w", err)
 	}
 
 	req, err := http.NewRequest(http.MethodPost, gitHubDeviceFlowCodeURL, bytes.NewBuffer(requestBody))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error setting request: %w", err)
 	}
 	req.Header.Add("Content-Type", pkg.JSONContentType)
 	req.Header.Add("Accept", pkg.JSONContentType)
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := httpCommon.CustomHTTPClient(false).Do(req)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error calling GitHub API: %w", err)
 	}
-
 	defer res.Body.Close()
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		return "", err
-	}
 
 	var gitHubDeviceFlow GitHubDeviceFlow
-	err = json.Unmarshal(body, &gitHubDeviceFlow)
-	if err != nil {
-		log.Warn().Msgf("%s", err)
+	if err := json.NewDecoder(res.Body).Decode(&gitHubDeviceFlow); err != nil {
+		return "", fmt.Errorf("error decoding response body: %w", err)
 	}
 
 	// todo: check http code
@@ -103,7 +98,7 @@ func (handler GitHubHandler) AuthenticateUser() (string, error) {
 
 	if err = pkg.OpenBrowser("https://github.com/login/device"); err != nil {
 		log.Error().Msgf("error opening browser: %s", err)
-		return "", err
+		return "", fmt.Errorf("error opening browser: %w", err)
 	}
 
 	var gitHubAccessToken string
@@ -134,21 +129,22 @@ func (handler GitHubHandler) GetGitHubUser(gitHubAccessToken string) (string, er
 	req, err := http.NewRequest(http.MethodGet, "https://api.github.com/user", nil)
 	if err != nil {
 		log.Warn().Msg("error setting request")
+		return "", fmt.Errorf("error setting request: %w", err)
 	}
 
 	req.Header.Add("Content-Type", pkg.JSONContentType)
 	req.Header.Add("Accept", "application/vnd.github+json")
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", gitHubAccessToken))
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := httpCommon.CustomHTTPClient(false).Do(req)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error calling GitHub API: %w", err)
 	}
-
 	defer res.Body.Close()
+
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error reading response body: %w", err)
 	}
 
 	if res.StatusCode != http.StatusOK {
@@ -160,9 +156,8 @@ func (handler GitHubHandler) GetGitHubUser(gitHubAccessToken string) (string, er
 	}
 
 	var githubUser GitHubUser
-	err = json.Unmarshal(body, &githubUser)
-	if err != nil {
-		return "", err
+	if err := json.Unmarshal(body, &githubUser); err != nil {
+		return "", fmt.Errorf("error unmarshalling response body: %w", err)
 	}
 
 	if len(githubUser.Login) == 0 {
@@ -177,21 +172,22 @@ func (handler GitHubHandler) CheckGithubOrganizationPermissions(githubToken, git
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("https://api.github.com/orgs/%s/memberships/%s", githubOwner, githubUsername), nil)
 	if err != nil {
 		log.Info().Msg("error setting github owner permissions request")
+		return fmt.Errorf("error setting github owner permissions request: %w", err)
 	}
 
 	req.Header.Add("Content-Type", pkg.JSONContentType)
 	req.Header.Add("Accept", "application/vnd.github+json")
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", githubToken))
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := httpCommon.CustomHTTPClient(false).Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error calling GitHub API: %w", err)
 	}
 
 	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading response body: %w", err)
 	}
 
 	if res.StatusCode != http.StatusOK {
@@ -205,7 +201,7 @@ func (handler GitHubHandler) CheckGithubOrganizationPermissions(githubToken, git
 	var gitHubOrganizationRole GitHubOrganizationRole
 	err = json.Unmarshal(body, &gitHubOrganizationRole)
 	if err != nil {
-		return err
+		return fmt.Errorf("error unmarshalling response body: %w", err)
 	}
 
 	log.Info().Msgf("the github owner role is: %s", gitHubOrganizationRole.Role)
