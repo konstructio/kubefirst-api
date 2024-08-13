@@ -77,8 +77,15 @@ func InsertEnvironment(clientSet *kubernetes.Clientset, env pkgtypes.Environment
 		}
 	}
 
-	bytes, _ := json.Marshal(environment)
-	secretValuesMap, _ := ParseJSONToMap(string(bytes))
+	bytes, err := json.Marshal(environment)
+	if err != nil {
+		return environment, fmt.Errorf("error marshalling json: %w", err)
+	}
+
+	secretValuesMap, err := ParseJSONToMap(string(bytes))
+	if err != nil {
+		return environment, fmt.Errorf("error parsing json: %w", err)
+	}
 
 	secretToCreate := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{

@@ -66,7 +66,7 @@ func CreateContainerRegistrySecret(obj *ContainerRegistryAuth) (string, error) {
 	case "gitlab":
 		gitlabClient, err := gitlab.NewGitLabClient(obj.GitToken, obj.GitlabGroupFlag)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("error while creating gitlab client: %w", err)
 		}
 
 		// Create argo workflows pull secret

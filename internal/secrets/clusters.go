@@ -55,7 +55,7 @@ func GetCluster(clientSet *kubernetes.Clientset, clusterName string) (pkgtypes.C
 		return cluster, fmt.Errorf("error marshalling json: %w", err)
 	}
 
-	err = json.Unmarshal([]byte(jsonData), &cluster)
+	err = json.Unmarshal(jsonData, &cluster)
 	if err != nil {
 		return cluster, fmt.Errorf("unable to cast cluster: %w", err)
 	}
@@ -94,8 +94,15 @@ func InsertCluster(clientSet *kubernetes.Clientset, cl pkgtypes.Cluster) error {
 		}
 	}
 
-	bytes, _ := json.Marshal(cl)
-	secretValuesMap, _ := ParseJSONToMap(string(bytes))
+	bytes, err := json.Marshal(cl)
+	if err != nil {
+		return fmt.Errorf("error marshalling json: %w", err)
+	}
+
+	secretValuesMap, err := ParseJSONToMap(string(bytes))
+	if err != nil {
+		return fmt.Errorf("error parsing json to map: %w", err)
+	}
 
 	secretToCreate := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{

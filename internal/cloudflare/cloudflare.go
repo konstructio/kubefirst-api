@@ -21,7 +21,7 @@ import (
 func (c *Configuration) GetDNSDomains() ([]string, error) {
 	zones, err := c.Client.ListZones(c.Context)
 	if err != nil {
-		return []string{}, err
+		return nil, fmt.Errorf("error getting cloudflare zones: %w", err)
 	}
 
 	domainList := make([]string, 0, len(zones))
@@ -36,7 +36,7 @@ func (c *Configuration) GetDNSDomains() ([]string, error) {
 func (c *Configuration) GetDNSRecord() ([]string, error) {
 	zones, err := c.Client.ListZones(c.Context)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting cloudflare zones: %w", err)
 	}
 
 	domainList := make([]string, 0, len(zones))
@@ -60,9 +60,6 @@ func (c *Configuration) TestDomainLiveness(domainName string) bool {
 	rc := cloudflare.ZoneIdentifier(zoneID)
 
 	log.Info().Msgf("Cloudflare ZoneID %s exists and contains domain %s", zoneID, domainName)
-
-	// Change this for origin certs
-
 	log.Info().Msgf("checking to see if record %s exists", domainName)
 
 	// check for existing records
@@ -80,6 +77,7 @@ func (c *Configuration) TestDomainLiveness(domainName string) bool {
 	}
 	for _, existingRecord := range existingRecords {
 		if existingRecord.Type == "TXT" && existingRecord.Name == RecordName && existingRecord.Content == RecordValue {
+			log.Info().Msgf("Kubefirst DNS liveness TXT record already exists on Cloudflare")
 			return true
 		}
 	}

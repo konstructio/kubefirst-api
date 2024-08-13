@@ -124,7 +124,7 @@ func GetServices(clientSet *kubernetes.Clientset, clusterName string) (types.Clu
 		return clusterServices, fmt.Errorf("error marshalling json: %w", err)
 	}
 
-	err = json.Unmarshal([]byte(jsonData), &clusterServices)
+	err = json.Unmarshal(jsonData, &clusterServices)
 	if err != nil {
 		return clusterServices, fmt.Errorf("unable to cast environment: %w", err)
 	}

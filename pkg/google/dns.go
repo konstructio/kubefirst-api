@@ -8,6 +8,7 @@ package google
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"strings"
@@ -166,7 +167,7 @@ func (conf *Configuration) ListInstances(zone string) ([]string, error) {
 	var machineTypes []string
 	for {
 		m, err := machines.Next()
-		if err == iterator.Done {
+		if errors.Is(err, iterator.Done) {
 			break
 		}
 		if err != nil {

@@ -8,12 +8,12 @@ package google
 
 import (
 	"fmt"
-	"net/http"
 	"time"
 
 	compute "cloud.google.com/go/compute/apiv1"
 	computepb "cloud.google.com/go/compute/apiv1/computepb"
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	"github.com/kubefirst/kubefirst-api/internal/httpCommon"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/iterator"
@@ -90,18 +90,16 @@ func (conf *Configuration) GetZones() ([]string, error) {
 // GetDomainApexContent determines whether or not a target domain features
 // a host responding at zone apex
 func GetDomainApexContent(domainName string) bool {
-	timeout := time.Duration(5 * time.Second)
-	client := http.Client{
-		Timeout: timeout,
-	}
+	client := httpCommon.CustomHTTPClient(false, 5*time.Second)
 
 	exists := false
 	for _, proto := range []string{"http", "https"} {
 		fqdn := fmt.Sprintf("%s://%s", proto, domainName)
-		_, err := client.Get(fqdn)
+		resp, err := client.Get(fqdn)
 		if err != nil {
 			log.Warn().Msgf("domain %s has no apex content", fqdn)
 		} else {
+			resp.Body.Close()
 			log.Info().Msgf("domain %s has apex content", fqdn)
 			exists = true
 		}

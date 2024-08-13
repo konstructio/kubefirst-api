@@ -7,12 +7,9 @@ See the LICENSE file for more details.
 package controller
 
 import (
-	"github.com/kubefirst/kubefirst-api/internal/civo"
-	"github.com/kubefirst/kubefirst-api/internal/digitalocean"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
-	"github.com/kubefirst/kubefirst-api/internal/vultr"
+	"github.com/kubefirst/kubefirst-api/internal/utils"
 	awsinternal "github.com/kubefirst/kubefirst-api/pkg/aws"
-	google "github.com/kubefirst/kubefirst-api/pkg/google"
 	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
 	log "github.com/rs/zerolog/log"
 )
@@ -31,7 +28,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 
 		switch cl.CloudProvider {
 		case "akamai":
-			err := civo.DownloadTools(
+			err := utils.DownloadTools(
 				clctrl.ProviderConfig.KubectlClient,
 				providerConfigs.KubectlClientVersion,
 				providerConfigs.LocalhostOS,
@@ -54,7 +51,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 				return err
 			}
 		case "civo":
-			err := civo.DownloadTools(
+			err := utils.DownloadTools(
 				clctrl.ProviderConfig.KubectlClient,
 				providerConfigs.KubectlClientVersion,
 				providerConfigs.LocalhostOS,
@@ -67,7 +64,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 				return err
 			}
 		case "google":
-			err := google.DownloadTools(
+			err := utils.DownloadTools(
 				clctrl.ProviderConfig.KubectlClient,
 				providerConfigs.KubectlClientVersion,
 				providerConfigs.LocalhostOS,
@@ -80,7 +77,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 				return err
 			}
 		case "digitalocean":
-			err := digitalocean.DownloadTools(
+			err := utils.DownloadTools(
 				clctrl.ProviderConfig.KubectlClient,
 				providerConfigs.KubectlClientVersion,
 				providerConfigs.LocalhostOS,
@@ -93,7 +90,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 				return err
 			}
 		case "vultr":
-			err := vultr.DownloadTools(
+			err := utils.DownloadTools(
 				clctrl.ProviderConfig.KubectlClient,
 				providerConfigs.KubectlClientVersion,
 				providerConfigs.LocalhostOS,
@@ -109,7 +106,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 			// TODO: move to runtime
 			// use vultr DownloadTools meanwhile
 		case "k3s":
-			err := vultr.DownloadTools(
+			err := utils.DownloadTools(
 				clctrl.ProviderConfig.KubectlClient,
 				providerConfigs.KubectlClientVersion,
 				providerConfigs.LocalhostOS,
