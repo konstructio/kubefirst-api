@@ -8,6 +8,7 @@ package github
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -59,7 +60,7 @@ func (g Session) CreateWebhookRepo(org, repo, hookName, hookURL, hookSecret stri
 // CreatePrivateRepo - Use github API to create a private repo
 func (g Session) CreatePrivateRepo(org, name, description string) error {
 	if name == "" {
-		return fmt.Errorf("no name: New repos must be given a name")
+		return errors.New("no name: New repos must be given a name")
 	}
 
 	isPrivate := true
@@ -84,11 +85,11 @@ func (g Session) CreatePrivateRepo(org, name, description string) error {
 // as http status code, the caller can make use of the http status code to validate the response.
 func (g Session) RemoveRepo(owner, name string) (*github.Response, error) {
 	if owner == "" {
-		return nil, fmt.Errorf("removal failed: a repository owner is required")
+		return nil, errors.New("removal failed: a repository owner is required")
 	}
 
 	if name == "" {
-		return nil, fmt.Errorf("removal failed: a repository name is required")
+		return nil, errors.New("removal failed: a repository name is required")
 	}
 
 	resp, err := g.gitClient.Repositories.Delete(g.context, owner, name)
@@ -103,7 +104,7 @@ func (g Session) RemoveRepo(owner, name string) (*github.Response, error) {
 // RemoveTeam - Remove  a team
 func (g Session) RemoveTeam(owner, team string) error {
 	if team == "" {
-		return fmt.Errorf("team removal failed: team name is required")
+		return errors.New("team removal failed: team name is required")
 	}
 
 	_, err := g.gitClient.Teams.DeleteTeamBySlug(g.context, owner, team)

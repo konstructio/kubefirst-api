@@ -429,7 +429,7 @@ func writeGoogleSecrets(homeDir string, vaultClient *vaultapi.Client) error {
 	}
 
 	var data map[string]interface{}
-	err = json.Unmarshal([]byte(adcJSON), &data)
+	err = json.Unmarshal(adcJSON, &data)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal google json credentials: %w", err)
 	}

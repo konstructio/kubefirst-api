@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package digitalocean
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -42,7 +43,7 @@ func (c *Configuration) GetKubernetesAssociatedResources(clusterName string) (*g
 // DeleteKubernetesClusterVolumes iterates over resource volumes and deletes them
 func (c *Configuration) DeleteKubernetesClusterVolumes(resources *godo.KubernetesAssociatedResources) error {
 	if len(resources.Volumes) == 0 {
-		return fmt.Errorf("no volumes are available for deletion with the provided parameters")
+		return errors.New("no volumes are available for deletion with the provided parameters")
 	}
 
 	for _, vol := range resources.Volumes {

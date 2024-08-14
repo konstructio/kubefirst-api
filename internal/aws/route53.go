@@ -152,7 +152,7 @@ func (conf *Configuration) GetHostedZone(hostedZoneID string) (*route53.GetHoste
 		Id: aws.String(hostedZoneID),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error fetching details for hosted zone %s: %s", hostedZoneID, err)
+		return nil, fmt.Errorf("error fetching details for hosted zone %s: %w", hostedZoneID, err)
 	}
 
 	return hostedZone, nil

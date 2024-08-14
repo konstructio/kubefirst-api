@@ -22,6 +22,8 @@ import (
 )
 
 // GetRegions lists all available regions
+//
+//nolint:dupl // This function is similar to GetRegions, but the Go SDK does not provide a common interface for both
 func (conf *Configuration) GetRegions() ([]string, error) {
 	creds, err := google.CredentialsFromJSON(conf.Context, []byte(conf.KeyFile), secretmanager.DefaultAuthScopes()...)
 	if err != nil {
@@ -55,6 +57,7 @@ func (conf *Configuration) GetRegions() ([]string, error) {
 	return regionList, nil
 }
 
+//nolint:dupl // This function is similar to GetRegions, but the Go SDK does not provide a common interface for both
 func (conf *Configuration) GetZones() ([]string, error) {
 	creds, err := google.CredentialsFromJSON(conf.Context, []byte(conf.KeyFile), secretmanager.DefaultAuthScopes()...)
 	if err != nil {

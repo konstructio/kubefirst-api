@@ -216,7 +216,7 @@ func DeleteGoogleCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 		case "github":
 			tfEnvs = googleext.GetGithubTerraformEnvs(tfEnvs, cl)
 		case "gitlab":
-			gid, err := strconv.Atoi(fmt.Sprint(cl.GitlabOwnerGroupID))
+			gid, err := strconv.Atoi(strconv.Itoa(cl.GitlabOwnerGroupID))
 			if err != nil {
 				return fmt.Errorf("couldn't convert gitlab group id to int: %w", err)
 			}

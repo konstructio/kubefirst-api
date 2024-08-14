@@ -35,8 +35,8 @@ func initActionAutoApprove(terraformClientPath string, tfAction, tfEntrypoint st
 		return fmt.Errorf("error: terraform %s -auto-approve for %s failed: %w", tfAction, tfEntrypoint, err)
 	}
 
-	os.RemoveAll(fmt.Sprintf("%s/.terraform/", tfEntrypoint))
-	os.Remove(fmt.Sprintf("%s/.terraform.lock.hcl", tfEntrypoint))
+	os.RemoveAll(tfEntrypoint + "/.terraform/")
+	os.Remove(tfEntrypoint + "/.terraform.lock.hcl")
 	return nil
 }
 

@@ -65,7 +65,7 @@ func RemoveDuplicatesLinks(items []string) []string {
 	for _, item := range items {
 		if _, ok := seen[item]; !ok && !strings.Contains(item, ".git") {
 			seen[item] = struct{}{} // Mark item as seen
-			result = append(result, fmt.Sprintf("https://%s", item))
+			result = append(result, "https://"+item)
 		}
 	}
 

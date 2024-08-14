@@ -17,13 +17,13 @@ func (conf *Configuration) AutoUnseal() (*vaultapi.InitResponse, error) {
 		Address: VaultDefaultAddress,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error creating vault client: %s", err)
+		return nil, fmt.Errorf("error creating vault client: %w", err)
 	}
 
 	if err := vaultClient.CloneConfig().ConfigureTLS(&vaultapi.TLSConfig{
 		Insecure: true,
 	}); err != nil {
-		return nil, fmt.Errorf("error configuring vault client TLS insecure flow: %s", err)
+		return nil, fmt.Errorf("error configuring vault client TLS insecure flow: %w", err)
 	}
 
 	log.Info().Msg("created vault client, initializing vault with auto unseal")
@@ -35,7 +35,7 @@ func (conf *Configuration) AutoUnseal() (*vaultapi.InitResponse, error) {
 		SecretThreshold:   SecretThreshold,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error initializing vault: %s", err)
+		return nil, fmt.Errorf("error initializing vault: %w", err)
 	}
 
 	log.Info().Msg("vault initialization complete")

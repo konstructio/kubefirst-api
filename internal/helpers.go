@@ -103,6 +103,7 @@ func randSeq(n int) string {
 }
 
 func Random(seq int) string {
+	//nolint:staticcheck // will be improved in future iterations
 	rand.Seed(time.Now().UnixNano())
 	return randSeq(seq)
 }
@@ -169,12 +170,12 @@ func RemoveSubDomain(fullURL string) (string, error) {
 // IsValidURL checks if a URL is valid
 func IsValidURL(rawURL string) error {
 	if len(rawURL) == 0 {
-		return fmt.Errorf("rawURL cannot be empty string")
+		return errors.New("rawURL cannot be empty string")
 	}
 
 	parsedURL, err := url.ParseRequestURI(rawURL)
 	if err != nil || parsedURL == nil {
-		return fmt.Errorf("the URL (%s) is invalid, error = %v", rawURL, err)
+		return fmt.Errorf("the URL (%s) is invalid: %w", rawURL, err)
 	}
 
 	if parsedURL.Scheme == "" || parsedURL.Host == "" {
@@ -197,7 +198,7 @@ func ValidateK1Folder(folderPath string) error {
 
 	if _, err := os.Stat(folderPath); errors.Is(err, os.ErrNotExist) {
 		if err = os.Mkdir(folderPath, os.ModePerm); err != nil {
-			return fmt.Errorf("info: could not create directory %q - error: %s", folderPath, err)
+			return fmt.Errorf("info: could not create directory %q - error: %w", folderPath, err)
 		}
 		// folder was just created, no further validation required
 		return nil
@@ -241,7 +242,7 @@ func AwaitHostNTimes(url string, times int, gracePeriod time.Duration) {
 
 		if resp.StatusCode == http.StatusOK {
 			log.Printf("%s resolved, %s second grace period required...", url, gracePeriod)
-			time.Sleep(time.Second * gracePeriod)
+			time.Sleep(gracePeriod)
 			return
 		}
 
@@ -386,7 +387,7 @@ func OpenBrowser(url string) error {
 	case "darwin":
 		if err := exec.Command("open", url).Start(); err != nil {
 			log.Warn().Msgf("unable to load the browser - continuing")
-			return nil
+			return nil //nolint:nilerr // needed so the app can continue
 		}
 	default:
 		log.Warn().Msgf("unable to load the browser, unsupported platform - continuing")
@@ -553,27 +554,27 @@ func ResetK1Dir(k1Dir string) error {
 		// path/to/whatever exists
 		err := os.RemoveAll(k1Dir + "/argo-workflows")
 		if err != nil {
-			return fmt.Errorf("unable to delete %q folder, error: %s", k1Dir+"/argo-workflows", err)
+			return fmt.Errorf("unable to delete %q folder, error: %w", k1Dir+"/argo-workflows", err)
 		}
 	}
 
 	if _, err := os.Stat(k1Dir + "/gitops"); !os.IsNotExist(err) {
 		err := os.RemoveAll(k1Dir + "/gitops")
 		if err != nil {
-			return fmt.Errorf("unable to delete %q folder, error: %s", k1Dir+"/gitops", err)
+			return fmt.Errorf("unable to delete %q folder, error: %w", k1Dir+"/gitops", err)
 		}
 	}
 	if _, err := os.Stat(k1Dir + "/metaphor"); !os.IsNotExist(err) {
 		err := os.RemoveAll(k1Dir + "/metaphor")
 		if err != nil {
-			return fmt.Errorf("unable to delete %q folder, error: %s", k1Dir+"/metaphor", err)
+			return fmt.Errorf("unable to delete %q folder, error: %w", k1Dir+"/metaphor", err)
 		}
 	}
 	// todo look at logic to not re-download
 	if _, err := os.Stat(k1Dir + "/tools"); !os.IsNotExist(err) {
 		err = os.RemoveAll(k1Dir + "/tools")
 		if err != nil {
-			return fmt.Errorf("unable to delete %q folder, error: %s", k1Dir+"/tools", err)
+			return fmt.Errorf("unable to delete %q folder, error: %w", k1Dir+"/tools", err)
 		}
 	}
 	// * files
@@ -581,7 +582,7 @@ func ResetK1Dir(k1Dir string) error {
 	if _, err := os.Stat(k1Dir + "/argocd-init-values.yaml"); !os.IsNotExist(err) {
 		err = os.Remove(k1Dir + "/argocd-init-values.yaml")
 		if err != nil {
-			return fmt.Errorf("unable to delete %q folder, error: %s", k1Dir+"/argocd-init-values.yaml", err)
+			return fmt.Errorf("unable to delete %q folder, error: %w", k1Dir+"/argocd-init-values.yaml", err)
 		}
 	}
 

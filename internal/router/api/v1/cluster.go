@@ -238,7 +238,7 @@ func GetClusters(c *gin.Context) {
 // PostCreateCluster handles a request to create a cluster
 func PostCreateCluster(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
-	if !param || string(clusterName) == ":cluster_name" {
+	if !param || clusterName == ":cluster_name" {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: ":cluster_name not provided",
 		})
@@ -770,10 +770,6 @@ func PostImportCluster(c *gin.Context) {
 	err = gitShim.PrepareMgmtCluster(cluster)
 	if err != nil {
 		log.Error().Msgf("error cloning repository: %s", err)
-		return
-	}
-
-	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: fmt.Sprintf("error importing cluster %s: %s", cluster.ClusterName, err),
 		})

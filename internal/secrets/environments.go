@@ -42,12 +42,12 @@ func GetEnvironment(clientSet *kubernetes.Clientset, name string) (pkgtypes.Envi
 
 	jsonData, err := json.Marshal(jsonString)
 	if err != nil {
-		return environment, fmt.Errorf("error marshalling json %s: %s", name, err)
+		return environment, fmt.Errorf("error marshalling json %s: %w", name, err)
 	}
 
-	err = json.Unmarshal([]byte(jsonData), &environment)
+	err = json.Unmarshal(jsonData, &environment)
 	if err != nil {
-		return environment, fmt.Errorf("unable to cast environment %s: %s", name, err)
+		return environment, fmt.Errorf("unable to cast environment %s: %w", name, err)
 	}
 
 	return environment, nil
@@ -123,7 +123,7 @@ func DeleteEnvironment(clientSet *kubernetes.Clientset, envID string) error {
 
 	err = k8s.DeleteSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", kubefirstEnvironmentPrefix, environmentToDelete.Name))
 	if err != nil {
-		return fmt.Errorf("error deleting environment %s: %s", environmentToDelete.Name, err)
+		return fmt.Errorf("error deleting environment %s: %w", environmentToDelete.Name, err)
 	}
 
 	log.Info().Msgf("environment deleted: %v", environmentToDelete.Name)
@@ -147,10 +147,17 @@ func UpdateEnvironment(clientSet *kubernetes.Clientset, id string, env types.Env
 	environmentToUpdate.Color = env.Color
 	environmentToUpdate.Description = env.Description
 
-	bytes, _ := json.Marshal(environmentToUpdate)
-	secretValuesMap, _ := ParseJSONToMap(string(bytes))
+	bytes, err := json.Marshal(environmentToUpdate)
+	if err != nil {
+		return fmt.Errorf("error marshalling json: %w", err)
+	}
 
-	err := k8s.UpdateSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", kubefirstEnvironmentPrefix, environmentToUpdate.Name), secretValuesMap)
+	secretValuesMap, err := ParseJSONToMap(string(bytes))
+	if err != nil {
+		return fmt.Errorf("error parsing json to map: %w", err)
+	}
+
+	err = k8s.UpdateSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", kubefirstEnvironmentPrefix, environmentToUpdate.Name), secretValuesMap)
 	if err != nil {
 		return fmt.Errorf("error creating kubernetes secret: %w", err)
 	}

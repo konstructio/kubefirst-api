@@ -45,7 +45,7 @@ func VerifyTokenPermissions(githubToken string) error {
 
 	res, err := httpCommon.CustomHTTPClient(false).Do(req)
 	if err != nil {
-		return fmt.Errorf("error calling GitHub API %q: %s", req.URL.String(), err)
+		return fmt.Errorf("error calling GitHub API %q: %w", req.URL.String(), err)
 	}
 	defer res.Body.Close()
 

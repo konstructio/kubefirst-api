@@ -37,13 +37,13 @@ func CreateKubeConfig(inCluster bool, kubeConfigPath string) (*KubernetesClient,
 		config, err := rest.InClusterConfig()
 		if err != nil {
 			log.Errorf("error creating kubernetes config: %s", err)
-			return nil, fmt.Errorf("error creating kubernetes config: %s", err)
+			return nil, fmt.Errorf("error creating kubernetes config: %w", err)
 		}
 
 		clientset, err := kubernetes.NewForConfig(config)
 		if err != nil {
 			log.Errorf("error creating kubernetes client: %s", err)
-			return nil, fmt.Errorf("error creating kubernetes client: %s", err)
+			return nil, fmt.Errorf("error creating kubernetes client: %w", err)
 		}
 
 		return &KubernetesClient{
@@ -77,7 +77,7 @@ func CreateKubeConfig(inCluster bool, kubeConfigPath string) (*KubernetesClient,
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		log.Errorf("error creating kubernetes client: %s", err)
-		return nil, fmt.Errorf("error creating kubernetes client: %s", err)
+		return nil, fmt.Errorf("error creating kubernetes client: %w", err)
 	}
 
 	return &KubernetesClient{

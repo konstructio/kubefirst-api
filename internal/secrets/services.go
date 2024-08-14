@@ -33,8 +33,15 @@ func CreateClusterServiceList(clientSet *kubernetes.Clientset, clusterName strin
 			Services:    []types.Service{},
 		}
 
-		bytes, _ := json.Marshal(clusterServices)
-		secretValuesMap, _ := ParseJSONToMap(string(bytes))
+		bytes, err := json.Marshal(clusterServices)
+		if err != nil {
+			return fmt.Errorf("error marshalling json: %w", err)
+		}
+
+		secretValuesMap, err := ParseJSONToMap(string(bytes))
+		if err != nil {
+			return fmt.Errorf("error parsing json: %w", err)
+		}
 
 		secretToCreate := &v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
@@ -44,7 +51,7 @@ func CreateClusterServiceList(clientSet *kubernetes.Clientset, clusterName strin
 			Data: secretValuesMap,
 		}
 
-		err := k8s.CreateSecretV2(clientSet, secretToCreate)
+		err = k8s.CreateSecretV2(clientSet, secretToCreate)
 		if err != nil {
 			return fmt.Errorf("error creating kubernetes service secret: %w", err)
 		}
@@ -59,7 +66,7 @@ func DeleteClusterServiceListEntry(clientSet *kubernetes.Clientset, clusterName 
 	// Find
 	clusterServices, err := GetServices(clientSet, clusterName)
 	if err != nil {
-		return fmt.Errorf("error deleting service list entry %s: %s", def.Name, err)
+		return fmt.Errorf("error deleting service list entry %s: %w", def.Name, err)
 	}
 
 	filteredServiceList := []types.Service{}
@@ -84,7 +91,7 @@ func DeleteClusterServiceListEntry(clientSet *kubernetes.Clientset, clusterName 
 
 	err = k8s.UpdateSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", kubefirstServicesPrefix, clusterName), secretValuesMap)
 	if err != nil {
-		return fmt.Errorf("error deleting service list entry %s: %s", def.Name, err)
+		return fmt.Errorf("error deleting service list entry %s: %w", def.Name, err)
 	}
 
 	log.Info().Msgf("service deleted: %v", def.Name)
@@ -137,7 +144,7 @@ func InsertClusterServiceListEntry(clientSet *kubernetes.Clientset, clusterName 
 	// Find
 	clusterServices, err := GetServices(clientSet, clusterName)
 	if err != nil {
-		return fmt.Errorf("error adding service list entry %s: %s", def.Name, err)
+		return fmt.Errorf("error adding service list entry %s: %w", def.Name, err)
 	}
 
 	clusterServices.Services = append(clusterServices.Services, *def)
@@ -154,7 +161,7 @@ func InsertClusterServiceListEntry(clientSet *kubernetes.Clientset, clusterName 
 
 	err = k8s.UpdateSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", kubefirstServicesPrefix, clusterName), secretValuesMap)
 	if err != nil {
-		return fmt.Errorf("error adding service list entry %s: %s", def.Name, err)
+		return fmt.Errorf("error adding service list entry %s: %w", def.Name, err)
 	}
 
 	log.Info().Msgf("service added: %v", def.Name)

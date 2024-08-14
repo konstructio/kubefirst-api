@@ -29,13 +29,18 @@ const (
 // ApplicationCleanup removes and waits for specific ArgoCD applications
 func ApplicationCleanup(clientset kubernetes.Interface, removeApps []string) error {
 	// Patch registry app to remove syncPolicy
-	removeSyncPolicyPatch, _ := json.Marshal(
+	removeSyncPolicyPatch, err := json.Marshal(
 		[]PatchStringValue{{
 			Op:    "remove",
 			Path:  "/spec/syncPolicy",
 			Value: "",
 		}})
-	err := RestPatchArgoCD(clientset, "registry", removeSyncPolicyPatch)
+	if err != nil {
+		log.Error().Msgf("unable to marshal patch for registry application: %s", err)
+		return fmt.Errorf("unable to marshal patch for registry application: %w", err)
+	}
+
+	err = RestPatchArgoCD(clientset, "registry", removeSyncPolicyPatch)
 	if err != nil {
 		log.Error().Msgf("unable to patch registry application: %s", err)
 		return fmt.Errorf("unable to patch registry application: %w", err)
@@ -59,7 +64,7 @@ func ApplicationCleanup(clientset kubernetes.Interface, removeApps []string) err
 func deleteArgoCDApplicationV2(clientset kubernetes.Interface, applicationName string, ch chan<- bool) error {
 	// Call the API to delete an ArgoCD application
 	data, err := clientset.CoreV1().RESTClient().Delete().
-		AbsPath(fmt.Sprintf("/apis/%s", ArgoCDAPIVersion)).
+		AbsPath("/apis/" + ArgoCDAPIVersion).
 		Namespace("argocd").
 		Resource("applications").
 		Name(applicationName).
@@ -89,12 +94,16 @@ func deleteArgoCDApplicationV2(clientset kubernetes.Interface, applicationName s
 			return nil
 		case health.HealthStatusProgressing:
 			log.Info().Msgf("application %s is progressing", applicationName)
+			time.Sleep(time.Second * 1)
 			continue
 		case health.HealthStatusDegraded:
 			log.Info().Msgf("application %s is progressing", applicationName)
+			time.Sleep(time.Second * 1)
 			continue
+		default:
+			log.Info().Msgf("application %s is in an unknown state", applicationName)
+			time.Sleep(time.Second * 1)
 		}
-		time.Sleep(time.Second * 1)
 	}
 
 	return nil
@@ -180,13 +189,18 @@ func returnArgoCDApplicationStatus(clientset kubernetes.Interface, applicationNa
 func waitForApplicationDeletion(clientset kubernetes.Interface, applicationName string) error {
 	ch := make(chan bool)
 	// Patch app to remove sync
-	removeSyncPolicyPatch, _ := json.Marshal(
+	removeSyncPolicyPatch, err := json.Marshal(
 		[]PatchStringValue{{
 			Op:    "remove",
 			Path:  "/spec/syncPolicy",
 			Value: "",
 		}})
-	err := RestPatchArgoCD(clientset, applicationName, removeSyncPolicyPatch)
+	if err != nil {
+		log.Info().Msgf("error marshalling patch for argocd application %s: %s", applicationName, err)
+		return fmt.Errorf("error marshalling patch for argocd application %s: %w", applicationName, err)
+	}
+
+	err = RestPatchArgoCD(clientset, applicationName, removeSyncPolicyPatch)
 	if err != nil {
 		log.Info().Msgf("error patching argocd application %s: %s", applicationName, err)
 		return fmt.Errorf("error patching argocd application %s: %w", applicationName, err)

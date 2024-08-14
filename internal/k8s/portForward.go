@@ -8,6 +8,7 @@ package k8s
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -93,7 +94,7 @@ func PortForwardPod(clientset *kubernetes.Clientset, req PortForwardAPodRequest)
 		}
 	}
 	if runningPod == nil {
-		return fmt.Errorf("error reading pod details")
+		return errors.New("error reading pod details")
 	}
 
 	log.Println("Namespace for PF", runningPod.Namespace)

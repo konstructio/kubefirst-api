@@ -28,7 +28,7 @@ func createNamespace(ctx context.Context, k8s kubernetes.Interface, namespaces [
 				return nil
 			}
 
-			return fmt.Errorf("error retrieving namespace %s: %w (%T)", ns.Name, err, err)
+			return fmt.Errorf("error retrieving namespace %s: %w", ns.Name, err)
 		}
 	}
 	return nil

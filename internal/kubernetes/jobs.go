@@ -32,7 +32,7 @@ func CreateJobsIfNotExist(ctx context.Context, k8s kubernetes.Interface, jobs []
 				return nil
 			}
 
-			return fmt.Errorf("error retrieving Job %s: %w (%T)", job.Name, err, err)
+			return fmt.Errorf("error retrieving Job %s: %w", job.Name, err)
 		}
 	}
 	return nil
@@ -45,7 +45,7 @@ func RecreateJobs(ctx context.Context, k8s kubernetes.Interface, jobs []Job) err
 		_, err := k8s.BatchV1().Jobs(job.Namespace).Get(ctx, job.Name, metav1.GetOptions{})
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
-				return fmt.Errorf("error retrieving Job %s: %w (%T)", job.Name, err, err)
+				return fmt.Errorf("error retrieving Job %s: %w", job.Name, err)
 			}
 		} else {
 			if err := k8s.BatchV1().Jobs(job.Namespace).Delete(ctx, job.Name, metav1.DeleteOptions{}); err != nil {

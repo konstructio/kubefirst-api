@@ -108,7 +108,7 @@ func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster
 	envs["TF_VAR_aws_session_token"] = "" // allows for debugging
 
 	if cl.GitProvider == "gitlab" {
-		envs["TF_VAR_owner_group_id"] = fmt.Sprintf("%d", cl.GitlabOwnerGroupID)
+		envs["TF_VAR_owner_group_id"] = strconv.Itoa(cl.GitlabOwnerGroupID)
 	}
 
 	return envs

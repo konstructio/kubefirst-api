@@ -32,7 +32,7 @@ func CreateClusterRoleBindingsIfNotExist(ctx context.Context, k8s kubernetes.Int
 				return nil
 			}
 
-			return fmt.Errorf("error retrieving ClusterRoleBinding %s: %w (%T)", clusterRoleBinding.Name, err, err)
+			return fmt.Errorf("error retrieving ClusterRoleBinding %s: %w", clusterRoleBinding.Name, err)
 		}
 	}
 	return nil

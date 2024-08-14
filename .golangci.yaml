@@ -26,7 +26,6 @@ linters:
     - errorlint
     - exhaustive
     - exportloopref
-    - forcetypeassert
     - ginkgolinter
     - gocheckcompilerdirectives
     - gochecksumtype
@@ -49,15 +48,12 @@ linters:
     - makezero
     - mirror
     - misspell
-    - musttag
     - nakedret
     - nilerr
     - nilnil
-    - nolintlint
     - nonamedreturns
     - nosprintfhostport
     - paralleltest
-    - perfsprint
     - prealloc
     - predeclared
     - promlinter
@@ -115,3 +111,11 @@ linters-settings:
 
   gocyclo:
     min-complexity: 60
+
+  exhaustive:
+    check-generated: false
+    explicit-exhaustive-switch: false
+    explicit-exhaustive-map: false
+    default-case-required: false
+    default-signifies-exhaustive: true
+    package-scope-only: false

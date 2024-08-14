@@ -32,7 +32,7 @@ func CreateServiceAccountsIfNotExist(ctx context.Context, k8s kubernetes.Interfa
 				return nil
 			}
 
-			return fmt.Errorf("error retrieving service account %s in namespace %s: %w (%T)", serviceAccount.Name, serviceAccount.Namespace, err, err)
+			return fmt.Errorf("error retrieving service account %s in namespace %s: %w", serviceAccount.Name, serviceAccount.Namespace, err)
 		}
 	}
 	return nil

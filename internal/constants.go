@@ -48,8 +48,8 @@ const (
 )
 
 var (
-	VaultLocalURL    = fmt.Sprintf("http://vault.%s", LocalDomainName)
-	VaultLocalURLTLS = fmt.Sprintf("https://vault.%s", LocalDomainName)
+	VaultLocalURL    = "http://vault." + LocalDomainName
+	VaultLocalURLTLS = "https://vault." + LocalDomainName
 )
 
 // Argo
@@ -61,7 +61,7 @@ const (
 	ArgocdPortForwardURL = "http://localhost:8080"
 )
 
-var ArgoLocalURLTLS = fmt.Sprintf("https://argo.%s", LocalDomainName)
+var ArgoLocalURLTLS = "https://argo." + LocalDomainName
 
 // ArgoCD
 const (

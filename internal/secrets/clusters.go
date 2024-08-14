@@ -32,7 +32,7 @@ func DeleteCluster(clientSet *kubernetes.Clientset, clusterName string) error {
 
 	err = k8s.DeleteSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", clusterPrefix, clusterName))
 	if err != nil {
-		return fmt.Errorf("error deleting cluster %s: %s", clusterName, err)
+		return fmt.Errorf("error deleting cluster %s: %w", clusterName, err)
 	}
 
 	log.Info().Msgf("cluster deleted: %v", clusterName)
@@ -122,10 +122,17 @@ func InsertCluster(clientSet *kubernetes.Clientset, cl pkgtypes.Cluster) error {
 
 // UpdateCluster
 func UpdateCluster(clientSet *kubernetes.Clientset, cluster pkgtypes.Cluster) error {
-	bytes, _ := json.Marshal(cluster)
-	secretValuesMap, _ := ParseJSONToMap(string(bytes))
+	bytes, err := json.Marshal(cluster)
+	if err != nil {
+		return fmt.Errorf("error marshalling json: %w", err)
+	}
 
-	err := k8s.UpdateSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", clusterPrefix, cluster.ClusterName), secretValuesMap)
+	secretValuesMap, err := ParseJSONToMap(string(bytes))
+	if err != nil {
+		return fmt.Errorf("error parsing json to map: %w", err)
+	}
+
+	err = k8s.UpdateSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", clusterPrefix, cluster.ClusterName), secretValuesMap)
 	if err != nil {
 		return fmt.Errorf("error updating kubernetes secret: %w", err)
 	}

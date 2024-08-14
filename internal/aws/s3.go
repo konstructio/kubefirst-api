@@ -48,7 +48,7 @@ func (conf *Configuration) CreateBucket(bucketName string) (*s3.CreateBucketOutp
 
 	bucket, err := s3Client.CreateBucket(context.Background(), s3CreateBucketInput)
 	if err != nil {
-		return &s3.CreateBucketOutput{}, fmt.Errorf("error creating s3 bucket %s: %s", bucketName, err)
+		return &s3.CreateBucketOutput{}, fmt.Errorf("error creating s3 bucket %s: %w", bucketName, err)
 	}
 
 	versionConfigInput := &s3.PutBucketVersioningInput{
@@ -60,7 +60,7 @@ func (conf *Configuration) CreateBucket(bucketName string) (*s3.CreateBucketOutp
 
 	_, err = s3Client.PutBucketVersioning(context.Background(), versionConfigInput)
 	if err != nil {
-		return &s3.CreateBucketOutput{}, fmt.Errorf("error creating s3 bucket %s: %s", bucketName, err)
+		return &s3.CreateBucketOutput{}, fmt.Errorf("error creating s3 bucket %s: %w", bucketName, err)
 	}
 	return bucket, nil
 }
@@ -77,7 +77,7 @@ func (conf *Configuration) DeleteBucket(bucketName string) error {
 
 	_, err := s3Client.DeleteBucket(context.Background(), s3DeleteBucketInput)
 	if err != nil {
-		return fmt.Errorf("error deleting s3 bucket %s: %s", bucketName, err)
+		return fmt.Errorf("error deleting s3 bucket %s: %w", bucketName, err)
 	}
 
 	return nil
@@ -89,7 +89,7 @@ func (conf *Configuration) ListBuckets() (*s3.ListBucketsOutput, error) {
 
 	buckets, err := s3Client.ListBuckets(context.Background(), &s3.ListBucketsInput{})
 	if err != nil {
-		return nil, fmt.Errorf("error listing s3 buckets: %s", err)
+		return nil, fmt.Errorf("error listing s3 buckets: %w", err)
 	}
 
 	return buckets, nil

@@ -16,7 +16,7 @@ func NewEKSServiceAccountClientV1() aws.Config {
 	region := os.Getenv("AWS_REGION")
 	roleArn := os.Getenv("AWS_ROLE_ARN")
 
-	fmt.Println(fmt.Sprintf("authenticating as role arn: %s from service account", roleArn))
+	fmt.Printf("authenticating as role arn: %s from service account\n", roleArn)
 
 	awsClient, err := config.LoadDefaultConfig(
 		context.Background(),

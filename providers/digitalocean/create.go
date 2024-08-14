@@ -219,13 +219,13 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 		log.Error().Msgf("Error exporting cluster record: %s", err)
 		ctrl.UpdateClusterOnError(err.Error())
 		return fmt.Errorf("error exporting cluster record: %w", err)
-	} else {
-		// Create default service entries
-		cl, _ := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
-		err = services.AddDefaultServices(&cl)
-		if err != nil {
-			log.Error().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
-		}
+	}
+
+	// Create default service entries
+	cl, _ := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
+	err = services.AddDefaultServices(&cl)
+	if err != nil {
+		log.Error().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
 	}
 
 	log.Info().Msg("waiting for kubefirst-api Deployment to transition to Running")

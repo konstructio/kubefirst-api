@@ -15,6 +15,7 @@ import (
 type HTTPMock struct{}
 
 func (httpMock HTTPMock) Do(_ *http.Request) (*http.Response, error) {
+	//nolint:nilnil // This is a mock
 	return nil, nil
 }
 

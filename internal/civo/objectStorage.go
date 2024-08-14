@@ -51,7 +51,7 @@ func (c *Configuration) DeleteStorageBucket(bucketName string) error {
 
 	_, err = c.Client.DeleteObjectStore(bucketID)
 	if err != nil {
-		return fmt.Errorf("error deleting object store %s: %s", bucketName, err)
+		return fmt.Errorf("error deleting object store %s: %w", bucketName, err)
 	}
 
 	return nil
@@ -60,12 +60,12 @@ func (c *Configuration) DeleteStorageBucket(bucketName string) error {
 // GetAccessCredentials creates object store access credentials if they do not exist and returns them if they do
 func (c *Configuration) GetAccessCredentials(credentialName string, region string) (*civogo.ObjectStoreCredential, error) {
 	creds, err := c.checkKubefirstCredentials(credentialName)
-	if err != nil && err != errNoCredsFound {
+	if err != nil && !errors.Is(err, errNoCredsFound) {
 		log.Error().Msg(err.Error())
 		return nil, fmt.Errorf("error fetching object store credentials: %w", err)
 	}
 
-	if err == errNoCredsFound {
+	if errors.Is(err, errNoCredsFound) {
 		log.Info().Msgf("credential name: %s not found, creating", credentialName)
 		creds, err = c.createAccessCredentials(credentialName, region)
 		if err != nil {
@@ -89,7 +89,7 @@ func (c *Configuration) GetAccessCredentials(credentialName string, region strin
 
 		if creds.AccessKeyID == "" || creds.ID == "" || creds.Name == "" || creds.SecretAccessKeyID == "" {
 			log.Error().Msg("Civo credentials for state bucket in object storage could not be fetched, please try to run again")
-			return nil, fmt.Errorf("the Civo credentials for state bucket in object storage could not be fetched, please try to run again")
+			return nil, errors.New("the Civo credentials for state bucket in object storage could not be fetched, please try to run again")
 		}
 
 		log.Info().Msgf("created object storage credential %s", credentialName)
@@ -108,7 +108,7 @@ func (c *Configuration) DeleteAccessCredentials(credentialName string) error {
 	}
 
 	// If no credentials are found, return
-	if err == errNoCredsFound {
+	if errors.Is(err, errNoCredsFound) {
 		return nil
 	}
 

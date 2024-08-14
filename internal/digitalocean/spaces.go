@@ -31,7 +31,7 @@ func (c *Configuration) CreateSpaceBucket(cr SpacesCredentials, bucketName strin
 	location := "us-east-1"
 	err = minioClient.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{Region: location})
 	if err != nil {
-		return fmt.Errorf("error creating bucket %s for %s: %s", bucketName, cr.Endpoint, err)
+		return fmt.Errorf("error creating bucket %s for %s: %w", bucketName, cr.Endpoint, err)
 	}
 
 	return nil

@@ -64,7 +64,7 @@ type outputLogger struct {
 	isError bool
 }
 
-func (l outputLogger) Write(p []byte) (n int, err error) {
+func (l outputLogger) Write(p []byte) (int, error) {
 	if l.isError {
 		log.Error().Msgf("%s %s", l.prefix, string(p))
 	} else {

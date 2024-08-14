@@ -91,7 +91,7 @@ func (c *Configuration) GetDNSRecords(domainName string) ([]godo.DomainRecord, e
 	records, _, err := c.Client.Domains.Records(c.Context, domainName, &godo.ListOptions{})
 	if err != nil {
 		log.Error().Msgf("error getting digitalocean dns records for domain %s: %s", domainName, err)
-		return nil, fmt.Errorf("error getting digitalocean dns records for domain %s: %s", domainName, err)
+		return nil, fmt.Errorf("error getting digitalocean dns records for domain %s: %w", domainName, err)
 	}
 
 	return records, nil
@@ -104,7 +104,7 @@ func (c *Configuration) GetDNSInfo(domainName string) (string, error) {
 	doDNSDomain, _, err := c.Client.Domains.Get(c.Context, domainName)
 	if err != nil {
 		log.Error().Msg(err.Error())
-		return "", fmt.Errorf("error getting digitalocean dns domain %s: %s", domainName, err)
+		return "", fmt.Errorf("error getting digitalocean dns domain %s: %w", domainName, err)
 	}
 
 	return doDNSDomain.Name, nil
@@ -133,7 +133,7 @@ func GetDomainApexContent(domainName string) bool {
 func (c *Configuration) GetDNSDomains() ([]string, error) {
 	domains, _, err := c.Client.Domains.List(c.Context, &godo.ListOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("error getting digitalocean dns domains: %s", err)
+		return nil, fmt.Errorf("error getting digitalocean dns domains: %w", err)
 	}
 
 	domainList := make([]string, 0, len(domains))
@@ -149,7 +149,7 @@ func (c *Configuration) DeleteDNSRecords(domainName string, dryRun bool) error {
 	records, _, err := c.Client.Domains.Records(c.Context, domainName, &godo.ListOptions{})
 	if err != nil {
 		log.Error().Msgf("error getting digitalocean dns records for domain %s: %s", domainName, err)
-		return fmt.Errorf("error getting digitalocean dns records for domain %s: %s", domainName, err)
+		return fmt.Errorf("error getting digitalocean dns records for domain %s: %w", domainName, err)
 	}
 
 	for _, rec := range records {
@@ -165,7 +165,7 @@ func (c *Configuration) DeleteDNSRecords(domainName string, dryRun bool) error {
 			if !dryRun {
 				_, err := c.Client.Domains.DeleteRecord(c.Context, domainName, rec.ID)
 				if err != nil {
-					return fmt.Errorf("error attempting to delete digitalocean dns record %s.%s: %s", rec.Name, domainName, err)
+					return fmt.Errorf("error attempting to delete digitalocean dns record %s.%s: %w", rec.Name, domainName, err)
 				}
 			}
 		}

@@ -31,7 +31,7 @@ func CreateClusterRolesIfNotExist(ctx context.Context, k8s kubernetes.Interface,
 				return nil
 			}
 
-			return fmt.Errorf("error retrieving ClusterRole %s: %w (%T)", clusterRole.Name, err, err)
+			return fmt.Errorf("error retrieving ClusterRole %s: %w", clusterRole.Name, err)
 		}
 	}
 	return nil

@@ -31,7 +31,7 @@ func GetSecretReference(clientSet *kubernetes.Clientset, secretName string) (pkg
 		return secretReference, fmt.Errorf("error marshalling json: %w", err)
 	}
 
-	err = json.Unmarshal([]byte(jsonData), &secretReference)
+	err = json.Unmarshal(jsonData, &secretReference)
 	if err != nil {
 		return secretReference, fmt.Errorf("unable to cast secret reference: %w", err)
 	}
@@ -60,10 +60,17 @@ func DeleteSecretReference(clientSet *kubernetes.Clientset, secretName string, v
 
 // UpdateSecretReference
 func UpdateSecretReference(clientSet *kubernetes.Clientset, secretName string, secretReference pkgtypes.SecretListReference) error {
-	bytes, _ := json.Marshal(secretReference)
-	secretValuesMap, _ := ParseJSONToMap(string(bytes))
+	bytes, err := json.Marshal(secretReference)
+	if err != nil {
+		return fmt.Errorf("error marshalling json: %w", err)
+	}
 
-	err := k8s.UpdateSecretV2(clientSet, "kubefirst", secretName, secretValuesMap)
+	secretValuesMap, err := ParseJSONToMap(string(bytes))
+	if err != nil {
+		return fmt.Errorf("error parsing json to map: %w", err)
+	}
+
+	err = k8s.UpdateSecretV2(clientSet, "kubefirst", secretName, secretValuesMap)
 	if err != nil {
 		return fmt.Errorf("error updating secret reference: %w", err)
 	}
@@ -72,8 +79,15 @@ func UpdateSecretReference(clientSet *kubernetes.Clientset, secretName string, s
 }
 
 func CreateSecretReference(clientSet *kubernetes.Clientset, secretName string, secretReference pkgtypes.SecretListReference) error {
-	bytes, _ := json.Marshal(secretReference)
-	secretValuesMap, _ := ParseJSONToMap(string(bytes))
+	bytes, err := json.Marshal(secretReference)
+	if err != nil {
+		return fmt.Errorf("error marshalling json: %w", err)
+	}
+
+	secretValuesMap, err := ParseJSONToMap(string(bytes))
+	if err != nil {
+		return fmt.Errorf("error parsing json to map: %w", err)
+	}
 
 	secretToCreate := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -83,7 +97,7 @@ func CreateSecretReference(clientSet *kubernetes.Clientset, secretName string, s
 		Data: secretValuesMap,
 	}
 
-	err := k8s.CreateSecretV2(clientSet, secretToCreate)
+	err = k8s.CreateSecretV2(clientSet, secretToCreate)
 	if err != nil {
 		return fmt.Errorf("error creating secret reference: %w", err)
 	}

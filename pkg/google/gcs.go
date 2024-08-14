@@ -34,14 +34,14 @@ func (conf *Configuration) CreateBucket(bucketName string, keyFile []byte) (*sto
 
 	err = client.Bucket(bucketName).Create(conf.Context, conf.Project, &storage.BucketAttrs{})
 	if err != nil {
-		return nil, fmt.Errorf("error creating gcs bucket %s: %s", bucketName, err)
+		return nil, fmt.Errorf("error creating gcs bucket %s: %w", bucketName, err)
 	}
 
 	it := client.Buckets(conf.Context, conf.Project)
 	for {
 		pair, err := it.Next()
 		if errors.Is(err, iterator.Done) {
-			return nil, nil
+			return nil, nil //nolint:nilnil // need to return nil here
 		}
 		if err != nil {
 			return nil, fmt.Errorf("could not list buckets: %w", err)

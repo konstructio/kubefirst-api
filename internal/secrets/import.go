@@ -46,7 +46,7 @@ func ImportClusterIfEmpty() (pkgtypes.Cluster, error) {
 		return cluster, fmt.Errorf("error marshalling json from secret data: %w", err)
 	}
 
-	err = json.Unmarshal([]byte(jsonData), &cluster)
+	err = json.Unmarshal(jsonData, &cluster)
 	if err != nil {
 		return cluster, fmt.Errorf("unable to cast unmarshalled JSON to cluster type: %w", err)
 	}
@@ -61,7 +61,7 @@ func ImportClusterIfEmpty() (pkgtypes.Cluster, error) {
 		// Create if entry does not exist
 		err = InsertCluster(kcfg.Clientset, cluster)
 		if err != nil {
-			return cluster, fmt.Errorf("error inserting cluster record %v into database: %s", cluster, err)
+			return cluster, fmt.Errorf("error inserting cluster record %v into database: %w", cluster, err)
 		}
 		// log cluster
 		log.Info().Msgf("inserted cluster record to db. adding default services. %s", cluster.ClusterName)

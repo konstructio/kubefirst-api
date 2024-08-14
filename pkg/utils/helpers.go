@@ -18,6 +18,7 @@ func randSeq(n int) string {
 }
 
 func Random(seq int) string {
+	//nolint:staticcheck // will be improved in future iterations
 	rand.Seed(time.Now().UnixNano())
 	return randSeq(seq)
 }

@@ -24,14 +24,14 @@ const (
 // VerifyTokenPermissions compares scope of the provided token to the required
 // scopes for kubefirst functionality
 func VerifyTokenPermissions(gitlabToken string) error {
-	destination := fmt.Sprintf("%s/personal_access_tokens/self", gitlabAPIURL)
+	destination := gitlabAPIURL + "/personal_access_tokens/self"
 	req, err := http.NewRequest(http.MethodGet, destination, nil)
 	if err != nil {
 		log.Error().Msgf("unable to create HTTP request to %q", destination)
 		return fmt.Errorf("unable to create HTTP request to %q", destination)
 	}
 
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", gitlabToken))
+	req.Header.Add("Authorization", "Bearer "+gitlabToken)
 
 	res, err := httpCommon.CustomHTTPClient(false).Do(req)
 	if err != nil {

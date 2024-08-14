@@ -72,7 +72,7 @@ func BootstrapMgmtCluster(clientset kubernetes.Interface, opts BootstrapOptions)
 		{
 			Name:      opts.DNSProvider + "-auth",
 			Namespace: "external-dns",
-			Contents:  map[string]string{fmt.Sprintf("%s-auth", opts.DNSProvider): opts.CloudAuth, "cf-api-token": opts.CloudflareAPIToken},
+			Contents:  map[string]string{opts.DNSProvider + "-auth": opts.CloudAuth, "cf-api-token": opts.CloudflareAPIToken},
 		},
 		{
 			Name:      fmt.Sprintf("%s-secret", opts.CloudProvider),

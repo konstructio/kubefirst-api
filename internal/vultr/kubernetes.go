@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package vultr
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/rs/zerolog/log"
@@ -75,7 +76,7 @@ func (c *Configuration) GetKubernetesAssociatedBlockStorage(clusterName string, 
 // DeleteBlockStorage iterates over target volumes and deletes them
 func (c *Configuration) DeleteBlockStorage(blockStorage []govultr.BlockStorage) error {
 	if len(blockStorage) == 0 {
-		return fmt.Errorf("no block storage resources are available for deletion when calling DeleteBlockStorage")
+		return errors.New("no block storage resources are available for deletion when calling DeleteBlockStorage")
 	}
 
 	for _, blst := range blockStorage {

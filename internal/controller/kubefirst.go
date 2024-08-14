@@ -152,6 +152,7 @@ func (clctrl *ClusterController) CreateVirtualClusters() error {
 		clctrl.UpdateClusterOnError(err.Error())
 		return fmt.Errorf("unable to create default clusters: %w", err)
 	}
+	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {

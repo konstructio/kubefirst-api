@@ -297,6 +297,8 @@ func ReturnStatefulSetObject(clientset *kubernetes.Clientset, matchLabel, matchL
 				log.Error().Msgf("error not ok waiting %s StatefulSet to be created: %s", matchLabelValue, err)
 				return nil, fmt.Errorf("error not ok waiting %s StatefulSet to be created: %w", matchLabelValue, err)
 			}
+
+			//nolint:forcetypeassert // we are confident this is a StatefulSet
 			if event.Object.(*appsv1.StatefulSet).Status.Replicas > 0 {
 				spec, err := clientset.AppsV1().StatefulSets(namespace).List(context.Background(), statefulSetListOptions)
 				if err != nil {
@@ -342,6 +344,8 @@ func WaitForDeploymentReady(clientset *kubernetes.Clientset, deployment *appsv1.
 				log.Error().Msgf("error waiting for Deployment %s in Namespace %s: %s", deployment.Name, deployment.Namespace, err)
 				return false, fmt.Errorf("error waiting for Deployment %q in Namespace %q: %w", deployment.Name, deployment.Namespace, err)
 			}
+
+			//nolint:forcetypeassert // we are confident this is a Deployment
 			if event.
 				Object.(*appsv1.Deployment).
 				Status.ReadyReplicas == configuredReplicas {

@@ -246,7 +246,7 @@ func DeleteDigitaloceanCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Te
 		case "github":
 			tfEnvs = digitaloceanext.GetGithubTerraformEnvs(tfEnvs, cl)
 		case "gitlab":
-			gid, err := strconv.Atoi(fmt.Sprint(cl.GitlabOwnerGroupID))
+			gid, err := strconv.Atoi(strconv.Itoa(cl.GitlabOwnerGroupID))
 			if err != nil {
 				return fmt.Errorf("couldn't convert gitlab group id to int: %w", err)
 			}

@@ -45,12 +45,12 @@ func ResolveAddress(address string) error {
 	httpClient := CustomHTTPClient(false, 10*time.Second)
 	resp, err := httpClient.Get(address) //nolint:noctx // client enforces limits
 	if err != nil {
-		return fmt.Errorf("unable to resolve address %q: %s", address, err)
+		return fmt.Errorf("unable to resolve address %q: %w", address, err)
 	}
 	defer resp.Body.Close()
 
 	if _, err := io.Copy(io.Discard, resp.Body); err != nil {
-		return fmt.Errorf("unable to read response body: %s", err)
+		return fmt.Errorf("unable to read response body: %w", err)
 	}
 
 	return nil

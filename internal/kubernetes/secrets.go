@@ -32,7 +32,7 @@ func CreateSecretsIfNotExist(ctx context.Context, k8s kubernetes.Interface, secr
 				return nil
 			}
 
-			return fmt.Errorf("error retrieving secret %s in namespace %s: %w (%T)", secret.Name, secret.Namespace, err, err)
+			return fmt.Errorf("error retrieving secret %s in namespace %s: %w", secret.Name, secret.Namespace, err)
 		}
 	}
 	return nil

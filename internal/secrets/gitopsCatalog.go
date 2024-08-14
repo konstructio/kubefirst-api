@@ -113,8 +113,15 @@ func UpdateGitopsCatalogApps(clientSet *kubernetes.Clientset) error {
 	} else {
 		catalogApps.Apps = mpapps.Apps
 
-		bytes, _ := json.Marshal(catalogApps)
-		secretValuesMap, _ := ParseJSONToMap(string(bytes))
+		bytes, err := json.Marshal(catalogApps)
+		if err != nil {
+			return fmt.Errorf("error marshalling json: %w", err)
+		}
+
+		secretValuesMap, err := ParseJSONToMap(string(bytes))
+		if err != nil {
+			return fmt.Errorf("error parsing json to map: %w", err)
+		}
 
 		err = k8s.UpdateSecretV2(clientSet, "kubefirst", kubefirstCatalogSecretName, secretValuesMap)
 		if err != nil {

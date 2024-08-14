@@ -270,18 +270,18 @@ func CreateService(cl *pkgtypes.Cluster, serviceName string, appDef *pkgtypes.Gi
 			break
 		}
 		if i == 50 {
-			return fmt.Errorf("cluster %q - error waiting for app %q to be created: %s", clusterName, serviceName, err)
+			return fmt.Errorf("cluster %q - error waiting for app %q to be created: %w", clusterName, serviceName, err)
 		}
 	}
 
 	// Wait for app to be synchronized and healthy
 	for i := 0; i < 50; i++ {
 		if i == 50 {
-			return fmt.Errorf("cluster %q - error waiting for app %q to synchronize: %s", clusterName, serviceName, err)
+			return fmt.Errorf("cluster %q - error waiting for app %q to synchronize: %w", clusterName, serviceName, err)
 		}
 		app, err := argocdClient.ArgoprojV1alpha1().Applications("argocd").Get(context.Background(), serviceName, v1.GetOptions{})
 		if err != nil {
-			return fmt.Errorf("cluster %q - error getting argocd application %q: %s", clusterName, serviceName, err)
+			return fmt.Errorf("cluster %q - error getting argocd application %q: %w", clusterName, serviceName, err)
 		}
 		if app.Status.Sync.Status == v1alpha1.SyncStatusCodeSynced && app.Status.Health.Status == health.HealthStatusHealthy {
 			log.Info().Msgf("cluster %q - app %q synchronized", clusterName, serviceName)
