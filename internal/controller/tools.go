@@ -117,7 +117,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 				toolsDir,
 			)
 			if err != nil {
-				log.Fatal().Msgf("error downloading dependencies: %s", err)
+				log.Error().Msgf("error downloading dependencies: %s", err)
 				return fmt.Errorf("failed to download tools for k3s: %w", err)
 			}
 		}

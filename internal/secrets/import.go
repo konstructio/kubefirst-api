@@ -27,7 +27,11 @@ func ImportClusterIfEmpty() (pkgtypes.Cluster, error) {
 		return cluster, nil
 	}
 
-	kcfg := k8s.CreateKubeConfig(true, "")
+	kcfg, err := k8s.CreateKubeConfig(true, "")
+	if err != nil {
+		return cluster, fmt.Errorf("error creating kubeconfig: %w", err)
+	}
+
 	log.Info().Msg("reading secret kubefirst-initial-state to determine if import is needed")
 	secData, err := k8s.ReadSecretV2Old(kcfg.Clientset, "kubefirst", "kubefirst-initial-state")
 	if err != nil {

@@ -38,7 +38,10 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 		case "akamai", "civo", "digitalocean", "k3s", "vultr":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			if err != nil {
+				return fmt.Errorf("failed to create Kubernetes config: %w", err)
+			}
 		case "google":
 			var err error
 			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))

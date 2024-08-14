@@ -69,16 +69,18 @@ type Config struct {
 }
 
 // GetConfig - load default values from kubefirst installer
-func GetConfig(clusterName string, gitProvider string, gitOwner string, gitProtocol string) *Config {
+func GetConfig(clusterName, gitProvider, gitOwner, gitProtocol string) (*Config, error) {
 	config := Config{}
 
 	if err := env.Parse(&config); err != nil {
 		log.Error().Msgf("something went wrong loading the environment variables: %s", err)
+		return nil, err
 	}
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatal().Msgf("something went wrong getting home path: %s", err)
+		log.Error().Msgf("something went wrong getting home path: %s", err)
+		return nil, err
 	}
 
 	// cGitHost describes which git host to use depending on gitProvider
@@ -110,7 +112,7 @@ func GetConfig(clusterName string, gitProvider string, gitOwner string, gitProto
 	config.TerraformClient = fmt.Sprintf("%s/.k1/%s/tools/terraform", homeDir, clusterName)
 	config.ToolsDir = fmt.Sprintf("%s/.k1/%s/tools", homeDir, clusterName)
 
-	return &config
+	return &config, nil
 }
 
 type GitopsDirectoryValues struct {

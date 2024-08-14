@@ -296,7 +296,10 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 	case "aws":
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 	case "akamai", "civo", "digitalocean", "k3s", "vultr":
-		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		if err != nil {
+			return fmt.Errorf("failed to create Kubernetes config during secrets bootstrap: %w", err)
+		}
 	case "google":
 		var err error
 		kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
@@ -410,7 +413,11 @@ func (clctrl *ClusterController) ContainerRegistryAuth() (string, error) {
 
 		return containerRegistryAuthToken, nil
 	case "civo", "digitalocean", "vultr", "k3s":
-		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		var err error
+		kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		if err != nil {
+			return "", fmt.Errorf("error creating Kubernetes config during registry auth: %w", err)
+		}
 	case "google":
 		var err error
 		kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
@@ -446,7 +453,11 @@ func (clctrl *ClusterController) WaitForClusterReady() error {
 	case "aws":
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 	case "civo", "digitalocean", "vultr", "k3s":
-		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		var err error
+		kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		if err != nil {
+			return fmt.Errorf("error creating Kubernetes config while waiting for cluster ready: %w", err)
+		}
 	case "google":
 		var err error
 		kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))

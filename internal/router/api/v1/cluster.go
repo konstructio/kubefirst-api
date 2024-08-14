@@ -544,7 +544,7 @@ func PostCreateCluster(c *gin.Context) {
 		go func() {
 			err = k3s.CreateK3sCluster(&clusterDefinition)
 			if err != nil {
-				log.Fatal().Msg(err.Error())
+				log.Error().Msg(err.Error())
 			}
 		}()
 
@@ -769,7 +769,8 @@ func PostImportCluster(c *gin.Context) {
 
 	err = gitShim.PrepareMgmtCluster(cluster)
 	if err != nil {
-		log.Fatal().Msgf("error cloning repository: %s", err)
+		log.Error().Msgf("error cloning repository: %s", err)
+		return
 	}
 
 	if err != nil {
@@ -859,13 +860,14 @@ func PostCreateVcluster(c *gin.Context) {
 
 	cluster, err := secrets.GetCluster(kcfg.Clientset, clusterName)
 	if err != nil {
-		log.Fatal().Msg(err.Error())
+		log.Error().Msg(err.Error())
+		return
 	}
 
 	go func() {
 		err = environments.CreateDefaultClusters(cluster)
 		if err != nil {
-			log.Fatal().Msgf("Error creating default environments %s", err.Error())
+			log.Error().Msgf("Error creating default environments %s", err.Error())
 		}
 	}()
 

@@ -73,7 +73,10 @@ func (clctrl *ClusterController) InitializeVault() error {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 		case "akamai", "civo", "digitalocean", "k3s", "vultr":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			if err != nil {
+				return fmt.Errorf("failed to create Kubernetes config for vault initialization: %w", err)
+			}
 			vaultHandlerPath = "github.com:kubefirst/manifests.git/vault-handler/replicas-3"
 		case "google":
 			var err error
@@ -167,7 +170,10 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 		case "akamai", "civo", "digitalocean", "k3s", "vultr":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			if err != nil {
+				return fmt.Errorf("failed to create Kubernetes config for vault terraform execution: %w", err)
+			}
 		case "google":
 			var err error
 			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
@@ -297,7 +303,10 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 	case "aws":
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 	case "akamai", "civo", "digitalocean", "k3s", "vultr":
-		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		if err != nil {
+			return fmt.Errorf("failed to create Kubernetes config: %w", err)
+		}
 	case "google":
 		var err error
 		kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
@@ -356,7 +365,8 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 		log.Info().Msg("writing google specific secrets to vault secret store")
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
-			log.Fatal().Msgf("error getting home path: %s", err)
+			log.Error().Msgf("error getting home path: %s", err)
+			return fmt.Errorf("failed to get home path: %w", err)
 		}
 		if err := writeGoogleSecrets(homeDir, vaultClient); err != nil {
 			log.Error().Msgf("error writing Google secrets to vault: %s", err)
@@ -377,7 +387,11 @@ func (clctrl *ClusterController) WaitForVault() error {
 	case "aws":
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 	case "akamai", "civo", "digitalocean", "k3s", "vultr":
-		kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		var err error
+		kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		if err != nil {
+			return fmt.Errorf("failed to create Kubernetes config: %w", err)
+		}
 	case "google":
 		var err error
 		kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))

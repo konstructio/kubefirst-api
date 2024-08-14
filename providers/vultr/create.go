@@ -148,7 +148,10 @@ func CreateVultrCluster(definition *pkgtypes.ClusterDefinition) error {
 	}
 
 	// Create kubeconfig client
-	kcfg := k8s.CreateKubeConfig(false, ctrl.ProviderConfig.Kubeconfig)
+	kcfg, err := k8s.CreateKubeConfig(false, ctrl.ProviderConfig.Kubeconfig)
+	if err != nil {
+		return fmt.Errorf("failed to create kubeconfig: %w", err)
+	}
 
 	// SetupMinioStorage(kcfg, ctrl.ProviderConfig.K1Dir, ctrl.GitProvider)
 

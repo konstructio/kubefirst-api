@@ -313,7 +313,10 @@ func UpdateTerraformS3BackendForK8sAddress(k1Dir string) error {
 // UpdateTerraformS3BackendForLocalhostAddress during the destroy process, Terraform must reach port-forwarded resources
 // to be able to communicate with the services.
 func UpdateTerraformS3BackendForLocalhostAddress() error {
-	config := configs.ReadConfig()
+	config, err := configs.ReadConfig()
+	if err != nil {
+		return fmt.Errorf("unable to read config file: %w", err)
+	}
 
 	// todo: create a function for file content replacement
 	vaultMainFile := fmt.Sprintf("%s/gitops/terraform/vault/main.tf", config.K1FolderPath)

@@ -100,7 +100,8 @@ func detokenizeGitops(tokens *GitopsDirectoryValues, gitProtocol string, useClou
 				var terraformServersPrivateIpsList string
 				jsonBytes, err := json.Marshal(tokens.K3sServersPrivateIps)
 				if err != nil {
-					log.Fatal().Msgf("detokenise issue on %s", err)
+					log.Error().Msgf("detokenise issue on %s", err)
+					return err
 				}
 				terraformServersPrivateIpsList = string(jsonBytes)
 				newContents = strings.ReplaceAll(newContents, "<K3S_SERVERS_PRIVATE_IPS>", terraformServersPrivateIpsList)
@@ -108,7 +109,8 @@ func detokenizeGitops(tokens *GitopsDirectoryValues, gitProtocol string, useClou
 				var terraformServersPublicIpsList string
 				jsonBytes2, err := json.Marshal(tokens.K3sServersPublicIps)
 				if err != nil {
-					log.Fatal().Msgf("detokenise issue on %s", err)
+					log.Error().Msgf("detokenise issue on %s", err)
+					return err
 				}
 				terraformServersPublicIpsList = string(jsonBytes2)
 				newContents = strings.ReplaceAll(newContents, "<K3S_SERVERS_PUBLIC_IPS>", terraformServersPublicIpsList)
@@ -116,7 +118,8 @@ func detokenizeGitops(tokens *GitopsDirectoryValues, gitProtocol string, useClou
 				var terraformServersArgsList string
 				jsonBytes3, err := json.Marshal(tokens.K3sServersArgs)
 				if err != nil {
-					log.Fatal().Msgf("detokenise issue on %s", err)
+					log.Error().Msgf("detokenise issue on %s", err)
+					return err
 				}
 				terraformServersArgsList = string(jsonBytes3)
 				newContents = strings.ReplaceAll(newContents, "<K3S_SERVERS_ARGS>", terraformServersArgsList)

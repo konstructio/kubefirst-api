@@ -147,7 +147,10 @@ func GetKubernetesClient(clusterName string) *k8s.KubernetesClient {
 		kubeconfigPath = env.K1LocalKubeconfigPath
 	}
 
-	kcfg := k8s.CreateKubeConfig(inCluster, kubeconfigPath)
+	kcfg, err := k8s.CreateKubeConfig(inCluster, kubeconfigPath)
+	if err != nil {
+		log.Error().Msg(fmt.Errorf("error creating kubeconfig: %w", err).Error())
+	}
 
 	return kcfg
 }

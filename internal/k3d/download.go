@@ -15,7 +15,10 @@ import (
 )
 
 func DownloadTools(clusterName string, gitProvider string, gitOwner string, toolsDir string, gitProtocol string) error {
-	config := GetConfig(clusterName, gitProvider, gitOwner, gitProtocol)
+	config, err := GetConfig(clusterName, gitProvider, gitOwner, gitProtocol)
+	if err != nil {
+		return fmt.Errorf("error while trying to get config: %w", err)
+	}
 
 	if _, err := os.Stat(toolsDir); os.IsNotExist(err) {
 		err := os.MkdirAll(toolsDir, os.ModePerm)
@@ -31,7 +34,7 @@ func DownloadTools(clusterName string, gitProvider string, gitOwner string, tool
 		LocalhostOS,
 		LocalhostARCH,
 	)
-	err := downloadManager.DownloadFile(config.K3dClient, k3dDownloadURL)
+	err = downloadManager.DownloadFile(config.K3dClient, k3dDownloadURL)
 	if err != nil {
 		return fmt.Errorf("error while trying to download k3d: %w", err)
 	}

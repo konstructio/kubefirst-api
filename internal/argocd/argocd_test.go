@@ -22,8 +22,12 @@ func TestArgoCDLivenessIntegration(t *testing.T) {
 		t.Skip("skipping integration test")
 	}
 
-	config := configs.ReadConfig()
-	err := pkg.SetupViper(config, false)
+	config, err := configs.ReadConfig()
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = pkg.SetupViper(config, false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -56,8 +60,12 @@ func TestArgoWorkflowLivenessIntegration(t *testing.T) {
 		t.Skip("skipping integration test")
 	}
 
-	config := configs.ReadConfig()
-	err := pkg.SetupViper(config, false)
+	config, err := configs.ReadConfig()
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = pkg.SetupViper(config, false)
 	if err != nil {
 		t.Error(err)
 	}

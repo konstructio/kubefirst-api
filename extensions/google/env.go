@@ -20,14 +20,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func readVaultTokenFromSecret(clientset *kubernetes.Clientset) string {
+func readVaultTokenFromSecret(clientset *kubernetes.Clientset) (string, error) {
 	existingKubernetesSecret, err := k8s.ReadSecretV2(clientset, vault.VaultNamespace, vault.VaultSecretName)
 	if err != nil || existingKubernetesSecret == nil {
-		log.Printf("Error reading existing Secret data: %s", err)
-		return ""
+		log.Error().Msgf("Error reading existing Secret data: %s", err)
+		return "", err
 	}
 
-	return existingKubernetesSecret["root-token"]
+	return existingKubernetesSecret["root-token"], nil
 }
 
 func GetGoogleTerraformEnvs(envs map[string]string, cl *pkgtypes.Cluster) map[string]string {
@@ -73,7 +73,11 @@ func GetGitlabTerraformEnvs(envs map[string]string, gid int, cl *pkgtypes.Cluste
 }
 
 func GetUsersTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster, envs map[string]string) map[string]string {
-	envs["VAULT_TOKEN"] = readVaultTokenFromSecret(clientset)
+	vaultToken, err := readVaultTokenFromSecret(clientset)
+	if err != nil {
+		return envs
+	}
+	envs["VAULT_TOKEN"] = vaultToken
 	envs["VAULT_ADDR"] = providerConfigs.VaultPortForwardURL
 	envs[fmt.Sprintf("%s_TOKEN", strings.ToUpper(cl.GitProvider))] = cl.GitAuth.Token
 	envs[fmt.Sprintf("%s_OWNER", strings.ToUpper(cl.GitProvider))] = cl.GitAuth.Owner
@@ -87,14 +91,18 @@ func GetUsersTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster
 }
 
 func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster, envs map[string]string) map[string]string {
+	vaultToken, err := readVaultTokenFromSecret(clientset)
+	if err != nil {
+		return envs
+	}
 	envs[fmt.Sprintf("%s_TOKEN", strings.ToUpper(cl.GitProvider))] = cl.GitAuth.Token
 	envs[fmt.Sprintf("%s_OWNER", strings.ToUpper(cl.GitProvider))] = cl.GitAuth.Owner
 	envs["TF_VAR_email_address"] = cl.AlertsEmail
 	envs["TF_VAR_vault_addr"] = providerConfigs.VaultPortForwardURL
-	envs["TF_VAR_vault_token"] = readVaultTokenFromSecret(clientset)
+	envs["TF_VAR_vault_token"] = vaultToken
 	envs[fmt.Sprintf("TF_VAR_%s_token", cl.GitProvider)] = cl.GitAuth.Token
 	envs["VAULT_ADDR"] = providerConfigs.VaultPortForwardURL
-	envs["VAULT_TOKEN"] = readVaultTokenFromSecret(clientset)
+	envs["VAULT_TOKEN"] = vaultToken
 	envs["TF_VAR_civo_token"] = cl.CivoAuth.Token
 	envs["TF_VAR_atlantis_repo_webhook_secret"] = cl.AtlantisWebhookSecret
 	envs["TF_VAR_atlantis_repo_webhook_url"] = cl.AtlantisWebhookURL

@@ -139,7 +139,10 @@ func DeleteDigitaloceanCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Te
 
 	// Should be a "cluster was created" check
 	if cl.CloudTerraformApplyCheck {
-		kcfg := k8s.CreateKubeConfig(false, config.Kubeconfig)
+		kcfg, err := k8s.CreateKubeConfig(false, config.Kubeconfig)
+		if err != nil {
+			return fmt.Errorf("error creating kubeconfig: %w", err)
+		}
 
 		// Remove applications with external dependencies
 		removeArgoCDApps := []string{
@@ -173,7 +176,10 @@ func DeleteDigitaloceanCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Te
 
 	if cl.CloudTerraformApplyCheck || cl.CloudTerraformApplyFailedCheck {
 		if !cl.ArgoCDDeleteRegistryCheck {
-			kcfg := k8s.CreateKubeConfig(false, config.Kubeconfig)
+			kcfg, err := k8s.CreateKubeConfig(false, config.Kubeconfig)
+			if err != nil {
+				return fmt.Errorf("error creating kubeconfig: %w", err)
+			}
 
 			log.Info().Msg("destroying digitalocean resources with terraform")
 

@@ -123,7 +123,10 @@ func DeleteAkamaiCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 
 	if cl.CloudTerraformApplyCheck || cl.CloudTerraformApplyFailedCheck {
 		if !cl.ArgoCDDeleteRegistryCheck {
-			kcfg := k8s.CreateKubeConfig(false, config.Kubeconfig)
+			kcfg, err := k8s.CreateKubeConfig(false, config.Kubeconfig)
+			if err != nil {
+				return fmt.Errorf("error creating kubeconfig: %w", err)
+			}
 
 			log.Info().Msg("destroying civo resources with terraform")
 

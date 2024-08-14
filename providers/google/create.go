@@ -37,12 +37,14 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 	// TODO Validate Google region
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatal().Msgf("error getting home path: %s", err)
+		log.Error().Msgf("error getting home path: %s", err)
+		return fmt.Errorf("error getting home path: %w", err)
 	}
 
 	err = google.WriteGoogleApplicationCredentialsFile(definition.GoogleAuth.KeyFile, homeDir)
 	if err != nil {
-		log.Fatal().Msgf("error writing google application credentials file: %s", err)
+		log.Error().Msgf("error writing google application credentials file: %s", err)
+		return fmt.Errorf("error writing google application credentials file: %w", err)
 	}
 
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir))

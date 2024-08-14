@@ -122,7 +122,10 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryE
 
 	if cl.CloudTerraformApplyCheck || cl.CloudTerraformApplyFailedCheck {
 		if !cl.ArgoCDDeleteRegistryCheck {
-			kcfg := k8s.CreateKubeConfig(false, config.Kubeconfig)
+			kcfg, err := k8s.CreateKubeConfig(false, config.Kubeconfig)
+			if err != nil {
+				return fmt.Errorf("error creating kubeconfig for cluster %s: %w", cl.ClusterName, err)
+			}
 
 			log.Info().Msg("destroying civo resources with terraform")
 

@@ -140,7 +140,10 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 	}
 
 	if !cl.ArgoCDDeleteRegistryCheck {
-		kcfg := k8s.CreateKubeConfig(false, config.Kubeconfig)
+		kcfg, err := k8s.CreateKubeConfig(false, config.Kubeconfig)
+		if err != nil {
+			return fmt.Errorf("error creating kubeconfig for cluster %q: %w", cl.ClusterName, err)
+		}
 
 		// Remove applications with external dependencies
 		removeArgoCDApps := []string{
@@ -175,7 +178,10 @@ func DeleteVultrCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetry
 
 	if cl.CloudTerraformApplyCheck || cl.CloudTerraformApplyFailedCheck {
 		if !cl.CloudTerraformApplyFailedCheck {
-			kcfg := k8s.CreateKubeConfig(false, config.Kubeconfig)
+			kcfg, err := k8s.CreateKubeConfig(false, config.Kubeconfig)
+			if err != nil {
+				return fmt.Errorf("error creating kubeconfig for cluster %q: %w", cl.ClusterName, err)
+			}
 
 			log.Info().Msg("destroying vultr resources with terraform")
 

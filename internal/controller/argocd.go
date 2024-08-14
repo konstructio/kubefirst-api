@@ -37,7 +37,10 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 		case "akamai", "civo", "digitalocean", "k3s", "vultr":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			if err != nil {
+				return fmt.Errorf("failed to create Kubernetes config: %w", err)
+			}
 		case "google":
 			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
 			if err != nil {
@@ -88,7 +91,10 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 		case "akamai", "civo", "digitalocean", "k3s", "vultr":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			if err != nil {
+				return fmt.Errorf("failed to create Kubernetes config: %w", err)
+			}
 		case "google":
 			var err error
 			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
@@ -183,7 +189,10 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 		case "akamai", "civo", "digitalocean", "k3s", "vultr":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			if err != nil {
+				return fmt.Errorf("failed to create Kubernetes config: %w", err)
+			}
 		case "google":
 			var err error
 			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
@@ -218,7 +227,10 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		)
 
 		if clctrl.Kcfg == nil {
-			clctrl.Kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			clctrl.Kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			if err != nil {
+				return fmt.Errorf("failed to create Kubernetes config: %w", err)
+			}
 		}
 
 		err = RestartDeployment(context.Background(), clctrl.Kcfg.Clientset, "argocd", "argocd-applicationset-controller")

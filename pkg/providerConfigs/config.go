@@ -70,7 +70,7 @@ func GetConfig(
 ) (*ProviderConfig, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatal().Msgf("unable to get current user's home directory: %s", err)
+		log.Error().Msgf("unable to get current user's home directory: %s", err)
 		return nil, fmt.Errorf("unable to get current user's home directory: %w", err)
 	}
 

@@ -123,16 +123,18 @@ type Config struct {
 }
 
 // ReadConfig - load default values from kubefirst installer
-func ReadConfig() *Config {
+func ReadConfig() (*Config, error) {
 	config := Config{}
 
 	if err := env.Parse(&config); err != nil {
-		log.Fatal().Msgf("something went wrong loading the environment variables: %s", err)
+		log.Error().Msgf("something went wrong loading the environment variables: %s", err)
+		return nil, err
 	}
 
 	homePath, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatal().Msgf("something went wrong getting home path: %s", err)
+		log.Error().Msgf("something went wrong getting home path: %s", err)
+		return nil, err
 	}
 
 	config.HomePath = homePath
@@ -213,5 +215,5 @@ func ReadConfig() *Config {
 		log.Error().Msgf("unable to set AWS_SDK_LOAD_CONFIG environment value, error is: %v", err)
 	}
 
-	return &config
+	return &config, nil
 }

@@ -22,14 +22,14 @@ func WriteGoogleApplicationCredentialsFile(googleApplicationCredentials, homeDir
 
 	_, err = file.WriteString(googleApplicationCredentials)
 	if err != nil {
-		log.Fatal().Msg("error writing google application credentials file")
+		log.Error().Msg("error writing google application credentials file")
 		return fmt.Errorf("failed to write to Google application credentials file: %w", err)
 	}
 
 	// Close the file writer.
 	err = file.Close()
 	if err != nil {
-		log.Fatal().Msg("error closing file writer")
+		log.Error().Msg("error closing file writer")
 		return fmt.Errorf("failed to close Google application credentials file writer: %w", err)
 	}
 	return nil

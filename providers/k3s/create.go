@@ -149,7 +149,10 @@ func CreateK3sCluster(definition *pkgtypes.ClusterDefinition) error {
 	}
 
 	// Create kubeconfig client
-	kcfg := k8s.CreateKubeConfig(false, ctrl.ProviderConfig.Kubeconfig)
+	kcfg, err := k8s.CreateKubeConfig(false, ctrl.ProviderConfig.Kubeconfig)
+	if err != nil {
+		return fmt.Errorf("error creating kubeconfig: %w", err)
+	}
 
 	// SetupMinioStorage(kcfg, ctrl.ProviderConfig.K1Dir, ctrl.GitProvider)
 
