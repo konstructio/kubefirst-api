@@ -7,6 +7,8 @@ See the LICENSE file for more details.
 package errors
 
 import (
+	"fmt"
+
 	"github.com/kubefirst/kubefirst-api/internal/constants"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
@@ -23,7 +25,7 @@ func HandleClusterError(cl *pkgtypes.Cluster, condition string) error {
 
 	err := secrets.UpdateCluster(kcfg.Clientset, *cl)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to update cluster %q: %w", cl.ClusterName, err)
 	}
 
 	return nil

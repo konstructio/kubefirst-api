@@ -29,7 +29,7 @@ import (
 func (clctrl *ClusterController) GitInit() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster: %w", err)
 	}
 
 	if !cl.GitInitCheck {
@@ -46,13 +46,13 @@ func (clctrl *ClusterController) GitInit() error {
 		}
 		err := gitShim.InitializeGitProvider(&initGitParameters)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to initialize git provider: %w", err)
 		}
 
 		clctrl.Cluster.GitInitCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster after git initialization: %w", err)
 		}
 	}
 
@@ -63,7 +63,7 @@ func (clctrl *ClusterController) GitInit() error {
 func (clctrl *ClusterController) RunGitTerraform() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster for terraform execution: %w", err)
 	}
 
 	// // * create teams and repositories in github
@@ -123,7 +123,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				msg := fmt.Sprintf("error creating %s resources with terraform %s: %s", clctrl.GitProvider, tfEntrypoint, err)
 				log.Error().Msg(msg)
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.GitTerraformApplyFailed, err.Error())
-				return fmt.Errorf(msg)
+				return fmt.Errorf("failed to apply terraform for git resources: %q", msg)
 			}
 		}
 
@@ -133,7 +133,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 		clctrl.Cluster.GitTerraformApplyCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster after terraform application: %w", err)
 		}
 	}
 
@@ -154,7 +154,7 @@ func (clctrl *ClusterController) GetRepoURL() (string, error) {
 	case "gitlab":
 		gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitAuth.Token, clctrl.GitAuth.Owner)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("failed to create GitLab client: %w", err)
 		}
 		// Format git url based on full path to group
 		switch clctrl.ProviderConfig.GitProtocol {

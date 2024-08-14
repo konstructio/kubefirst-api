@@ -22,7 +22,7 @@ func DetokenizeGitGitops(path string, tokens *GitopsDirectoryValues, gitProtocol
 	fn := detokenizeGitops(tokens, gitProtocol, useCloudflareOriginIssuer)
 	err := filepath.Walk(path, fn)
 	if err != nil {
-		return fmt.Errorf("error walking path: %w", err)
+		return fmt.Errorf("error walking path %q: %w", path, err)
 	}
 
 	return nil
@@ -34,7 +34,7 @@ func detokenizeGitops(tokens *GitopsDirectoryValues, gitProtocol string, useClou
 			return filepath.SkipDir
 		}
 		if err != nil {
-			return err
+			return fmt.Errorf("error accessing file info for %q: %w", path, err)
 		}
 
 		if fi.IsDir() {
@@ -49,7 +49,7 @@ func detokenizeGitops(tokens *GitopsDirectoryValues, gitProtocol string, useClou
 		if !strings.Contains(path, "/.git/") {
 			read, err := os.ReadFile(path)
 			if err != nil {
-				return err
+				return fmt.Errorf("error reading file %q: %w", path, err)
 			}
 
 			var fullDomainName string
@@ -203,7 +203,7 @@ func detokenizeGitops(tokens *GitopsDirectoryValues, gitProtocol string, useClou
 
 			err = os.WriteFile(path, []byte(newContents), 0)
 			if err != nil {
-				return err
+				return fmt.Errorf("error writing file %q: %w", path, err)
 			}
 		}
 
@@ -216,7 +216,7 @@ func DetokenizeAdditionalPath(path string, tokens *GitopsDirectoryValues) error 
 	fn := detokenizeAdditionalPath(tokens)
 	err := filepath.Walk(path, fn)
 	if err != nil {
-		return err
+		return fmt.Errorf("error walking additional path %q: %w", path, err)
 	}
 
 	return nil
@@ -226,7 +226,7 @@ func DetokenizeAdditionalPath(path string, tokens *GitopsDirectoryValues) error 
 func detokenizeAdditionalPath(tokens *GitopsDirectoryValues) filepath.WalkFunc {
 	return filepath.WalkFunc(func(path string, fi os.FileInfo, err error) error {
 		if err != nil {
-			return err
+			return fmt.Errorf("error accessing file info for %q: %w", path, err)
 		}
 
 		if fi.IsDir() {
@@ -237,7 +237,7 @@ func detokenizeAdditionalPath(tokens *GitopsDirectoryValues) filepath.WalkFunc {
 		if !strings.Contains(path, "/.git/") {
 			read, err := os.ReadFile(path)
 			if err != nil {
-				return err
+				return fmt.Errorf("error reading file %q: %w", path, err)
 			}
 
 			newContents := string(read)
@@ -245,7 +245,7 @@ func detokenizeAdditionalPath(tokens *GitopsDirectoryValues) filepath.WalkFunc {
 
 			err = os.WriteFile(path, []byte(newContents), 0)
 			if err != nil {
-				return err
+				return fmt.Errorf("error writing file %q: %w", path, err)
 			}
 		}
 
@@ -258,7 +258,7 @@ func DetokenizeGitMetaphor(path string, tokens *MetaphorTokenValues) error {
 	fn := detokenizeGitopsMetaphor(tokens)
 	err := filepath.Walk(path, fn)
 	if err != nil {
-		return err
+		return fmt.Errorf("error walking metaphor path %q: %w", path, err)
 	}
 	return nil
 }
@@ -267,7 +267,7 @@ func DetokenizeGitMetaphor(path string, tokens *MetaphorTokenValues) error {
 func detokenizeGitopsMetaphor(tokens *MetaphorTokenValues) filepath.WalkFunc {
 	return filepath.WalkFunc(func(path string, fi os.FileInfo, err error) error {
 		if err != nil {
-			return err
+			return fmt.Errorf("error accessing file info for %q: %w", path, err)
 		}
 
 		if fi.IsDir() {
@@ -278,7 +278,7 @@ func detokenizeGitopsMetaphor(tokens *MetaphorTokenValues) filepath.WalkFunc {
 		if !strings.Contains(path, "/.git/") {
 			read, err := os.ReadFile(path)
 			if err != nil {
-				return err
+				return fmt.Errorf("error reading file %q: %w", path, err)
 			}
 
 			// todo reduce to terraform tokens by moving to helm chart?
@@ -293,7 +293,7 @@ func detokenizeGitopsMetaphor(tokens *MetaphorTokenValues) filepath.WalkFunc {
 
 			err = os.WriteFile(path, []byte(newContents), 0)
 			if err != nil {
-				return err
+				return fmt.Errorf("error writing file %q: %w", path, err)
 			}
 		}
 
