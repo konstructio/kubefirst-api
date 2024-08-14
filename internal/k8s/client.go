@@ -8,6 +8,7 @@ package k8s
 
 import (
 	// b64 "encoding/base64"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -36,13 +37,13 @@ func CreateKubeConfig(inCluster bool, kubeConfigPath string) (*KubernetesClient,
 		config, err := rest.InClusterConfig()
 		if err != nil {
 			log.Errorf("error creating kubernetes config: %s", err)
-			return nil, err
+			return nil, fmt.Errorf("error creating kubernetes config: %s", err)
 		}
 
 		clientset, err := kubernetes.NewForConfig(config)
 		if err != nil {
 			log.Errorf("error creating kubernetes client: %s", err)
-			return nil, err
+			return nil, fmt.Errorf("error creating kubernetes client: %s", err)
 		}
 
 		return &KubernetesClient{
@@ -69,14 +70,14 @@ func CreateKubeConfig(inCluster bool, kubeConfigPath string) (*KubernetesClient,
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		log.Errorf("unable to locate kubeconfig file - checked path: %s", kubeconfig)
-		return nil, err
+		return nil, fmt.Errorf("unable to locate kubeconfig file - checked path: %s", kubeconfig)
 	}
 
 	// Create clientset, which is used to run operations against the API
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		log.Errorf("error creating kubernetes client: %s", err)
-		return nil, err
+		return nil, fmt.Errorf("error creating kubernetes client: %s", err)
 	}
 
 	return &KubernetesClient{

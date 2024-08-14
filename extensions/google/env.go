@@ -24,7 +24,7 @@ func readVaultTokenFromSecret(clientset *kubernetes.Clientset) (string, error) {
 	existingKubernetesSecret, err := k8s.ReadSecretV2(clientset, vault.VaultNamespace, vault.VaultSecretName)
 	if err != nil || existingKubernetesSecret == nil {
 		log.Error().Msgf("Error reading existing Secret data: %s", err)
-		return "", err
+		return "", fmt.Errorf("error reading existing Secret data: %w", err)
 	}
 
 	return existingKubernetesSecret["root-token"], nil
