@@ -25,7 +25,7 @@ const letsDebugHost = "https://letsdebug.net/certwatch-query"
 // CheckCertificateUsage polls letsdebug to get information about used certificates
 func CheckCertificateUsage(domain string) error {
 	// Retrieve response from letsdebug regarding used certificates
-	req, err := http.NewRequest("GET", letsDebugHost, nil)
+	req, err := http.NewRequest(http.MethodGet, letsDebugHost, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create HTTP request for certificate usage: %w", err)
 	}

@@ -239,7 +239,7 @@ func AwaitHostNTimes(url string, times int, gracePeriod time.Duration) {
 		}
 		defer resp.Body.Close()
 
-		if resp.StatusCode == 200 {
+		if resp.StatusCode == http.StatusOK {
 			log.Printf("%s resolved, %s second grace period required...", url, gracePeriod)
 			time.Sleep(time.Second * gracePeriod)
 			return

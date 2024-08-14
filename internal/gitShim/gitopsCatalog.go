@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 
 	"github.com/google/go-github/v52/github"
 )
@@ -125,7 +126,7 @@ func (gh *GitHubClient) readFileContents(content *github.RepositoryContent) ([]b
 	}
 	defer rc.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("error downloading file contents: %d", resp.StatusCode)
 	}
 
