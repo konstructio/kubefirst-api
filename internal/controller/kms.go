@@ -20,7 +20,7 @@ import (
 func (clctrl *ClusterController) DetokenizeKMSKeyID() error {
 	cl, err := clctrl.GetCurrentClusterRecord()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get current cluster record: %w", err)
 	}
 
 	if !cl.AWSKMSKeyDetokenizedCheck {
@@ -31,17 +31,17 @@ func (clctrl *ClusterController) DetokenizeKMSKeyID() error {
 		// KMS
 		gitopsRepo, err := git.PlainOpen(clctrl.ProviderConfig.GitopsDir)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to open gitops repository: %w", err)
 		}
 		awsKmsKeyID, err := clctrl.AwsClient.GetKmsKeyID(fmt.Sprintf("alias/vault_%s", clctrl.ClusterName))
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get KMS key ID: %w", err)
 		}
 
 		clctrl.Cluster.AWSKMSKeyID = awsKmsKeyID
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster with KMS key ID: %w", err)
 		}
 
 		var registryPath string
@@ -66,12 +66,12 @@ func (clctrl *ClusterController) DetokenizeKMSKeyID() error {
 			"<AWS_KMS_KEY_ID>",
 			awsKmsKeyID,
 		); err != nil {
-			return err
+			return fmt.Errorf("failed to replace file content in application.yaml: %w", err)
 		}
 
 		err = gitClient.Commit(gitopsRepo, "committing detokenized kms key")
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to commit detokenized KMS key: %w", err)
 		}
 
 		err = gitopsRepo.Push(&git.PushOptions{
@@ -82,13 +82,13 @@ func (clctrl *ClusterController) DetokenizeKMSKeyID() error {
 			},
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to push changes to repository: %w", err)
 		}
 
 		clctrl.Cluster.AWSKMSKeyDetokenizedCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster after detokenizing KMS key: %w", err)
 		}
 	}
 

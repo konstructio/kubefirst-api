@@ -28,7 +28,7 @@ import (
 func (clctrl *ClusterController) RepositoryPrep() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return fmt.Errorf("error getting cluster: %w", err)
+		return fmt.Errorf("error getting cluster for %q: %w", clctrl.ClusterName, err)
 	}
 
 	useCloudflareOriginIssuer := false
@@ -62,7 +62,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				useCloudflareOriginIssuer,
 			)
 			if err != nil {
-				return fmt.Errorf("error preparing git repositories: %w", err)
+				return fmt.Errorf("error preparing git repositories for akamai: %w", err)
 			}
 		case "aws":
 			err := providerConfigs.PrepareGitRepositories(
@@ -84,7 +84,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				useCloudflareOriginIssuer,
 			)
 			if err != nil {
-				return fmt.Errorf("error preparing git repositories: %w", err)
+				return fmt.Errorf("error preparing git repositories for AWS: %w", err)
 			}
 		case "civo":
 			err := providerConfigs.PrepareGitRepositories(
@@ -106,7 +106,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				useCloudflareOriginIssuer,
 			)
 			if err != nil {
-				return fmt.Errorf("error preparing git repositories: %w", err)
+				return fmt.Errorf("error preparing git repositories for Civo: %w", err)
 			}
 		case "google":
 			err := providerConfigs.PrepareGitRepositories(
@@ -128,7 +128,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				useCloudflareOriginIssuer,
 			)
 			if err != nil {
-				return fmt.Errorf("error preparing git repositories: %w", err)
+				return fmt.Errorf("error preparing git repositories for Google: %w", err)
 			}
 		case "digitalocean":
 			err = providerConfigs.PrepareGitRepositories(
@@ -150,7 +150,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				useCloudflareOriginIssuer,
 			)
 			if err != nil {
-				return fmt.Errorf("error preparing git repositories: %w", err)
+				return fmt.Errorf("error preparing git repositories for DigitalOcean: %w", err)
 			}
 		case "vultr":
 			err = providerConfigs.PrepareGitRepositories(
@@ -172,7 +172,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				useCloudflareOriginIssuer,
 			)
 			if err != nil {
-				return fmt.Errorf("error preparing git repositories: %w", err)
+				return fmt.Errorf("error preparing git repositories for Vultr: %w", err)
 			}
 
 		case "k3s":
@@ -195,7 +195,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				useCloudflareOriginIssuer,
 			)
 			if err != nil {
-				return fmt.Errorf("error preparing git repositories: %w", err)
+				return fmt.Errorf("error preparing git repositories for K3s: %w", err)
 			}
 		}
 
@@ -210,7 +210,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 		clctrl.Cluster.GitopsReadyCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return fmt.Errorf("error updating cluster: %w", err)
+			return fmt.Errorf("error updating cluster %q: %w", clctrl.ClusterName, err)
 		}
 
 		log.Info().Msg("gitops repository initialized")
@@ -223,7 +223,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 func (clctrl *ClusterController) RepositoryPush() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting cluster %q: %w", clctrl.ClusterName, err)
 	}
 
 	if !cl.GitopsPushedCheck {
@@ -233,19 +233,19 @@ func (clctrl *ClusterController) RepositoryPush() error {
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.GitopsRepoPushStarted, "")
 		gitopsRepo, err := git.PlainOpen(gitopsDir)
 		if err != nil {
-			log.Info().Msgf("error opening repo at: %s", gitopsDir)
+			return fmt.Errorf("error opening gitops repo at %q: %w", gitopsDir, err)
 		}
 
 		metaphorRepo, err := git.PlainOpen(metaphorDir)
 		if err != nil {
-			log.Info().Msgf("error opening repo at: %s", metaphorDir)
+			return fmt.Errorf("error opening metaphor repo at %q: %w", metaphorDir, err)
 		}
 
 		// For GitLab, we currently need to add an ssh key to the authenticating user
 		if clctrl.GitProvider == "gitlab" {
 			gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitAuth.Token, clctrl.GitAuth.Owner)
 			if err != nil {
-				return err
+				return fmt.Errorf("error creating gitlab client for %q: %w", clctrl.GitAuth.Owner, err)
 			}
 
 			keys, err := gitlabClient.GetUserSSHKeys()
@@ -269,7 +269,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 				log.Info().Msgf("creating ssh key %s...", keyName)
 				err := gitlabClient.AddUserSSHKey(keyName, clctrl.GitAuth.PublicKey)
 				if err != nil {
-					log.Error().Msgf("error adding ssh key %s: %s", keyName, err.Error())
+					log.Error().Msgf("error adding ssh key %q: %s", keyName, err.Error())
 				}
 			}
 		}
@@ -314,7 +314,7 @@ func (clctrl *ClusterController) RepositoryPush() error {
 		clctrl.Cluster.GitopsPushedCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating cluster %q: %w", clctrl.ClusterName, err)
 		}
 	}
 

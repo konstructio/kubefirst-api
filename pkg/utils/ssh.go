@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/pem"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/kubefirst/kubefirst-api/internal/gitlab"
@@ -20,8 +19,7 @@ func CreateSSHKeyPair() (string, string, error) {
 	// Generate a key pair
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to generate key pair: %v\n", err)
-		return "", "", err
+		return "", "", fmt.Errorf("failed to generate key pair: %w", err)
 	}
 
 	// Encode private key in PEM format
@@ -34,7 +32,7 @@ func CreateSSHKeyPair() (string, string, error) {
 	// Encode public key in OpenSSH authorized_keys format
 	authKey, err := ssh.NewPublicKey(publicKey)
 	if err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("failed to create public key: %w", err)
 	}
 	pubKey := ssh.MarshalAuthorizedKey(authKey)
 
@@ -65,7 +63,7 @@ func EvalSSHKey(req *types.EvalSSHKeyRequest) error {
 					log.Warn().Msgf("ssh key %s already exists and key data has drifted - it will be recreated", keyName)
 					err := gitlabClient.DeleteUserSSHKey(keyName)
 					if err != nil {
-						return fmt.Errorf("error deleting gitlab user ssh key %s: %s", keyName, err)
+						return fmt.Errorf("error deleting gitlab user ssh key %q: %w", keyName, err)
 					}
 				}
 			}

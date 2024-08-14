@@ -28,7 +28,7 @@ import (
 func (clctrl *ClusterController) StateStoreCredentials() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster: %w", err)
 	}
 
 	var stateStoreData pkgtypes.StateStoreCredentials
@@ -42,12 +42,12 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 		case "aws":
 			kubefirstStateStoreBucket, err := clctrl.AwsClient.CreateBucket(clctrl.KubefirstStateStoreBucketName)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to create AWS state store bucket: %w", err)
 			}
 
 			kubefirstArtifactsBucket, err := clctrl.AwsClient.CreateBucket(clctrl.KubefirstArtifactsBucketName)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to create AWS artifacts bucket: %w", err)
 			}
 
 			stateStoreData = pkgtypes.StateStoreCredentials{
@@ -66,7 +66,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 			if err != nil {
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCredentialsCreateFailed, err.Error())
-				return err
+				return fmt.Errorf("failed to update cluster after creating AWS state store: %w", err)
 			}
 		case "civo":
 			civoConf := civo.Configuration{
@@ -78,6 +78,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			if err != nil {
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCredentialsCreateFailed, err.Error())
 				log.Error().Msg(err.Error())
+				return fmt.Errorf("failed to get access credentials from Civo: %w", err)
 			}
 
 			stateStoreData = pkgtypes.StateStoreCredentials{
@@ -102,7 +103,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				msg := fmt.Sprintf("error creating spaces bucket %s: %s", clctrl.KubefirstStateStoreBucketName, err)
 				log.Error().Msg(msg)
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCredentialsCreateFailed, err.Error())
-				return fmt.Errorf(msg)
+				return fmt.Errorf("failed to create DigitalOcean spaces bucket: %w", err)
 			}
 
 			stateStoreData = pkgtypes.StateStoreCredentials{
@@ -117,7 +118,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			}
 			err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to update cluster after creating DigitalOcean spaces bucket: %w", err)
 			}
 
 		case "google":
@@ -128,7 +129,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			if err != nil {
 				msg := fmt.Sprintf("error creating google bucket %s: %s", clctrl.KubefirstStateStoreBucketName, err)
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, msg)
-				return fmt.Errorf(msg)
+				return fmt.Errorf("failed to create Google Cloud Storage bucket: %w", err)
 			}
 
 		case "vultr":
@@ -144,7 +145,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			if err != nil {
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, err.Error())
 				log.Error().Msg(err.Error())
-				return err
+				return fmt.Errorf("failed to create Vultr object storage: %w", err)
 			}
 			err = vultrConf.CreateObjectStorageBucket(vultr.BucketCredentials{
 				AccessKey:       objst.S3AccessKey,
@@ -153,7 +154,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			}, clctrl.KubefirstStateStoreBucketName)
 			if err != nil {
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCredentialsCreateFailed, err.Error())
-				return fmt.Errorf("error creating vultr state storage bucket: %w", err)
+				return fmt.Errorf("failed to create Vultr state storage bucket: %w", err)
 			}
 
 			stateStoreData = pkgtypes.StateStoreCredentials{
@@ -170,7 +171,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			}
 			err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to update cluster after creating Vultr state storage bucket: %w", err)
 			}
 		}
 
@@ -179,7 +180,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster state store credentials: %w", err)
 		}
 
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.CloudCredentialsCheckCompleted, "")
@@ -193,7 +194,7 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 func (clctrl *ClusterController) StateStoreCreate() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster for state store creation: %w", err)
 	}
 
 	if !cl.StateStoreCreateCheck {
@@ -221,7 +222,7 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 			if err != nil {
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, err.Error())
 				log.Error().Msg(err.Error())
-				return err
+				return fmt.Errorf("failed to create Akamai object storage bucket and keys: %w", err)
 			}
 
 			clctrl.Cluster.StateStoreDetails = pkgtypes.StateStoreDetails{
@@ -234,7 +235,7 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 
 			err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to update cluster after creating Akamai state store: %w", err)
 			}
 
 			telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateCompleted, "")
@@ -255,7 +256,7 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 			if err != nil {
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, err.Error())
 				log.Error().Msg(err.Error())
-				return err
+				return fmt.Errorf("failed to create Civo storage bucket: %w", err)
 			}
 
 			stateStoreData := pkgtypes.StateStoreDetails{
@@ -269,7 +270,7 @@ func (clctrl *ClusterController) StateStoreCreate() error {
 
 			err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to update cluster after creating Civo state store: %w", err)
 			}
 
 			telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateCompleted, "")

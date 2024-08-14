@@ -24,7 +24,7 @@ func CreateAkamaiCluster(definition *pkgtypes.ClusterDefinition) error {
 	ctrl := controller.ClusterController{}
 	err := ctrl.InitController(definition)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to initialize controller: %w", err)
 	}
 
 	ctrl.Cluster.InProgress = true
@@ -224,7 +224,7 @@ func CreateAkamaiCluster(definition *pkgtypes.ClusterDefinition) error {
 	ctrl.Cluster.Status = constants.ClusterStatusProvisioned
 	err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
 	if err != nil {
-		return fmt.Errorf("error updating cluster status: %w", err)
+		return fmt.Errorf("error updating cluster status after provisioning: %w", err)
 	}
 
 	log.Info().Msg("cluster creation complete")

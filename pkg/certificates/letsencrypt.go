@@ -27,7 +27,7 @@ func CheckCertificateUsage(domain string) error {
 	// Retrieve response from letsdebug regarding used certificates
 	req, err := http.NewRequest("GET", letsDebugHost, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create HTTP request for certificate usage: %w", err)
 	}
 	query := fmt.Sprintf(`WITH ci AS ( SELECT min(sub.CERTIFICATE_ID) ID, min(sub.ISSUER_CA_ID) ISSUER_CA_ID, sub.CERTIFICATE DER FROM (SELECT * FROM certificate_and_identities cai WHERE plainto_tsquery('%s') @@ identities(cai.CERTIFICATE) AND cai.NAME_VALUE ILIKE ('%%' || '%s' || '%%') LIMIT 10000 ) sub GROUP BY sub.CERTIFICATE ) SELECT ci.ID crtsh_id, ci.DER der FROM ci LEFT JOIN LATERAL ( SELECT min(ctle.ENTRY_TIMESTAMP) ENTRY_TIMESTAMP FROM ct_log_entry ctle WHERE ctle.CERTIFICATE_ID = ci.ID ) le ON TRUE, ca WHERE ci.ISSUER_CA_ID = ca.ID AND x509_notBefore(ci.DER) >= NOW() - INTERVAL '169 hours' AND ci.ISSUER_CA_ID IN (16418, 183267, 183283) ORDER BY le.ENTRY_TIMESTAMP DESC;`,
 		domain,
@@ -39,14 +39,14 @@ func CheckCertificateUsage(domain string) error {
 
 	resp, err := httpCommon.CustomHTTPClient(false).Do(req)
 	if err != nil {
-		return fmt.Errorf("unable to check certificate usage: %w", err)
+		return fmt.Errorf("unable to check certificate usage for domain %q: %w", domain, err)
 	}
 	defer resp.Body.Close()
 
 	// Decode response into struct
 	var output Response
 	if err := json.NewDecoder(resp.Body).Decode(&output); err != nil {
-		return fmt.Errorf("unable to decode response: %w", err)
+		return fmt.Errorf("unable to decode response for domain %q: %w", domain, err)
 	}
 
 	// Iterate over returned certificates
@@ -55,12 +55,12 @@ func CheckCertificateUsage(domain string) error {
 		sDec, err := base64.StdEncoding.DecodeString(result.Der)
 		if err != nil {
 			log.Error().Msgf("unable to decode certificate: %s", err)
-			return fmt.Errorf("unable to decode certificate: %w", err)
+			return fmt.Errorf("unable to decode certificate for domain %q: %w", domain, err)
 		}
 		cert, err := x509.ParseCertificate(sDec)
 		if err != nil {
 			log.Error().Msgf("unable to parse certificate: %s", err)
-			return fmt.Errorf("unable to parse certificate: %w", err)
+			return fmt.Errorf("unable to parse certificate for domain %q: %w", domain, err)
 		}
 		detail := CertificateDetail{
 			Issued:         cert.NotBefore,

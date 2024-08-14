@@ -7,6 +7,8 @@ See the LICENSE file for more details.
 package controller
 
 import (
+	"fmt"
+
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	pkg "github.com/kubefirst/kubefirst-api/pkg/utils"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
@@ -17,7 +19,7 @@ import (
 func (clctrl *ClusterController) InitializeBot() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster: %w", err)
 	}
 
 	if !cl.KbotSetupCheck {
@@ -25,7 +27,7 @@ func (clctrl *ClusterController) InitializeBot() error {
 		if err != nil {
 			log.Error().Msgf("error generating ssh keys: %s", err)
 			telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.KbotSetupFailed, err.Error())
-			return err
+			return fmt.Errorf("failed to generate SSH key pair: %w", err)
 		}
 
 		clctrl.Cluster.GitAuth.PublicKey = clctrl.GitAuth.PublicKey
@@ -34,7 +36,7 @@ func (clctrl *ClusterController) InitializeBot() error {
 
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster: %w", err)
 		}
 	}
 

@@ -24,7 +24,7 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 	ctrl := controller.ClusterController{}
 	err := ctrl.InitController(definition)
 	if err != nil {
-		return err
+		return fmt.Errorf("error initializing controller: %w", err)
 	}
 
 	ctrl.Cluster.InProgress = true

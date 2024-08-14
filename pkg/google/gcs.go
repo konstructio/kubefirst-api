@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package google
 
 import (
+	"errors"
 	"fmt"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
@@ -39,11 +40,11 @@ func (conf *Configuration) CreateBucket(bucketName string, keyFile []byte) (*sto
 	it := client.Buckets(conf.Context, conf.Project)
 	for {
 		pair, err := it.Next()
-		if err == iterator.Done {
-			return nil, fmt.Errorf("error fetching created bucket: %w", err)
+		if errors.Is(err, iterator.Done) {
+			return nil, nil
 		}
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not list buckets: %w", err)
 		}
 		if pair.Name == bucketName {
 			return pair, nil
@@ -69,7 +70,7 @@ func (conf *Configuration) DeleteBucket(bucketName string, keyFile []byte) error
 	bucket := client.Bucket(bucketName)
 	err = bucket.Delete(conf.Context)
 	if err != nil {
-		return fmt.Errorf("error deleting gcs bucket %s: %s", bucketName, err)
+		return fmt.Errorf("error deleting gcs bucket %s: %w", bucketName, err)
 	}
 
 	return nil
@@ -85,9 +86,6 @@ func (conf *Configuration) ListBuckets(keyFile []byte) ([]*storage.BucketAttrs, 
 	if err != nil {
 		return nil, fmt.Errorf("could not create google storage client: %w", err)
 	}
-	if err != nil {
-		return nil, fmt.Errorf("could not create google storage client: %w", err)
-	}
 	defer client.Close()
 
 	var buckets []*storage.BucketAttrs
@@ -95,11 +93,11 @@ func (conf *Configuration) ListBuckets(keyFile []byte) ([]*storage.BucketAttrs, 
 	it := client.Buckets(conf.Context, conf.Project)
 	for {
 		pair, err := it.Next()
-		if err == iterator.Done {
+		if errors.Is(err, iterator.Done) {
 			break
 		}
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not list buckets: %w", err)
 		}
 		buckets = append(buckets, pair)
 	}

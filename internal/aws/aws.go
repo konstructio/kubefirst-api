@@ -80,7 +80,7 @@ func (conf *Configuration) Route53AlterResourceRecord(r *Route53AlterResourceRec
 		r.input)
 	if err != nil {
 		log.Error().Msgf("error changing resource record sets: %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("error changing resource record sets for record: %w", err)
 	}
 
 	return record, nil
@@ -95,7 +95,7 @@ func (conf *Configuration) Route53ListARecords(hostedZoneID string) ([]ARecord, 
 		&route53.ListResourceRecordSetsInput{HostedZoneId: &hostedZoneID},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("error listing resource record sets: %w", err)
+		return nil, fmt.Errorf("error listing resource record sets for hosted zone ID %q: %w", hostedZoneID, err)
 	}
 
 	aRecords := make([]ARecord, 0, len(recordSets.ResourceRecordSets))
@@ -125,7 +125,7 @@ func (conf *Configuration) Route53ListTXTRecords(hostedZoneID string) ([]TXTReco
 		&route53.ListResourceRecordSetsInput{HostedZoneId: &hostedZoneID},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("error listing resource record sets: %w", err)
+		return nil, fmt.Errorf("error listing resource record sets for hosted zone ID %q: %w", hostedZoneID, err)
 	}
 
 	txtRecords := make([]TXTRecord, 0, len(recordSets.ResourceRecordSets))
@@ -164,7 +164,7 @@ func (conf *Configuration) TestHostedZoneLivenessWithTxtRecords(hostedZoneName s
 	// Get hosted zone ID
 	hostedZoneID, err := conf.GetHostedZoneID(hostedZoneName)
 	if err != nil {
-		return false, fmt.Errorf("error getting hosted zone ID for name %q: %w", hostedZoneName, err)
+		return false, fmt.Errorf("error getting hosted zone ID for hosted zone name %q: %w", hostedZoneName, err)
 	}
 
 	// Format fqdn of target record for validation
@@ -284,13 +284,13 @@ func NewAwsV2(region string) (aws.Config, error) {
 		config.WithSharedConfigProfile(profile),
 	)
 	if err != nil {
-		return aws.Config{}, fmt.Errorf("unable to create aws client: %w", err)
+		return aws.Config{}, fmt.Errorf("unable to create aws client for region %q: %w", region, err)
 	}
 
 	return awsClient, nil
 }
 
-func NewAwsV3(region string, accessKeyID string, secretAccessKey string, sessionToken string) (aws.Config, error) {
+func NewAwsV3(region, accessKeyID, secretAccessKey, sessionToken string) (aws.Config, error) {
 	awsClient, err := config.LoadDefaultConfig(
 		context.Background(),
 		config.WithRegion(region),
@@ -301,7 +301,7 @@ func NewAwsV3(region string, accessKeyID string, secretAccessKey string, session
 		)),
 	)
 	if err != nil {
-		return aws.Config{}, fmt.Errorf("unable to create aws client: %w", err)
+		return aws.Config{}, fmt.Errorf("unable to create aws client for region %q with provided credentials: %w", region, err)
 	}
 
 	return awsClient, nil

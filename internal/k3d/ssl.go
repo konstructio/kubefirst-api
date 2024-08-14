@@ -36,7 +36,7 @@ func GenerateTLSSecrets(clientset *kubernetes.Clientset, config Config) error {
 			_, err = clientset.CoreV1().Namespaces().Create(context.TODO(), namespace, metav1.CreateOptions{})
 			if err != nil {
 				log.Error().Err(err).Msg("")
-				return fmt.Errorf("error creating namespace")
+				return fmt.Errorf("error creating namespace for app %s: %w", app.AppName, err)
 			}
 			log.Info().Msgf("%d, %s", i, app.Namespace)
 			log.Info().Msgf("namespace created: %s", app.Namespace)
@@ -61,17 +61,17 @@ func GenerateTLSSecrets(clientset *kubernetes.Clientset, config Config) error {
 			fullAppAddress,
 		)
 		if err != nil {
-			return err
+			return fmt.Errorf("error executing shell command for app %s: %w", app.AppName, err)
 		}
 
 		// * read certificate files
 		certPem, err := os.ReadFile(fmt.Sprintf("%s/ssl/%s/pem/%s-cert.pem", config.K1Dir, DomainName, app.AppName))
 		if err != nil {
-			return fmt.Errorf("error reading %s file %s", fmt.Sprintf("%s/ssl/%s/pem/%s-cert.pem", config.K1Dir, DomainName, app.AppName), err)
+			return fmt.Errorf("error reading certificate file for app %s: %w", app.AppName, err)
 		}
 		keyPem, err := os.ReadFile(fmt.Sprintf("%s/ssl/%s/pem/%s-key.pem", config.K1Dir, DomainName, app.AppName))
 		if err != nil {
-			return fmt.Errorf("error reading %s file %s", fmt.Sprintf("%s/ssl/%s/pem/%s-key.pem", config.K1Dir, DomainName, app.AppName), err)
+			return fmt.Errorf("error reading key file for app %s: %w", app.AppName, err)
 		}
 
 		_, err = clientset.CoreV1().Secrets(app.Namespace).Get(context.TODO(), app.AppName, metav1.GetOptions{})
@@ -91,7 +91,7 @@ func GenerateTLSSecrets(clientset *kubernetes.Clientset, config Config) error {
 			}, metav1.CreateOptions{})
 			if err != nil {
 				log.Error().Msgf("error creating kubernetes secret %s/%s: %s", app.Namespace, app.AppName, err)
-				return err
+				return fmt.Errorf("error creating kubernetes secret for app %s in namespace %s: %w", app.AppName, app.Namespace, err)
 			}
 			log.Info().Msgf("created kubernetes secret: %s/%s", app.Namespace, app.AppName)
 		}
@@ -112,7 +112,7 @@ func GenerateSingleTLSSecret(
 		_, err = clientset.CoreV1().Namespaces().Create(context.TODO(), namespace, metav1.CreateOptions{})
 		if err != nil {
 			log.Error().Err(err).Msg("")
-			return fmt.Errorf("error creating namespace")
+			return fmt.Errorf("error creating namespace for app %s: %w", app, err)
 		}
 		log.Info().Msgf("namespace created: %s", ns)
 	} else {
@@ -136,17 +136,17 @@ func GenerateSingleTLSSecret(
 		fullAppAddress,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("error executing shell command for app %s: %w", app, err)
 	}
 
 	// * read certificate files
 	certPem, err := os.ReadFile(fmt.Sprintf("%s/ssl/%s/pem/%s-cert.pem", config.K1Dir, DomainName, app))
 	if err != nil {
-		return fmt.Errorf("error reading %s file %s", fmt.Sprintf("%s/ssl/%s/pem/%s-cert.pem", config.K1Dir, DomainName, app), err)
+		return fmt.Errorf("error reading certificate file for app %s: %w", app, err)
 	}
 	keyPem, err := os.ReadFile(fmt.Sprintf("%s/ssl/%s/pem/%s-key.pem", config.K1Dir, DomainName, app))
 	if err != nil {
-		return fmt.Errorf("error reading %s file %s", fmt.Sprintf("%s/ssl/%s/pem/%s-key.pem", config.K1Dir, DomainName, app), err)
+		return fmt.Errorf("error reading key file for app %s: %w", app, err)
 	}
 
 	_, err = clientset.CoreV1().Secrets(ns).Get(context.TODO(), app, metav1.GetOptions{})
@@ -166,7 +166,7 @@ func GenerateSingleTLSSecret(
 		}, metav1.CreateOptions{})
 		if err != nil {
 			log.Error().Msgf("error creating kubernetes secret %s/%s: %s", ns, app, err)
-			return err
+			return fmt.Errorf("error creating kubernetes secret for app %s in namespace %s: %w", app, ns, err)
 		}
 		log.Info().Msgf("created kubernetes secret: %s/%s", ns, app)
 	}

@@ -19,7 +19,7 @@ func (conf *Configuration) GetECRAuthToken() (string, error) {
 
 	token, err := ecrClient.GetAuthorizationToken(context.Background(), &ecr.GetAuthorizationTokenInput{})
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get ECR authorization token: %w", err)
 	}
 
 	return *token.AuthorizationData[0].AuthorizationToken, nil

@@ -32,19 +32,19 @@ func ImportClusterIfEmpty() (pkgtypes.Cluster, error) {
 	secData, err := k8s.ReadSecretV2Old(kcfg.Clientset, "kubefirst", "kubefirst-initial-state")
 	if err != nil {
 		log.Info().Msgf("error reading secret kubefirst-initial-state. %s", err)
-		return cluster, err
+		return cluster, fmt.Errorf("failed to read secret kubefirst-initial-state: %w", err)
 	}
 
 	jsonString, _ := MapToStructuredJSON(secData)
 
 	jsonData, err := json.Marshal(jsonString)
 	if err != nil {
-		return cluster, fmt.Errorf("error marshalling json: %w", err)
+		return cluster, fmt.Errorf("error marshalling json from secret data: %w", err)
 	}
 
 	err = json.Unmarshal([]byte(jsonData), &cluster)
 	if err != nil {
-		return cluster, fmt.Errorf("unable to cast cluster: %w", err)
+		return cluster, fmt.Errorf("unable to cast unmarshalled JSON to cluster type: %w", err)
 	}
 
 	log.Info().Msgf("import cluster secret discovered for cluster %s", cluster.ClusterName)
@@ -57,7 +57,7 @@ func ImportClusterIfEmpty() (pkgtypes.Cluster, error) {
 		// Create if entry does not exist
 		err = InsertCluster(kcfg.Clientset, cluster)
 		if err != nil {
-			return cluster, fmt.Errorf("error inserting cluster %v: %s", cluster, err)
+			return cluster, fmt.Errorf("error inserting cluster record %v into database: %s", cluster, err)
 		}
 		// log cluster
 		log.Info().Msgf("inserted cluster record to db. adding default services. %s", cluster.ClusterName)

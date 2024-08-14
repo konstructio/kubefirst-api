@@ -20,7 +20,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsRepoDir, gitProvider string, removeAtlantis bool, installKubefirstPro bool) error {
+func AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsRepoDir, gitProvider string, removeAtlantis, installKubefirstPro bool) error {
 	// * clean up all other platforms
 	for _, platform := range pkg.SupportedPlatforms {
 		if platform != fmt.Sprintf("%s-%s", CloudProvider, gitProvider) {
@@ -48,7 +48,7 @@ func AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsRepoDir, gi
 	err := cp.Copy(driverContent, gitopsRepoDir, opt)
 	if err != nil {
 		log.Error().Msgf("Error populating gitops repository with driver content: %s. error: %s", driverContent, err.Error())
-		return fmt.Errorf("error populating gitops repository with driver content: %s. error: %w", driverContent, err)
+		return fmt.Errorf("error populating gitops repository with driver content: %q. error: %w", driverContent, err)
 	}
 
 	if err := os.RemoveAll(driverContent); err != nil {
@@ -61,7 +61,7 @@ func AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsRepoDir, gi
 	err = cp.Copy(clusterContent, fmt.Sprintf("%s/registry/%s", gitopsRepoDir, clusterName), opt)
 	if err != nil {
 		log.Error().Msgf("Error populating cluster content with %s. error: %s", clusterContent, err.Error())
-		return fmt.Errorf("error populating cluster content with %s. error: %w", clusterContent, err)
+		return fmt.Errorf("error populating cluster content with %q. error: %w", clusterContent, err)
 	}
 
 	if err := os.RemoveAll(fmt.Sprintf("%s/cluster-types", gitopsRepoDir)); err != nil {
@@ -120,7 +120,7 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 	// * git init
 	metaphorRepo, err := git.PlainInit(metaphorDir, false)
 	if err != nil {
-		return fmt.Errorf("error initializing metaphor repo: %w", err)
+		return fmt.Errorf("error initializing metaphor repository at %q: %w", metaphorDir, err)
 	}
 
 	// * copy options
@@ -141,7 +141,7 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 	err = cp.Copy(metaphorContent, metaphorDir, opt)
 	if err != nil {
 		log.Error().Msgf("Error populating metaphor content with %s. error: %s", metaphorContent, err.Error())
-		return fmt.Errorf("error populating metaphor content with %s. error: %w", metaphorContent, err)
+		return fmt.Errorf("error populating metaphor content from %q: %w", metaphorContent, err)
 	}
 
 	// * copy ci content
@@ -172,7 +172,7 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 	err = cp.Copy(argoWorkflowsFolderContent, fmt.Sprintf("%s/.argo", metaphorDir), opt)
 	if err != nil {
 		log.Error().Msgf("error populating metaphor repository with %s: %s", argoWorkflowsFolderContent, err)
-		return fmt.Errorf("error populating metaphor repository with %s: %w", argoWorkflowsFolderContent, err)
+		return fmt.Errorf("error populating metaphor repository with argo workflows content from %q: %w", argoWorkflowsFolderContent, err)
 	}
 
 	// * copy $HOME/.k1/gitops/metaphor/Dockerfile $HOME/.k1/metaphor/build/Dockerfile
@@ -182,7 +182,7 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 	err = cp.Copy(dockerfileContent, fmt.Sprintf("%s/build/Dockerfile", metaphorDir), opt)
 	if err != nil {
 		log.Info().Msgf("error populating metaphor repository with %s: %s", argoWorkflowsFolderContent, err)
-		return err
+		return fmt.Errorf("error populating metaphor repository with dockerfile from %q: %w", argoWorkflowsFolderContent, err)
 	}
 	os.RemoveAll(fmt.Sprintf("%s/ci", gitopsRepoDir))
 	os.RemoveAll(fmt.Sprintf("%s/metaphor", gitopsRepoDir))
@@ -191,18 +191,18 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 	// commit
 	err = gitClient.Commit(metaphorRepo, "committing initial detokenized metaphor repo content")
 	if err != nil {
-		return fmt.Errorf("error committing initial detokenized metaphor repo content: %w", err)
+		return fmt.Errorf("error committing initial detokenized metaphor repository content: %w", err)
 	}
 
 	metaphorRepo, err = gitClient.SetRefToMainBranch(metaphorRepo)
 	if err != nil {
-		return fmt.Errorf("error setting ref to main branch: %w", err)
+		return fmt.Errorf("error setting reference to main branch in metaphor repository: %w", err)
 	}
 
 	// remove old git ref
 	err = metaphorRepo.Storer.RemoveReference(plumbing.NewBranchReferenceName("master"))
 	if err != nil {
-		return fmt.Errorf("error removing previous git ref: %w", err)
+		return fmt.Errorf("error removing previous git reference from metaphor repository: %w", err)
 	}
 	// create remote
 	_, err = metaphorRepo.CreateRemote(&config.RemoteConfig{
@@ -210,7 +210,7 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 		URLs: []string{destinationMetaphorRepoGitURL},
 	})
 	if err != nil {
-		return fmt.Errorf("error creating remote: %w", err)
+		return fmt.Errorf("error creating remote in metaphor repository: %w", err)
 	}
 
 	return nil

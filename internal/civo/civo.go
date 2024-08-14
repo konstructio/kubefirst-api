@@ -22,7 +22,7 @@ import (
 )
 
 // TestDomainLiveness checks Civo DNS for the liveness test record
-func (c *Configuration) TestDomainLiveness(domainName string, domainID string) bool {
+func (c *Configuration) TestDomainLiveness(domainName, domainID string) bool {
 	civoRecordName := fmt.Sprintf("kubefirst-liveness.%s", domainName)
 	civoRecordValue := "domain record propagated"
 
@@ -117,7 +117,7 @@ func (c *Configuration) GetDNSInfo(domainName string) (string, error) {
 	civoDNSDomain, err := c.Client.FindDNSDomain(domainName)
 	if err != nil {
 		log.Error().Msg(err.Error())
-		return "", fmt.Errorf("error getting civo dns domain %s: %w", domainName, err)
+		return "", fmt.Errorf("error getting Civo DNS domain %q: %w", domainName, err)
 	}
 
 	return civoDNSDomain.ID, nil
@@ -127,7 +127,7 @@ func (c *Configuration) GetDNSInfo(domainName string) (string, error) {
 func (c *Configuration) GetDNSDomains() ([]string, error) {
 	domains, err := c.Client.ListDNSDomains()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error listing DNS domains: %w", err)
 	}
 
 	domainList := make([]string, 0, len(domains))
@@ -156,12 +156,12 @@ func (c *Configuration) GetRegions() ([]string, error) {
 func (c *Configuration) ListInstanceSizes() ([]string, error) {
 	resp, err := c.Client.SendGetRequest("/v2/sizes")
 	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
+		return nil, fmt.Errorf("error sending request to list instance sizes: %w", err)
 	}
 
 	sizes := make([]civogo.InstanceSize, 0)
 	if err := json.NewDecoder(bytes.NewReader(resp)).Decode(&sizes); err != nil {
-		return nil, fmt.Errorf("error decoding response: %w", err)
+		return nil, fmt.Errorf("error decoding instance sizes response: %w", err)
 	}
 
 	var instanceNames []string
@@ -177,7 +177,7 @@ func (c *Configuration) ListInstanceSizes() ([]string, error) {
 func (c *Configuration) GetKubeconfig(clusterName string) (string, error) {
 	cluster, err := c.Client.FindKubernetesCluster(clusterName)
 	if err != nil {
-		return "", fmt.Errorf("error finding cluster: %w", err)
+		return "", fmt.Errorf("error finding Kubernetes cluster %q: %w", clusterName, err)
 	}
 
 	return cluster.KubeConfig, nil

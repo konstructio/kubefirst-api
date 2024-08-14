@@ -18,12 +18,12 @@ import (
 )
 
 // DeleteK3dCluster delete a k3d cluster
-func DeleteK3dCluster(clusterName string, k1Dir string, k3dClient string) error {
+func DeleteK3dCluster(clusterName, k1Dir, k3dClient string) error {
 	log.Info().Msgf("deleting k3d cluster %s", clusterName)
 	_, _, err := pkg.ExecShellReturnStrings(k3dClient, "cluster", "delete", clusterName)
 	if err != nil {
 		log.Info().Msg("error deleting k3d cluster")
-		return err
+		return fmt.Errorf("failed to delete k3d cluster %q: %w", clusterName, err)
 	}
 	// todo: remove it?
 	time.Sleep(20 * time.Second)
@@ -40,7 +40,7 @@ func ResolveMinioLocal(path string) error {
 	log.Info().Msgf("attempting to prepare terraform files pre-destroy...")
 	err := filepath.Walk(path, resolveMinioLocal)
 	if err != nil {
-		return err
+		return fmt.Errorf("error walking the path %q: %w", path, err)
 	}
 
 	return nil
@@ -49,7 +49,7 @@ func ResolveMinioLocal(path string) error {
 // resolveMinioLocal
 func resolveMinioLocal(path string, fi os.FileInfo, err error) error {
 	if err != nil {
-		return err
+		return fmt.Errorf("error accessing file info for %q: %w", path, err)
 	}
 
 	if fi.IsDir() {

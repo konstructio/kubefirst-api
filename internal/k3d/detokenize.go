@@ -21,7 +21,7 @@ import (
 func detokenizeGitGitops(path string, tokens *GitopsDirectoryValues, gitProtocol string) error {
 	err := filepath.Walk(path, detokenizeGitops(tokens, gitProtocol))
 	if err != nil {
-		return fmt.Errorf("error walking path %q: %w", path, err)
+		return fmt.Errorf("failed to walk path %q: %w", path, err)
 	}
 
 	return nil
@@ -41,7 +41,7 @@ func detokenizeGitops(tokens *GitopsDirectoryValues, gitProtocol string) filepat
 		if !strings.Contains(path, "/.git/") {
 			read, err := os.ReadFile(path)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to read file %q: %w", path, err)
 			}
 
 			// todo reduce to terraform tokens by moving to helm chart?
@@ -86,7 +86,7 @@ func detokenizeGitops(tokens *GitopsDirectoryValues, gitProtocol string) filepat
 
 			err = os.WriteFile(path, []byte(newContents), 0)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to write updated content to file %q: %w", path, err)
 			}
 		}
 
@@ -98,7 +98,7 @@ func detokenizeGitops(tokens *GitopsDirectoryValues, gitProtocol string) filepat
 func postRunDetokenizeGitGitops(path string) error {
 	err := filepath.Walk(path, postRunDetokenizeGitops)
 	if err != nil {
-		return fmt.Errorf("error walking path: %w", err)
+		return fmt.Errorf("error walking path %q: %w", path, err)
 	}
 
 	return nil
@@ -123,7 +123,7 @@ func postRunDetokenizeGitops(path string, fi os.FileInfo, err error) error {
 		// change Minio post cluster launch to cluster svc address
 		read = bytes.ReplaceAll(read, []byte("https://minio."+DomainName), []byte("http://minio.minio.svc.cluster.local:9000"))
 		if err := os.WriteFile(path, read, 0); err != nil {
-			return fmt.Errorf("error writing file %q: %w", path, err)
+			return fmt.Errorf("error writing updated file %q: %w", path, err)
 		}
 	}
 
@@ -133,7 +133,7 @@ func postRunDetokenizeGitops(path string, fi os.FileInfo, err error) error {
 // detokenizeGitMetaphor - Translate tokens by values on a given path
 func detokenizeGitMetaphor(path string, tokens *MetaphorTokenValues) error {
 	if err := filepath.Walk(path, detokenize(tokens)); err != nil {
-		return fmt.Errorf("error walking path %q: %w", path, err)
+		return fmt.Errorf("failed to walk path %q: %w", path, err)
 	}
 
 	return nil
@@ -153,7 +153,7 @@ func detokenize(tokens *MetaphorTokenValues) filepath.WalkFunc {
 		if !strings.Contains(path, "/.git/") {
 			read, err := os.ReadFile(path)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to read file %q: %w", path, err)
 			}
 
 			// todo reduce to terraform tokens by moving to helm chart?
@@ -168,7 +168,7 @@ func detokenize(tokens *MetaphorTokenValues) filepath.WalkFunc {
 
 			err = os.WriteFile(path, []byte(newContents), 0)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to write updated content to file %q: %w", path, err)
 			}
 		}
 

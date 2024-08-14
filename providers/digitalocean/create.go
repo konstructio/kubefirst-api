@@ -31,61 +31,61 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 	ctrl.Cluster.InProgress = true
 	err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
 	if err != nil {
-		return fmt.Errorf("error updating cluster status: %w", err)
+		return fmt.Errorf("error updating cluster status after setting in progress: %w", err)
 	}
 
 	err = ctrl.DownloadTools(ctrl.ProviderConfig.ToolsDir)
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error downloading tools: %w", err)
+		return fmt.Errorf("error downloading tools during cluster creation: %w", err)
 	}
 
 	err = ctrl.DomainLivenessTest()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error running domain liveness test: %w", err)
+		return fmt.Errorf("error running domain liveness test during cluster setup: %w", err)
 	}
 
 	err = ctrl.StateStoreCredentials()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error storing state store credentials: %w", err)
+		return fmt.Errorf("error storing state store credentials during cluster setup: %w", err)
 	}
 
 	err = ctrl.GitInit()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error initializing git: %w", err)
+		return fmt.Errorf("error initializing git during cluster setup: %w", err)
 	}
 
 	err = ctrl.InitializeBot()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error initializing bot: %w", err)
+		return fmt.Errorf("error initializing bot during cluster setup: %w", err)
 	}
 
 	err = ctrl.RepositoryPrep()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error preparing repository: %w", err)
+		return fmt.Errorf("error preparing repository during cluster setup: %w", err)
 	}
 
 	err = ctrl.RunGitTerraform()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error running git terraform: %w", err)
+		return fmt.Errorf("error running git terraform during cluster setup: %w", err)
 	}
 
 	err = ctrl.RepositoryPush()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error pushing repository: %w", err)
+		return fmt.Errorf("error pushing repository during cluster setup: %w", err)
 	}
 
 	err = ctrl.CreateCluster()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error creating cluster: %w", err)
+		return fmt.Errorf("error creating cluster in DigitalOcean: %w", err)
 	}
 
 	err = ctrl.WaitForClusterReady()
@@ -97,7 +97,7 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 	err = ctrl.ClusterSecretsBootstrap()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error bootstrapping cluster secrets: %w", err)
+		return fmt.Errorf("error bootstrapping cluster secrets during setup: %w", err)
 	}
 
 	// * check for ssl restore
@@ -105,7 +105,7 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 	secretsFilesToRestore, err := os.ReadDir(ctrl.ProviderConfig.SSLBackupDir + "/secrets")
 	if err != nil {
 		log.Info().Msg(err.Error())
-		return fmt.Errorf("error reading secrets directory: %w", err)
+		return fmt.Errorf("error reading secrets directory for TLS: %w", err)
 	}
 	if len(secretsFilesToRestore) != 0 {
 		// todo would like these but requires CRD's and is not currently supported
@@ -257,7 +257,7 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 	if err != nil {
 		log.Error().Msgf("Error finding argocd Deployment: %s", err)
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error finding argocd Deployment: %w", err)
 	}
 	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, argocdDeployment, 3600)
 	if err != nil {
@@ -270,7 +270,7 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 	ctrl.Cluster.InProgress = false
 	err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
 	if err != nil {
-		return fmt.Errorf("error updating cluster status: %w", err)
+		return fmt.Errorf("error updating cluster status after provisioning: %w", err)
 	}
 
 	log.Info().Msg("cluster creation complete")

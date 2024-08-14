@@ -144,7 +144,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	if recordExists && rec.Status == constants.ClusterStatusDeleted {
 		err = secrets.DeleteCluster(clctrl.KubernetesClient, def.ClusterName)
 		if err != nil {
-			return fmt.Errorf("could not delete existing cluster %s: %s", def.ClusterName, err)
+			return fmt.Errorf("error deleting existing cluster %q: %w", def.ClusterName, err)
 		}
 	}
 
@@ -214,7 +214,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		if def.GitopsTemplateBranch != "" {
 			clctrl.GitopsTemplateURL = def.GitopsTemplateURL
 		} else {
-			return fmt.Errorf("must supply branch of gitops templatelog.Fatal().Msg( repo when supplying a gitops template url")
+			return fmt.Errorf("invalid GitOps template configuration: must supply branch when supplying a GitOps template URL")
 		}
 	} else {
 		clctrl.GitopsTemplateURL = "https://github.com/kubefirst/gitops-template.git"
@@ -248,7 +248,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 
 	err = clctrl.SetGitTokens(*def)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to set Git tokens: %w", err)
 	}
 
 	// Instantiate provider configuration
@@ -256,7 +256,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	case "akamai":
 		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.APIToken, clctrl.CloudflareAuth.OriginCaIssuerKey)
 		if err != nil {
-			return fmt.Errorf("unable to get configuration: %w", err)
+			return fmt.Errorf("unable to get provider configuration for Akamai: %w", err)
 		}
 
 		clctrl.ProviderConfig = *conf
@@ -264,14 +264,14 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	case "aws":
 		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
 		if err != nil {
-			return fmt.Errorf("unable to get configuration: %w", err)
+			return fmt.Errorf("unable to get provider configuration for AWS: %w", err)
 		}
 
 		clctrl.ProviderConfig = *conf
 	case "civo":
 		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.APIToken, clctrl.CloudflareAuth.OriginCaIssuerKey)
 		if err != nil {
-			return fmt.Errorf("unable to get configuration: %w", err)
+			return fmt.Errorf("unable to get provider configuration for Civo: %w", err)
 		}
 
 		clctrl.ProviderConfig = *conf
@@ -279,7 +279,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	case "google":
 		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
 		if err != nil {
-			return fmt.Errorf("unable to get configuration: %w", err)
+			return fmt.Errorf("unable to get provider configuration for Google: %w", err)
 		}
 
 		clctrl.ProviderConfig = *conf
@@ -288,7 +288,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	case "digitalocean":
 		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
 		if err != nil {
-			return fmt.Errorf("unable to get configuration: %w", err)
+			return fmt.Errorf("unable to get provider configuration for DigitalOcean: %w", err)
 		}
 
 		clctrl.ProviderConfig = *conf
@@ -296,7 +296,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	case "vultr":
 		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
 		if err != nil {
-			return fmt.Errorf("unable to get configuration: %w", err)
+			return fmt.Errorf("unable to get provider configuration for Vultr: %w", err)
 		}
 
 		clctrl.ProviderConfig = *conf
@@ -304,7 +304,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	case "k3s":
 		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
 		if err != nil {
-			return fmt.Errorf("unable to get configuration: %w", err)
+			return fmt.Errorf("unable to get provider configuration for K3s: %w", err)
 		}
 
 		clctrl.ProviderConfig = *conf
@@ -380,13 +380,13 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		if env.K1LocalDebug == "true" {
 			err = utils.CreateKubefirstNamespace(clctrl.KubernetesClient)
 			if err != nil {
-				return err
+				return fmt.Errorf("error creating Kubefirst namespace: %w", err)
 			}
 		}
 
 		err = secrets.InsertCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("error inserting cluster record: %w", err)
 		}
 	} else {
 		clctrl.Cluster = rec
@@ -407,12 +407,12 @@ func (clctrl *ClusterController) SetGitTokens(def types.ClusterDefinition) error
 		// Verify token scopes
 		err := github.VerifyTokenPermissions(def.GitAuth.Token)
 		if err != nil {
-			return err
+			return fmt.Errorf("GitHub token verification failed: %w", err)
 		}
 		// Get authenticated user's name
 		githubUser, err := gitHubHandler.GetGitHubUser(def.GitAuth.Token)
 		if err != nil {
-			return err
+			return fmt.Errorf("error retrieving GitHub user: %w", err)
 		}
 		clctrl.GitAuth.User = githubUser
 	case "gitlab":
@@ -421,22 +421,22 @@ func (clctrl *ClusterController) SetGitTokens(def types.ClusterDefinition) error
 		// Verify token scopes
 		err := gitlab.VerifyTokenPermissions(def.GitAuth.Token)
 		if err != nil {
-			return err
+			return fmt.Errorf("GitLab token verification failed: %w", err)
 		}
 		gitlabClient, err := gitlab.NewGitLabClient(def.GitAuth.Token, def.GitAuth.Owner)
 		if err != nil {
-			return err
+			return fmt.Errorf("error creating GitLab client: %w", err)
 		}
 		clctrl.GitAuth.Owner = gitlabClient.ParentGroupPath
 		clctrl.GitlabOwnerGroupID = gitlabClient.ParentGroupID
 		// Get authenticated user's name
 		user, _, err := gitlabClient.Client.Users.CurrentUser()
 		if err != nil {
-			return fmt.Errorf("unable to get authenticated user info - please make sure GITLAB_TOKEN env var is set %s", err.Error())
+			return fmt.Errorf("unable to get authenticated user info from GitLab: %w", err)
 		}
 		clctrl.GitAuth.User = user.Username
 	default:
-		return fmt.Errorf("invalid git provider option")
+		return fmt.Errorf("invalid git provider option: %q", def.GitProvider)
 	}
 
 	return nil
@@ -446,7 +446,7 @@ func (clctrl *ClusterController) SetGitTokens(def types.ClusterDefinition) error
 func (clctrl *ClusterController) GetCurrentClusterRecord() (types.Cluster, error) {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return types.Cluster{}, err
+		return types.Cluster{}, fmt.Errorf("error retrieving current cluster record: %w", err)
 	}
 
 	return cl, nil
@@ -460,7 +460,7 @@ func (clctrl *ClusterController) UpdateClusterOnError(condition string) error {
 
 	log.Error().Msgf("unexpected error: %s", condition)
 	if err := secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster); err != nil {
-		return err
+		return fmt.Errorf("error updating cluster after condition failure: %w", err)
 	}
 
 	return nil

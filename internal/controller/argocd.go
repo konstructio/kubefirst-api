@@ -27,7 +27,7 @@ import (
 func (clctrl *ClusterController) InstallArgoCD() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster: %w", err)
 	}
 
 	if !cl.ArgoCDInstallCheck {
@@ -41,7 +41,7 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 		case "google":
 			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get Google container cluster auth: %w", err)
 			}
 		}
 
@@ -52,7 +52,7 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 		err = argocd.ApplyArgoCDKustomize(kcfg.Clientset, argoCDInstallPath)
 		if err != nil {
 			telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.ArgoCDInstallFailed, err.Error())
-			return err
+			return fmt.Errorf("failed to apply ArgoCD kustomize: %w", err)
 		}
 
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.ArgoCDInstallCompleted, "")
@@ -61,13 +61,13 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 		_, err = k8s.VerifyArgoCDReadiness(kcfg.Clientset, true, 300)
 		if err != nil {
 			log.Error().Msgf("error waiting for ArgoCD to become ready: %s", err)
-			return err
+			return fmt.Errorf("failed to verify ArgoCD readiness: %w", err)
 		}
 
 		clctrl.Cluster.ArgoCDInstallCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster: %w", err)
 		}
 	}
 
@@ -78,7 +78,7 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 func (clctrl *ClusterController) InitializeArgoCD() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster: %w", err)
 	}
 
 	if !cl.ArgoCDInitializeCheck {
@@ -93,7 +93,7 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 			var err error
 			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get Google container cluster auth: %w", err)
 			}
 		}
 
@@ -130,7 +130,7 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 			)
 			argoCDToken, err = argocd.GetArgoCDToken("admin", argocdPassword)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get ArgoCD token: %w", err)
 			}
 		}
 
@@ -142,7 +142,7 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster: %w", err)
 		}
 	}
 
@@ -152,7 +152,7 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, namespace string, deploymentName string) error {
 	deploy, err := clientset.AppsV1().Deployments(namespace).Get(ctx, deploymentName, metav1.GetOptions{})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get deployment %s: %w", deploymentName, err)
 	}
 
 	if deploy.Spec.Template.ObjectMeta.Annotations == nil {
@@ -173,7 +173,7 @@ func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, name
 func (clctrl *ClusterController) DeployRegistryApplication() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster: %w", err)
 	}
 
 	if !cl.ArgoCDCreateRegistryCheck {
@@ -188,21 +188,21 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			var err error
 			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get Google container cluster auth: %w", err)
 			}
 		}
 
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.CreateRegistryStarted, "")
 		argocdClient, err := argocdapi.NewForConfig(kcfg.RestConfig)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to create ArgoCD client: %w", err)
 		}
 
 		log.Info().Msg("applying the registry application to argocd")
 
 		registryURL, err := clctrl.GetRepoURL()
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get repository URL: %w", err)
 		}
 
 		var registryPath string
@@ -223,7 +223,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 
 		err = RestartDeployment(context.Background(), clctrl.Kcfg.Clientset, "argocd", "argocd-applicationset-controller")
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to restart deployment: %w", err)
 		}
 
 		retryAttempts := 2
@@ -233,7 +233,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			app, err := argocdClient.ArgoprojV1alpha1().Applications("argocd").Create(context.Background(), registryApplicationObject, metav1.CreateOptions{})
 			if err != nil {
 				if attempt == retryAttempts {
-					return err
+					return fmt.Errorf("failed to create Argo CD application on attempt #%d: %w", attempt, err)
 				}
 				log.Info().Msgf("Error creating Argo CD application on attempt number #%d: %v\n", attempt, err)
 				time.Sleep(5 * time.Second)
@@ -249,7 +249,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		clctrl.Cluster.ArgoCDCreateRegistryCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster: %w", err)
 		}
 	}
 

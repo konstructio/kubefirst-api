@@ -25,7 +25,7 @@ import (
 func (clctrl *ClusterController) DomainLivenessTest() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster for domain liveness test: %w", err)
 	}
 
 	if !cl.DomainLivenessCheck {
@@ -37,7 +37,7 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 
 			err = clctrl.HandleDomainLiveness(domainLiveness)
 			if err != nil {
-				return err
+				return fmt.Errorf("domain liveness check failed for AWS: %w", err)
 			}
 		case "civo":
 			civoConf := civo.Configuration{
@@ -57,13 +57,13 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 
 			err = clctrl.HandleDomainLiveness(domainLiveness)
 			if err != nil {
-				return err
+				return fmt.Errorf("domain liveness check failed for Civo: %w", err)
 			}
 		case "cloudflare":
 
 			client, err := cloudflare_api.NewWithAPIToken(clctrl.CloudflareAuth.APIToken)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to create Cloudflare client: %w", err)
 			}
 
 			cloudflareConf := cloudflare.Configuration{
@@ -75,7 +75,7 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 
 			err = clctrl.HandleDomainLiveness(domainLiveness)
 			if err != nil {
-				return err
+				return fmt.Errorf("domain liveness check failed for Cloudflare: %w", err)
 			}
 		case "digitalocean":
 			digitaloceanConf := digitalocean.Configuration{
@@ -94,7 +94,7 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 
 			err = clctrl.HandleDomainLiveness(domainLiveness)
 			if err != nil {
-				return err
+				return fmt.Errorf("domain liveness check failed for DigitalOcean: %w", err)
 			}
 		case "vultr":
 			vultrConf := vultr.Configuration{
@@ -114,14 +114,14 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 
 			err = clctrl.HandleDomainLiveness(domainLiveness)
 			if err != nil {
-				return err
+				return fmt.Errorf("domain liveness check failed for Vultr: %w", err)
 			}
 		}
 
 		clctrl.Cluster.DomainLivenessCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster after domain liveness test: %w", err)
 		}
 
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.DomainLivenessCompleted, "")

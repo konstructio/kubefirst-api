@@ -25,79 +25,79 @@ func CreateK3sCluster(definition *pkgtypes.ClusterDefinition) error {
 	ctrl := controller.ClusterController{}
 	err := ctrl.InitController(definition)
 	if err != nil {
-		return err
+		return fmt.Errorf("error initializing controller: %w", err)
 	}
 
 	ctrl.Cluster.InProgress = true
 	err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating cluster secrets: %w", err)
 	}
 
 	err = ctrl.DownloadTools(ctrl.ProviderConfig.ToolsDir)
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error downloading tools: %w", err)
 	}
 
 	err = ctrl.DomainLivenessTest()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error in domain liveness test: %w", err)
 	}
 
 	err = ctrl.StateStoreCredentials()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error in state store credentials: %w", err)
 	}
 
 	err = ctrl.GitInit()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error initializing git: %w", err)
 	}
 
 	err = ctrl.InitializeBot()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error initializing bot: %w", err)
 	}
 
 	err = ctrl.RepositoryPrep()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error in repository preparation: %w", err)
 	}
 
 	err = ctrl.RunGitTerraform()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error running git terraform: %w", err)
 	}
 
 	err = ctrl.RepositoryPush()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error pushing repository: %w", err)
 	}
 
 	err = ctrl.CreateCluster()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error creating cluster: %w", err)
 	}
 
 	err = ctrl.WaitForClusterReady()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error waiting for cluster to be ready: %w", err)
 	}
 
 	err = ctrl.ClusterSecretsBootstrap()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error in cluster secrets bootstrap: %w", err)
 	}
 
 	// * check for ssl restore
@@ -121,31 +121,31 @@ func CreateK3sCluster(definition *pkgtypes.ClusterDefinition) error {
 	err = ctrl.InstallArgoCD()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error installing ArgoCD: %w", err)
 	}
 
 	err = ctrl.InitializeArgoCD()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error initializing ArgoCD: %w", err)
 	}
 
 	err = ctrl.DeployRegistryApplication()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error deploying registry application: %w", err)
 	}
 
 	err = ctrl.WaitForVault()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error waiting for Vault: %w", err)
 	}
 
 	err = ctrl.InitializeVault()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error initializing Vault: %w", err)
 	}
 
 	// Create kubeconfig client
@@ -172,19 +172,19 @@ func CreateK3sCluster(definition *pkgtypes.ClusterDefinition) error {
 	err = ctrl.RunVaultTerraform()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error running Vault terraform: %w", err)
 	}
 
 	err = ctrl.WriteVaultSecrets()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error writing Vault secrets: %w", err)
 	}
 
 	err = ctrl.RunUsersTerraform()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error running users terraform: %w", err)
 	}
 
 	// Wait for last sync wave app transition to Running
@@ -220,7 +220,7 @@ func CreateK3sCluster(definition *pkgtypes.ClusterDefinition) error {
 	ctrl.Cluster.Status = constants.ClusterStatusProvisioned
 	err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating cluster secrets: %w", err)
 	}
 
 	log.Info().Msg("cluster creation complete")
@@ -265,14 +265,14 @@ func CreateK3sCluster(definition *pkgtypes.ClusterDefinition) error {
 	if err != nil {
 		log.Error().Msgf("Error finding argocd Deployment: %s", err)
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error finding argocd Deployment: %w", err)
 	}
 	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, argocdDeployment, 3600)
 	if err != nil {
 		log.Error().Msgf("Error waiting for argocd deployment to enter Ready state: %s", err)
 
 		ctrl.UpdateClusterOnError(err.Error())
-		return err
+		return fmt.Errorf("error waiting for argocd deployment to enter Ready state: %w", err)
 	}
 
 	log.Info().Msg("cluster creation complete")

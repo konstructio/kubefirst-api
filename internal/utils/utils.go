@@ -30,7 +30,7 @@ func CreateK1Directory(clusterName string) {
 	// Create k1 dir if it doesn't exist
 	homePath, err := os.UserHomeDir()
 	if err != nil {
-		log.Info().Msg(err.Error())
+		log.Info().Msg(fmt.Errorf("error getting user home directory: %w", err).Error())
 		return
 	}
 
@@ -58,7 +58,7 @@ func FindStringInSlice(s []string, str string) bool {
 func ReadFileContents(filePath string) (string, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error reading file contents from %s: %w", filePath, err)
 	}
 	return string(data), nil
 }
@@ -68,7 +68,7 @@ func ReadFileContentType(filePath string) (string, error) {
 	// Open File
 	f, err := os.Open(filePath)
 	if err != nil {
-		log.Error().Msg(err.Error())
+		log.Error().Msg(fmt.Errorf("error opening file %q: %w", filePath, err).Error())
 		return "", fmt.Errorf("error opening file %q: %w", filePath, err)
 	}
 	defer f.Close()
@@ -78,7 +78,7 @@ func ReadFileContentType(filePath string) (string, error) {
 
 	_, err = f.Read(buffer)
 	if err != nil {
-		return "", fmt.Errorf("error reading file: %s", err)
+		return "", fmt.Errorf("error reading file %s: %w", filePath, err)
 	}
 
 	// Use the net/http package's handy DectectContentType function. Always returns a valid
@@ -158,8 +158,8 @@ func CreateKubefirstNamespace(clientSet *kubernetes.Clientset) error {
 		namespace := &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "kubefirst"}}
 		_, err = clientSet.CoreV1().Namespaces().Create(context.TODO(), namespace, metav1.CreateOptions{})
 		if err != nil {
-			log.Error().Err(err).Msg("")
-			return fmt.Errorf("error creating namespace %s: %s", "kubefirst", err)
+			log.Error().Err(fmt.Errorf("error creating namespace %s: %w", "kubefirst", err)).Msg("")
+			return fmt.Errorf("error creating namespace %s: %w", "kubefirst", err)
 		}
 		log.Info().Msgf("namespace created: %s", "kubefirst")
 	} else {

@@ -18,14 +18,14 @@ func (c *Configuration) GetKubernetesAssociatedBlockStorage(clusterName string, 
 	// Probably needs pagination
 	allBlockStorage, _, _, err := c.Client.BlockStorage.List(c.Context, &govultr.ListOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("error listing block storage resources: %w", err)
+		return nil, fmt.Errorf("error listing block storage resources while retrieving associated volumes: %w", err)
 	}
 
 	if !returnAll {
 		// Return only volumes associated with droplets part of the target cluster's node pool
 		clusters, _, _, err := c.Client.Kubernetes.ListClusters(c.Context, &govultr.ListOptions{})
 		if err != nil {
-			return nil, fmt.Errorf("error listing Kubernetes clusters: %w", err)
+			return nil, fmt.Errorf("error listing Kubernetes clusters when checking associated block storage: %w", err)
 		}
 
 		var clusterID string
@@ -35,12 +35,12 @@ func (c *Configuration) GetKubernetesAssociatedBlockStorage(clusterName string, 
 			}
 		}
 		if clusterID == "" {
-			return nil, fmt.Errorf("could not find cluster ID for cluster name %s", clusterName)
+			return nil, fmt.Errorf("could not find cluster ID for cluster name %q when fetching block storage", clusterName)
 		}
 
 		cluster, _, err := c.Client.Kubernetes.GetCluster(c.Context, clusterID)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error retrieving cluster details for cluster ID %q: %w", clusterID, err)
 		}
 
 		// Construct a slice of node IDs associated with a cluster's node pool
@@ -75,14 +75,14 @@ func (c *Configuration) GetKubernetesAssociatedBlockStorage(clusterName string, 
 // DeleteBlockStorage iterates over target volumes and deletes them
 func (c *Configuration) DeleteBlockStorage(blockStorage []govultr.BlockStorage) error {
 	if len(blockStorage) == 0 {
-		return fmt.Errorf("no block storage resources are available for deletion with the provided parameters")
+		return fmt.Errorf("no block storage resources are available for deletion when calling DeleteBlockStorage")
 	}
 
 	for _, blst := range blockStorage {
 		log.Info().Msg("removing block storage with name: " + blst.Label)
 		err := c.Client.BlockStorage.Delete(c.Context, blst.ID)
 		if err != nil {
-			return fmt.Errorf("error deleting block storage resource: %w", err)
+			return fmt.Errorf("error deleting block storage resource with ID %q: %w", blst.ID, err)
 		}
 		log.Info().Msg("volume " + blst.ID + " deleted")
 	}
@@ -93,7 +93,7 @@ func (c *Configuration) DeleteBlockStorage(blockStorage []govultr.BlockStorage) 
 func (c *Configuration) GetKubeconfig(clusterName string) (string, error) {
 	clusters, _, _, err := c.Client.Kubernetes.ListClusters(c.Context, &govultr.ListOptions{})
 	if err != nil {
-		return "", fmt.Errorf("error listing Kubernetes clusters: %w", err)
+		return "", fmt.Errorf("error listing Kubernetes clusters when fetching kubeconfig: %w", err)
 	}
 
 	var clusterID string
@@ -105,12 +105,12 @@ func (c *Configuration) GetKubeconfig(clusterName string) (string, error) {
 	}
 
 	if clusterID == "" {
-		return "", fmt.Errorf("could not find cluster ID for cluster name %s", clusterName)
+		return "", fmt.Errorf("could not find cluster ID for cluster name %q when retrieving kubeconfig", clusterName)
 	}
 
 	kubeConfig, _, err := c.Client.Kubernetes.GetKubeConfig(c.Context, clusterID)
 	if err != nil {
-		return "", fmt.Errorf("error getting kubeconfig: %w", err)
+		return "", fmt.Errorf("error getting kubeconfig for cluster ID %q: %w", clusterID, err)
 	}
 
 	return kubeConfig.KubeConfig, nil

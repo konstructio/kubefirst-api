@@ -7,6 +7,8 @@ See the LICENSE file for more details.
 package controller
 
 import (
+	"fmt"
+
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/kubefirst-api/internal/utils"
 	awsinternal "github.com/kubefirst/kubefirst-api/pkg/aws"
@@ -20,7 +22,7 @@ import (
 func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster: %w", err)
 	}
 
 	if !cl.InstallToolsCheck {
@@ -38,7 +40,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 			)
 			if err != nil {
 				log.Error().Msgf("error downloading dependencies: %s", err)
-				return err
+				return fmt.Errorf("failed to download tools for akamai: %w", err)
 			}
 		case "aws":
 			err := awsinternal.DownloadTools(
@@ -48,7 +50,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 			)
 			if err != nil {
 				log.Error().Msgf("error downloading dependencies: %s", err)
-				return err
+				return fmt.Errorf("failed to download tools for aws: %w", err)
 			}
 		case "civo":
 			err := utils.DownloadTools(
@@ -61,7 +63,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 			)
 			if err != nil {
 				log.Error().Msgf("error downloading dependencies: %s", err)
-				return err
+				return fmt.Errorf("failed to download tools for civo: %w", err)
 			}
 		case "google":
 			err := utils.DownloadTools(
@@ -74,7 +76,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 			)
 			if err != nil {
 				log.Error().Msgf("error downloading dependencies: %s", err)
-				return err
+				return fmt.Errorf("failed to download tools for google: %w", err)
 			}
 		case "digitalocean":
 			err := utils.DownloadTools(
@@ -87,7 +89,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 			)
 			if err != nil {
 				log.Error().Msgf("error downloading dependencies: %s", err)
-				return err
+				return fmt.Errorf("failed to download tools for digitalocean: %w", err)
 			}
 		case "vultr":
 			err := utils.DownloadTools(
@@ -100,7 +102,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 			)
 			if err != nil {
 				log.Error().Msgf("error downloading dependencies: %s", err)
-				return err
+				return fmt.Errorf("failed to download tools for vultr: %w", err)
 			}
 
 			// TODO: move to runtime
@@ -116,7 +118,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 			)
 			if err != nil {
 				log.Fatal().Msgf("error downloading dependencies: %s", err)
-				return err
+				return fmt.Errorf("failed to download tools for k3s: %w", err)
 			}
 		}
 		log.Info().Msg("dependency downloads complete")
@@ -124,7 +126,7 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 		clctrl.Cluster.InstallToolsCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster after downloading tools: %w", err)
 		}
 	}
 

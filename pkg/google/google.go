@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package google
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -22,8 +23,6 @@ import (
 
 // GetRegions lists all available regions
 func (conf *Configuration) GetRegions() ([]string, error) {
-	var regionList []string
-
 	creds, err := google.CredentialsFromJSON(conf.Context, []byte(conf.KeyFile), secretmanager.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, fmt.Errorf("could not create google storage client credentials: %w", err)
@@ -31,7 +30,7 @@ func (conf *Configuration) GetRegions() ([]string, error) {
 
 	client, err := compute.NewRegionsRESTClient(conf.Context, option.WithCredentials(creds))
 	if err != nil {
-		return []string{}, fmt.Errorf("could not create google compute client: %w", err)
+		return nil, fmt.Errorf("could not create google compute client: %w", err)
 	}
 	defer client.Close()
 
@@ -40,13 +39,15 @@ func (conf *Configuration) GetRegions() ([]string, error) {
 	}
 
 	it := client.List(conf.Context, req)
+	regionList := []string{}
+
 	for {
 		pair, err := it.Next()
-		if err == iterator.Done {
+		if errors.Is(err, iterator.Done) {
 			break
 		}
 		if err != nil {
-			return []string{}, err
+			return nil, fmt.Errorf("could not list regions: %w", err)
 		}
 		regionList = append(regionList, pair.GetName())
 	}
@@ -55,8 +56,6 @@ func (conf *Configuration) GetRegions() ([]string, error) {
 }
 
 func (conf *Configuration) GetZones() ([]string, error) {
-	var zoneList []string
-
 	creds, err := google.CredentialsFromJSON(conf.Context, []byte(conf.KeyFile), secretmanager.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, fmt.Errorf("could not create google storage client credentials: %w", err)
@@ -73,13 +72,15 @@ func (conf *Configuration) GetZones() ([]string, error) {
 	}
 
 	it := client.List(conf.Context, req)
+	zoneList := []string{}
+
 	for {
 		pair, err := it.Next()
-		if err == iterator.Done {
+		if errors.Is(err, iterator.Done) {
 			break
 		}
 		if err != nil {
-			return []string{}, err
+			return nil, fmt.Errorf("could not list zones: %w", err)
 		}
 		zoneList = append(zoneList, pair.GetName())
 	}

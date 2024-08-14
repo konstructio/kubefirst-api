@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package controller
 
 import (
+	"fmt"
 	"time"
 
 	akamaiext "github.com/kubefirst/kubefirst-api/extensions/akamai"
@@ -27,7 +28,7 @@ import (
 func (clctrl *ClusterController) RunUsersTerraform() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster: %w", err)
 	}
 
 	if !cl.UsersTerraformApplyCheck {
@@ -42,7 +43,7 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 			var err error
 			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get Google container cluster auth: %w", err)
 			}
 		}
 
@@ -86,7 +87,7 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 			if err != nil {
 				log.Error().Msgf("error applying users terraform: %s", err)
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.UsersTerraformApplyFailed, err.Error())
-				return err
+				return fmt.Errorf("failed to apply users terraform on retry: %w", err)
 			}
 		}
 		log.Info().Msg("executed users terraform successfully")
@@ -97,7 +98,7 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		clctrl.Cluster.VaultAuth.RootToken = clctrl.VaultAuth.RootToken
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster after applying terraform: %w", err)
 		}
 
 		// Set kbot password in object
@@ -109,7 +110,7 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		clctrl.Cluster.UsersTerraformApplyCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster with new status details: %w", err)
 		}
 	}
 

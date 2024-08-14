@@ -27,7 +27,7 @@ import (
 	vultrext "github.com/kubefirst/kubefirst-api/extensions/vultr"
 	"github.com/kubefirst/kubefirst-api/internal/k8s"
 	"github.com/kubefirst/kubefirst-api/internal/secrets"
-	vault "github.com/kubefirst/kubefirst-api/internal/vault"
+	"github.com/kubefirst/kubefirst-api/internal/vault"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	log "github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
@@ -38,7 +38,7 @@ import (
 func (clctrl *ClusterController) GetUserPassword(user string) error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster for user password retrieval: %w", err)
 	}
 
 	// empty conf
@@ -46,13 +46,13 @@ func (clctrl *ClusterController) GetUserPassword(user string) error {
 	// sets up vault client within function
 	clctrl.VaultAuth.KbotPassword, err = vaultConf.GetUserPassword(vault.VaultDefaultAddress, cl.VaultAuth.RootToken, user, "initial-password")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get user password from vault: %w", err)
 	}
 
 	clctrl.Cluster.VaultAuth.KbotPassword = clctrl.VaultAuth.KbotPassword
 	err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to update the cluster with new kbot password: %w", err)
 	}
 
 	return nil
@@ -62,7 +62,7 @@ func (clctrl *ClusterController) GetUserPassword(user string) error {
 func (clctrl *ClusterController) InitializeVault() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster for vault initialization: %w", err)
 	}
 
 	if !cl.VaultInitializedCheck {
@@ -79,7 +79,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 			var err error
 			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get google client auth for vault initialization: %w", err)
 			}
 		}
 
@@ -91,7 +91,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 
 			initResponse, err := vaultClient.AutoUnseal()
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to auto unseal vault: %w", err)
 			}
 
 			vaultRootToken := initResponse.RootToken
@@ -111,28 +111,28 @@ func (clctrl *ClusterController) InitializeVault() error {
 
 			err = k8s.CreateSecretV2(kcfg.Clientset, &secret)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to create vault secret in Kubernetes: %w", err)
 			}
 		case "akamai", "civo", "digitalocean", "k3s", "vultr":
 			// Initialize and unseal Vault
 			// Build and apply manifests
 			yamlData, err := kcfg.KustomizeBuild(vaultHandlerPath)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to build kustomize resources for vault: %w", err)
 			}
 			output, err := kcfg.SplitYAMLFile(yamlData)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to split kustomize yaml output for vault: %w", err)
 			}
 			err = kcfg.ApplyObjects(output)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to apply kustomize objects for vault: %w", err)
 			}
 
 			// Wait for the Job to finish
 			job, err := k8s.ReturnJobObject(kcfg.Clientset, "vault", "vault-handler")
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to return vault handler job object: %w", err)
 			}
 			_, err = k8s.WaitForJobComplete(kcfg.Clientset, job.Name, job.Namespace, 240)
 			if err != nil {
@@ -146,7 +146,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 		clctrl.Cluster.VaultInitializedCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster to indicate vault is initialized: %w", err)
 		}
 	}
 
@@ -157,7 +157,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 func (clctrl *ClusterController) RunVaultTerraform() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster for vault terraform execution: %w", err)
 	}
 
 	if !cl.VaultTerraformApplyCheck {
@@ -172,7 +172,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 			var err error
 			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get google client auth for vault terraform execution: %w", err)
 			}
 		}
 
@@ -186,7 +186,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		if clctrl.GitProvider == "gitlab" {
 			registryAuth, err = clctrl.ContainerRegistryAuth()
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get container registry auth for gitlab: %w", err)
 			}
 
 			usernamePasswordString = fmt.Sprintf("%s:%s", "container-registry-auth", registryAuth)
@@ -229,19 +229,19 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		}
 
 		tfEntrypoint := clctrl.ProviderConfig.GitopsDir + "/terraform/vault"
-		terraformClient := clctrl.ProviderConfig.TerraformClient
+		tfClient := clctrl.ProviderConfig.TerraformClient
 
 		log.Info().Msg("configuring vault with terraform")
-		err = terraformext.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
+		err = terraformext.InitApplyAutoApprove(tfClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Error().Msgf("error applying vault terraform: %s", err)
 			log.Info().Msg("sleeping 10 seconds before retrying terraform execution once more")
 			time.Sleep(10 * time.Second)
-			err = terraformext.InitApplyAutoApprove(terraformClient, tfEntrypoint, tfEnvs)
+			err = terraformext.InitApplyAutoApprove(tfClient, tfEntrypoint, tfEnvs)
 			if err != nil {
-				log.Error().Msgf("error applying vault terraform: %s", err)
+				log.Error().Msgf("error applying vault terraform on retry: %s", err)
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.VaultTerraformApplyFailed, err.Error())
-				return err
+				return fmt.Errorf("failed to apply vault terraform configuration after retry: %w", err)
 			}
 		}
 
@@ -251,7 +251,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		clctrl.Cluster.VaultTerraformApplyCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster after vault terraform execution: %w", err)
 		}
 	}
 
@@ -261,7 +261,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 func (clctrl *ClusterController) WriteVaultSecrets() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster when writing vault secrets: %w", err)
 	}
 
 	vaultAddr := "http://localhost:8200"
@@ -271,7 +271,7 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 	})
 	if err != nil {
 		log.Error().Msgf("error creating vault client: %s", err)
-		return err
+		return fmt.Errorf("failed to create vault client: %w", err)
 	}
 
 	var externalDNSToken string
@@ -302,7 +302,7 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 		var err error
 		kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get google client auth for writing vault secrets: %w", err)
 		}
 	}
 
@@ -336,7 +336,7 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 	})
 	if err != nil {
 		log.Error().Msgf("error writing secret to vault: %s", err)
-		return err
+		return fmt.Errorf("failed to write external-dns secret to vault: %w", err)
 	}
 
 	_, err = vaultClient.KVv2("secret").Put(context.Background(), "cloudflare", map[string]interface{}{
@@ -344,7 +344,7 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 	})
 	if err != nil {
 		log.Error().Msgf("error writing secret to vault: %s", err)
-		return err
+		return fmt.Errorf("failed to write cloudflare secret to vault: %w", err)
 	}
 
 	// _, err = vaultClient.KVv2("secret").Put(context.Background(), "crossplane", map[string]interface{}{
@@ -360,7 +360,7 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 		}
 		if err := writeGoogleSecrets(homeDir, vaultClient); err != nil {
 			log.Error().Msgf("error writing Google secrets to vault: %s", err)
-			return err
+			return fmt.Errorf("failed to write google-specific secrets to vault: %w", err)
 		}
 		log.Info().Msg("successfully wrote google specific secrets to vault")
 	}
@@ -382,7 +382,7 @@ func (clctrl *ClusterController) WaitForVault() error {
 		var err error
 		kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get google client auth for waiting for vault: %w", err)
 		}
 	}
 
@@ -395,12 +395,12 @@ func (clctrl *ClusterController) WaitForVault() error {
 	)
 	if err != nil {
 		log.Error().Msgf("error finding Vault StatefulSet: %s", err)
-		return err
+		return fmt.Errorf("failed to find vault stateful set in Kubernetes: %w", err)
 	}
 	_, err = k8s.WaitForStatefulSetReady(kcfg.Clientset, vaultStatefulSet, 300, true)
 	if err != nil {
 		log.Error().Msgf("error waiting for Vault StatefulSet ready state: %s", err)
-		return err
+		return fmt.Errorf("failed to wait for vault stateful set to be ready: %w", err)
 	}
 
 	return nil
@@ -411,20 +411,20 @@ func writeGoogleSecrets(homeDir string, vaultClient *vaultapi.Client) error {
 	adcJSON, err := os.ReadFile(fmt.Sprintf("%s/.k1/application-default-credentials.json", homeDir))
 	if err != nil {
 		log.Error().Msg("error: reading google json credentials file")
-		return err
+		return fmt.Errorf("failed to read google json credentials file: %w", err)
 	}
 
 	var data map[string]interface{}
 	err = json.Unmarshal([]byte(adcJSON), &data)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to unmarshal google json credentials: %w", err)
 	}
 
 	data["private_key"] = strings.ReplaceAll(data["private_key"].(string), "\n", "\\n")
 
 	_, err = vaultClient.KVv2("secret").Put(context.Background(), "gcp/application-default-credentials", data)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to write google application default credentials to vault: %w", err)
 	}
 	return nil
 }

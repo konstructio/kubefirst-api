@@ -49,7 +49,7 @@ func (g Session) CreateWebhookRepo(org, repo, hookName, hookURL, hookSecret stri
 
 	hook, _, err := g.gitClient.Repositories.CreateHook(g.context, org, repo, input)
 	if err != nil {
-		return fmt.Errorf("error when creating a webhook: %v", err)
+		return fmt.Errorf("error when creating a webhook for repo %s/%s: %w", org, repo, err)
 	}
 
 	log.Info().Msgf("Successfully created hook (id: %v)", hook.GetID())
@@ -57,7 +57,7 @@ func (g Session) CreateWebhookRepo(org, repo, hookName, hookURL, hookSecret stri
 }
 
 // CreatePrivateRepo - Use github API to create a private repo
-func (g Session) CreatePrivateRepo(org string, name string, description string) error {
+func (g Session) CreatePrivateRepo(org, name, description string) error {
 	if name == "" {
 		return fmt.Errorf("no name: New repos must be given a name")
 	}
@@ -73,7 +73,7 @@ func (g Session) CreatePrivateRepo(org string, name string, description string) 
 
 	repo, _, err := g.gitClient.Repositories.Create(g.context, org, r)
 	if err != nil {
-		return fmt.Errorf("error creating private repo %q: %w", name, err)
+		return fmt.Errorf("error creating private repo %q in organization %q: %w", name, org, err)
 	}
 
 	log.Info().Msgf("Successfully created new repo: %q", repo.GetName())
@@ -82,18 +82,18 @@ func (g Session) CreatePrivateRepo(org string, name string, description string) 
 
 // RemoveRepo Removes a repository based on repository owner and name. It returns github.Response that hold http data,
 // as http status code, the caller can make use of the http status code to validate the response.
-func (g Session) RemoveRepo(owner string, name string) (*github.Response, error) {
+func (g Session) RemoveRepo(owner, name string) (*github.Response, error) {
 	if owner == "" {
-		return nil, fmt.Errorf("a repository owner is required")
+		return nil, fmt.Errorf("removal failed: a repository owner is required")
 	}
 
 	if name == "" {
-		return nil, fmt.Errorf("a repository name is required")
+		return nil, fmt.Errorf("removal failed: a repository name is required")
 	}
 
 	resp, err := g.gitClient.Repositories.Delete(g.context, owner, name)
 	if err != nil {
-		return resp, fmt.Errorf("error removing private repo %q: %w", name, err)
+		return resp, fmt.Errorf("error removing private repo %q from owner %q: %w", name, owner, err)
 	}
 
 	log.Info().Msgf("Successfully removed repo: %v", name)
@@ -101,14 +101,14 @@ func (g Session) RemoveRepo(owner string, name string) (*github.Response, error)
 }
 
 // RemoveTeam - Remove  a team
-func (g Session) RemoveTeam(owner string, team string) error {
+func (g Session) RemoveTeam(owner, team string) error {
 	if team == "" {
-		return fmt.Errorf("team name is required")
+		return fmt.Errorf("team removal failed: team name is required")
 	}
 
 	_, err := g.gitClient.Teams.DeleteTeamBySlug(g.context, owner, team)
 	if err != nil {
-		return fmt.Errorf("error removing team %q: %w", team, err)
+		return fmt.Errorf("error removing team %q from owner %q: %w", team, owner, err)
 	}
 
 	log.Info().Msgf("Successfully removed team: %v", team)
@@ -116,14 +116,14 @@ func (g Session) RemoveTeam(owner string, team string) error {
 }
 
 // GetRepo - Returns  a repo
-func (g Session) GetRepo(owner string, name string) (*github.Repository, error) {
+func (g Session) GetRepo(owner, name string) (*github.Repository, error) {
 	if name == "" {
 		return nil, fmt.Errorf("get repo: name is empty")
 	}
 
 	repo, _, err := g.gitClient.Repositories.Get(g.context, owner, name)
 	if err != nil {
-		return nil, fmt.Errorf("error removing private repo %q: %w", name, err)
+		return nil, fmt.Errorf("error fetching private repo %q for owner %q: %w", name, owner, err)
 	}
 
 	log.Info().Msgf("Successfully fetched repo: %q", repo.GetName())
@@ -132,33 +132,33 @@ func (g Session) GetRepo(owner string, name string) (*github.Repository, error) 
 
 // AddSSHKey - Add ssh keys to a user account to allow kubefirst installer
 // to use its own token during installation
-func (g Session) AddSSHKey(keyTitle string, publicKey string) (*github.Key, error) {
+func (g Session) AddSSHKey(keyTitle, publicKey string) (*github.Key, error) {
 	log.Printf("Add SSH key to user account on behalf of kubefirst")
 	key, _, err := g.gitClient.Users.CreateKey(g.context, &github.Key{Title: &keyTitle, Key: &publicKey})
 	if err != nil {
-		return nil, fmt.Errorf("error add SSH Key: %w", err)
+		return nil, fmt.Errorf("error adding SSH Key with title %q: %w", keyTitle, err)
 	}
 	return key, nil
 }
 
 // RemoveSSHKey - Removes SSH Key from github user
 func (g Session) RemoveSSHKey(keyID int64) error {
-	log.Printf("Remove SSH key to user account on behalf of kubefrist")
+	log.Printf("Remove SSH key to user account on behalf of kubefirst")
 	_, err := g.gitClient.Users.DeleteKey(g.context, keyID)
 	if err != nil {
-		return fmt.Errorf("error remiving SSH Key: %w", err)
+		return fmt.Errorf("error removing SSH Key with ID %d: %w", keyID, err)
 	}
 	return nil
 }
 
 // RemoveSSHKeyByPublicKey deletes a GitHub key that matches the provided public key.
-func (g Session) RemoveSSHKeyByPublicKey(user string, publicKey string) error {
+func (g Session) RemoveSSHKeyByPublicKey(user, publicKey string) error {
 	keys, resp, err := g.gitClient.Users.ListKeys(g.context, user, &github.ListOptions{})
 	if err != nil {
-		return fmt.Errorf("unable to retrieve ssh keys: %w", err)
+		return fmt.Errorf("unable to retrieve SSH keys for user %q: %w", user, err)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unable to retrieve ssh keys, http code is: %d", resp.StatusCode)
+		return fmt.Errorf("unable to retrieve SSH keys for user %q, http code is: %d", user, resp.StatusCode)
 	}
 
 	for _, key := range keys {
@@ -167,11 +167,11 @@ func (g Session) RemoveSSHKeyByPublicKey(user string, publicKey string) error {
 		if key.GetKey()+"\n" == publicKey {
 			resp, err := g.gitClient.Users.DeleteKey(g.context, key.GetID())
 			if err != nil {
-				return err
+				return fmt.Errorf("error deleting SSH key with ID %d: %w", key.GetID(), err)
 			}
 
 			if resp.StatusCode != http.StatusNoContent {
-				return fmt.Errorf("unable to delete ssh-key, http code is: %d", resp.StatusCode)
+				return fmt.Errorf("unable to delete SSH key with ID %d, http code is: %d", key.GetID(), resp.StatusCode)
 			}
 		}
 	}
@@ -202,7 +202,7 @@ func (g Session) CreatePR(
 		&prData,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("error creating pull request: %w", err)
+		return nil, fmt.Errorf("error creating pull request for repo %q by user %q: %w", repoName, gitHubUser, err)
 	}
 
 	log.Info().Msgf("pull request create response http code: %d", resp.StatusCode)
@@ -210,7 +210,7 @@ func (g Session) CreatePR(
 	return pullRequest, nil
 }
 
-func (g Session) CommentPR(pullRequesrt *github.PullRequest, gitHubUser string, body string) error {
+func (g Session) CommentPR(pullRequesrt *github.PullRequest, gitHubUser, body string) error {
 	issueComment := github.IssueComment{
 		Body: &body,
 	}
@@ -223,7 +223,7 @@ func (g Session) CommentPR(pullRequesrt *github.PullRequest, gitHubUser string, 
 		&issueComment,
 	)
 	if err != nil {
-		return fmt.Errorf("error creating pull request comment: %w", err)
+		return fmt.Errorf("error creating pull request comment for pull request %d: %w", *pullRequesrt.Number, err)
 	}
 	log.Printf("pull request comment response http code: %d", resp.StatusCode)
 
@@ -244,11 +244,11 @@ func (g Session) SearchWordInPullRequestComment(gitHubUser string,
 		&github.IssueListCommentsOptions{},
 	)
 	if err != nil {
-		return false, fmt.Errorf("error listing comments: %w", err)
+		return false, fmt.Errorf("error listing comments for pull request %d: %w", *pullRequest.Number, err)
 	}
 
 	if r.StatusCode != http.StatusOK {
-		return false, nil
+		return false, fmt.Errorf("error retrieving comments for pull request %d, http code is: %d", *pullRequest.Number, r.StatusCode)
 	}
 
 	for _, v := range comments {
@@ -276,26 +276,26 @@ func (g Session) RetrySearchPullRequestComment(
 		}
 		return true, nil
 	}
-	return false, nil
+	return false, fmt.Errorf("failed to find the search term %q in comments for pull request %d after retries", searchFor, *pullRequest.Number)
 }
 
 // GetRepo - Always returns a status code for whether a repository exists or not
-func (g Session) CheckRepoExists(owner string, name string) int {
+func (g Session) CheckRepoExists(owner, name string) int {
 	_, response, _ := g.gitClient.Repositories.Get(g.context, owner, name)
 	return response.StatusCode
 }
 
 // GetRepo - Always returns a status code for whether a team exists or not
-func (g Session) CheckTeamExists(owner string, name string) int {
+func (g Session) CheckTeamExists(owner, name string) int {
 	_, response, _ := g.gitClient.Teams.GetTeamBySlug(g.context, owner, name)
 	return response.StatusCode
 }
 
 // DeleteRepositoryWebhook
-func (g Session) DeleteRepositoryWebhook(owner string, repository string, url string) error {
+func (g Session) DeleteRepositoryWebhook(owner, repository, url string) error {
 	webhooks, err := g.ListRepoWebhooks(owner, repository)
 	if err != nil {
-		return err
+		return fmt.Errorf("error listing webhooks for repo %s/%s: %w", owner, repository, err)
 	}
 
 	var hookID int64
@@ -307,7 +307,7 @@ func (g Session) DeleteRepositoryWebhook(owner string, repository string, url st
 	if hookID != 0 {
 		_, err := g.gitClient.Repositories.DeleteHook(g.context, owner, repository, hookID)
 		if err != nil {
-			return fmt.Errorf("error deleting hook %s/%s/%s: %w", owner, repository, url, err)
+			return fmt.Errorf("error deleting hook from repo %s/%s with URL %s: %w", owner, repository, url, err)
 		}
 		log.Info().Msgf("deleted hook %s/%s/%s", owner, repository, url)
 		return nil
@@ -317,7 +317,7 @@ func (g Session) DeleteRepositoryWebhook(owner string, repository string, url st
 }
 
 // ListRepoWebhooks returns all webhooks for a repository
-func (g Session) ListRepoWebhooks(owner string, repo string) ([]*github.Hook, error) {
+func (g Session) ListRepoWebhooks(owner, repo string) ([]*github.Hook, error) {
 	container := make([]*github.Hook, 0)
 	for nextPage := 1; nextPage > 0; {
 		hooks, resp, err := g.gitClient.Repositories.ListHooks(g.context, owner, repo, &github.ListOptions{
@@ -325,7 +325,7 @@ func (g Session) ListRepoWebhooks(owner string, repo string) ([]*github.Hook, er
 			PerPage: 10,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("error listing hooks: %w", err)
+			return nil, fmt.Errorf("error listing hooks for repo %s/%s: %w", owner, repo, err)
 		}
 		container = append(container, hooks...)
 		nextPage = resp.NextPage

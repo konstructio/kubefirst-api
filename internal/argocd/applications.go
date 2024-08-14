@@ -101,7 +101,7 @@ func deleteArgoCDApplicationV2(clientset kubernetes.Interface, applicationName s
 }
 
 // RefreshRegistryApplication forces the registry application to fetch upstream manifests
-func RefreshRegistryApplication(host string, token string) error {
+func RefreshRegistryApplication(host, token string) error {
 	// Build request to ArgoCD API
 	request, err := http.NewRequest(
 		http.MethodGet,
@@ -109,16 +109,16 @@ func RefreshRegistryApplication(host string, token string) error {
 		nil,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating request to refresh registry application: %w", err)
 	}
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 
 	// Submit request to ArgoCD API
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := httpCommon.CustomHTTPClient(false, 10*time.Second)
 	response, err := client.Do(request)
 	if err != nil {
-		return err
+		return fmt.Errorf("error sending request to refresh registry application: %w", err)
 	}
 	defer response.Body.Close()
 
@@ -126,7 +126,7 @@ func RefreshRegistryApplication(host string, token string) error {
 }
 
 // RefreshApplication forces the registry application to fetch upstream manifests
-func RefreshApplication(host string, token string, appName string) error {
+func RefreshApplication(host, token, appName string) error {
 	// Build request to ArgoCD API
 	endpoint := fmt.Sprintf("%s/api/v1/applications/%s?refresh=true", host, appName)
 	request, err := http.NewRequest(http.MethodGet, endpoint, nil)
