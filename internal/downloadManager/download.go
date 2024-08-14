@@ -4,7 +4,7 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package downloadManager //nolint:revive // allowing temporarily for better code organization
+package downloadManager //nolint:revive,stylecheck // allowing temporarily for better code organization
 
 import (
 	"archive/tar"

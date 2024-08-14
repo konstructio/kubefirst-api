@@ -1,4 +1,4 @@
-package providerConfigs // nolint:revive // allowing temporarily for better code organization
+package providerConfigs //nolint:revive,stylecheck // allowing temporarily for better code organization
 
 import (
 	"context"
