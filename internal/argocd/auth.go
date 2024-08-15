@@ -43,6 +43,8 @@ func GetArgoCDToken(username string, password string) (string, error) {
 		return "", err
 	}
 
+	req.Header.Set("Content-Type", "application/json")
+
 	res, err := httpClient.Do(req)
 	if err != nil {
 		return "", err
