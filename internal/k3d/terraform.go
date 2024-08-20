@@ -80,7 +80,6 @@ func TerraformPrep(config *K3dConfig) error {
 	if err := filepath.Walk(githubRunnerPath, detokenizeTerraform(githubRunnerPath, config)); err != nil {
 		return fmt.Errorf("error in detokenizing GitHub runner: %w", err)
 	}
-	log.Info().Msgf(githubRunnerPath)
 
 	return nil
 }

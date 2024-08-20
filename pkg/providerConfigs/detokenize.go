@@ -275,7 +275,7 @@ func DetokenizeGitMetaphor(path string, tokens *MetaphorTokenValues) error {
 			oldPath := path
 			err := os.Rename(oldPath, newPath)
 			if err != nil {
-				return fmt.Errorf("Error renaming %s to %s : %w", oldPath, newPath, err)
+				return fmt.Errorf("error renaming %s to %s : %w", oldPath, newPath, err)
 			}
 			return fs.SkipDir
 		}
@@ -284,7 +284,7 @@ func DetokenizeGitMetaphor(path string, tokens *MetaphorTokenValues) error {
 
 	err = filepath.Walk(path, detokenizeGitopsMetaphor(path, tokens))
 	if err != nil {
-		return err
+		return fmt.Errorf("error in detokenizing metaphor :%w", err)
 	}
 	return nil
 }

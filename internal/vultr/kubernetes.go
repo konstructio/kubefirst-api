@@ -112,7 +112,7 @@ func (c *VultrConfiguration) GetKubeconfig(clusterName string) (string, error) {
 	kubeConfig, _, err := c.Client.Kubernetes.GetKubeConfig(c.Context, clusterId)
 
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error getting k8s client :%w", err)
 	}
 
 	return kubeConfig.KubeConfig, nil

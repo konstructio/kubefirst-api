@@ -164,7 +164,7 @@ func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, name
 
 	if err != nil {
 		return fmt.Errorf("unable to get deployment %q: %w", deploymentName, err)
-  }
+	}
 
 	if deploy.Spec.Template.ObjectMeta.Annotations == nil {
 		deploy.Spec.Template.ObjectMeta.Annotations = make(map[string]string)
@@ -239,7 +239,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			return err
 		}
 
-		log.Info().Msg("successfull in restarting\n")
+		log.Info().Msg("successfull in restarting")
 
 		retryAttempts := 2
 		for attempt := 1; attempt <= retryAttempts; attempt++ {

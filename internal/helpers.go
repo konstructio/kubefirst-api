@@ -551,44 +551,35 @@ func FindStringInSlice(s []string, str string) bool {
 	return false
 }
 
-func ResetK1Dir(k1Dir string, gitopsRepoName string, metaphorRepoName string) error {
-
-	if _, err := os.Stat(k1Dir + "/argo-workflows"); !os.IsNotExist(err) {
-		// path/to/whatever exists
-		err := os.RemoveAll(k1Dir + "/argo-workflows")
-		if err != nil {
-			return fmt.Errorf("unable to delete %q folder, error: %w", k1Dir+"/argo-workflows", err)
-		}
+func ResetK1Dir(k1Dir, gitopsRepoName, metaphorRepoName string) error {
+	// Define the list of directories and files to be removed
+	paths := []string{
+		"argo-workflows",
+		gitopsRepoName,
+		metaphorRepoName,
+		"tools",
+		"argocd-init-values.yaml",
 	}
 
-	if _, err := os.Stat(k1Dir + "/" + gitopsRepoName); !os.IsNotExist(err) {
-		err := os.RemoveAll(k1Dir + "/" + gitopsRepoName)
-		if err != nil {
-			return fmt.Errorf("unable to delete %q folder, error: %w", k1Dir+"/"+gitopsRepoName, err)
-		}
-	}
-	if _, err := os.Stat(k1Dir + "/" + metaphorRepoName); !os.IsNotExist(err) {
-		err := os.RemoveAll(k1Dir + "/" + metaphorRepoName)
-		if err != nil {
-			return fmt.Errorf("unable to delete %q folder, error: %w", k1Dir+"/"+metaphorRepoName, err)
-		}
-	}
-	// todo look at logic to not re-download
-	if _, err := os.Stat(k1Dir + "/tools"); !os.IsNotExist(err) {
-		err = os.RemoveAll(k1Dir + "/tools")
-		if err != nil {
-			return fmt.Errorf("unable to delete %q folder, error: %w", k1Dir+"/tools", err)
-		}
-	}
-	//* files
-	//! this might fail with an adjustment made to validate
-	if _, err := os.Stat(k1Dir + "/argocd-init-values.yaml"); !os.IsNotExist(err) {
-		err = os.Remove(k1Dir + "/argocd-init-values.yaml")
-		if err != nil {
-			return fmt.Errorf("unable to delete %q folder, error: %w", k1Dir+"/argocd-init-values.yaml", err)
+	for _, p := range paths {
+		fullPath := filepath.Join(k1Dir, p)
+
+		// Check if the path exists
+		if _, err := os.Stat(fullPath); !os.IsNotExist(err) {
+			var removeErr error
+			if filepath.Ext(fullPath) == "" {
+				// It's a directory
+				removeErr = os.RemoveAll(fullPath)
+			} else {
+				// It's a file
+				removeErr = os.Remove(fullPath)
+			}
+
+			if removeErr != nil {
+				return fmt.Errorf("unable to delete %q, error: %s", fullPath, removeErr)
+			}
 		}
 	}
 
 	return nil
-
 }
