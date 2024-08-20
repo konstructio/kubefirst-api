@@ -8,9 +8,11 @@ package k8s
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
+	"syscall"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -18,6 +20,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
@@ -160,50 +163,46 @@ func podExec(kubeConfigPath string, ps *PodSessionOptions, pe v1.PodExecOptions,
 	return nil
 }
 
-// ReturnDeploymentObject returns a matching appsv1.Deployment object based on the filters
-func ReturnDeploymentObject(clientset *kubernetes.Clientset, matchLabel string, matchLabelValue string, namespace string, timeoutSeconds int) (*appsv1.Deployment, error) {
+func ReturnDeploymentObject(client kubernetes.Interface, matchLabel string, matchLabelValue string, namespace string, timeoutSeconds int) (*appsv1.Deployment, error) {
 
-	// Filter
-	deploymentListOptions := metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("%s=%s", matchLabel, matchLabelValue),
-	}
+	timeout := time.Duration(timeoutSeconds) * time.Second
+	var deployment *appsv1.Deployment
 
-	log.Info().Msgf("waiting for %s Deployment to be created", matchLabelValue)
-
-	// Create watch operation
-	objWatch, err := clientset.
-		AppsV1().
-		Deployments(namespace).
-		Watch(context.Background(), deploymentListOptions)
-	if err != nil {
-		log.Error().Msgf("error when attempting to search for Deployment: %s", err)
-		return nil, err
-	}
-
-	objChan := objWatch.ResultChan()
-	for {
-		select {
-		case event, ok := <-objChan:
-			time.Sleep(time.Second * 15)
-			if !ok {
-				// Error if the channel closes
-				log.Error().Msgf("error waiting for %s Deployment to be created: %s", matchLabelValue, err)
-				return nil, fmt.Errorf("error waiting for %s Deployment to be created: %s", matchLabelValue, err)
+	err := wait.PollImmediate(15*time.Second, timeout, func() (bool, error) {
+		deployments, err := client.AppsV1().Deployments(namespace).List(context.Background(), metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("%s=%s", matchLabel, matchLabelValue),
+		})
+		if err != nil {
+			// if we couldn't connect, ask to try again
+			if errors.Is(err, syscall.ECONNREFUSED) {
+				return false, nil
 			}
-			if event.
-				Object.(*appsv1.Deployment).Status.Replicas > 0 {
-				spec, err := clientset.AppsV1().Deployments(namespace).List(context.Background(), deploymentListOptions)
-				if err != nil {
-					log.Error().Msgf("Error when searching for Deployment: %s", err)
-					return nil, err
-				}
-				return &spec.Items[0], nil
-			}
-		case <-time.After(time.Duration(timeoutSeconds) * time.Second):
-			log.Error().Msg("the Deployment was not created within the timeout period")
-			return nil, fmt.Errorf("the Deployment was not created within the timeout period")
+
+			// if we got an error, return it
+			return false, fmt.Errorf("error getting Deployment: %w", err)
 		}
+
+		// if we couldn't find any deployments, ask to try again
+		if len(deployments.Items) == 0 {
+			return false, nil
+		}
+
+		// fetch the first item from the list matching the labels
+		deployment = &deployments.Items[0]
+
+		// Check if it has at least one replica, if not, ask to try again
+		if deployment.Status.Replicas == 0 {
+			return false, nil
+		}
+
+		// if we found a deployment, return it
+		return true, nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error waiting for Deployment: %w", err)
 	}
+
+	return deployment, nil
 }
 
 // ReturnPodObject returns a matching v1.Pod object based on the filters

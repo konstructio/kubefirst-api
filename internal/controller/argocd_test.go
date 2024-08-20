@@ -39,7 +39,7 @@ func TestRestartDeployment(t *testing.T) {
 	}
 
 	// kubectl rollout restart deployment example-deployment
-	if err := RestartDeployment(ctx, client, namespace, deployment.Name); err != nil {
+	if  err := RestartDeployment(ctx, client, namespace, deployment.Name); err != nil {
 		t.Fatalf("error restarting deployment: %v", err)
 	}
 
@@ -69,3 +69,4 @@ func TestRestartDeployment(t *testing.T) {
 		t.Fatalf("expected annotation restartedAt to be set within 1 second, got %v", t2.Sub(t1))
 	}
 }
+

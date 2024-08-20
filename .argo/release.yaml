@@ -65,6 +65,22 @@ spec:
                   value: '{{workflow.parameters.appName}}'
                 - name: chartDir
                   value: 'charts/{{workflow.parameters.appName}}'
+        - - name: release-and-tag-main-with-notes
+            templateRef:
+              name: cwft-git
+              template: release-and-tag-main-with-notes
+              clusterScope: true
+            arguments:
+              artifacts:
+                - name: repo-source
+                  from: '{{steps.set-chart-versions.outputs.artifacts.repo-source}}'
+              parameters:
+                - name: orgName
+                  value: 'kubefirst'
+                - name: appName
+                  value: '{{workflow.parameters.appName}}'
+                - name: tagName
+                  value: '{{steps.get-initial-chart-version.outputs.result}}'
         - - name: increment-chart-minor
             templateRef:
               name: cwft-helm
@@ -165,12 +181,12 @@ spec:
         - - name: get-current-macro-chart-version
             templateRef:
               name: cwft-helm
-              template: get-macro-chart-version
+              template: get-macro-chart-version-from-charts
               clusterScope: true
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}'
+                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
               parameters:
                 - name: chartDir
                   value: "charts/kubefirst"
@@ -183,7 +199,7 @@ spec:
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}'
+                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
               parameters:
                 - name: commitMessage
                   value: 'tagged {{workflow.parameters.appName}} in charts kubefirst-v{{steps.get-current-macro-chart-version.outputs.result}}'
@@ -193,4 +209,3 @@ spec:
                   value: 'charts'
                 - name: tag
                   value: 'kubefirst-v{{steps.get-current-macro-chart-version.outputs.result}}'
-

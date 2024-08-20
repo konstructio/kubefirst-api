@@ -46,7 +46,13 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 			}
 		}
 
-		argoCDInstallPath := fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
+		var argoCDInstallPath string
+		if clctrl.CloudProvider == "digitalocean" {
+			argoCDInstallPath = "github.com:konstructio/manifests/argocd/cloud?ref=v1.1.0"
+		} else {
+			argoCDInstallPath = fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
+		}
+
 		log.Info().Msg("installing argocd")
 
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.ArgoCDInstallStarted, "")
@@ -129,9 +135,11 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 				8080,
 				argoCDStopChannel,
 			)
+
 			argoCDToken, err = argocd.GetArgoCDToken("admin", argocdPassword)
+
 			if err != nil {
-				return err
+				return fmt.Errorf("error getting argoCDToken : %w", err)
 			}
 		}
 
@@ -156,7 +164,7 @@ func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, name
 
 	if err != nil {
 		return fmt.Errorf("unable to get deployment %q: %w", deploymentName, err)
-	}
+  }
 
 	if deploy.Spec.Template.ObjectMeta.Annotations == nil {
 		deploy.Spec.Template.ObjectMeta.Annotations = make(map[string]string)
