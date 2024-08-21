@@ -47,9 +47,11 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 		}
 
 		var argoCDInstallPath string
-		if clctrl.CloudProvider == "digitalocean" || clctrl.CloudProvider == "aws" || clctrl.CloudProvider == "civo" {
+
+		switch clctrl.CloudProvider {
+		case "digitalocean", "aws", "civo":
 			argoCDInstallPath = "github.com:konstructio/manifests/argocd/cloud?ref=v1.1.0"
-		} else {
+		default:
 			argoCDInstallPath = fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
 		}
 
