@@ -14,11 +14,11 @@ spec:
             arguments:
               parameters:
                 - name: appName
-                  value: '{{workflow.parameters.appName}}'
+                  value: "{{workflow.parameters.appName}}"
                 - name: branch
-                  value: '{{workflow.parameters.branch}}'
+                  value: "{{workflow.parameters.branch}}"
                 - name: gitUrlNoProtocol
-                  value: '{{workflow.parameters.gitUrlNoProtocol}}'
+                  value: "{{workflow.parameters.gitUrlNoProtocol}}"
         - - name: get-initial-chart-version
             templateRef:
               name: cwft-helm
@@ -27,12 +27,12 @@ spec:
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.checkout.outputs.artifacts.repo-source}}'
+                  from: "{{steps.checkout.outputs.artifacts.repo-source}}"
               parameters:
                 - name: appName
-                  value: '{{workflow.parameters.appName}}'
+                  value: "{{workflow.parameters.appName}}"
                 - name: chartDir
-                  value: 'charts/{{workflow.parameters.appName}}'
+                  value: "charts/{{workflow.parameters.appName}}"
         - - name: set-chart-versions
             templateRef:
               name: cwft-helm
@@ -41,16 +41,16 @@ spec:
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.checkout.outputs.artifacts.repo-source}}'
+                  from: "{{steps.checkout.outputs.artifacts.repo-source}}"
               parameters:
                 - name: appName
-                  value: '{{workflow.parameters.appName}}'
+                  value: "{{workflow.parameters.appName}}"
                 - name: chartDir
-                  value: 'charts/{{workflow.parameters.appName}}'
+                  value: "charts/{{workflow.parameters.appName}}"
                 - name: chartVersion
-                  value: '{{steps.get-initial-chart-version.outputs.result}}'
+                  value: "{{steps.get-initial-chart-version.outputs.result}}"
                 - name: shortSha
-                  value: '{{workflow.parameters.shortSha}}'
+                  value: "{{workflow.parameters.shortSha}}"
         - - name: publish-helm-chart
             templateRef:
               name: cwft-helm
@@ -59,12 +59,12 @@ spec:
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.set-chart-versions.outputs.artifacts.repo-source}}'
+                  from: "{{steps.set-chart-versions.outputs.artifacts.repo-source}}"
               parameters:
                 - name: appName
-                  value: '{{workflow.parameters.appName}}'
+                  value: "{{workflow.parameters.appName}}"
                 - name: chartDir
-                  value: 'charts/{{workflow.parameters.appName}}'
+                  value: "charts/{{workflow.parameters.appName}}"
         - - name: release-and-tag-main-with-notes
             templateRef:
               name: cwft-git
@@ -73,14 +73,14 @@ spec:
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.set-chart-versions.outputs.artifacts.repo-source}}'
+                  from: "{{steps.set-chart-versions.outputs.artifacts.repo-source}}"
               parameters:
                 - name: orgName
-                  value: 'kubefirst'
+                  value: "kubefirst"
                 - name: appName
-                  value: '{{workflow.parameters.appName}}'
+                  value: "{{workflow.parameters.appName}}"
                 - name: tagName
-                  value: '{{steps.get-initial-chart-version.outputs.result}}'
+                  value: "{{steps.get-initial-chart-version.outputs.result}}"
         - - name: increment-chart-minor
             templateRef:
               name: cwft-helm
@@ -89,14 +89,14 @@ spec:
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.set-chart-versions.outputs.artifacts.repo-source}}'
+                  from: "{{steps.set-chart-versions.outputs.artifacts.repo-source}}"
               parameters:
                 - name: appName
-                  value: '{{workflow.parameters.appName}}'
+                  value: "{{workflow.parameters.appName}}"
                 - name: chartDir
-                  value: 'charts/{{workflow.parameters.appName}}'
+                  value: "charts/{{workflow.parameters.appName}}"
                 - name: chartVersion
-                  value: '{{steps.get-initial-chart-version.outputs.result}}'
+                  value: "{{steps.get-initial-chart-version.outputs.result}}"
         - - name: get-published-chart-version
             templateRef:
               name: cwft-helm
@@ -105,12 +105,12 @@ spec:
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.increment-chart-minor.outputs.artifacts.repo-source}}'
+                  from: "{{steps.increment-chart-minor.outputs.artifacts.repo-source}}"
               parameters:
                 - name: appName
-                  value: '{{workflow.parameters.appName}}'
+                  value: "{{workflow.parameters.appName}}"
                 - name: chartDir
-                  value: 'charts/{{workflow.parameters.appName}}'
+                  value: "charts/{{workflow.parameters.appName}}"
         - - name: commit-chart-increment
             templateRef:
               name: cwft-git
@@ -119,12 +119,12 @@ spec:
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.increment-chart-minor.outputs.artifacts.repo-source}}'
+                  from: "{{steps.increment-chart-minor.outputs.artifacts.repo-source}}"
               parameters:
                 - name: repoName
-                  value: '{{workflow.parameters.appName}}'
+                  value: "{{workflow.parameters.appName}}"
                 - name: gitUrlNoProtocol
-                  value: '{{workflow.parameters.gitUrlNoProtocol}}'
+                  value: "{{workflow.parameters.gitUrlNoProtocol}}"
                 - name: commitMessage
                   # Please, be careful updating this message, it must comply with:
                   # github skip ci rule: https://github.blog/changelog/2021-02-08-github-actions-skip-pull-request-and-push-workflows-with-skip-ci/
@@ -141,14 +141,14 @@ spec:
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.set-chart-versions.outputs.artifacts.repo-source}}'
+                  from: "{{steps.set-chart-versions.outputs.artifacts.repo-source}}"
               parameters:
                 - name: appName
-                  value: '{{workflow.parameters.appName}}'
+                  value: "{{workflow.parameters.appName}}"
                 - name: chartDir
-                  value: 'charts/kubefirst'
+                  value: "charts/kubefirst"
                 - name: nextAppChartVersion
-                  value: '{{steps.get-initial-chart-version.outputs.result}}'
+                  value: "{{steps.get-initial-chart-version.outputs.result}}"
 
         - - name: helm-dependency-update
             templateRef:
@@ -158,10 +158,10 @@ spec:
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}'
+                  from: "{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}"
               parameters:
                 - name: chartDir
-                  value: 'charts/kubefirst'
+                  value: "charts/kubefirst"
 
         - - name: publish-macro-helm-chart
             templateRef:
@@ -171,12 +171,12 @@ spec:
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
+                  from: "{{steps.helm-dependency-update.outputs.artifacts.repo-source}}"
               parameters:
                 - name: appName
                   value: charts
                 - name: chartDir
-                  value: 'charts/kubefirst'
+                  value: "charts/kubefirst"
 
         - - name: get-current-macro-chart-version
             templateRef:
@@ -186,7 +186,7 @@ spec:
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
+                  from: "{{steps.helm-dependency-update.outputs.artifacts.repo-source}}"
               parameters:
                 - name: chartDir
                   value: "charts/kubefirst"
@@ -199,13 +199,13 @@ spec:
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
+                  from: "{{steps.helm-dependency-update.outputs.artifacts.repo-source}}"
               parameters:
                 - name: commitMessage
-                  value: 'tagged {{workflow.parameters.appName}} in charts kubefirst-v{{steps.get-current-macro-chart-version.outputs.result}}'
+                  value: "tagged {{workflow.parameters.appName}} in charts kubefirst-v{{steps.get-current-macro-chart-version.outputs.result}}"
                 - name: gitUrlNoProtocol
-                  value: '{{workflow.parameters.gitUrlNoProtocol}}'
+                  value: "{{workflow.parameters.gitUrlNoProtocol}}"
                 - name: repoName
-                  value: 'charts'
+                  value: "charts"
                 - name: tag
-                  value: 'kubefirst-v{{steps.get-current-macro-chart-version.outputs.result}}'
+                  value: "kubefirst-v{{steps.get-current-macro-chart-version.outputs.result}}"
