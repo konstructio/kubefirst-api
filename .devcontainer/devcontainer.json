@@ -1,0 +1,30 @@
+{
+    "name": "devcontainer",
+    "image": "ghcr.io/kubefirst/devcontainers/full",
+    "features": {
+      "ghcr.io/rio/features/k3d:1": {}
+    },
+    "customizations": {
+      "vscode": {
+        "extensions": [
+            "Arjun.swagger-viewer"
+        ],
+        "settings": {}
+      }
+    },
+    "postAttachCommand": {
+      "ensure_k3d": "(k3d cluster create dev || true) && k3d kubeconfig write dev",
+      "install_air": "go install github.com/air-verse/air@latest",
+      "install_swag": "go install github.com/swaggo/swag/cmd/swag@latest"
+    },
+    "containerEnv": {
+      "CLUSTER_ID": "abc456",
+      "CLUSTER_TYPE": "bootstrap",
+      "INSTALL_METHOD": "helm",
+      "IS_CLUSTER_ZERO": "true",
+      "K1_ACCESS_TOKEN": "feedkray",
+      "K1_LOCAL_DEBUG": "true",
+      "K1_LOCAL_KUBECONFIG_PATH": "/home/vscode/.config/k3d/kubeconfig-dev.yaml",
+      "KUBEFIRST_TEAM": "true"
+    }
+}

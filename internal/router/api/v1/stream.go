@@ -7,16 +7,15 @@ See the LICENSE file for more details.
 package api
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubefirst/kubefirst-api/internal/types"
 	"github.com/nxadm/tail"
-	log "github.com/rs/zerolog/log"
 )
 
 // setHeaders sets headers for the SSE response
@@ -48,74 +47,48 @@ func GetLogs(c *gin.Context) {
 	}
 
 	// Stream logs
-	logs := make(chan types.LogMessage)
-	errCh := make(chan error)
-	go func() {
-		err := StreamLogs(c.Request.Context(), fileName, logs)
-		if err != nil {
-			errCh <- err
-		}
-	}()
-
-	// Stream logs to client using SSE
-	streamLogsToClient(c, logs, errCh)
+	if err := StreamLogs(c, fileName); err != nil {
+		c.SSEvent("error", err.Error())
+		c.Writer.Flush()
+	}
 }
 
 // StreamLogs redirects stdout logs to the stream via SSE
-func StreamLogs(ctx context.Context, fileName string, ch chan types.LogMessage) error {
+func StreamLogs(c *gin.Context, fileName string) error {
 	homePath, err := os.UserHomeDir()
 	if err != nil {
-		log.Info().Msgf("error getting user home directory: %s", err.Error())
-		return fmt.Errorf("error getting user home directory: %w", err)
+		return fmt.Errorf("error getting current user's home directory: %w", err)
 	}
 
-	k1Dir := fmt.Sprintf("%s/.k1", homePath)
-	logsFolder := fmt.Sprintf("%s/logs", k1Dir)
-	logfile := fmt.Sprintf("%s/%s", logsFolder, fileName)
+	logfile := filepath.Join(homePath, ".k1", "logs", fileName)
 
 	t, err := tail.TailFile(logfile, tail.Config{Follow: true, ReOpen: true})
 	if err != nil {
-		return fmt.Errorf("error opening log file %w", err)
+		return fmt.Errorf("error opening log file %q: %w", logfile, err)
 	}
+	defer t.Cleanup()
 
-	// Continuously stream log lines to the client
 	for {
 		select {
-		case <-ctx.Done():
-			t.Cleanup()
+		case <-c.Request.Context().Done():
+			// if the request itself has been closed, then we just continue
+			return nil
+
+		case <-c.Writer.CloseNotify():
+			// if the place where we're writing the logs has been closed, then we just continue
 			return nil
 
 		case line, ok := <-t.Lines:
 			if !ok {
+				// channel has been closed, nothing more to do
 				return nil
 			}
 
-			// Send the log line to the client as an event
-			ch <- types.LogMessage{
-				Message: line.Text,
-			}
+			c.SSEvent("", line.Text)
+			c.Writer.Flush()
 
 			// Sleep for a short time to avoid overwhelming the client
 			time.Sleep(100 * time.Millisecond)
-		}
-	}
-}
-
-// streamLogsToClient
-func streamLogsToClient(c *gin.Context, logs chan types.LogMessage, errCh chan error) {
-	for {
-		select {
-		// received new log line in go channel
-		case log := <-logs:
-			c.SSEvent(log.Type, log)
-			c.Writer.Flush()
-		case err := <-errCh:
-			log.Error().Msgf("error reading logs: %s", err.Error())
-			c.SSEvent("error", err.Error())
-			return
-			// channel should be closed
-		case <-c.Writer.CloseNotify():
-			return
 		}
 	}
 }

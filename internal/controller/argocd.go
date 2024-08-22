@@ -48,7 +48,15 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 			}
 		}
 
-		argoCDInstallPath := fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
+		var argoCDInstallPath string
+
+		switch clctrl.CloudProvider {
+		case "digitalocean", "aws", "civo", "google", "vultr":
+			argoCDInstallPath = "github.com:konstructio/manifests/argocd/cloud?ref=v1.1.0"
+		default:
+			argoCDInstallPath = fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
+		}
+
 		log.Info().Msg("installing argocd")
 
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.ArgoCDInstallStarted, "")
@@ -134,6 +142,7 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 				8080,
 				argoCDStopChannel,
 			)
+
 			argoCDToken, err = argocd.GetArgoCDToken("admin", argocdPassword)
 			if err != nil {
 				return fmt.Errorf("failed to get ArgoCD token: %w", err)
@@ -249,6 +258,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 				}
 				log.Info().Msgf("Error creating Argo CD application on attempt number #%d: %v\n", attempt, err)
 				time.Sleep(5 * time.Second)
+				continue
 				continue
 			}
 
