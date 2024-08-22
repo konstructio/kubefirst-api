@@ -253,7 +253,7 @@ func (conf *Configuration) TestHostedZoneLivenessWithTxtRecords(hostedZoneName s
 
 			// If the record was not found, log the error and retry
 			log.Warn().Msgf("attempt %d of %d resolving %q, retrying in %ds", i, retries, route53RecordName, retryInterval)
-			time.Sleep(time.Duration(int32(retryInterval)) * time.Second)
+			time.Sleep(time.Duration(retryInterval) * time.Second)
 		}
 
 		// If the record was not found after all retries, close the channel
@@ -268,7 +268,7 @@ func (conf *Configuration) TestHostedZoneLivenessWithTxtRecords(hostedZoneName s
 				return found, errors.New("timed out waiting for domain check - check zone for presence of record and retry validation")
 			}
 			return found, nil
-		case <-time.After(time.Duration(int32(duration)) * time.Second):
+		case <-time.After(time.Duration(duration) * time.Second):
 			return false, errors.New("timed out waiting for domain check - check zone for presence of record and retry validation")
 		}
 	}

@@ -107,13 +107,6 @@ func (m Model) footerView() string {
 	return lipgloss.JoinHorizontal(lipgloss.Center, line, info)
 }
 
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
 // CommandSummary receives a well-formatted buffer of bytes, and style it to the output.
 func CommandSummary(cleanSummary bytes.Buffer) {
 	style := getStyle()

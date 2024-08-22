@@ -231,8 +231,8 @@ func ValidateK1Folder(folderPath string) error {
 // - Supports the grace period after status 200 to wait before returning
 func AwaitHostNTimes(url string, times int, gracePeriod time.Duration) {
 	log.Printf("AwaitHostNTimes %d called with grace period of: %d seconds", times, gracePeriod)
-	max := times
-	for i := 0; i < max; i++ {
+	maxamount := times
+	for i := 0; i < maxamount; i++ {
 		resp, err := http.Get(url)
 		if err != nil {
 			log.Printf("error: %s", err)

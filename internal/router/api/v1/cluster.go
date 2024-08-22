@@ -108,7 +108,7 @@ func DeleteCluster(c *gin.Context) {
 		go func() {
 			err := aws.DeleteAWSCluster(&rec, telemetryEvent)
 			if err != nil {
-				log.Error().Msgf(err.Error())
+				log.Error().Msg(err.Error())
 			}
 		}()
 
@@ -119,7 +119,7 @@ func DeleteCluster(c *gin.Context) {
 		go func() {
 			err := civo.DeleteCivoCluster(&rec, telemetryEvent)
 			if err != nil {
-				log.Error().Msgf(err.Error())
+				log.Error().Msg(err.Error())
 			}
 		}()
 
@@ -130,7 +130,7 @@ func DeleteCluster(c *gin.Context) {
 		go func() {
 			err := digitalocean.DeleteDigitaloceanCluster(&rec, telemetryEvent)
 			if err != nil {
-				log.Error().Msgf(err.Error())
+				log.Error().Msg(err.Error())
 			}
 		}()
 
@@ -141,7 +141,7 @@ func DeleteCluster(c *gin.Context) {
 		go func() {
 			err := vultr.DeleteVultrCluster(&rec, telemetryEvent)
 			if err != nil {
-				log.Error().Msgf(err.Error())
+				log.Error().Msg(err.Error())
 			}
 		}()
 
@@ -152,7 +152,7 @@ func DeleteCluster(c *gin.Context) {
 		go func() {
 			err := google.DeleteGoogleCluster(&rec, telemetryEvent)
 			if err != nil {
-				log.Error().Msgf(err.Error())
+				log.Error().Msg(err.Error())
 			}
 		}()
 
@@ -348,7 +348,7 @@ func PostCreateCluster(c *gin.Context) {
 		go func() {
 			err = akamai.CreateAkamaiCluster(&clusterDefinition)
 			if err != nil {
-				log.Error().Msgf(err.Error())
+				log.Error().Msg(err.Error())
 			}
 		}()
 
@@ -380,7 +380,7 @@ func PostCreateCluster(c *gin.Context) {
 		go func() {
 			err = aws.CreateAWSCluster(&clusterDefinition)
 			if err != nil {
-				log.Error().Msgf(err.Error())
+				log.Error().Msg(err.Error())
 			}
 		}()
 
@@ -409,7 +409,7 @@ func PostCreateCluster(c *gin.Context) {
 		go func() {
 			err = civo.CreateCivoCluster(&clusterDefinition)
 			if err != nil {
-				log.Error().Msgf(err.Error())
+				log.Error().Msg(err.Error())
 			}
 		}()
 
@@ -442,7 +442,7 @@ func PostCreateCluster(c *gin.Context) {
 		go func() {
 			err = digitalocean.CreateDigitaloceanCluster(&clusterDefinition)
 			if err != nil {
-				log.Error().Msgf(err.Error())
+				log.Error().Msg(err.Error())
 			}
 		}()
 
@@ -471,7 +471,7 @@ func PostCreateCluster(c *gin.Context) {
 		go func() {
 			err = vultr.CreateVultrCluster(&clusterDefinition)
 			if err != nil {
-				log.Error().Msgf(err.Error())
+				log.Error().Msg(err.Error())
 			}
 		}()
 
@@ -501,7 +501,7 @@ func PostCreateCluster(c *gin.Context) {
 		go func() {
 			err = google.CreateGoogleCluster(&clusterDefinition)
 			if err != nil {
-				log.Error().Msgf(err.Error())
+				log.Error().Msg(err.Error())
 			}
 		}()
 

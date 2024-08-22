@@ -16,6 +16,7 @@ linters:
     - bidichk
     - bodyclose
     - contextcheck
+    - copyloopvar
     - decorder
     - dogsled
     - dupl
@@ -25,7 +26,6 @@ linters:
     - errname
     - errorlint
     - exhaustive
-    - exportloopref
     - ginkgolinter
     - gocheckcompilerdirectives
     - gochecksumtype

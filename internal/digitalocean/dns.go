@@ -160,7 +160,7 @@ func (c *Configuration) DeleteDNSRecords(domainName string, dryRun bool) error {
 				msg += " [dry run]"
 			}
 
-			log.Info().Msgf(msg)
+			log.Info().Msg(msg)
 
 			if !dryRun {
 				_, err := c.Client.Domains.DeleteRecord(c.Context, domainName, rec.ID)
