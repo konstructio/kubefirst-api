@@ -8,6 +8,7 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	cloudflare_api "github.com/cloudflare/cloudflare-go"
@@ -143,7 +144,7 @@ func (clctrl *ClusterController) HandleDomainLiveness(domainLiveness bool) error
 		if len(foundRecords) != 0 {
 			msg += fmt.Sprintf(" - last result: %s - it may be necessary to wait for propagation", foundRecords)
 		}
-		return fmt.Errorf(msg)
+		return errors.New(msg)
 	}
 
 	return nil

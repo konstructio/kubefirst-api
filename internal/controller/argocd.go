@@ -49,7 +49,6 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 		}
 
 		var argoCDInstallPath string
-
 		switch clctrl.CloudProvider {
 		case "digitalocean", "aws", "civo", "google", "vultr":
 			argoCDInstallPath = "github.com:konstructio/manifests/argocd/cloud?ref=v1.1.0"
@@ -258,7 +257,6 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 				}
 				log.Info().Msgf("Error creating Argo CD application on attempt number #%d: %v\n", attempt, err)
 				time.Sleep(5 * time.Second)
-				continue
 				continue
 			}
 
