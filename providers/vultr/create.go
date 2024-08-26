@@ -231,25 +231,27 @@ func CreateVultrCluster(definition *pkgtypes.ClusterDefinition) error {
 		}
 	}
 
-	log.Info().Msg("waiting for kubefirst-api Deployment to transition to Running")
-	kubefirstAPI, err := k8s.ReturnDeploymentObject(
-		kcfg.Clientset,
-		"app.kubernetes.io/name",
-		"kubefirst-api",
-		"kubefirst",
-		1200,
-	)
-	if err != nil {
-		log.Error().Msgf("Error finding kubefirst api Deployment: %s", err)
-		ctrl.HandleError(err.Error())
-		return err
-	}
-	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, kubefirstAPI, 300)
-	if err != nil {
-		log.Error().Msgf("Error waiting for kubefirst-api to transition to Running: %s", err)
+	if ctrl.InstallKubefirstPro {
+		log.Info().Msg("waiting for kubefirst-api Deployment to transition to Running")
+		kubefirstAPI, err := k8s.ReturnDeploymentObject(
+			kcfg.Clientset,
+			"app.kubernetes.io/name",
+			"kubefirst-api",
+			"kubefirst",
+			1200,
+		)
+		if err != nil {
+			log.Error().Msgf("Error finding kubefirst api Deployment: %s", err)
+			ctrl.HandleError(err.Error())
+			return err
+		}
+		_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, kubefirstAPI, 300)
+		if err != nil {
+			log.Error().Msgf("Error waiting for kubefirst-api to transition to Running: %s", err)
 
-		ctrl.HandleError(err.Error())
-		return err
+			ctrl.HandleError(err.Error())
+			return err
+		}
 	}
 
 	// Wait for last sync wave app transition to Running
