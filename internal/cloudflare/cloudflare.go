@@ -13,7 +13,7 @@ import (
 	"time"
 
 	cloudflare "github.com/cloudflare/cloudflare-go"
-	"github.com/kubefirst/kubefirst-api/internal/dns"
+	"github.com/konstructio/kubefirst-api/internal/dns"
 	"github.com/rs/zerolog/log"
 )
 

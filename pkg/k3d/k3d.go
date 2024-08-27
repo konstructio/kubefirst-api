@@ -1,7 +1,7 @@
 package k3d
 
-import internal "github.com/kubefirst/kubefirst-api/internal/k3d"
-import controller "github.com/kubefirst/kubefirst-api/internal/controller"
+import controller "github.com/konstructio/kubefirst-api/internal/controller"
+import internal "github.com/konstructio/kubefirst-api/internal/k3d"
 
 const DomainName = internal.DomainName
 const GithubHost = internal.GithubHost

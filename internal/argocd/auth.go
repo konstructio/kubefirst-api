@@ -14,8 +14,8 @@ import (
 	"io"
 	"net/http"
 
-	pkg "github.com/kubefirst/kubefirst-api/internal"
-	"github.com/kubefirst/kubefirst-api/internal/argocdModel"
+	pkg "github.com/konstructio/kubefirst-api/internal"
+	"github.com/konstructio/kubefirst-api/internal/argocdModel"
 	"github.com/rs/zerolog/log"
 )
 

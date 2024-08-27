@@ -12,7 +12,7 @@ import (
 	"io"
 	"net/http"
 
-	pkg "github.com/kubefirst/kubefirst-api/internal"
+	pkg "github.com/konstructio/kubefirst-api/internal"
 	"github.com/rs/zerolog/log"
 )
 

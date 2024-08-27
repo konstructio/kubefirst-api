@@ -1,4 +1,4 @@
-module github.com/kubefirst/kubefirst-api
+module github.com/konstructio/kubefirst-api
 
 go 1.20
 

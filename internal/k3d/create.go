@@ -14,8 +14,8 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/rs/zerolog/log"
 
-	pkg "github.com/kubefirst/kubefirst-api/internal"
-	"github.com/kubefirst/kubefirst-api/internal/gitClient"
+	pkg "github.com/konstructio/kubefirst-api/internal"
+	"github.com/konstructio/kubefirst-api/internal/gitClient"
 )
 
 const (

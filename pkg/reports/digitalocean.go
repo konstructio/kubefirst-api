@@ -12,8 +12,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/kubefirst/kubefirst-api/internal/digitalocean"
-	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	"github.com/konstructio/kubefirst-api/internal/digitalocean"
+	"github.com/konstructio/kubefirst-api/pkg/providerConfigs"
 )
 
 // DigitaloceanHandoffScreen prints the handoff screen

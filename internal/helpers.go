@@ -22,9 +22,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/kubefirst/kubefirst-api/internal/progressPrinter"
+	"github.com/konstructio/kubefirst-api/internal/progressPrinter"
 
-	"github.com/kubefirst/kubefirst-api/configs"
+	"github.com/konstructio/kubefirst-api/configs"
 	"github.com/spf13/viper"
 )
 
