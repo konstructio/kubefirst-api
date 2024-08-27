@@ -10,8 +10,8 @@ import (
 	"context"
 	"strings"
 
-	providerConfig "github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
-	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	providerConfig "github.com/konstructio/kubefirst-api/pkg/providerConfigs"
+	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
 	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

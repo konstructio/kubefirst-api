@@ -6,9 +6,10 @@ spec:
   templates:
     - name: main
       steps:
-        - - name: checkout
+
+        - - name: checkout-repos
             templateRef:
-              name: cwft-git
+              name: cwft-git-v2
               template: checkout-with-gitops
               clusterScope: true
             arguments:
@@ -19,107 +20,116 @@ spec:
                   value: '{{workflow.parameters.branch}}'
                 - name: gitUrlNoProtocol
                   value: '{{workflow.parameters.gitUrlNoProtocol}}'
-        - - name: get-initial-chart-version
+
+
+        - - name: get-initial-micro-chart-version
             templateRef:
-              name: cwft-helm
+              name: cwft-helm-v2
               template: get-chart-version
               clusterScope: true
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.checkout.outputs.artifacts.repo-source}}'
+                  from: '{{steps.checkout-repos.outputs.artifacts.repo-source}}'
               parameters:
                 - name: appName
                   value: '{{workflow.parameters.appName}}'
                 - name: chartDir
                   value: 'charts/{{workflow.parameters.appName}}'
-        - - name: set-chart-versions
+
+        - - name: set-micro-chart-versions
             templateRef:
-              name: cwft-helm
-              template: set-chart-versions
+              name: cwft-helm-v2
+              template: set-micro-chart-versions
               clusterScope: true
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.checkout.outputs.artifacts.repo-source}}'
+                  from: '{{steps.checkout-repos.outputs.artifacts.repo-source}}'
               parameters:
                 - name: appName
                   value: '{{workflow.parameters.appName}}'
                 - name: chartDir
                   value: 'charts/{{workflow.parameters.appName}}'
                 - name: chartVersion
-                  value: '{{steps.get-initial-chart-version.outputs.result}}'
+                  value: '{{steps.get-initial-micro-chart-version.outputs.result}}'
                 - name: shortSha
                   value: '{{workflow.parameters.shortSha}}'
-        - - name: publish-helm-chart
+
+        - - name: publish-micro-helm-chart
             templateRef:
-              name: cwft-helm
+              name: cwft-helm-v2
               template: publish-chart
               clusterScope: true
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.set-chart-versions.outputs.artifacts.repo-source}}'
+                  from: '{{steps.set-micro-chart-versions.outputs.artifacts.repo-source}}'
               parameters:
                 - name: appName
                   value: '{{workflow.parameters.appName}}'
                 - name: chartDir
                   value: 'charts/{{workflow.parameters.appName}}'
+
         - - name: release-and-tag-main-with-notes
             templateRef:
-              name: cwft-git
+              name: cwft-git-v2
               template: release-and-tag-main-with-notes
               clusterScope: true
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.set-chart-versions.outputs.artifacts.repo-source}}'
+                  from: '{{steps.set-micro-chart-versions.outputs.artifacts.repo-source}}'
               parameters:
                 - name: orgName
-                  value: 'kubefirst'
+                  value: 'konstructio'
                 - name: appName
                   value: '{{workflow.parameters.appName}}'
                 - name: tagName
-                  value: '{{steps.get-initial-chart-version.outputs.result}}'
-        - - name: increment-chart-minor
+                  value: '{{steps.get-initial-micro-chart-version.outputs.result}}'
+
+
+        - - name: increment-micro-chart-minor
             templateRef:
-              name: cwft-helm
+              name: cwft-helm-v2
               template: increment-chart-minor
               clusterScope: true
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.set-chart-versions.outputs.artifacts.repo-source}}'
+                  from: '{{steps.set-micro-chart-versions.outputs.artifacts.repo-source}}'
               parameters:
                 - name: appName
                   value: '{{workflow.parameters.appName}}'
                 - name: chartDir
                   value: 'charts/{{workflow.parameters.appName}}'
                 - name: chartVersion
-                  value: '{{steps.get-initial-chart-version.outputs.result}}'
-        - - name: get-published-chart-version
+                  value: '{{steps.get-initial-micro-chart-version.outputs.result}}'
+
+        - - name: get-published-micro-chart-version
             templateRef:
-              name: cwft-helm
+              name: cwft-helm-v2
               template: get-chart-version
               clusterScope: true
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.increment-chart-minor.outputs.artifacts.repo-source}}'
+                  from: '{{steps.increment-micro-chart-minor.outputs.artifacts.repo-source}}'
               parameters:
                 - name: appName
                   value: '{{workflow.parameters.appName}}'
                 - name: chartDir
                   value: 'charts/{{workflow.parameters.appName}}'
-        - - name: commit-chart-increment
+
+        - - name: commit-micro-chart-increment
             templateRef:
-              name: cwft-git
-              template: pull-commit-push
+              name: cwft-git-v2
+              template: pull-commit-sign-push
               clusterScope: true
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.increment-chart-minor.outputs.artifacts.repo-source}}'
+                  from: '{{steps.increment-micro-chart-minor.outputs.artifacts.repo-source}}'
               parameters:
                 - name: repoName
                   value: '{{workflow.parameters.appName}}'
@@ -131,81 +141,83 @@ spec:
                   # github skip ci rule: https://docs.github.com/en/actions/managing-workflow-runs/skipping-workflow-runs
                   # gitlab skip ci rule: https://devops.stackexchange.com/questions/6809/is-there-a-ci-skip-option-in-gitlab-ci
                   # in case, the rule is disbaled or don't work this step will create a circular trigger of builds and bumps of version.
-                  value: "[skip ci] [CI SKIP] setting {{workflow.parameters.appName}} {{workflow.parameters.environment}} to chart version {{steps.get-published-chart-version.outputs.result}}\n\nskip-checks:true"
+                  value: "[skip ci] [CI SKIP] setting {{workflow.parameters.appName}} {{workflow.parameters.environment}} to chart version {{steps.get-published-micro-chart-version.outputs.result}}\n\nskip-checks:true"
 
-        - - name: set-app-version-and-bump-macro-chartz
+        - - name: set-micro-version-and-bump-macro-chart
             templateRef:
-              name: cwft-helm
-              template: set-app-version-and-bump-macro-chart
+              name: cwft-helm-v2
+              template: set-micro-version-and-bump-macro-chart
               clusterScope: true
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.set-chart-versions.outputs.artifacts.repo-source}}'
+                  from: '{{steps.set-micro-chart-versions.outputs.artifacts.repo-source}}'
               parameters:
                 - name: appName
                   value: '{{workflow.parameters.appName}}'
                 - name: chartDir
-                  value: 'charts/kubefirst'
+                  value: 'charts/{{workflow.parameters.appName}}-macro'
                 - name: nextAppChartVersion
-                  value: '{{steps.get-initial-chart-version.outputs.result}}'
+                  value: '{{steps.get-initial-micro-chart-version.outputs.result}}'
 
-        - - name: helm-dependency-update
+        - - name: helm-dependency-update-macro
             templateRef:
-              name: cwft-helm
+              name: cwft-helm-v2
               template: dependency-update
               clusterScope: true
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.set-app-version-and-bump-macro-chartz.outputs.artifacts.repo-source}}'
+                  from: '{{steps.set-micro-version-and-bump-macro-chart.outputs.artifacts.repo-source}}'
               parameters:
                 - name: chartDir
-                  value: 'charts/kubefirst'
+                  value: 'charts/{{workflow.parameters.appName}}-macro'
 
         - - name: publish-macro-helm-chart
             templateRef:
-              name: cwft-helm
+              name: cwft-helm-v2
               template: publish-chart
               clusterScope: true
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
+                  from: '{{steps.helm-dependency-update-macro.outputs.artifacts.repo-source}}'
               parameters:
                 - name: appName
                   value: charts
                 - name: chartDir
-                  value: 'charts/kubefirst'
+                  value: 'charts/{{workflow.parameters.appName}}-macro'
 
         - - name: get-current-macro-chart-version
             templateRef:
-              name: cwft-helm
+              name: cwft-helm-v2
               template: get-macro-chart-version-from-charts
               clusterScope: true
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
+                  from: '{{steps.helm-dependency-update-macro.outputs.artifacts.repo-source}}'
               parameters:
                 - name: chartDir
-                  value: "charts/kubefirst"
+                  value: 'charts/{{workflow.parameters.appName}}-macro'
 
         - - name: pull-commit-push-tag-charts
             templateRef:
-              name: cwft-git
-              template: pull-commit-push-tag
+              name: cwft-git-v2
+              template: pull-commit-sign-push-signed-tag
               clusterScope: true
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.helm-dependency-update.outputs.artifacts.repo-source}}'
+                  from: '{{steps.helm-dependency-update-macro.outputs.artifacts.repo-source}}'
               parameters:
                 - name: commitMessage
-                  value: 'tagged {{workflow.parameters.appName}} in charts kubefirst-v{{steps.get-current-macro-chart-version.outputs.result}}'
+                  value: 'tagged {{workflow.parameters.appName}} in charts metaphor-v{{steps.get-current-macro-chart-version.outputs.result}}'
                 - name: gitUrlNoProtocol
                   value: '{{workflow.parameters.gitUrlNoProtocol}}'
-                - name: repoName
+                - name: srcDir
+                  value: '/src/charts'
+                - name: chartsRepoName
                   value: 'charts'
                 - name: tag
-                  value: 'kubefirst-v{{steps.get-current-macro-chart-version.outputs.result}}'
+                  value: 'metaphor-v{{steps.get-current-macro-chart-version.outputs.result}}'

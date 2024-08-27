@@ -13,7 +13,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/kubefirst/kubefirst-api/internal/dns"
+	"github.com/konstructio/kubefirst-api/internal/dns"
 	"github.com/rs/zerolog/log"
 	"github.com/vultr/govultr/v3"
 )

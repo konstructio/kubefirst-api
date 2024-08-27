@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kubefirst/kubefirst-api/internal/constants"
+	"github.com/konstructio/kubefirst-api/internal/constants"
 )
 
 func TestEnv(t *testing.T) {

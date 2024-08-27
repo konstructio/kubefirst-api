@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kubefirst/kubefirst-api/internal/constants"
-	"github.com/kubefirst/kubefirst-api/internal/env"
-	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
-	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/konstructio/kubefirst-api/internal/constants"
+	"github.com/konstructio/kubefirst-api/internal/env"
+	"github.com/konstructio/kubefirst-api/pkg/providerConfigs"
+	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
 	"github.com/thanhpk/randstr"
 )
 

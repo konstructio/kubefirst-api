@@ -15,7 +15,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/kubefirst/kubefirst-api/pkg/reports"
+	"github.com/konstructio/kubefirst-api/pkg/reports"
 )
 
 const letsDebugHost = "https://letsdebug.net/certwatch-query"

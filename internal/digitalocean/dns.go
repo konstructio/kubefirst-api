@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/digitalocean/godo"
-	"github.com/kubefirst/kubefirst-api/internal/dns"
+	"github.com/konstructio/kubefirst-api/internal/dns"
 	"github.com/rs/zerolog/log"
 )
 
