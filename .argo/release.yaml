@@ -156,7 +156,7 @@ spec:
                 - name: appName
                   value: '{{workflow.parameters.appName}}'
                 - name: chartDir
-                  value: 'charts/{{workflow.parameters.appName}}-macro'
+                  value: 'charts/{{workflow.parameters.appName}}'
                 - name: nextAppChartVersion
                   value: '{{steps.get-initial-micro-chart-version.outputs.result}}'
 
@@ -171,7 +171,7 @@ spec:
                   from: '{{steps.set-micro-version-and-bump-macro-chart.outputs.artifacts.repo-source}}'
               parameters:
                 - name: chartDir
-                  value: 'charts/{{workflow.parameters.appName}}-macro'
+                  value: 'charts/{{workflow.parameters.appName}}'
 
         - - name: publish-macro-helm-chart
             templateRef:
@@ -186,7 +186,7 @@ spec:
                 - name: appName
                   value: charts
                 - name: chartDir
-                  value: 'charts/{{workflow.parameters.appName}}-macro'
+                  value: 'charts/{{workflow.parameters.appName}}'
 
         - - name: get-current-macro-chart-version
             templateRef:
@@ -199,7 +199,7 @@ spec:
                   from: '{{steps.helm-dependency-update-macro.outputs.artifacts.repo-source}}'
               parameters:
                 - name: chartDir
-                  value: 'charts/{{workflow.parameters.appName}}-macro'
+                  value: 'charts/{{workflow.parameters.appName}}'
 
         - - name: pull-commit-push-tag-charts
             templateRef:
