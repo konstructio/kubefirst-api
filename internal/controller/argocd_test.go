@@ -69,3 +69,4 @@ func TestRestartDeployment(t *testing.T) {
 		t.Fatalf("expected annotation restartedAt to be set within 1 second, got %v", t2.Sub(t1))
 	}
 }
+

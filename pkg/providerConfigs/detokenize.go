@@ -9,6 +9,7 @@ package providerConfigs
 import (
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -148,6 +149,10 @@ func detokenizeGitops(path string, tokens *GitopsDirectoryValues, gitProtocol st
 				newContents = strings.Replace(newContents, "<GIT_RUNNER_DESCRIPTION>", tokens.GitRunnerDescription, -1)
 				newContents = strings.Replace(newContents, "<GIT_RUNNER_NS>", tokens.GitRunnerNS, -1)
 				newContents = strings.Replace(newContents, "<GIT_URL>", tokens.GitURL, -1) // remove
+				newContents = strings.Replace(newContents, "<ADMIN-TEAM>", tokens.AdminTeamName, -1)
+				newContents = strings.Replace(newContents, "<DEVELOPER-TEAM>", tokens.DeveloperTeamName, -1)
+				newContents = strings.Replace(newContents, "<METPAHOR-REPO-NAME>", tokens.MetaphorRepoName, -1)
+				newContents = strings.Replace(newContents, "<GIT-REPO-NAME>", tokens.GitopsRepoName, -1)
 
 				// GitHub
 				newContents = strings.Replace(newContents, "<GITHUB_HOST>", tokens.GitHubHost, -1)
@@ -263,9 +268,23 @@ func detokenizeAdditionalPath(path string, tokens *GitopsDirectoryValues) filepa
 
 // DetokenizeGithubMetaphor - Translate tokens by values on a given path
 func DetokenizeGitMetaphor(path string, tokens *MetaphorTokenValues) error {
-	err := filepath.Walk(path, detokenizeGitopsMetaphor(path, tokens))
+
+	err := filepath.WalkDir(path, func(path string, info fs.DirEntry, err error) error {
+		if info.IsDir() && info.Name() == "metaphor" {
+			newPath := filepath.Join(filepath.Dir(path), tokens.MetaphorRepoName)
+			oldPath := path
+			err := os.Rename(oldPath, newPath)
+			if err != nil {
+				return fmt.Errorf("error renaming %s to %s : %w", oldPath, newPath, err)
+			}
+			return fs.SkipDir
+		}
+		return nil
+	})
+
+	err = filepath.Walk(path, detokenizeGitopsMetaphor(path, tokens))
 	if err != nil {
-		return err
+		return fmt.Errorf("error in detokenizing metaphor :%w", err)
 	}
 	return nil
 }

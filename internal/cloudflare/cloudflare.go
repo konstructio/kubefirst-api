@@ -55,6 +55,7 @@ func (c *CloudflareConfiguration) TestDomainLiveness(domainName string) bool {
 
 	// Get zone id for domain name
 	zoneId, err := c.Client.ZoneIDByName(domainName)
+
 	if err != nil {
 		log.Error().Msgf("error finding cloudflare zoneid for domain %s: %s", domainName, err)
 		return false

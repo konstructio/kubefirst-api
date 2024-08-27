@@ -204,7 +204,7 @@ func ValidateK1Folder(folderPath string) error {
 
 	if _, err := os.Stat(folderPath); errors.Is(err, os.ErrNotExist) {
 		if err = os.Mkdir(folderPath, os.ModePerm); err != nil {
-			return fmt.Errorf("info: could not create directory %q - error: %s", folderPath, err)
+			return fmt.Errorf("info: could not create directory %q - error: %w", folderPath, err)
 		}
 		// folder was just created, no further validation required
 		return nil
@@ -276,10 +276,10 @@ func ReplaceFileContent(filPath string, oldContent string, newContent string) er
 // UpdateTerraformS3BackendForK8sAddress during the installation process, Terraform must reach port-forwarded resources
 // to be able to communicate with the services. When Kubefirst finish the installation, and Terraform needs to
 // communicate with the services, it must use the internal Kubernetes addresses.
-func UpdateTerraformS3BackendForK8sAddress(k1Dir string) error {
+func UpdateTerraformS3BackendForK8sAddress(k1Dir, gitopsRepoName string) error {
 
 	// todo: create a function for file content replacement
-	vaultMainFile := fmt.Sprintf("%s/gitops/terraform/vault/main.tf", k1Dir)
+	vaultMainFile := fmt.Sprintf("%s/%s/terraform/vault/main.tf", k1Dir, gitopsRepoName)
 	if err := ReplaceFileContent(
 		vaultMainFile,
 		MinioURL,
@@ -290,7 +290,7 @@ func UpdateTerraformS3BackendForK8sAddress(k1Dir string) error {
 
 	// update GitHub Terraform content
 	if viper.GetString("git-provider") == "github" {
-		fullPathKubefirstGitHubFile := fmt.Sprintf("%s/gitops/terraform/users/kubefirst-github.tf", k1Dir)
+		fullPathKubefirstGitHubFile := fmt.Sprintf("%s/%s/terraform/users/kubefirst-github.tf", k1Dir, gitopsRepoName)
 		if err := ReplaceFileContent(
 			fullPathKubefirstGitHubFile,
 			MinioURL,
@@ -300,7 +300,7 @@ func UpdateTerraformS3BackendForK8sAddress(k1Dir string) error {
 		}
 
 		// change remote-backend.tf
-		fullPathRemoteBackendFile := fmt.Sprintf("%s/gitops/terraform/github/remote-backend.tf", k1Dir)
+		fullPathRemoteBackendFile := fmt.Sprintf("%s/%s/terraform/github/remote-backend.tf", k1Dir, gitopsRepoName)
 		if err := ReplaceFileContent(
 			fullPathRemoteBackendFile,
 			MinioURL,
@@ -320,8 +320,9 @@ func UpdateTerraformS3BackendForLocalhostAddress() error {
 	config := configs.ReadConfig()
 
 	// todo: create a function for file content replacement
-	vaultMainFile := fmt.Sprintf("%s/gitops/terraform/vault/main.tf", config.K1FolderPath)
+	vaultMainFile := fmt.Sprintf("%s/%s/terraform/vault/main.tf", config.K1FolderPath, "gitops")
 	if err := ReplaceFileContent(
+
 		vaultMainFile,
 		"http://minio.minio.svc.cluster.local:9000",
 		MinioURL,
@@ -332,7 +333,7 @@ func UpdateTerraformS3BackendForLocalhostAddress() error {
 	gitProvider := viper.GetString("git-provider")
 	// update GitHub Terraform content
 	if gitProvider == "github" {
-		fullPathKubefirstGitHubFile := fmt.Sprintf("%s/gitops/terraform/users/kubefirst-github.tf", config.K1FolderPath)
+		fullPathKubefirstGitHubFile := fmt.Sprintf("%s/%s/terraform/users/kubefirst-github.tf", config.K1FolderPath, "gitops")
 		if err := ReplaceFileContent(
 			fullPathKubefirstGitHubFile,
 			"http://minio.minio.svc.cluster.local:9000",
@@ -342,7 +343,7 @@ func UpdateTerraformS3BackendForLocalhostAddress() error {
 		}
 
 		// change remote-backend.tf
-		fullPathRemoteBackendFile := fmt.Sprintf("%s/gitops/terraform/github/remote-backend.tf", config.K1FolderPath)
+		fullPathRemoteBackendFile := fmt.Sprintf("%s/%s/terraform/github/remote-backend.tf", config.K1FolderPath, "gitops")
 		if err := ReplaceFileContent(
 			fullPathRemoteBackendFile,
 			"http://minio.minio.svc.cluster.local:9000",
@@ -550,44 +551,35 @@ func FindStringInSlice(s []string, str string) bool {
 	return false
 }
 
-func ResetK1Dir(k1Dir string) error {
-
-	if _, err := os.Stat(k1Dir + "/argo-workflows"); !os.IsNotExist(err) {
-		// path/to/whatever exists
-		err := os.RemoveAll(k1Dir + "/argo-workflows")
-		if err != nil {
-			return fmt.Errorf("unable to delete %q folder, error: %s", k1Dir+"/argo-workflows", err)
-		}
+func ResetK1Dir(k1Dir, gitopsRepoName, metaphorRepoName string) error {
+	// Define the list of directories and files to be removed
+	paths := []string{
+		"argo-workflows",
+		gitopsRepoName,
+		metaphorRepoName,
+		"tools",
+		"argocd-init-values.yaml",
 	}
 
-	if _, err := os.Stat(k1Dir + "/gitops"); !os.IsNotExist(err) {
-		err := os.RemoveAll(k1Dir + "/gitops")
-		if err != nil {
-			return fmt.Errorf("unable to delete %q folder, error: %s", k1Dir+"/gitops", err)
-		}
-	}
-	if _, err := os.Stat(k1Dir + "/metaphor"); !os.IsNotExist(err) {
-		err := os.RemoveAll(k1Dir + "/metaphor")
-		if err != nil {
-			return fmt.Errorf("unable to delete %q folder, error: %s", k1Dir+"/metaphor", err)
-		}
-	}
-	// todo look at logic to not re-download
-	if _, err := os.Stat(k1Dir + "/tools"); !os.IsNotExist(err) {
-		err = os.RemoveAll(k1Dir + "/tools")
-		if err != nil {
-			return fmt.Errorf("unable to delete %q folder, error: %s", k1Dir+"/tools", err)
-		}
-	}
-	//* files
-	//! this might fail with an adjustment made to validate
-	if _, err := os.Stat(k1Dir + "/argocd-init-values.yaml"); !os.IsNotExist(err) {
-		err = os.Remove(k1Dir + "/argocd-init-values.yaml")
-		if err != nil {
-			return fmt.Errorf("unable to delete %q folder, error: %s", k1Dir+"/argocd-init-values.yaml", err)
+	for _, p := range paths {
+		fullPath := filepath.Join(k1Dir, p)
+
+		// Check if the path exists
+		if _, err := os.Stat(fullPath); !os.IsNotExist(err) {
+			var removeErr error
+			if filepath.Ext(fullPath) == "" {
+				// It's a directory
+				removeErr = os.RemoveAll(fullPath)
+			} else {
+				// It's a file
+				removeErr = os.Remove(fullPath)
+			}
+
+			if removeErr != nil {
+				return fmt.Errorf("unable to delete %q, error: %s", fullPath, removeErr)
+			}
 		}
 	}
 
 	return nil
-
 }

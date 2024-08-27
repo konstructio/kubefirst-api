@@ -1,6 +1,7 @@
 package k3d
 
 import internal "github.com/kubefirst/kubefirst-api/internal/k3d"
+import controller "github.com/kubefirst/kubefirst-api/internal/controller"
 
 const DomainName = internal.DomainName
 const GithubHost = internal.GithubHost
@@ -29,3 +30,5 @@ var DeleteK3dCluster = internal.DeleteK3dCluster
 var GenerateSingleTLSSecret = internal.GenerateSingleTLSSecret
 
 var ClusterCreateConsoleAPI = internal.ClusterCreateConsoleAPI
+var TerraformPrep = internal.TerraformPrep
+var RestartDeployment = controller.RestartDeployment

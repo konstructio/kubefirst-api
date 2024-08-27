@@ -25,7 +25,6 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 	if err != nil {
 		return err
 	}
-
 	ctrl.Cluster.InProgress = true
 	err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
 	if err != nil {
@@ -74,6 +73,12 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		return err
 	}
 
+	err = ctrl.TerraformPrep()
+	if err != nil {
+		ctrl.HandleError(err.Error())
+		return err
+	}
+
 	err = ctrl.RunGitTerraform()
 	if err != nil {
 		ctrl.HandleError(err.Error())
@@ -91,7 +96,6 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		ctrl.HandleError(err.Error())
 		return err
 	}
-
 	// Needs wait after cluster create
 
 	err = ctrl.ClusterSecretsBootstrap()
