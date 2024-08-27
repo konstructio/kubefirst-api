@@ -12,7 +12,7 @@ import (
 	"io"
 	"os"
 
-	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	log "github.com/rs/zerolog/log"

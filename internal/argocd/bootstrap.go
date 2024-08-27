@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kubefirst/kubefirst-api/internal/k8s"
+	"github.com/konstructio/kubefirst-api/internal/k8s"
 	"github.com/rs/zerolog/log"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"

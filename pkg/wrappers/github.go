@@ -9,7 +9,7 @@ package wrappers
 import (
 	"fmt"
 
-	"github.com/kubefirst/kubefirst-api/pkg/handlers"
+	"github.com/konstructio/kubefirst-api/pkg/handlers"
 )
 
 // AuthenticateGitHubUserWrapper receives a handler that was previously instantiated, and communicate with GitHub.

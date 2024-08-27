@@ -1,6 +1,6 @@
 package constants
 
-import "github.com/kubefirst/kubefirst-api/pkg/types"
+import "github.com/konstructio/kubefirst-api/pkg/types"
 
 var cloudProviderDefaults = types.CloudProviderDefaults{
 	Akamai:       types.CloudDefault{InstanceSize: "g6-standard-4", NodeCount: "4"},

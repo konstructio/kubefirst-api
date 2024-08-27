@@ -3,7 +3,7 @@ package akamai
 import (
 	"context"
 
-	"github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/konstructio/kubefirst-api/pkg/types"
 	"github.com/linode/linodego"
 )
 

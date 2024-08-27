@@ -1,7 +1,7 @@
 package types
 
 import (
-	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
 )
 
 type KubeconfigRequest struct {

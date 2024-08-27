@@ -7,14 +7,14 @@ See the LICENSE file for more details.
 package aws
 
 import (
-	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
-	awsinternal "github.com/kubefirst/kubefirst-api/internal/aws"
-	"github.com/kubefirst/kubefirst-api/internal/constants"
-	"github.com/kubefirst/kubefirst-api/internal/controller"
-	"github.com/kubefirst/kubefirst-api/internal/k8s"
-	"github.com/kubefirst/kubefirst-api/internal/secrets"
-	"github.com/kubefirst/kubefirst-api/internal/services"
-	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	awsext "github.com/konstructio/kubefirst-api/extensions/aws"
+	awsinternal "github.com/konstructio/kubefirst-api/internal/aws"
+	"github.com/konstructio/kubefirst-api/internal/constants"
+	"github.com/konstructio/kubefirst-api/internal/controller"
+	"github.com/konstructio/kubefirst-api/internal/k8s"
+	"github.com/konstructio/kubefirst-api/internal/secrets"
+	"github.com/konstructio/kubefirst-api/internal/services"
+	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
 	log "github.com/rs/zerolog/log"
 )
 

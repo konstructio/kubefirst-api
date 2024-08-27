@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kubefirst/kubefirst-api/internal/k8s"
+	"github.com/konstructio/kubefirst-api/internal/k8s"
 	"github.com/rs/zerolog/log"
 
 	v1 "k8s.io/api/core/v1"

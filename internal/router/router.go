@@ -9,8 +9,8 @@ package api
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/kubefirst/kubefirst-api/internal/middleware"
-	router "github.com/kubefirst/kubefirst-api/internal/router/api/v1"
+	"github.com/konstructio/kubefirst-api/internal/middleware"
+	router "github.com/konstructio/kubefirst-api/internal/router/api/v1"
 	log "github.com/rs/zerolog/log"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"

@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/civo/civogo"
-	"github.com/kubefirst/kubefirst-api/internal/dns"
+	"github.com/konstructio/kubefirst-api/internal/dns"
 	"github.com/rs/zerolog/log"
 )
 

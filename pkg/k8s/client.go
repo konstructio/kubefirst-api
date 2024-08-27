@@ -11,7 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kubefirst/kubefirst-api/internal/k8s"
+	"github.com/konstructio/kubefirst-api/internal/k8s"
 	log "github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"k8s.io/client-go/kubernetes"

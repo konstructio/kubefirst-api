@@ -8,9 +8,9 @@ spec:
   templates:
     - name: main
       steps:
-        - - name: checkout
+        - - name: checkout-repos
             templateRef:
-              name: cwft-git
+              name: cwft-git-v2
               template: checkout-with-gitops
               clusterScope: true
             arguments:
@@ -23,13 +23,13 @@ spec:
                   value: '{{workflow.parameters.gitUrlNoProtocol}}'
         - - name: pull-commit-empty-push
             templateRef:
-              name: cwft-git
+              name: cwft-git-v2
               template: pull-commit-empty-push
               clusterScope: true
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.checkout.outputs.artifacts.repo-source}}'
+                  from: '{{steps.checkout-repos.outputs.artifacts.repo-source}}'
               parameters:
                 - name: commitMessage
                   value: 'chore: triggered an empty commit against main branch'

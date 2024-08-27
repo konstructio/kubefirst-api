@@ -1,6 +1,6 @@
 package constants
 
-import internal "github.com/kubefirst/kubefirst-api/internal"
+import internal "github.com/konstructio/kubefirst-api/internal"
 
 const MinimumAvailableDiskSize = internal.MinimumAvailableDiskSize
 const MinioDefaultUsername = internal.MinioDefaultUsername
