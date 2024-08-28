@@ -86,7 +86,7 @@ spec:
                 - name: appName
                   value: '{{workflow.parameters.appName}}'
                 - name: tagName
-                  value: '{{steps.get-initial-micro-chart-version.outputs.result}}'
+                  value: 'v{{steps.get-initial-micro-chart-version.outputs.result}}'
 
 
         - - name: increment-micro-chart-minor
