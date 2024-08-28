@@ -46,14 +46,7 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 			}
 		}
 
-		var argoCDInstallPath string
-
-		switch clctrl.CloudProvider {
-		case "digitalocean", "aws", "civo", "google", "vultr", "akamai":
-			argoCDInstallPath = "github.com:konstructio/manifests/argocd/cloud?ref=v1.1.0"
-		default:
-			argoCDInstallPath = fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
-		}
+		argoCDInstallPath := fmt.Sprintf("github.com:konstructio/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
 
 		log.Info().Msg("installing argocd")
 
