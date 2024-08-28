@@ -1,6 +1,9 @@
 package k3d
 
-import internal "github.com/konstructio/kubefirst-api/internal/k3d"
+import (
+	"github.com/konstructio/kubefirst-api/internal/controller"
+	internal "github.com/konstructio/kubefirst-api/internal/k3d"
+)
 
 const DomainName = internal.DomainName
 const GithubHost = internal.GithubHost
@@ -29,3 +32,4 @@ var DeleteK3dCluster = internal.DeleteK3dCluster
 var GenerateSingleTLSSecret = internal.GenerateSingleTLSSecret
 
 var ClusterCreateConsoleAPI = internal.ClusterCreateConsoleAPI
+var RestartDeployment = controller.RestartDeployment
