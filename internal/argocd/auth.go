@@ -93,6 +93,8 @@ func GetArgocdTokenV2(httpClient *http.Client, argocdBaseURL string, username st
 		return "", err
 	}
 
+	req.Header.Set("Content-Type", "application/json")
+
 	res, err := httpClient.Do(req)
 	if err != nil {
 		return "", err
