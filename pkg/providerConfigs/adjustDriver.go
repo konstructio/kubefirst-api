@@ -9,6 +9,7 @@ package providerConfigs
 import (
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/go-git/go-git/v5"
@@ -16,10 +17,13 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	pkg "github.com/konstructio/kubefirst-api/internal"
 	"github.com/konstructio/kubefirst-api/internal/gitClient"
+	"github.com/konstructio/kubefirst-api/pkg/taskrunner"
 
 	cp "github.com/otiai10/copy"
 	"github.com/rs/zerolog/log"
 )
+
+const taskrunnerFile = "taskrunner.yaml"
 
 // AdjustGitopsRepo
 func AdjustGitopsRepo(
@@ -32,6 +36,23 @@ func AdjustGitopsRepo(
 	apexContentExists bool,
 	useCloudflareOriginIssuer bool,
 ) error {
+	//* Compose the providers if a taskrunner.yaml file exists
+	if _, err := os.Stat(path.Join(gitopsRepoDir, taskrunnerFile)); !os.IsNotExist(err) {
+		tasks := taskrunner.Config{
+			Root:     gitopsRepoDir,
+			TaskFile: taskrunnerFile,
+			Variables: map[string]string{
+				"cloudProvider": cloudProvider,
+				"outputDir":     gitopsRepoDir,
+				"vcsProvider":   gitProvider,
+			},
+		}
+
+		if err := tasks.Exec(); err != nil {
+			return err
+		}
+	}
+
 	//* clean up all other platforms
 	for _, platform := range pkg.SupportedPlatforms {
 		if platform != fmt.Sprintf("%s-%s", cloudProvider, gitProvider) {
