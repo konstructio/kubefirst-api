@@ -999,7 +999,7 @@ func PrepareGitRepositories(
 
 	// DETOKENIZE
 	//* detokenize the metaphor repo
-	DetokenizeGitMetaphor(metaphorDir, metaphorTokens)
+	err = DetokenizeGitMetaphor(metaphorDir, metaphorTokens)
 	if err != nil {
 		return err
 	}
