@@ -1,0 +1,6 @@
+tasks:
+  - copy:
+      src: "common/vcs/{{ .vcsProvider }}"
+      dest: "{{ .outputDir }}"
+    remove:
+      src: "templates/{{ .cloudProvider }}-{{ .vcsProvider }}"

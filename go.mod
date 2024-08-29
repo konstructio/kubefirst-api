@@ -38,6 +38,7 @@ require (
 	github.com/rs/zerolog v1.29.1
 	github.com/segmentio/analytics-go v3.1.0+incompatible
 	github.com/sirupsen/logrus v1.9.0
+	github.com/stretchr/testify v1.8.4
 	github.com/swaggo/files v1.0.0
 	github.com/swaggo/gin-swagger v1.5.3
 	github.com/swaggo/swag v1.16.1
@@ -60,6 +61,7 @@ require (
 	github.com/go-test/deep v1.0.4 // indirect
 	github.com/hashicorp/go-hclog v1.3.0 // indirect
 	github.com/opencontainers/image-spec v1.0.3-0.20211202183452-c5a74bcca799 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gotest.tools/v3 v3.4.0 // indirect
 )

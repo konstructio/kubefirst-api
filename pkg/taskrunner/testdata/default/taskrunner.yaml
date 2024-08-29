@@ -1,0 +1,14 @@
+tasks:
+  - copy:
+      src: common/templates
+      dest: "{{ .outputDir }}/templates/{{ .cloudProvider }}-{{ .vcsProvider }}"
+  - copy:
+      src: "common/cloud/{{ .cloudProvider }}"
+      dest: "{{ .outputDir }}/templates/{{ .cloudProvider }}-{{ .vcsProvider }}"
+  - copy:
+      src: "common/vcs/{{ .vcsProvider }}"
+      dest: "{{ .outputDir }}/templates/{{ .cloudProvider }}-{{ .vcsProvider }}"
+  - remove:
+      src: "{{ .outputDir }}/common"
+  - remove:
+      src: "{{ .outputDir }}/templates"
