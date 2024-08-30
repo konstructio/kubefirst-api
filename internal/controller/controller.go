@@ -132,7 +132,11 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	// Determine if record already exists
 	recordExists := true
 	rec, err := secrets.GetCluster(clctrl.KubernetesClient, def.ClusterName)
-	if rec.ClusterID == "" && err != nil {
+	if err != nil {
+		return fmt.Errorf("could not read cluster secret %s: %w", def.ClusterName, err)
+	}
+
+	if rec.ClusterID == "" {
 		recordExists = false
 		log.Info().Msg("cluster record doesn't exist, continuing")
 	}
