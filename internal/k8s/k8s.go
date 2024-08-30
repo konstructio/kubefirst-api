@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/rs/zerolog/log"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -12,8 +13,9 @@ import (
 func ReadSecretV2Old(clientset *kubernetes.Clientset, namespace string, secretName string) (map[string]interface{}, error) {
 	secret, err := clientset.CoreV1().Secrets(namespace).Get(context.Background(), secretName, metav1.GetOptions{})
 	if err != nil {
-		log.Warn().Msgf("no secret found: %s\n", err)
-		return map[string]interface{}{}, err
+		if !errors.IsNotFound(err) {
+			return nil, err
+		}
 	}
 
 	parsedSecretData := make(map[string]interface{})
