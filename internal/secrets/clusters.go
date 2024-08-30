@@ -64,7 +64,11 @@ func GetCluster(clientSet *kubernetes.Clientset, clusterName string) (pkgtypes.C
 // GetCluster
 func GetClusters(clientSet *kubernetes.Clientset) ([]pkgtypes.Cluster, error) {
 	clusterList := []pkgtypes.Cluster{}
-	clusterReferenceList, _ := GetSecretReference(clientSet, KUBEFIRST_CLUSTERS_SECRET_NAME)
+	clusterReferenceList, err := GetSecretReference(clientSet, KUBEFIRST_CLUSTERS_SECRET_NAME)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get secret cluster reference: %w", err)
+	}
+
 	for _, clusterName := range clusterReferenceList.List {
 		cluster, _ := GetCluster(clientSet, clusterName)
 
@@ -78,9 +82,12 @@ func GetClusters(clientSet *kubernetes.Clientset) ([]pkgtypes.Cluster, error) {
 
 // InsertCluster
 func InsertCluster(clientSet *kubernetes.Clientset, cl pkgtypes.Cluster) error {
-	_, err := GetSecretReference(clientSet, KUBEFIRST_CLUSTERS_SECRET_NAME)
-
+	secretReference, err := GetSecretReference(clientSet, KUBEFIRST_CLUSTERS_SECRET_NAME)
 	if err != nil {
+		return fmt.Errorf("unable to get secret cluster reference: %w", err)
+	}
+
+	if secretReference.Name == "" {
 		CreateSecretReference(clientSet, KUBEFIRST_CLUSTERS_SECRET_NAME, pkgtypes.SecretListReference{
 			Name: "clusters",
 			List: []string{cl.ClusterName},
