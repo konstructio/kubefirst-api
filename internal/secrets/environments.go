@@ -170,8 +170,15 @@ func UpdateEnvironment(clientSet *kubernetes.Clientset, id string, env types.Env
 	environmentToUpdate.Color = env.Color
 	environmentToUpdate.Description = env.Description
 
-	bytes, _ := json.Marshal(environmentToUpdate)
-	secretValuesMap, _ := ParseJSONToMap(string(bytes))
+	bytes, err := json.Marshal(environmentToUpdate)
+	if err != nil {
+		return fmt.Errorf("error marshalling json: %w", err)
+	}
+
+	secretValuesMap, err := ParseJSONToMap(string(bytes))
+	if err != nil {
+		return fmt.Errorf("error parsing json: %w", err)
+	}
 
 	err = k8s.UpdateSecretV2(clientSet, "kubefirst", fmt.Sprintf("%s-%s", kubefirstEnvironmentPrefix, environmentToUpdate.Name), secretValuesMap)
 	if err != nil {
