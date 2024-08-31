@@ -104,7 +104,7 @@ func UpdateGitopsCatalogApps(clientSet *kubernetes.Clientset) error {
 		err = CreateGitopsCatalogApps(clientSet, mpapps)
 		if err != nil {
 			log.Error().Msgf("error creating gitops catalog apps secret: %s", err)
-			return fmt.Errorf("error creating gitops catalog apps secret: %s", err)
+			return fmt.Errorf("error creating gitops catalog apps secret: %w", err)
 		}
 	} else {
 		catalogApps.Apps = mpapps.Apps
