@@ -43,16 +43,9 @@ func GetCluster(clientSet *kubernetes.Clientset, clusterName string) (pkgtypes.C
 	cluster := pkgtypes.Cluster{}
 
 	clusterSecret, err := k8s.ReadSecretV2Old(clientSet, "kubefirst", fmt.Sprintf("%s-%s", KUBEFIRST_CLUSTER_PREFIX, clusterName))
-	// Check for errors in reading the secret
 	if err != nil {
-		return cluster, fmt.Errorf("failed to read secret: %w", err)
+		return cluster, fmt.Errorf("secret not found: %s", err)
 	}
-
-	// Check if the secret is empty or contains only whitespace
-	if clusterSecret == nil || len(clusterSecret) == 0 {
-		return cluster, fmt.Errorf("secret not found for cluster: %s", clusterName)
-	}
-
 	jsonString, _ := MapToStructuredJSON(clusterSecret)
 
 	jsonData, err := json.Marshal(jsonString)
