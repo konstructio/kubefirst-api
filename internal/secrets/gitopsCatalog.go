@@ -93,7 +93,14 @@ func UpdateGitopsCatalogApps(clientSet *kubernetes.Clientset) error {
 	}
 
 	catalogApps, err := GetGitopsCatalogApps(clientSet)
+
 	if err != nil {
+		log.Error().Msgf("error fetching gitops catalog apps: %s", err)
+		return fmt.Errorf("error fetching gitops catalog apps: %s", err)
+	}
+
+	// If no apps are found, create the GitOps catalog apps
+	if len(catalogApps.Apps) == 0 {
 		err = CreateGitopsCatalogApps(clientSet, mpapps)
 		if err != nil {
 			log.Error().Msgf("error creating gitops catalog apps secret: %s", err)
