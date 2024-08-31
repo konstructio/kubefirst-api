@@ -57,7 +57,7 @@ func ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster, error) {
 	// if you find a record bail
 	existingCluster, err := GetCluster(kcfg.Clientset, cluster.ClusterName)
 	if err != nil {
-		return existingCluster, fmt.Errorf("unable to find cluster: %s", err)
+		return nil, fmt.Errorf("unable to find cluster: %w", err)
 	}
 
 	if existingCluster.ClusterID == "" {
