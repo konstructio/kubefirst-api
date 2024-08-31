@@ -9,10 +9,10 @@ package controller
 import (
 	"fmt"
 
-	"github.com/kubefirst/kubefirst-api/internal/secrets"
-	"github.com/kubefirst/kubefirst-api/internal/utils"
-	awsinternal "github.com/kubefirst/kubefirst-api/pkg/aws"
-	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	"github.com/konstructio/kubefirst-api/internal/secrets"
+	"github.com/konstructio/kubefirst-api/internal/utils"
+	awsinternal "github.com/konstructio/kubefirst-api/pkg/aws"
+	"github.com/konstructio/kubefirst-api/pkg/providerConfigs"
 	log "github.com/rs/zerolog/log"
 )
 

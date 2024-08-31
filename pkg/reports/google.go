@@ -7,8 +7,8 @@ See the LICENSE file for more details.
 package reports
 
 import (
-	"github.com/kubefirst/kubefirst-api/pkg/google"
-	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	"github.com/konstructio/kubefirst-api/pkg/google"
+	"github.com/konstructio/kubefirst-api/pkg/providerConfigs"
 )
 
 // googleHandoffScreen prints the handoff screen

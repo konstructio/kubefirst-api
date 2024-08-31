@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kubefirst/kubefirst-api/internal/k8s"
-	"github.com/kubefirst/kubefirst-api/internal/vault"
-	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
-	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/konstructio/kubefirst-api/internal/k8s"
+	"github.com/konstructio/kubefirst-api/internal/vault"
+	"github.com/konstructio/kubefirst-api/pkg/providerConfigs"
+	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 )

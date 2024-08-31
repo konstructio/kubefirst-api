@@ -1,6 +1,6 @@
 package vault
 
-import internal "github.com/kubefirst/kubefirst-api/internal/vault"
+import internal "github.com/konstructio/kubefirst-api/internal/vault"
 
 type Configuration = internal.Configuration
 

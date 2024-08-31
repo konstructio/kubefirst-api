@@ -9,8 +9,8 @@ package akamai
 import (
 	"fmt"
 
-	providerConfig "github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
-	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	providerConfig "github.com/konstructio/kubefirst-api/pkg/providerConfigs"
+	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
 	"github.com/rs/zerolog/log"
 	"k8s.io/client-go/kubernetes"
 )

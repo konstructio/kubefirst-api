@@ -12,8 +12,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/kubefirst/kubefirst-api/internal"
-	"github.com/kubefirst/kubefirst-api/internal/httpCommon"
+	"github.com/konstructio/kubefirst-api/internal"
+	"github.com/konstructio/kubefirst-api/internal/httpCommon"
 	"github.com/rs/zerolog/log"
 )
 

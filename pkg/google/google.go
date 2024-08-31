@@ -14,7 +14,7 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	computepb "cloud.google.com/go/compute/apiv1/computepb"
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
-	"github.com/kubefirst/kubefirst-api/internal/httpCommon"
+	"github.com/konstructio/kubefirst-api/internal/httpCommon"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/iterator"

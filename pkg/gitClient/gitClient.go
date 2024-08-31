@@ -1,6 +1,6 @@
 package gitClient //nolint:revive,stylecheck // allowing temporarily for better code organization
 
-import "github.com/kubefirst/kubefirst-api/internal/gitClient"
+import "github.com/konstructio/kubefirst-api/internal/gitClient"
 
 var (
 	Commit           = gitClient.Commit

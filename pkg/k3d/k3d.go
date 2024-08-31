@@ -1,6 +1,9 @@
 package k3d
 
-import internal "github.com/kubefirst/kubefirst-api/internal/k3d"
+import (
+	"github.com/konstructio/kubefirst-api/internal/controller"
+	internal "github.com/konstructio/kubefirst-api/internal/k3d"
+)
 
 const (
 	DomainName          = internal.DomainName
@@ -35,3 +38,4 @@ var (
 )
 
 var ClusterCreateConsoleAPI = internal.ClusterCreateConsoleAPI
+var RestartDeployment = controller.RestartDeployment

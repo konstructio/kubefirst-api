@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	pkg "github.com/kubefirst/kubefirst-api/internal"
-	"github.com/kubefirst/kubefirst-api/internal/downloadManager"
+	pkg "github.com/konstructio/kubefirst-api/internal"
+	"github.com/konstructio/kubefirst-api/internal/downloadManager"
 	log "github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
 )

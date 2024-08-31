@@ -12,20 +12,20 @@ import (
 	"net/http"
 	"time"
 
-	runtime "github.com/kubefirst/kubefirst-api/internal"
-	awsinternal "github.com/kubefirst/kubefirst-api/internal/aws"
-	"github.com/kubefirst/kubefirst-api/internal/constants"
-	"github.com/kubefirst/kubefirst-api/internal/env"
-	"github.com/kubefirst/kubefirst-api/internal/github"
-	"github.com/kubefirst/kubefirst-api/internal/gitlab"
-	"github.com/kubefirst/kubefirst-api/internal/k8s"
-	"github.com/kubefirst/kubefirst-api/internal/secrets"
-	"github.com/kubefirst/kubefirst-api/internal/services"
-	"github.com/kubefirst/kubefirst-api/internal/utils"
-	google "github.com/kubefirst/kubefirst-api/pkg/google"
-	"github.com/kubefirst/kubefirst-api/pkg/handlers"
-	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
-	"github.com/kubefirst/kubefirst-api/pkg/types"
+	runtime "github.com/konstructio/kubefirst-api/internal"
+	awsinternal "github.com/konstructio/kubefirst-api/internal/aws"
+	"github.com/konstructio/kubefirst-api/internal/constants"
+	"github.com/konstructio/kubefirst-api/internal/env"
+	"github.com/konstructio/kubefirst-api/internal/github"
+	"github.com/konstructio/kubefirst-api/internal/gitlab"
+	"github.com/konstructio/kubefirst-api/internal/k8s"
+	"github.com/konstructio/kubefirst-api/internal/secrets"
+	"github.com/konstructio/kubefirst-api/internal/services"
+	"github.com/konstructio/kubefirst-api/internal/utils"
+	google "github.com/konstructio/kubefirst-api/pkg/google"
+	"github.com/konstructio/kubefirst-api/pkg/handlers"
+	"github.com/konstructio/kubefirst-api/pkg/providerConfigs"
+	"github.com/konstructio/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"k8s.io/client-go/kubernetes"
 
@@ -127,7 +127,11 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	// Determine if record already exists
 	recordExists := true
 	rec, err := secrets.GetCluster(clctrl.KubernetesClient, def.ClusterName)
-	if rec.ClusterID == "" && err != nil {
+	if err != nil {
+		return fmt.Errorf("could not read cluster secret %s: %w", def.ClusterName, err)
+	}
+
+	if rec.ClusterID == "" {
 		recordExists = false
 		log.Info().Msg("cluster record doesn't exist, continuing")
 	}

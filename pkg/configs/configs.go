@@ -1,6 +1,6 @@
 package configs
 
-import "github.com/kubefirst/kubefirst-api/configs"
+import "github.com/konstructio/kubefirst-api/configs"
 
 const DefaultK1Version = configs.DefaultK1Version
 

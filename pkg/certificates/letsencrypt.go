@@ -15,8 +15,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/kubefirst/kubefirst-api/internal/httpCommon"
-	"github.com/kubefirst/kubefirst-api/pkg/reports"
+	"github.com/konstructio/kubefirst-api/internal/httpCommon"
+	"github.com/konstructio/kubefirst-api/pkg/reports"
 	"github.com/rs/zerolog/log"
 )
 

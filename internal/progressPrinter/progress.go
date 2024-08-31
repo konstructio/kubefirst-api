@@ -38,7 +38,7 @@ var (
 // GetInstance  Function used to initialize the component once in the execution.
 // Usually called from the `cmd`  `init` func or as early as possible on the execution.
 //
-//	import ("github.com/kubefirst/kubefirst-api/internal")
+//	import ("github.com/konstructio/kubefirst-api/internal")
 //	func init() {
 //			progressPrinter.GetInstance()
 //			progressPrinter.SetupProgress(5) // Number of bars for the entire run.

@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/go-git/go-git/v5"
-	pkg "github.com/kubefirst/kubefirst-api/internal"
+	pkg "github.com/konstructio/kubefirst-api/internal"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
@@ -26,7 +26,7 @@ func AppendFile(cloudType string, reponame string, filename string) bool {
 	if cloudType == pkg.CloudAws {
 		if strings.Contains(reponame, "gitops") {
 			if filename == "terraform/base/kubeconfig" {
-				// https://github.com/kubefirst/kubefirst/issues/926
+				// https://github.com/konstructio/kubefirst/issues/926
 				log.Debug().Msgf("file not included on commit[#926]: '%s'", filename)
 				return false
 			}
@@ -35,7 +35,7 @@ func AppendFile(cloudType string, reponame string, filename string) bool {
 	if cloudType == pkg.CloudK3d {
 		if strings.Contains(reponame, "gitops") {
 			if strings.HasPrefix(filename, "argo-workflows") {
-				// https://github.com/kubefirst/kubefirst/issues/959
+				// https://github.com/konstructio/kubefirst/issues/959
 				log.Debug().Msgf("file not included on commit[#959]: '%s'", filename)
 				return false
 			}

@@ -9,14 +9,14 @@ package aws
 import (
 	"fmt"
 
-	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
-	awsinternal "github.com/kubefirst/kubefirst-api/internal/aws"
-	"github.com/kubefirst/kubefirst-api/internal/constants"
-	"github.com/kubefirst/kubefirst-api/internal/controller"
-	"github.com/kubefirst/kubefirst-api/internal/k8s"
-	"github.com/kubefirst/kubefirst-api/internal/secrets"
-	"github.com/kubefirst/kubefirst-api/internal/services"
-	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	awsext "github.com/konstructio/kubefirst-api/extensions/aws"
+	awsinternal "github.com/konstructio/kubefirst-api/internal/aws"
+	"github.com/konstructio/kubefirst-api/internal/constants"
+	"github.com/konstructio/kubefirst-api/internal/controller"
+	"github.com/konstructio/kubefirst-api/internal/k8s"
+	"github.com/konstructio/kubefirst-api/internal/secrets"
+	"github.com/konstructio/kubefirst-api/internal/services"
+	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
 	log "github.com/rs/zerolog/log"
 )
 
@@ -242,22 +242,25 @@ func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 		log.Error().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
 	}
 
-	log.Info().Msg("waiting for kubefirst-api Deployment to transition to Running")
-	kubefirstAPI, err := k8s.ReturnDeploymentObject(
-		ctrl.Kcfg.Clientset,
-		"app.kubernetes.io/name",
-		"kubefirst-api",
-		"kubefirst",
-		1200,
-	)
-	if err != nil {
-		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error finding kubefirst-api Deployment: %w", err)
-	}
-	_, err = k8s.WaitForDeploymentReady(ctrl.Kcfg.Clientset, kubefirstAPI, 300)
-	if err != nil {
-		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error waiting for kubefirst-api deployment to enter Ready state: %w", err)
+	if ctrl.InstallKubefirstPro {
+		log.Info().Msg("waiting for kubefirst-api Deployment to transition to Running")
+		kubefirstAPI, err := k8s.ReturnDeploymentObject(
+			ctrl.Kcfg.Clientset,
+			"app.kubernetes.io/name",
+			"kubefirst-api",
+			"kubefirst",
+			1200,
+		)
+		if err != nil {
+			ctrl.UpdateClusterOnError(err.Error())
+			return fmt.Errorf("error finding kubefirst-api Deployment: %w", err)
+		}
+
+		_, err = k8s.WaitForDeploymentReady(ctrl.Kcfg.Clientset, kubefirstAPI, 300)
+		if err != nil {
+			ctrl.UpdateClusterOnError(err.Error())
+			return fmt.Errorf("error waiting for kubefirst-api deployment to enter Ready state: %w", err)
+		}
 	}
 
 	// Wait for last sync wave app transition to Running

@@ -12,11 +12,11 @@ import (
 	"time"
 
 	argocdapi "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned"
-	awsext "github.com/kubefirst/kubefirst-api/extensions/aws"
-	pkg "github.com/kubefirst/kubefirst-api/internal"
-	"github.com/kubefirst/kubefirst-api/internal/argocd"
-	"github.com/kubefirst/kubefirst-api/internal/k8s"
-	"github.com/kubefirst/kubefirst-api/internal/secrets"
+	awsext "github.com/konstructio/kubefirst-api/extensions/aws"
+	pkg "github.com/konstructio/kubefirst-api/internal"
+	"github.com/konstructio/kubefirst-api/internal/argocd"
+	"github.com/konstructio/kubefirst-api/internal/k8s"
+	"github.com/konstructio/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	log "github.com/rs/zerolog/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -48,13 +48,7 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 			}
 		}
 
-		var argoCDInstallPath string
-		switch clctrl.CloudProvider {
-		case "digitalocean", "aws", "civo", "google", "vultr":
-			argoCDInstallPath = "github.com:konstructio/manifests/argocd/cloud?ref=v1.1.0"
-		default:
-			argoCDInstallPath = fmt.Sprintf("github.com:kubefirst/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
-		}
+		argoCDInstallPath := fmt.Sprintf("github.com:konstructio/manifests/argocd/cloud?ref=%s", pkg.KubefirstManifestRepoRef)
 
 		log.Info().Msg("installing argocd")
 

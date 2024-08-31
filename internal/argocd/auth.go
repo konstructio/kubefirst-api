@@ -12,9 +12,9 @@ import (
 	"fmt"
 	"net/http"
 
-	pkg "github.com/kubefirst/kubefirst-api/internal"
-	"github.com/kubefirst/kubefirst-api/internal/argocdModel"
-	"github.com/kubefirst/kubefirst-api/internal/httpCommon"
+	pkg "github.com/konstructio/kubefirst-api/internal"
+	"github.com/konstructio/kubefirst-api/internal/argocdModel"
+	"github.com/konstructio/kubefirst-api/internal/httpCommon"
 )
 
 func getToken(endpoint, username, password string) (string, error) {

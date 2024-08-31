@@ -15,8 +15,8 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
-	pkg "github.com/kubefirst/kubefirst-api/internal"
-	"github.com/kubefirst/kubefirst-api/internal/gitClient"
+	pkg "github.com/konstructio/kubefirst-api/internal"
+	"github.com/konstructio/kubefirst-api/internal/gitClient"
 	cp "github.com/otiai10/copy"
 	"github.com/rs/zerolog/log"
 )

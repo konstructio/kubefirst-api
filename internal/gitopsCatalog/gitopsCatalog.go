@@ -9,8 +9,8 @@ package gitopsCatalog //nolint:revive,stylecheck // temporary allowing during co
 import (
 	"fmt"
 
-	"github.com/kubefirst/kubefirst-api/internal/gitShim"
-	"github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/konstructio/kubefirst-api/internal/gitShim"
+	"github.com/konstructio/kubefirst-api/pkg/types"
 	"gopkg.in/yaml.v2"
 )
 

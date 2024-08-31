@@ -10,8 +10,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kubefirst/kubefirst-api/internal/k8s"
-	kube "github.com/kubefirst/kubefirst-api/internal/kubernetes"
+	"github.com/konstructio/kubefirst-api/internal/k8s"
+	kube "github.com/konstructio/kubefirst-api/internal/kubernetes"
 	"github.com/rs/zerolog/log"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"

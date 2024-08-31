@@ -7,8 +7,8 @@ See the LICENSE file for more details.
 package reports
 
 import (
-	"github.com/kubefirst/kubefirst-api/internal/civo"
-	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	"github.com/konstructio/kubefirst-api/internal/civo"
+	"github.com/konstructio/kubefirst-api/pkg/providerConfigs"
 )
 
 // CivoHandoffScreen prints the handoff screen

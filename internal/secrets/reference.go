@@ -10,8 +10,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/kubefirst/kubefirst-api/internal/k8s"
-	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/konstructio/kubefirst-api/internal/k8s"
+	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -41,16 +41,20 @@ func GetSecretReference(clientSet *kubernetes.Clientset, secretName string) (pkg
 
 func DeleteSecretReference(clientSet *kubernetes.Clientset, secretName string, valueToDelete string) error {
 	filteredReferenceList := pkgtypes.SecretListReference{}
-	ReferenceList, _ := GetSecretReference(clientSet, secretName)
-	filteredReferenceList.Name = ReferenceList.Name
+	referenceList, err := GetSecretReference(clientSet, secretName)
+	if err != nil {
+		return fmt.Errorf("unable to get secret reference %s: %w", secretName, err)
+	}
 
-	for _, referenceClusterName := range ReferenceList.List {
+	filteredReferenceList.Name = referenceList.Name
+
+	for _, referenceClusterName := range referenceList.List {
 		if referenceClusterName != valueToDelete {
 			filteredReferenceList.List = append(filteredReferenceList.List, referenceClusterName)
 		}
 	}
 
-	err := UpdateSecretReference(clientSet, secretName, filteredReferenceList)
+	err = UpdateSecretReference(clientSet, secretName, filteredReferenceList)
 	if err != nil {
 		return err
 	}
@@ -106,12 +110,16 @@ func CreateSecretReference(clientSet *kubernetes.Clientset, secretName string, s
 }
 
 func AddSecretReferenceItem(clientSet *kubernetes.Clientset, secretName string, valueToAdd string) error {
-	secretReference, _ := GetSecretReference(clientSet, secretName)
+	secretReference, err := GetSecretReference(clientSet, secretName)
+	if err != nil {
+		return fmt.Errorf("unable to get secret reference %s: %w", secretName, err)
+	}
+
 	secretReference.List = append(secretReference.List, valueToAdd)
 
-	err := UpdateSecretReference(clientSet, secretName, secretReference)
+	err = UpdateSecretReference(clientSet, secretName, secretReference)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to update secret reference %s: %w", secretName, err)
 	}
 
 	return nil

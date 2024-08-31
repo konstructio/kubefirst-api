@@ -1,7 +1,7 @@
 //nolint:revive,stylecheck // allowing temporarily for better code organization
 package progressPrinter
 
-import internal "github.com/kubefirst/kubefirst-api/internal/progressPrinter"
+import internal "github.com/konstructio/kubefirst-api/internal/progressPrinter"
 
 var (
 	IncrementTracker = internal.IncrementTracker

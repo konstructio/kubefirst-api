@@ -17,7 +17,7 @@ import (
 
 	v1alpha1 "github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	health "github.com/argoproj/gitops-engine/pkg/health"
-	"github.com/kubefirst/kubefirst-api/internal/httpCommon"
+	"github.com/konstructio/kubefirst-api/internal/httpCommon"
 	"github.com/rs/zerolog/log"
 	"k8s.io/client-go/kubernetes"
 )

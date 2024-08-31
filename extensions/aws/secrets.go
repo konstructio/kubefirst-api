@@ -10,10 +10,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kubefirst/kubefirst-api/internal/aws"
-	kube "github.com/kubefirst/kubefirst-api/internal/kubernetes"
-	providerConfig "github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
-	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/konstructio/kubefirst-api/internal/aws"
+	kube "github.com/konstructio/kubefirst-api/internal/kubernetes"
+	providerConfig "github.com/konstructio/kubefirst-api/pkg/providerConfigs"
+	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
 	"github.com/rs/zerolog/log"
 	"k8s.io/client-go/kubernetes"
 )

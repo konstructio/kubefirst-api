@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   api:
-    repository: public.ecr.aws/kubefirst/kubefirst-api
+    repository: ghcr.io/konstructio/kubefirst-api
     pullPolicy: IfNotPresent
   hook:
     repository: public.ecr.aws/kubefirst/metrics-client

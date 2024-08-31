@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kubefirst/kubefirst-api/internal"
+	"github.com/konstructio/kubefirst-api/internal"
 	log "github.com/rs/zerolog/log"
 )
 

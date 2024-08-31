@@ -7,8 +7,8 @@ See the LICENSE file for more details.
 package reports
 
 import (
-	"github.com/kubefirst/kubefirst-api/internal/vultr"
-	"github.com/kubefirst/kubefirst-api/pkg/providerConfigs"
+	"github.com/konstructio/kubefirst-api/internal/vultr"
+	"github.com/konstructio/kubefirst-api/pkg/providerConfigs"
 )
 
 // VultrHandoffScreen prints the handoff screen

@@ -10,8 +10,8 @@ import (
 	"context"
 	"fmt"
 
-	kube "github.com/kubefirst/kubefirst-api/internal/kubernetes"
-	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	kube "github.com/konstructio/kubefirst-api/internal/kubernetes"
+	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
 	"github.com/rs/zerolog/log"
 	"k8s.io/client-go/kubernetes"
 )

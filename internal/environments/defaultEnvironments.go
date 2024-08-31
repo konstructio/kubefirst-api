@@ -15,12 +15,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kubefirst/kubefirst-api/internal/constants"
-	"github.com/kubefirst/kubefirst-api/internal/env"
-	"github.com/kubefirst/kubefirst-api/internal/httpCommon"
-	"github.com/kubefirst/kubefirst-api/internal/secrets"
-	"github.com/kubefirst/kubefirst-api/internal/utils"
-	"github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/konstructio/kubefirst-api/internal/constants"
+	"github.com/konstructio/kubefirst-api/internal/env"
+	"github.com/konstructio/kubefirst-api/internal/httpCommon"
+	"github.com/konstructio/kubefirst-api/internal/secrets"
+	"github.com/konstructio/kubefirst-api/internal/utils"
+	"github.com/konstructio/kubefirst-api/pkg/types"
 	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )

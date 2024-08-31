@@ -11,8 +11,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kubefirst/kubefirst-api/internal/digitalocean"
-	"github.com/kubefirst/kubefirst-api/internal/types"
+	"github.com/konstructio/kubefirst-api/internal/digitalocean"
+	"github.com/konstructio/kubefirst-api/internal/types"
 )
 
 func PostValidateDigitalOceanDomain(c *gin.Context) {

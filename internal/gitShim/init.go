@@ -10,8 +10,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kubefirst/kubefirst-api/internal/github"
-	"github.com/kubefirst/kubefirst-api/internal/gitlab"
+	"github.com/konstructio/kubefirst-api/internal/github"
+	"github.com/konstructio/kubefirst-api/internal/gitlab"
 	log "github.com/rs/zerolog/log"
 )
 

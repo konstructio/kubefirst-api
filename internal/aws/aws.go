@@ -21,9 +21,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	route53Types "github.com/aws/aws-sdk-go-v2/service/route53/types"
-	"github.com/kubefirst/kubefirst-api/internal/constants"
-	"github.com/kubefirst/kubefirst-api/internal/env"
-	"github.com/kubefirst/kubefirst-api/internal/utils"
+	"github.com/konstructio/kubefirst-api/internal/constants"
+	"github.com/konstructio/kubefirst-api/internal/env"
+	"github.com/konstructio/kubefirst-api/internal/utils"
 	log "github.com/rs/zerolog/log"
 )
 

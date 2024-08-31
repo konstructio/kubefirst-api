@@ -9,10 +9,10 @@ package errors
 import (
 	"fmt"
 
-	"github.com/kubefirst/kubefirst-api/internal/constants"
-	"github.com/kubefirst/kubefirst-api/internal/secrets"
-	"github.com/kubefirst/kubefirst-api/internal/utils"
-	pkgtypes "github.com/kubefirst/kubefirst-api/pkg/types"
+	"github.com/konstructio/kubefirst-api/internal/constants"
+	"github.com/konstructio/kubefirst-api/internal/secrets"
+	"github.com/konstructio/kubefirst-api/internal/utils"
+	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
 )
 
 // HandleClusterError implements an error handler for standalone cluster objects
