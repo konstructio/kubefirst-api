@@ -27,7 +27,7 @@ import (
 	"github.com/konstructio/kubefirst-api/pkg/providerConfigs"
 	"github.com/konstructio/kubefirst-api/pkg/types"
 	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
-	"github.com/kubefirst/metrics-client/pkg/telemetry"
+	"github.com/konstructio/metrics-client/pkg/telemetry"
 	"k8s.io/client-go/kubernetes"
 
 	log "github.com/rs/zerolog/log"

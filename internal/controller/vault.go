@@ -28,7 +28,7 @@ import (
 	"github.com/konstructio/kubefirst-api/internal/k8s"
 	"github.com/konstructio/kubefirst-api/internal/secrets"
 	vault "github.com/konstructio/kubefirst-api/internal/vault"
-	"github.com/kubefirst/metrics-client/pkg/telemetry"
+	"github.com/konstructio/metrics-client/pkg/telemetry"
 	log "github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

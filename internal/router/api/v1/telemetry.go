@@ -15,7 +15,7 @@ import (
 	"github.com/konstructio/kubefirst-api/internal/secrets"
 	"github.com/konstructio/kubefirst-api/internal/types"
 	"github.com/konstructio/kubefirst-api/internal/utils"
-	"github.com/kubefirst/metrics-client/pkg/telemetry"
+	"github.com/konstructio/metrics-client/pkg/telemetry"
 )
 
 // PostTelemetry godoc

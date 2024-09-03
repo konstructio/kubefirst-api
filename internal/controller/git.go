@@ -21,7 +21,7 @@ import (
 	gitShim "github.com/konstructio/kubefirst-api/internal/gitShim"
 	"github.com/konstructio/kubefirst-api/internal/gitlab"
 	"github.com/konstructio/kubefirst-api/internal/secrets"
-	"github.com/kubefirst/metrics-client/pkg/telemetry"
+	"github.com/konstructio/metrics-client/pkg/telemetry"
 	log "github.com/rs/zerolog/log"
 )
 

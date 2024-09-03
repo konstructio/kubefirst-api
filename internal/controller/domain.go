@@ -17,7 +17,7 @@ import (
 	"github.com/konstructio/kubefirst-api/internal/dns"
 	"github.com/konstructio/kubefirst-api/internal/secrets"
 	"github.com/konstructio/kubefirst-api/internal/vultr"
-	"github.com/kubefirst/metrics-client/pkg/telemetry"
+	"github.com/konstructio/metrics-client/pkg/telemetry"
 	log "github.com/rs/zerolog/log"
 )
 

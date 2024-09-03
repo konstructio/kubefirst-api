@@ -27,7 +27,7 @@ import (
 	"github.com/konstructio/kubefirst-api/internal/vultr"
 	"github.com/konstructio/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
-	"github.com/kubefirst/metrics-client/pkg/telemetry"
+	"github.com/konstructio/metrics-client/pkg/telemetry"
 	log "github.com/rs/zerolog/log"
 )
 
