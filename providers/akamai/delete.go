@@ -26,7 +26,7 @@ import (
 	"github.com/konstructio/kubefirst-api/internal/utils"
 	"github.com/konstructio/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
-	"github.com/konstructio/metrics-client/pkg/telemetry"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	log "github.com/rs/zerolog/log"
 )
 
@@ -35,7 +35,7 @@ func DeleteAkamaiCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Telemetr
 	telemetry.SendEvent(telemetryEvent, telemetry.ClusterDeleteStarted, "")
 
 	// Instantiate civo config
-	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.APIToken, cl.CloudflareAuth.OriginCaIssuerKey)
+	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.APIToken, cl.CloudflareAuth.OriginCaIssuerKey, cl.GitopsRepoName, cl.MetaphorRepoName, cl.AdminTeamName, cl.DeveloperTeamName)
 
 	kcfg := utils.GetKubernetesClient(cl.ClusterName)
 

@@ -27,7 +27,7 @@ import (
 	"github.com/konstructio/kubefirst-api/pkg/providerConfigs"
 	"github.com/konstructio/kubefirst-api/pkg/types"
 	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
-	"github.com/konstructio/metrics-client/pkg/telemetry"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"k8s.io/client-go/kubernetes"
 
 	log "github.com/rs/zerolog/log"
@@ -266,25 +266,25 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	// Instantiate provider configuration
 	switch clctrl.CloudProvider {
 	case "akamai":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.APIToken, clctrl.CloudflareAuth.OriginCaIssuerKey, clctrl.GitopsRepoName, clctrl.MetaphorRepoName)
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.APIToken, clctrl.CloudflareAuth.OriginCaIssuerKey, clctrl.GitopsRepoName, clctrl.MetaphorRepoName, clctrl.AdminTeamName, clctrl.DeveloperTeamName)
 		clctrl.ProviderConfig.AkamaiToken = clctrl.AkamaiAuth.Token
 	case "aws":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "", clctrl.GitopsRepoName, clctrl.MetaphorRepoName)
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "", clctrl.GitopsRepoName, clctrl.MetaphorRepoName, clctrl.AdminTeamName, clctrl.DeveloperTeamName)
 	case "civo":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.APIToken, clctrl.CloudflareAuth.OriginCaIssuerKey, clctrl.GitopsRepoName, clctrl.MetaphorRepoName)
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.APIToken, clctrl.CloudflareAuth.OriginCaIssuerKey, clctrl.GitopsRepoName, clctrl.MetaphorRepoName, clctrl.AdminTeamName, clctrl.DeveloperTeamName)
 		clctrl.ProviderConfig.CivoToken = clctrl.CivoAuth.Token
 	case "google":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "", clctrl.GitopsRepoName, clctrl.MetaphorRepoName)
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "", clctrl.GitopsRepoName, clctrl.MetaphorRepoName, clctrl.AdminTeamName, clctrl.DeveloperTeamName)
 		clctrl.ProviderConfig.GoogleAuth = clctrl.GoogleAuth.KeyFile
 		clctrl.ProviderConfig.GoogleProject = clctrl.GoogleAuth.ProjectId
 	case "digitalocean":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "", clctrl.GitopsRepoName, clctrl.MetaphorRepoName)
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "", clctrl.GitopsRepoName, clctrl.MetaphorRepoName, clctrl.AdminTeamName, clctrl.DeveloperTeamName)
 		clctrl.ProviderConfig.DigitaloceanToken = clctrl.DigitaloceanAuth.Token
 	case "vultr":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "", clctrl.GitopsRepoName, clctrl.MetaphorRepoName)
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "", clctrl.GitopsRepoName, clctrl.MetaphorRepoName, clctrl.AdminTeamName, clctrl.DeveloperTeamName)
 		clctrl.ProviderConfig.VultrToken = clctrl.VultrAuth.Token
 	case "k3s":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "", clctrl.GitopsRepoName, clctrl.MetaphorRepoName)
+		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "", clctrl.GitopsRepoName, clctrl.MetaphorRepoName, clctrl.AdminTeamName, clctrl.DeveloperTeamName)
 		clctrl.ProviderConfig.K3sServersPrivateIps = clctrl.K3sAuth.K3sServersPrivateIps
 		clctrl.ProviderConfig.K3sServersPublicIps = clctrl.K3sAuth.K3sServersPublicIps
 		clctrl.ProviderConfig.K3sSshPrivateKey = clctrl.K3sAuth.K3sSshPrivateKey

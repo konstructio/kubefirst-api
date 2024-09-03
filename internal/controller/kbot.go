@@ -9,7 +9,7 @@ package controller
 import (
 	"github.com/konstructio/kubefirst-api/internal/secrets"
 	pkg "github.com/konstructio/kubefirst-api/pkg/utils"
-	"github.com/konstructio/metrics-client/pkg/telemetry"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	log "github.com/rs/zerolog/log"
 )
 

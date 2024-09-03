@@ -7,12 +7,9 @@ See the LICENSE file for more details.
 package k3d
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
-
-	pkg "github.com/konstructio/kubefirst-api/internal"
 
 	pkg "github.com/konstructio/kubefirst-api/internal"
 )
@@ -66,7 +63,7 @@ type GithubTerraformEnvs struct {
 func TerraformPrep(config *K3dConfig) error {
 
 	path := config.GitopsDir + "/terraform"
-	err := filepath.Walk(path, detokenizeterraform(path, config))
+	err := filepath.Walk(path, detokenizeTerraform(path, config))
 	if err != nil {
 		return err
 	}
@@ -74,34 +71,32 @@ func TerraformPrep(config *K3dConfig) error {
 	return nil
 }
 
-// detokenizeTerraform returns a WalkFunc that detokenizes Terraform configuration files.
 func detokenizeTerraform(basePath string, config *K3dConfig) filepath.WalkFunc {
-	return func(path string, fi os.FileInfo, err error) error {
-		// Skip directories
+	return filepath.WalkFunc(func(path string, fi os.FileInfo, err error) error {
+
 		if fi.IsDir() {
 			return nil
 		}
 
-		// Read the file content
-		content, err := os.ReadFile(path)
+		read, err := os.ReadFile(path)
 		if err != nil {
-			return fmt.Errorf("failed to read file %s: %w", path, err)
+			return err
 		}
 
-		newContents := string(read)
-		newContents = strings.Replace(newContents, "<ADMIN-TEAM>", config.AdminTeamName, -1)
-		newContents = strings.Replace(newContents, "<DEVELOPER-TEAM>", config.DeveloperTeamName, -1)
-		newContents = strings.Replace(newContents, "<METPAHOR-REPO-NAME>", config.MetaphorRepoName, -1)
-		newContents = strings.Replace(newContents, "<GIT-REPO-NAME>", config.GitopsRepoName, -1)
+		replacer := strings.NewReplacer(
+			"<ADMIN_TEAM>", config.AdminTeamName,
+			"<DEVELOPER_TEAM>", config.DeveloperTeamName,
+			"<METAPHOR_REPO_NAME>", config.MetaphorRepoName,
+			"<GIT_REPO_NAME>", config.GitopsRepoName,
+		)
 
-		// Replace tokens in the file content
-		newContents := replacer.Replace(string(content))
+		newContents := replacer.Replace(string(read))
 
-		// Write the updated content back to the file
-		if err := os.WriteFile(path, []byte(newContents), 0); err != nil {
-			return fmt.Errorf("failed to write file %s: %w", path, err)
+		err = os.WriteFile(path, []byte(newContents), 0)
+		if err != nil {
+			return err
 		}
 
 		return nil
-	}
+	})
 }

@@ -18,7 +18,7 @@ import (
 	"github.com/konstructio/kubefirst-api/internal/vultr"
 	"github.com/konstructio/kubefirst-api/pkg/akamai"
 	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
-	"github.com/konstructio/metrics-client/pkg/telemetry"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	"github.com/linode/linodego"
 	log "github.com/rs/zerolog/log"
 	"golang.org/x/oauth2"

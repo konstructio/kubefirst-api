@@ -27,7 +27,7 @@ import (
 	"github.com/konstructio/kubefirst-api/internal/secrets"
 	"github.com/konstructio/kubefirst-api/pkg/providerConfigs"
 	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
-	"github.com/konstructio/metrics-client/pkg/telemetry"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	log "github.com/rs/zerolog/log"
 	"github.com/thanhpk/randstr"
 	v1 "k8s.io/api/apps/v1"

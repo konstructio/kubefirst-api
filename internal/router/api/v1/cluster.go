@@ -33,7 +33,7 @@ import (
 	"github.com/konstructio/kubefirst-api/providers/google"
 	"github.com/konstructio/kubefirst-api/providers/k3s"
 	"github.com/konstructio/kubefirst-api/providers/vultr"
-	"github.com/konstructio/metrics-client/pkg/telemetry"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	log "github.com/rs/zerolog/log"
 )
 

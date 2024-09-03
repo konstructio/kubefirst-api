@@ -17,7 +17,7 @@ import (
 	apitelemetry "github.com/konstructio/kubefirst-api/internal/telemetry"
 	"github.com/konstructio/kubefirst-api/internal/utils"
 	"github.com/konstructio/kubefirst-api/pkg/types"
-	"github.com/konstructio/metrics-client/pkg/telemetry"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 
 	log "github.com/rs/zerolog/log"
 )

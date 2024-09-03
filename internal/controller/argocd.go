@@ -17,7 +17,7 @@ import (
 	"github.com/konstructio/kubefirst-api/internal/argocd"
 	"github.com/konstructio/kubefirst-api/internal/k8s"
 	"github.com/konstructio/kubefirst-api/internal/secrets"
-	"github.com/konstructio/metrics-client/pkg/telemetry"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	log "github.com/rs/zerolog/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"

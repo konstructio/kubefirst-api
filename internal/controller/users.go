@@ -19,7 +19,7 @@ import (
 	vultrext "github.com/konstructio/kubefirst-api/extensions/vultr"
 	"github.com/konstructio/kubefirst-api/internal/k8s"
 	"github.com/konstructio/kubefirst-api/internal/secrets"
-	"github.com/konstructio/metrics-client/pkg/telemetry"
+	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	log "github.com/rs/zerolog/log"
 )
 
