@@ -351,7 +351,7 @@ func PrepareGitRepositories(
 	useCloudflareOriginIssuer bool,
 ) error {
 	// * clone the gitops-template repo
-	gitopsRepo, err := gitClient.CloneRefSetMain(gitopsTemplateBranch, gitopsDir, gitopsTemplateURL)
+	_, err := gitClient.CloneRefSetMain(gitopsTemplateBranch, gitopsDir, gitopsTemplateURL)
 	if err != nil {
 		log.Error().Msgf("error opening repo at: %s, err: %s", gitopsDir, err.Error())
 		return fmt.Errorf("error opening repo at: %s, err: %w", gitopsDir, err)
@@ -390,7 +390,7 @@ func PrepareGitRepositories(
 
 	// COMMIT
 	// * init gitops-template repo
-	gitopsRepo, err = git.PlainInit(gitopsDir, true)
+	gitopsRepo, err := git.PlainInit(gitopsDir, false)
 	if err != nil {
 		return fmt.Errorf("unable to initialize gitops repository at %s. %s", gitopsDir, err.Error())
 	}
