@@ -121,6 +121,9 @@ func AdjustGitopsRepo(
 		}
 	}
 
+	// clean git histroy
+	removeAllWithLogger(filepath.Join(gitopsRepoDir, ".git"))
+
 	if !useCloudflareOriginIssuer {
 		removeAllWithLogger(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/mgmt/cloudflare-origin-ca-issuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
 		removeAllWithLogger(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/mgmt/cloudflare-origin-issuer-crd.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
@@ -386,6 +389,12 @@ func PrepareGitRepositories(
 	}
 
 	// COMMIT
+	// * init gitops-template repo
+	gitopsRepo, err = git.PlainInit(gitopsDir, true)
+	if err != nil {
+		return fmt.Errorf("unable to initialize gitops repository at %s. %s", gitopsDir, err.Error())
+	}
+
 	// * commit initial gitops-template content
 	err = gitClient.Commit(gitopsRepo, "committing initial detokenized gitops-template repo content")
 	if err != nil {
