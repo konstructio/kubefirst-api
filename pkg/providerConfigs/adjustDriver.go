@@ -392,7 +392,7 @@ func PrepareGitRepositories(
 	// * init gitops-template repo
 	gitopsRepo, err := git.PlainInit(gitopsDir, false)
 	if err != nil {
-		return fmt.Errorf("unable to initialize gitops repository at %s. %s", gitopsDir, err.Error())
+		return fmt.Errorf("unable to initialize gitops repository at %s: %w", gitopsDir, err)
 	}
 
 	// * commit initial gitops-template content
