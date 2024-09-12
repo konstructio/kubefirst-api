@@ -54,10 +54,13 @@ func ImportClusterIfEmpty() (pkgtypes.Cluster, error) {
 	log.Info().Msgf("import cluster secret discovered for cluster %s", cluster.ClusterName)
 
 	// if you find a record bail
-	_, err = GetCluster(kcfg.Clientset, cluster.ClusterName)
+	existingCluster, err := GetCluster(kcfg.Clientset, cluster.ClusterName)
 	if err != nil {
-		log.Info().Stack().Msgf("did not find preexisting record for cluster %s. importing record.", cluster.ClusterName)
+		return existingCluster, fmt.Errorf("unable to find cluster: %w", err)
+	}
 
+	if existingCluster.ClusterID == "" {
+		log.Info().Stack().Msgf("did not find preexisting record for cluster %s. importing record.", cluster.ClusterName)
 		// Create if entry does not exist
 		err = InsertCluster(kcfg.Clientset, cluster)
 		if err != nil {
