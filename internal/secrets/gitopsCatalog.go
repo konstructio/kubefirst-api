@@ -104,7 +104,6 @@ func UpdateGitopsCatalogApps(clientSet *kubernetes.Clientset) error {
 	}
 
 	catalogApps, err := GetGitopsCatalogApps(clientSet)
-
 	if err != nil {
 		log.Error().Msgf("error fetching gitops catalog apps: %s", err)
 		return fmt.Errorf("error fetching gitops catalog apps: %w", err)
