@@ -11,10 +11,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 
 	pkg "github.com/konstructio/kubefirst-api/internal"
+	"github.com/rs/zerolog/log"
 )
 
 type GitHubService struct {
@@ -75,7 +75,7 @@ func (service GitHubService) CheckUserCodeConfirmation(deviceCode string) (strin
 	var gitHubAccessToken gitHubAccessCode
 	err = json.Unmarshal(body, &gitHubAccessToken)
 	if err != nil {
-		log.Println(err)
+		return "", fmt.Errorf("failed to unmarshal GitHub access token response: %w", err)
 	}
 
 	return gitHubAccessToken.AccessToken, nil

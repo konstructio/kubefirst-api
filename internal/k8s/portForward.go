@@ -10,13 +10,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -97,8 +97,8 @@ func PortForwardPod(clientset *kubernetes.Clientset, req PortForwardAPodRequest)
 		return errors.New("error reading pod details")
 	}
 
-	log.Println("Namespace for PF", runningPod.Namespace)
-	log.Println("Name for PF", runningPod.Name)
+	log.Print("Namespace for port forwarding", runningPod.Namespace)
+	log.Print("Name for port forwarding", runningPod.Name)
 
 	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", runningPod.Namespace, runningPod.Name)
 	hostURL, err := url.Parse(req.RestConfig.Host)
