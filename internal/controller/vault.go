@@ -212,26 +212,26 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		// Specific TfEnvs
 		switch clctrl.CloudProvider {
 		case "akamai":
-			tfEnvs = akamaiext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
-			tfEnvs = akamaiext.GetAkamaiTerraformEnvs(tfEnvs, &cl)
+			tfEnvs = akamaiext.GetVaultTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
+			tfEnvs = akamaiext.GetAkamaiTerraformEnvs(tfEnvs, cl)
 		case "aws":
-			tfEnvs = awsext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
-			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, &cl)
+			tfEnvs = awsext.GetVaultTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
+			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, cl)
 		case "civo":
-			tfEnvs = civoext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
-			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, &cl)
+			tfEnvs = civoext.GetVaultTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
+			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, cl)
 		case "google":
-			tfEnvs = googleext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
-			tfEnvs = googleext.GetGoogleTerraformEnvs(tfEnvs, &cl)
+			tfEnvs = googleext.GetVaultTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
+			tfEnvs = googleext.GetGoogleTerraformEnvs(tfEnvs, cl)
 		case "digitalocean":
-			tfEnvs = digitaloceanext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
-			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, &cl)
+			tfEnvs = digitaloceanext.GetVaultTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
+			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, cl)
 		case "vultr":
-			tfEnvs = vultrext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
-			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
+			tfEnvs = vultrext.GetVaultTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
+			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, cl)
 		case "k3s":
-			tfEnvs = k3sext.GetVaultTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
-			tfEnvs = k3sext.GetK3sTerraformEnvs(tfEnvs, &cl)
+			tfEnvs = k3sext.GetVaultTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
+			tfEnvs = k3sext.GetK3sTerraformEnvs(tfEnvs, cl)
 		}
 
 		tfEntrypoint := clctrl.ProviderConfig.GitopsDir + "/terraform/vault"

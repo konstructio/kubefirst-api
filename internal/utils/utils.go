@@ -155,7 +155,7 @@ func GetKubernetesClient(clusterName string) *k8s.KubernetesClient {
 	return kcfg
 }
 
-func CreateKubefirstNamespace(clientSet *kubernetes.Clientset) error {
+func CreateKubefirstNamespaceIfNotExists(clientSet *kubernetes.Clientset) error {
 	_, err := clientSet.CoreV1().Namespaces().Get(context.TODO(), "kubefirst", metav1.GetOptions{})
 	if err != nil {
 		namespace := &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "kubefirst"}}

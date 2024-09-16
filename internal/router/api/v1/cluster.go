@@ -90,14 +90,14 @@ func DeleteCluster(c *gin.Context) {
 
 	if rec.LastCondition != "" {
 		rec.LastCondition = ""
-		err = secrets.UpdateCluster(kcfg.Clientset, rec)
+		err = secrets.UpdateCluster(kcfg.Clientset, *rec)
 		if err != nil {
 			log.Warn().Msgf("error updating cluster last_condition field: %s", err)
 		}
 	}
 	if rec.Status == constants.ClusterStatusError {
 		rec.Status = constants.ClusterStatusDeleting
-		err = secrets.UpdateCluster(kcfg.Clientset, rec)
+		err = secrets.UpdateCluster(kcfg.Clientset, *rec)
 		if err != nil {
 			log.Warn().Msgf("error updating cluster status field: %s", err)
 		}
@@ -106,7 +106,7 @@ func DeleteCluster(c *gin.Context) {
 	switch rec.CloudProvider {
 	case "aws":
 		go func() {
-			err := aws.DeleteAWSCluster(&rec, telemetryEvent)
+			err := aws.DeleteAWSCluster(rec, telemetryEvent)
 			if err != nil {
 				log.Error().Msg(err.Error())
 			}
@@ -117,7 +117,7 @@ func DeleteCluster(c *gin.Context) {
 		})
 	case "civo":
 		go func() {
-			err := civo.DeleteCivoCluster(&rec, telemetryEvent)
+			err := civo.DeleteCivoCluster(rec, telemetryEvent)
 			if err != nil {
 				log.Error().Msg(err.Error())
 			}
@@ -128,7 +128,7 @@ func DeleteCluster(c *gin.Context) {
 		})
 	case "digitalocean":
 		go func() {
-			err := digitalocean.DeleteDigitaloceanCluster(&rec, telemetryEvent)
+			err := digitalocean.DeleteDigitaloceanCluster(rec, telemetryEvent)
 			if err != nil {
 				log.Error().Msg(err.Error())
 			}
@@ -139,7 +139,7 @@ func DeleteCluster(c *gin.Context) {
 		})
 	case "vultr":
 		go func() {
-			err := vultr.DeleteVultrCluster(&rec, telemetryEvent)
+			err := vultr.DeleteVultrCluster(rec, telemetryEvent)
 			if err != nil {
 				log.Error().Msg(err.Error())
 			}
@@ -150,7 +150,7 @@ func DeleteCluster(c *gin.Context) {
 		})
 	case "google":
 		go func() {
-			err := google.DeleteGoogleCluster(&rec, telemetryEvent)
+			err := google.DeleteGoogleCluster(rec, telemetryEvent)
 			if err != nil {
 				log.Error().Msg(err.Error())
 			}
@@ -273,14 +273,14 @@ func PostCreateCluster(c *gin.Context) {
 		}
 		if cluster.LastCondition != "" {
 			cluster.LastCondition = ""
-			err = secrets.UpdateCluster(kcfg.Clientset, cluster)
+			err = secrets.UpdateCluster(kcfg.Clientset, *cluster)
 			if err != nil {
 				log.Warn().Msgf("error updating cluster last_condition field: %s", err)
 			}
 		}
 		if cluster.Status == constants.ClusterStatusError {
 			cluster.Status = constants.ClusterStatusProvisioning
-			err = secrets.UpdateCluster(kcfg.Clientset, cluster)
+			err = secrets.UpdateCluster(kcfg.Clientset, *cluster)
 			if err != nil {
 				log.Warn().Msgf("error updating cluster status field: %s", err)
 			}
@@ -288,7 +288,7 @@ func PostCreateCluster(c *gin.Context) {
 	}
 
 	// Retry mechanism
-	if cluster.ClusterName != "" {
+	if cluster != nil && cluster.ClusterName != "" {
 		// Assign cloud and git credentials
 		clusterDefinition.AkamaiAuth = cluster.AkamaiAuth
 		clusterDefinition.AWSAuth = cluster.AWSAuth
@@ -823,7 +823,7 @@ func PostResetClusterProgress(c *gin.Context) {
 	cluster, _ := secrets.GetCluster(kcfg.Clientset, clusterName)
 	// Reset
 	cluster.InProgress = false
-	err := secrets.UpdateCluster(kcfg.Clientset, cluster)
+	err := secrets.UpdateCluster(kcfg.Clientset, *cluster)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: fmt.Sprintf("error updating cluster %s: %s", clusterName, err),
@@ -866,7 +866,7 @@ func PostCreateVcluster(c *gin.Context) {
 	}
 
 	go func() {
-		err = environments.CreateDefaultClusters(cluster)
+		err = environments.CreateDefaultClusters(*cluster)
 		if err != nil {
 			log.Error().Msgf("Error creating default environments %s", err.Error())
 		}

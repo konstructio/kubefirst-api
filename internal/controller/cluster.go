@@ -50,9 +50,9 @@ func (clctrl *ClusterController) CreateCluster() error {
 
 		switch clctrl.CloudProvider {
 		case "akamai":
-			tfEnvs = akamaiext.GetAkamaiTerraformEnvs(tfEnvs, &cl)
+			tfEnvs = akamaiext.GetAkamaiTerraformEnvs(tfEnvs, cl)
 		case "aws":
-			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, &cl)
+			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, cl)
 			iamCaller, err := clctrl.AwsClient.GetCallerIdentity()
 			if err != nil {
 				return fmt.Errorf("error getting AWS caller identity: %w", err)
@@ -66,15 +66,15 @@ func (clctrl *ClusterController) CreateCluster() error {
 				return fmt.Errorf("failed to update cluster after getting AWS account ID: %w", err)
 			}
 		case "civo":
-			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, &cl)
+			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, cl)
 		case "digitalocean":
-			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, &cl)
+			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, cl)
 		case "google":
-			tfEnvs = googleext.GetGoogleTerraformEnvs(tfEnvs, &cl)
+			tfEnvs = googleext.GetGoogleTerraformEnvs(tfEnvs, cl)
 		case "vultr":
-			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
+			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, cl)
 		case "k3s":
-			tfEnvs = k3sext.GetK3sTerraformEnvs(tfEnvs, &cl)
+			tfEnvs = k3sext.GetK3sTerraformEnvs(tfEnvs, cl)
 		}
 
 		err := terraformext.InitApplyAutoApprove(clctrl.ProviderConfig.TerraformClient, tfEntrypoint, tfEnvs)
@@ -324,7 +324,7 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 	if !cl.ClusterSecretsCreatedCheck {
 		switch clctrl.CloudProvider {
 		case "akamai":
-			err := akamaiext.BootstrapAkamaiMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
+			err := akamaiext.BootstrapAkamaiMgmtCluster(clientSet, cl, destinationGitopsRepoGitURL)
 			if err != nil {
 				log.Error().Msgf("error adding Kubernetes secrets for bootstrap: %s", err)
 				return fmt.Errorf("error adding Kubernetes secrets for bootstrap on akamai: %w", err)
@@ -332,7 +332,7 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 		case "aws":
 			err := awsext.BootstrapAWSMgmtCluster(
 				clientSet,
-				&cl,
+				cl,
 				destinationGitopsRepoGitURL,
 				clctrl.AwsClient,
 			)
@@ -341,31 +341,31 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 				return fmt.Errorf("error adding Kubernetes secrets for bootstrap on aws: %w", err)
 			}
 		case "civo":
-			err := civoext.BootstrapCivoMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
+			err := civoext.BootstrapCivoMgmtCluster(clientSet, cl, destinationGitopsRepoGitURL)
 			if err != nil {
 				log.Error().Msgf("error adding Kubernetes secrets for bootstrap: %s", err)
 				return fmt.Errorf("error adding Kubernetes secrets for bootstrap on civo: %w", err)
 			}
 		case "google":
-			err := googleext.BootstrapGoogleMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
+			err := googleext.BootstrapGoogleMgmtCluster(clientSet, cl, destinationGitopsRepoGitURL)
 			if err != nil {
 				log.Error().Msgf("error adding Kubernetes secrets for bootstrap: %s", err)
 				return fmt.Errorf("error adding Kubernetes secrets for bootstrap on google: %w", err)
 			}
 		case "digitalocean":
-			err := digitaloceanext.BootstrapDigitaloceanMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
+			err := digitaloceanext.BootstrapDigitaloceanMgmtCluster(clientSet, cl, destinationGitopsRepoGitURL)
 			if err != nil {
 				log.Error().Msgf("error adding Kubernetes secrets for bootstrap: %s", err)
 				return fmt.Errorf("error adding Kubernetes secrets for bootstrap on digitalocean: %w", err)
 			}
 		case "vultr":
-			err := vultrext.BootstrapVultrMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
+			err := vultrext.BootstrapVultrMgmtCluster(clientSet, cl, destinationGitopsRepoGitURL)
 			if err != nil {
 				log.Error().Msgf("error adding Kubernetes secrets for bootstrap: %s", err)
 				return fmt.Errorf("error adding Kubernetes secrets for bootstrap on vultr: %w", err)
 			}
 		case "k3s":
-			err := k3sext.BootstrapK3sMgmtCluster(clientSet, &cl, destinationGitopsRepoGitURL)
+			err := k3sext.BootstrapK3sMgmtCluster(clientSet, cl, destinationGitopsRepoGitURL)
 			if err != nil {
 				log.Error().Msgf("error adding Kubernetes secrets for bootstrap: %s", err)
 				return fmt.Errorf("error adding Kubernetes secrets for bootstrap on k3s: %w", err)

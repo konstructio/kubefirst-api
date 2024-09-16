@@ -258,9 +258,11 @@ func CreateGoogleCluster(definition *pkgtypes.ClusterDefinition) error {
 
 	// Create default service entries
 	cl, _ := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
-	err = services.AddDefaultServices(&cl)
+	err = services.AddDefaultServices(cl)
 	if err != nil {
 		log.Error().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
+		ctrl.UpdateClusterOnError(err.Error())
+		return fmt.Errorf("error adding default service entries for cluster %s: %w", cl.ClusterName, err)
 	}
 
 	if ctrl.InstallKubefirstPro {

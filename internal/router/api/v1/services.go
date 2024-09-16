@@ -176,7 +176,7 @@ func PostAddServiceToCluster(c *gin.Context) {
 		return
 	}
 
-	err = services.CreateService(&cl, serviceName, &appDef, &serviceDefinition, false)
+	err = services.CreateService(cl, serviceName, &appDef, &serviceDefinition, false)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -272,7 +272,7 @@ func PostValidateService(c *gin.Context) {
 		return
 	}
 
-	canDeleteService, err := services.ValidateService(&cl, serviceName, &serviceDefinition)
+	canDeleteService, err := services.ValidateService(cl, serviceName, &serviceDefinition)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),
@@ -357,7 +357,7 @@ func DeleteServiceFromCluster(c *gin.Context) {
 		return
 	}
 
-	err = services.DeleteService(&cl, serviceName, serviceDefinition)
+	err = services.DeleteService(cl, serviceName, serviceDefinition)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 			Message: err.Error(),

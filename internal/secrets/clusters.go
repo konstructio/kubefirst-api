@@ -41,26 +41,30 @@ func DeleteCluster(clientSet *kubernetes.Clientset, clusterName string) error {
 }
 
 // GetCluster
-func GetCluster(clientSet *kubernetes.Clientset, clusterName string) (pkgtypes.Cluster, error) {
+func GetCluster(clientSet *kubernetes.Clientset, clusterName string) (*pkgtypes.Cluster, error) {
 	cluster := pkgtypes.Cluster{}
 
 	clusterSecret, err := k8s.ReadSecretV2Old(clientSet, "kubefirst", fmt.Sprintf("%s-%s", clusterPrefix, clusterName))
 	if err != nil {
-		return cluster, fmt.Errorf("secret not found: %w", err)
+		return nil, fmt.Errorf("secret not found: %w", err)
 	}
-	jsonString, _ := MapToStructuredJSON(clusterSecret)
+
+	jsonString, err := MapToStructuredJSON(clusterSecret)
+	if err != nil {
+		return nil, fmt.Errorf("error mapping to structured json: %w", err)
+	}
 
 	jsonData, err := json.Marshal(jsonString)
 	if err != nil {
-		return cluster, fmt.Errorf("error marshalling json: %w", err)
+		return nil, fmt.Errorf("error marshalling json: %w", err)
 	}
 
 	err = json.Unmarshal(jsonData, &cluster)
 	if err != nil {
-		return cluster, fmt.Errorf("unable to cast cluster: %w", err)
+		return nil, fmt.Errorf("unable to cast cluster: %w", err)
 	}
 
-	return cluster, nil
+	return &cluster, nil
 }
 
 // GetCluster
@@ -72,10 +76,13 @@ func GetClusters(clientSet *kubernetes.Clientset) ([]pkgtypes.Cluster, error) {
 	}
 
 	for _, clusterName := range clusterReferenceList.List {
-		cluster, _ := GetCluster(clientSet, clusterName)
+		cluster, err := GetCluster(clientSet, clusterName)
+		if err != nil {
+			return nil, fmt.Errorf("unable to get cluster %s: %w", clusterName, err)
+		}
 
 		if cluster.ClusterName != "" {
-			clusterList = append(clusterList, cluster)
+			clusterList = append(clusterList, *cluster)
 		}
 	}
 
@@ -90,14 +97,16 @@ func InsertCluster(clientSet *kubernetes.Clientset, cl pkgtypes.Cluster) error {
 	}
 
 	if secretReference.Name == "" {
-		CreateSecretReference(clientSet, secretName, pkgtypes.SecretListReference{
+		secretReference = pkgtypes.SecretListReference{
 			Name: "clusters",
 			List: []string{cl.ClusterName},
-		})
+		}
+		if err := CreateSecretReference(clientSet, secretName, secretReference); err != nil {
+			return fmt.Errorf("when inserting cluster: error creating secret reference: %w", err)
+		}
 	} else {
-		err = AddSecretReferenceItem(clientSet, secretName, cl.ClusterName)
-		if err != nil {
-			return err
+		if err := AddSecretReferenceItem(clientSet, secretName, cl.ClusterName); err != nil {
+			return fmt.Errorf("when inserting cluster: error adding secret reference item: %w", err)
 		}
 	}
 

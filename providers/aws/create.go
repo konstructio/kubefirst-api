@@ -238,8 +238,10 @@ func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 		return fmt.Errorf("error getting cluster for default service entries registration: %w", err)
 	}
 
-	if err := services.AddDefaultServices(&cl); err != nil {
+	if err := services.AddDefaultServices(cl); err != nil {
 		log.Error().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
+		ctrl.UpdateClusterOnError(err.Error())
+		return fmt.Errorf("error adding default service entries for cluster %s: %w", cl.ClusterName, err)
 	}
 
 	if ctrl.InstallKubefirstPro {

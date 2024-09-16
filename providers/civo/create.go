@@ -221,8 +221,14 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 		return fmt.Errorf("error exporting cluster record: %w", err)
 	}
 	// Create default service entries
-	cl, _ := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
-	err = services.AddDefaultServices(&cl)
+	cl, err := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
+	if err != nil {
+		log.Error().Msgf("error getting cluster %s: %s", ctrl.ClusterName, err)
+		ctrl.UpdateClusterOnError(err.Error())
+		return fmt.Errorf("error getting cluster %s: %w", ctrl.ClusterName, err)
+	}
+
+	err = services.AddDefaultServices(cl)
 	if err != nil {
 		log.Error().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
 		ctrl.UpdateClusterOnError(err.Error())

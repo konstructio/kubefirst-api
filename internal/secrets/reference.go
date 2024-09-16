@@ -13,6 +13,7 @@ import (
 	"github.com/konstructio/kubefirst-api/internal/k8s"
 	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -21,9 +22,24 @@ func GetSecretReference(clientSet *kubernetes.Clientset, secretName string) (pkg
 	secretReference := pkgtypes.SecretListReference{}
 
 	kubefirstSecrets, err := k8s.ReadSecretV2Old(clientSet, "kubefirst", secretName)
-	if err != nil {
-		return secretReference, fmt.Errorf("secret not found: %w", err)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return secretReference, fmt.Errorf("unable to fetch secret: %w", err)
 	}
+
+	if apierrors.IsNotFound(err) {
+		err := k8s.CreateSecretV2(clientSet, &v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      secretName,
+				Namespace: "kubefirst",
+			},
+			Data: map[string][]byte{},
+		})
+		kubefirstSecrets = map[string]interface{}{}
+		if err != nil {
+			return secretReference, fmt.Errorf("kubefirst secret was attempted creation but failed: %w", err)
+		}
+	}
+
 	jsonString, _ := MapToStructuredJSON(kubefirstSecrets)
 
 	jsonData, err := json.Marshal(jsonString)

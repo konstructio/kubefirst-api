@@ -27,10 +27,10 @@ import (
 	"github.com/konstructio/kubefirst-api/pkg/providerConfigs"
 	"github.com/konstructio/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
-	"k8s.io/client-go/kubernetes"
-
 	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/client-go/kubernetes"
 )
 
 type ClusterController struct {
@@ -124,14 +124,24 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	kcfg := utils.GetKubernetesClient(def.ClusterName)
 	clctrl.KubernetesClient = kcfg.Clientset
 
+	// If on local environment, automatically create the namespace
+	// if it doesn't exist
+	if env.K1LocalDebug {
+		if err := utils.CreateKubefirstNamespaceIfNotExists(clctrl.KubernetesClient); err != nil {
+			return fmt.Errorf("error creating Kubefirst namespace: %w", err)
+		}
+	}
+
 	// Determine if record already exists
 	recordExists := true
+
+	// Get cluster record if it exists
 	rec, err := secrets.GetCluster(clctrl.KubernetesClient, def.ClusterName)
-	if err != nil {
+	if err != nil && !apierrors.IsNotFound(err) {
 		return fmt.Errorf("could not read cluster secret %s: %w", def.ClusterName, err)
 	}
 
-	if rec.ClusterID == "" {
+	if rec == nil {
 		recordExists = false
 		log.Info().Msg("cluster record doesn't exist, continuing")
 	}
@@ -381,19 +391,12 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	}
 
 	if !recordExists {
-		if env.K1LocalDebug {
-			err = utils.CreateKubefirstNamespace(clctrl.KubernetesClient)
-			if err != nil {
-				return fmt.Errorf("error creating Kubefirst namespace: %w", err)
-			}
-		}
-
 		err = secrets.InsertCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
 			return fmt.Errorf("error inserting cluster record: %w", err)
 		}
 	} else {
-		clctrl.Cluster = rec
+		clctrl.Cluster = *rec
 	}
 
 	return nil
@@ -447,10 +450,10 @@ func (clctrl *ClusterController) SetGitTokens(def types.ClusterDefinition) error
 }
 
 // GetCurrentClusterRecord will return an active cluster's record if it exists
-func (clctrl *ClusterController) GetCurrentClusterRecord() (types.Cluster, error) {
+func (clctrl *ClusterController) GetCurrentClusterRecord() (*types.Cluster, error) {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return types.Cluster{}, fmt.Errorf("error retrieving current cluster record: %w", err)
+		return nil, fmt.Errorf("error retrieving current cluster record: %w", err)
 	}
 
 	return cl, nil

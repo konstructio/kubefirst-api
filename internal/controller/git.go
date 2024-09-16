@@ -80,36 +80,36 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 		case "github":
 			switch clctrl.CloudProvider {
 			case "akamai":
-				tfEnvs = akamaiext.GetGithubTerraformEnvs(tfEnvs, &cl)
+				tfEnvs = akamaiext.GetGithubTerraformEnvs(tfEnvs, cl)
 			case "aws":
-				tfEnvs = awsext.GetGithubTerraformEnvs(tfEnvs, &cl)
+				tfEnvs = awsext.GetGithubTerraformEnvs(tfEnvs, cl)
 			case "civo":
-				tfEnvs = civoext.GetGithubTerraformEnvs(tfEnvs, &cl)
+				tfEnvs = civoext.GetGithubTerraformEnvs(tfEnvs, cl)
 			case "google":
-				tfEnvs = googleext.GetGithubTerraformEnvs(tfEnvs, &cl)
+				tfEnvs = googleext.GetGithubTerraformEnvs(tfEnvs, cl)
 			case "digitalocean":
-				tfEnvs = digitaloceanext.GetGithubTerraformEnvs(tfEnvs, &cl)
+				tfEnvs = digitaloceanext.GetGithubTerraformEnvs(tfEnvs, cl)
 			case "vultr":
-				tfEnvs = vultrext.GetGithubTerraformEnvs(tfEnvs, &cl)
+				tfEnvs = vultrext.GetGithubTerraformEnvs(tfEnvs, cl)
 			case "k3s":
-				tfEnvs = k3sext.GetGithubTerraformEnvs(tfEnvs, &cl)
+				tfEnvs = k3sext.GetGithubTerraformEnvs(tfEnvs, cl)
 			}
 		case "gitlab":
 			switch clctrl.CloudProvider {
 			case "akamai":
-				tfEnvs = akamaiext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
+				tfEnvs = akamaiext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, cl)
 			case "aws":
-				tfEnvs = awsext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
+				tfEnvs = awsext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, cl)
 			case "civo":
-				tfEnvs = civoext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
+				tfEnvs = civoext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, cl)
 			case "google":
-				tfEnvs = googleext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
+				tfEnvs = googleext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, cl)
 			case "digitalocean":
-				tfEnvs = digitaloceanext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
+				tfEnvs = digitaloceanext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, cl)
 			case "vultr":
-				tfEnvs = vultrext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
+				tfEnvs = vultrext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, cl)
 			case "k3s":
-				tfEnvs = k3sext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
+				tfEnvs = k3sext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, cl)
 			}
 		}
 

@@ -42,9 +42,9 @@ func main() {
 		log.Fatal().Msg(err.Error())
 	}
 
-	if importedCluster.ClusterName != "" {
+	if importedCluster != nil && importedCluster.ClusterName != "" {
 		log.Info().Msgf("adding default services for cluster %s", importedCluster.ClusterName)
-		if err := services.AddDefaultServices(&importedCluster); err != nil {
+		if err := services.AddDefaultServices(importedCluster); err != nil {
 			log.Fatal().Msg(err.Error())
 		}
 
@@ -59,7 +59,7 @@ func main() {
 						ConfigKeys: catalogApp.ConfigKeys,
 					}
 
-					err := services.CreateService(&importedCluster, catalogApp.Name, &catalogApp, request, true)
+					err := services.CreateService(importedCluster, catalogApp.Name, &catalogApp, request, true)
 					if err != nil {
 						log.Info().Msgf("Error creating default environments %s", err.Error())
 					}

@@ -58,26 +58,26 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 
 		switch clctrl.CloudProvider {
 		case "akamai":
-			tfEnvs = akamaiext.GetAkamaiTerraformEnvs(tfEnvs, &cl)
-			tfEnvs = akamaiext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEnvs = akamaiext.GetAkamaiTerraformEnvs(tfEnvs, cl)
+			tfEnvs = akamaiext.GetUsersTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
 		case "aws":
-			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, &cl)
-			tfEnvs = awsext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, cl)
+			tfEnvs = awsext.GetUsersTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
 		case "civo":
-			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, &cl)
-			tfEnvs = civoext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, cl)
+			tfEnvs = civoext.GetUsersTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
 		case "google":
-			tfEnvs = googleext.GetGoogleTerraformEnvs(tfEnvs, &cl)
-			tfEnvs = googleext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEnvs = googleext.GetGoogleTerraformEnvs(tfEnvs, cl)
+			tfEnvs = googleext.GetUsersTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
 		case "digitalocean":
-			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, &cl)
-			tfEnvs = digitaloceanext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, cl)
+			tfEnvs = digitaloceanext.GetUsersTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
 		case "vultr":
-			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
-			tfEnvs = vultrext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, cl)
+			tfEnvs = vultrext.GetUsersTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
 		case "k3s":
-			tfEnvs = k3sext.GetK3sTerraformEnvs(tfEnvs, &cl)
-			tfEnvs = k3sext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEnvs = k3sext.GetK3sTerraformEnvs(tfEnvs, cl)
+			tfEnvs = k3sext.GetUsersTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
 		}
 		tfEntrypoint = clctrl.ProviderConfig.GitopsDir + "/terraform/users"
 		terraformClient = clctrl.ProviderConfig.TerraformClient
