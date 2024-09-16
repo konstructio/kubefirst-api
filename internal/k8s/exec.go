@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"syscall"
 	"time"
@@ -173,7 +174,7 @@ func ReturnDeploymentObject(client kubernetes.Interface, matchLabel string, matc
 		})
 		if err != nil {
 			// if we couldn't connect, ask to try again
-			if errors.Is(err, syscall.ECONNREFUSED) {
+			if isNetworkingError(err) {
 				return false, nil
 			}
 
@@ -212,76 +213,91 @@ func ReturnPodObject(kubeConfigPath, matchLabel, matchLabelValue, namespace stri
 	}
 
 	labelSelector := fmt.Sprintf("%s=%s", matchLabel, matchLabelValue)
-	log.Info().Msgf("waiting for Pod with label %s=%s to be created in namespace %q", matchLabel, matchLabelValue, namespace)
+	log.Info().Msgf("Waiting for Pod with label %s=%s to be created in namespace %q", matchLabel, matchLabelValue, namespace)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSeconds)*time.Second)
-	defer cancel()
+	var pod *v1.Pod
 
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			log.Error().Msg("Timeout waiting for Pod to be created")
-			return nil, fmt.Errorf("the Pod %q in Namespace %q was not created within the timeout period", matchLabelValue, namespace)
-		case <-ticker.C:
-			podList, err := clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{
-				LabelSelector: labelSelector,
-			})
-			if err != nil {
-				log.Error().Msgf("Error listing Pods: %v", err)
-				return nil, fmt.Errorf("error when listing Pods: %w", err)
+	err = wait.PollImmediate(5*time.Second, time.Duration(timeoutSeconds)*time.Second, func() (bool, error) {
+		podList, err := clientset.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{
+			LabelSelector: labelSelector,
+		})
+		if err != nil {
+			// If we couldn't connect, retry
+			if isNetworkingError(err) {
+				log.Warn().Msgf("Connection error, retrying: %s", err.Error())
+				return false, nil
 			}
 
-			if len(podList.Items) == 0 {
-				continue
-			}
-
-			pod := &podList.Items[0]
-			if pod.Status.Phase == v1.PodPending || pod.Status.Phase == v1.PodRunning {
-				return pod, nil
-			}
+			// For other errors, log and return the error to stop polling
+			log.Error().Msgf("Error listing Pods: %v", err)
+			return false, err
 		}
+
+		if len(podList.Items) == 0 {
+			// No Pods found, continue polling
+			return false, nil
+		}
+
+		pod = &podList.Items[0]
+		if pod.Status.Phase == v1.PodPending || pod.Status.Phase == v1.PodRunning {
+			// Pod is in the desired state
+			return true, nil
+		}
+
+		// Pod is not yet in the desired state, continue polling
+		return false, nil
+	})
+	if err != nil {
+		log.Error().Msg("The Pod was not created within the timeout period")
+		return nil, fmt.Errorf("the Pod %q in Namespace %q was not created within the timeout period: %w", matchLabelValue, namespace, err)
 	}
+
+	return pod, nil
 }
 
 // ReturnStatefulSetObject returns a matching appsv1.StatefulSet object based on the filters
-// ReturnStatefulSetObject returns a matching appsv1.StatefulSet object based on the filters
 func ReturnStatefulSetObject(clientset *kubernetes.Clientset, matchLabel, matchLabelValue, namespace string, timeoutSeconds int) (*appsv1.StatefulSet, error) {
 	labelSelector := fmt.Sprintf("%s=%s", matchLabel, matchLabelValue)
-	log.Info().Msgf("Waiting for StatefulSet with label %s to be created in namespace %s", labelSelector, namespace)
+	log.Info().Msgf("Waiting for StatefulSet with label %s=%s to be created in namespace %q", matchLabel, matchLabelValue, namespace)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSeconds)*time.Second)
-	defer cancel()
+	var statefulSet *appsv1.StatefulSet
 
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			log.Error().Msg("Timeout waiting for StatefulSet to be created")
-			return nil, fmt.Errorf("the StatefulSet %q in Namespace %q was not created within the timeout period", matchLabelValue, namespace)
-		case <-ticker.C:
-			statefulSets, err := clientset.AppsV1().StatefulSets(namespace).List(ctx, metav1.ListOptions{
-				LabelSelector: labelSelector,
-			})
-			if err != nil {
-				log.Error().Msgf("Error listing StatefulSets: %v", err)
-				return nil, fmt.Errorf("error when listing StatefulSets: %w", err)
+	err := wait.PollImmediate(5*time.Second, time.Duration(timeoutSeconds)*time.Second, func() (bool, error) {
+		statefulSets, err := clientset.AppsV1().StatefulSets(namespace).List(context.Background(), metav1.ListOptions{
+			LabelSelector: labelSelector,
+		})
+		if err != nil {
+			// If we couldn't connect, retry
+			if isNetworkingError(err) {
+				log.Warn().Msgf("Connection error, retrying: %s", err.Error())
+				return false, nil
 			}
 
-			if len(statefulSets.Items) == 0 {
-				continue
-			}
-
-			sts := &statefulSets.Items[0]
-			if sts.Status.Replicas > 0 {
-				return sts, nil
-			}
+			// For other errors, log and return the error to stop polling
+			log.Error().Msgf("Error listing StatefulSets: %v", err)
+			return false, err
 		}
+
+		if len(statefulSets.Items) == 0 {
+			// No StatefulSets found, continue polling
+			return false, nil
+		}
+
+		sts := &statefulSets.Items[0]
+		if sts.Status.Replicas > 0 {
+			statefulSet = sts
+			return true, nil
+		}
+
+		// StatefulSet does not have replicas yet, continue polling
+		return false, nil
+	})
+	if err != nil {
+		log.Error().Msg("The StatefulSet was not created within the timeout period")
+		return nil, fmt.Errorf("the StatefulSet %q in Namespace %q was not created within the timeout period: %w", matchLabelValue, namespace, err)
 	}
+
+	return statefulSet, nil
 }
 
 // WaitForDeploymentReady waits for a target Deployment to become ready
@@ -298,31 +314,35 @@ func WaitForDeploymentReady(clientset *kubernetes.Clientset, deployment *appsv1.
 
 	log.Info().Msgf("Waiting for Deployment %s in Namespace %s to be ready - this could take up to %v seconds", deploymentName, namespace, timeoutSeconds)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSeconds)*time.Second)
-	defer cancel()
-
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			log.Error().Msgf("The Deployment %s in Namespace %s was not ready within the timeout period", deploymentName, namespace)
-			return false, fmt.Errorf("the Deployment %q in Namespace %q was not ready within the timeout period", deploymentName, namespace)
-		case <-ticker.C:
-			// Get the latest Deployment object
-			currentDeployment, err := clientset.AppsV1().Deployments(namespace).Get(ctx, deploymentName, metav1.GetOptions{})
-			if err != nil {
-				log.Error().Msgf("Error when getting Deployment %s in Namespace %s: %v", deploymentName, namespace, err)
-				return false, fmt.Errorf("error when getting Deployment %q in Namespace %q: %w", deploymentName, namespace, err)
+	err := wait.PollImmediate(5*time.Second, time.Duration(timeoutSeconds)*time.Second, func() (bool, error) {
+		// Get the latest Deployment object
+		currentDeployment, err := clientset.AppsV1().Deployments(namespace).Get(context.Background(), deploymentName, metav1.GetOptions{})
+		if err != nil {
+			// If we couldn't connect, retry
+			if isNetworkingError(err) {
+				log.Warn().Msgf("Connection error, retrying: %s", err.Error())
+				return false, nil
 			}
 
-			if currentDeployment.Status.ReadyReplicas == desiredReplicas {
-				log.Info().Msgf("All Pods in Deployment %s are ready", deploymentName)
-				return true, nil
-			}
+			// For other errors, log and return the error to stop polling
+			log.Error().Msgf("Error when getting Deployment %s in Namespace %s: %v", deploymentName, namespace, err)
+			return false, err
 		}
+
+		if currentDeployment.Status.ReadyReplicas == desiredReplicas {
+			log.Info().Msgf("All Pods in Deployment %s are ready", deploymentName)
+			return true, nil
+		}
+
+		// Deployment is not yet ready, continue polling
+		return false, nil
+	})
+	if err != nil {
+		log.Error().Msgf("The Deployment %s in Namespace %s was not ready within the timeout period", deploymentName, namespace)
+		return false, fmt.Errorf("the Deployment %q in Namespace %q was not ready within the timeout period: %w", deploymentName, namespace, err)
 	}
+
+	return true, nil
 }
 
 // WaitForPodReady waits for a target Pod to become ready
@@ -332,31 +352,35 @@ func WaitForPodReady(clientset *kubernetes.Clientset, pod *v1.Pod, timeoutSecond
 
 	log.Info().Msgf("Waiting for Pod %s in Namespace %s to be ready - this could take up to %v seconds", podName, namespace, timeoutSeconds)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSeconds)*time.Second)
-	defer cancel()
-
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			log.Error().Msgf("The operation timed out while waiting for Pod %s in Namespace %s to become ready", podName, namespace)
-			return false, fmt.Errorf("the operation timed out while waiting for Pod %q in Namespace %q", podName, namespace)
-		case <-ticker.C:
-			// Get the latest Pod object
-			currentPod, err := clientset.CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
-			if err != nil {
-				log.Error().Msgf("Error when getting Pod %s in Namespace %s: %v", podName, namespace, err)
-				return false, fmt.Errorf("error when getting Pod %q in Namespace %q: %w", podName, namespace, err)
+	err := wait.PollImmediate(5*time.Second, time.Duration(timeoutSeconds)*time.Second, func() (bool, error) {
+		// Get the latest Pod object
+		currentPod, err := clientset.CoreV1().Pods(namespace).Get(context.Background(), podName, metav1.GetOptions{})
+		if err != nil {
+			// If we couldn't connect, retry
+			if isNetworkingError(err) {
+				log.Warn().Msgf("Connection error, retrying: %s", err.Error())
+				return false, nil
 			}
 
-			if currentPod.Status.Phase == v1.PodRunning {
-				log.Info().Msgf("Pod %s is %s.", podName, currentPod.Status.Phase)
-				return true, nil
-			}
+			// For other errors, log and return the error to stop polling
+			log.Error().Msgf("Error when getting Pod %s in Namespace %s: %v", podName, namespace, err)
+			return false, err
 		}
+
+		if currentPod.Status.Phase == v1.PodRunning {
+			log.Info().Msgf("Pod %s is %s.", podName, currentPod.Status.Phase)
+			return true, nil
+		}
+
+		// Pod is not yet ready, continue polling
+		return false, nil
+	})
+	if err != nil {
+		log.Error().Msgf("The operation timed out while waiting for Pod %s in Namespace %s to become ready", podName, namespace)
+		return false, fmt.Errorf("the operation timed out while waiting for Pod %q in Namespace %q: %w", podName, namespace, err)
 	}
+
+	return true, nil
 }
 
 // WaitForStatefulSetReady waits for a target StatefulSet to become ready
@@ -373,60 +397,93 @@ func WaitForStatefulSetReady(clientset *kubernetes.Clientset, statefulset *appsv
 
 	log.Info().Msgf("Waiting for StatefulSet %s in Namespace %s to be ready - this could take up to %v seconds", statefulSetName, namespace, timeoutSeconds)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSeconds)*time.Second)
-	defer cancel()
-
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			log.Error().Msgf("The StatefulSet %s in Namespace %s was not ready within the timeout period", statefulSetName, namespace)
-			return false, fmt.Errorf("the StatefulSet %q in Namespace %q was not ready within the timeout period", statefulSetName, namespace)
-		case <-ticker.C:
-			// Get the latest StatefulSet object
-			currentStatefulSet, err := clientset.AppsV1().StatefulSets(namespace).Get(ctx, statefulSetName, metav1.GetOptions{})
-			if err != nil {
-				log.Error().Msgf("Error when getting StatefulSet %s in Namespace %s: %v", statefulSetName, namespace, err)
-				return false, fmt.Errorf("error when getting StatefulSet %q in Namespace %q: %w", statefulSetName, namespace, err)
+	err := wait.PollImmediate(5*time.Second, time.Duration(timeoutSeconds)*time.Second, func() (bool, error) {
+		// Get the latest StatefulSet object
+		currentStatefulSet, err := clientset.AppsV1().StatefulSets(namespace).Get(context.Background(), statefulSetName, metav1.GetOptions{})
+		if err != nil {
+			// If we couldn't connect, retry
+			if isNetworkingError(err) {
+				log.Warn().Msgf("Connection error, retrying: %s", err.Error())
+				return false, nil
 			}
 
-			if ignoreReady {
-				// Check if CurrentReplicas match desired replicas
-				if currentStatefulSet.Status.CurrentReplicas == desiredReplicas {
-					currentRevision := currentStatefulSet.Status.CurrentRevision
+			// For other errors, log and return the error to stop polling
+			log.Error().Msgf("Error when getting StatefulSet %s in Namespace %s: %v", statefulSetName, namespace, err)
+			return false, err
+		}
 
-					// Get Pods owned by the StatefulSet
-					pods, err := clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{
-						LabelSelector: fmt.Sprintf("controller-revision-hash=%s", currentRevision),
-					})
-					if err != nil {
-						log.Error().Msgf("Could not find Pods owned by StatefulSet %s in Namespace %s: %v", statefulSetName, namespace, err)
-						return false, fmt.Errorf("could not find Pods owned by StatefulSet %q in Namespace %q: %w", statefulSetName, namespace, err)
+		if ignoreReady {
+			// Check if CurrentReplicas match desired replicas
+			if currentStatefulSet.Status.CurrentReplicas == desiredReplicas {
+				currentRevision := currentStatefulSet.Status.CurrentRevision
+
+				// Get Pods owned by the StatefulSet
+				pods, err := clientset.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{
+					LabelSelector: fmt.Sprintf("controller-revision-hash=%s", currentRevision),
+				})
+				if err != nil {
+					// If we couldn't connect, retry
+					if isNetworkingError(err) {
+						log.Warn().Msg("Connection refused while listing Pods, retrying...")
+						return false, nil
 					}
 
-					// Check if all Pods are in Running phase
-					allRunning := true
-					for _, pod := range pods.Items {
-						if pod.Status.Phase != v1.PodRunning {
-							allRunning = false
-							break
-						}
-					}
+					log.Error().Msgf("Could not find Pods owned by StatefulSet %s in Namespace %s: %v", statefulSetName, namespace, err)
+					return false, err
+				}
 
-					if allRunning {
-						log.Info().Msgf("All Pods in StatefulSet %s are running.", statefulSetName)
-						return true, nil
+				// Check if all Pods are in Running phase
+				allRunning := true
+				for _, pod := range pods.Items {
+					if pod.Status.Phase != v1.PodRunning {
+						allRunning = false
+						break
 					}
 				}
-			} else {
-				// Check if ReadyReplicas match desired replicas
-				if currentStatefulSet.Status.ReadyReplicas == desiredReplicas {
-					log.Info().Msgf("All Pods in StatefulSet %s are ready.", statefulSetName)
+
+				if allRunning {
+					log.Info().Msgf("All Pods in StatefulSet %s are running.", statefulSetName)
 					return true, nil
 				}
 			}
+		} else {
+			// Check if ReadyReplicas match desired replicas
+			if currentStatefulSet.Status.ReadyReplicas == desiredReplicas {
+				log.Info().Msgf("All Pods in StatefulSet %s are ready.", statefulSetName)
+				return true, nil
+			}
 		}
+
+		// Continue polling
+		return false, nil
+	})
+	if err != nil {
+		log.Error().Msgf("The StatefulSet %s in Namespace %s was not ready within the timeout period", statefulSetName, namespace)
+		return false, fmt.Errorf("the StatefulSet %q in Namespace %q was not ready within the timeout period: %w", statefulSetName, namespace, err)
 	}
+
+	return true, nil
+}
+
+// isNetworkingError checks if the error is a networking error
+// that could be due to the cluster not being ready yet. It's the
+// responsibility of the caller to decide if these errors are fatal
+// or if they should be retried.
+func isNetworkingError(err error) bool {
+	// Check if the error is a networking error, which could be
+	// when the cluster is starting up or when the network pieces
+	// aren't yet ready
+	if errors.Is(err, syscall.ECONNREFUSED) ||
+		errors.Is(err, syscall.ECONNRESET) ||
+		errors.Is(err, syscall.ETIMEDOUT) {
+		return true
+	}
+
+	// Check if the error is a timeout error
+	var netErr net.Error
+	if errors.As(err, &netErr) && netErr.Timeout() {
+		return true
+	}
+
+	return false
 }
