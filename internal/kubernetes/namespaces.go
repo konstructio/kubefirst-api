@@ -18,19 +18,15 @@ type Namespace struct {
 
 func createNamespace(ctx context.Context, k8s kubernetes.Interface, namespaces []*v1.Namespace) error {
 	for _, ns := range namespaces {
-		_, err := k8s.CoreV1().Namespaces().Get(ctx, ns.Name, metav1.GetOptions{})
-		if err != nil {
-			if apierrors.IsNotFound(err) {
-				if _, err := k8s.CoreV1().Namespaces().Create(ctx, ns, metav1.CreateOptions{}); err != nil {
-					return fmt.Errorf("error creating namespace %s: %w", ns.Name, err)
-				}
-
-				return nil
+		if _, err := k8s.CoreV1().Namespaces().Create(ctx, ns, metav1.CreateOptions{}); err != nil {
+			if apierrors.IsAlreadyExists(err) {
+				continue
 			}
 
-			return fmt.Errorf("error retrieving namespace %s: %w", ns.Name, err)
+			return fmt.Errorf("error creating namespace %s: %w", ns.Name, err)
 		}
 	}
+
 	return nil
 }
 

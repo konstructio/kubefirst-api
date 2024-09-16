@@ -58,7 +58,7 @@ func CreateDefaultClusters(mgmtCluster types.Cluster) error {
 
 	defaultClusters := []types.WorkloadCluster{}
 	kcfg := utils.GetKubernetesClient("TODO: Secrets")
-	secrets.CreateSecretReference(kcfg.Clientset, secrets.KubefirstEnvironmentSecretName, types.SecretListReference{
+	secrets.UpsertSecretReference(kcfg.Clientset, secrets.KubefirstEnvironmentSecretName, types.SecretListReference{
 		Name: "environments",
 	})
 

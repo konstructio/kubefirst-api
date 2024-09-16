@@ -18,41 +18,29 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func GetSecretReference(clientSet *kubernetes.Clientset, secretName string) (pkgtypes.SecretListReference, error) {
-	secretReference := pkgtypes.SecretListReference{}
-
+func GetSecretReference(clientSet *kubernetes.Clientset, secretName string) (*pkgtypes.SecretListReference, error) {
 	kubefirstSecrets, err := k8s.ReadSecretV2Old(clientSet, "kubefirst", secretName)
-	if err != nil && !apierrors.IsNotFound(err) {
-		return secretReference, fmt.Errorf("unable to fetch secret: %w", err)
-	}
-
-	if apierrors.IsNotFound(err) {
-		err := k8s.CreateSecretV2(clientSet, &v1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      secretName,
-				Namespace: "kubefirst",
-			},
-			Data: map[string][]byte{},
-		})
-		kubefirstSecrets = map[string]interface{}{}
-		if err != nil {
-			return secretReference, fmt.Errorf("kubefirst secret was attempted creation but failed: %w", err)
-		}
+	if err != nil {
+		return nil, fmt.Errorf("unable to fetch secret: %w", err)
 	}
 
 	jsonString, _ := MapToStructuredJSON(kubefirstSecrets)
 
 	jsonData, err := json.Marshal(jsonString)
 	if err != nil {
-		return secretReference, fmt.Errorf("error marshalling json: %w", err)
+		return nil, fmt.Errorf("error marshalling json: %w", err)
 	}
 
-	err = json.Unmarshal(jsonData, &secretReference)
-	if err != nil {
-		return secretReference, fmt.Errorf("unable to cast secret reference: %w", err)
+	var secretReference pkgtypes.SecretListReference
+	if err := json.Unmarshal(jsonData, &secretReference); err != nil {
+		return nil, fmt.Errorf("unable to cast secret reference: %w", err)
 	}
 
-	return secretReference, nil
+	if secretReference.Name == "" {
+		return nil, apierrors.NewNotFound(v1.Resource("secrets"), secretName)
+	}
+
+	return &secretReference, nil
 }
 
 func DeleteSecretReference(clientSet *kubernetes.Clientset, secretName string, valueToDelete string) error {
@@ -98,7 +86,7 @@ func UpdateSecretReference(clientSet *kubernetes.Clientset, secretName string, s
 	return nil
 }
 
-func CreateSecretReference(clientSet *kubernetes.Clientset, secretName string, secretReference pkgtypes.SecretListReference) error {
+func UpsertSecretReference(clientSet *kubernetes.Clientset, secretName string, secretReference pkgtypes.SecretListReference) error {
 	bytes, err := json.Marshal(secretReference)
 	if err != nil {
 		return fmt.Errorf("error marshalling json: %w", err)
@@ -119,6 +107,10 @@ func CreateSecretReference(clientSet *kubernetes.Clientset, secretName string, s
 
 	err = k8s.CreateSecretV2(clientSet, secretToCreate)
 	if err != nil {
+		if apierrors.IsAlreadyExists(err) {
+			return UpdateSecretReference(clientSet, secretName, secretReference)
+		}
+
 		return fmt.Errorf("error creating secret reference: %w", err)
 	}
 
@@ -133,7 +125,7 @@ func AddSecretReferenceItem(clientSet *kubernetes.Clientset, secretName string, 
 
 	secretReference.List = append(secretReference.List, valueToAdd)
 
-	err = UpdateSecretReference(clientSet, secretName, secretReference)
+	err = UpdateSecretReference(clientSet, secretName, *secretReference)
 	if err != nil {
 		return fmt.Errorf("unable to update secret reference %s: %w", secretName, err)
 	}

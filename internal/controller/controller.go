@@ -391,6 +391,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	}
 
 	if !recordExists {
+		log.Info().Msg("cluster record doesn't exist after initialization, inserting")
 		err = secrets.InsertCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
 			return fmt.Errorf("error inserting cluster record: %w", err)

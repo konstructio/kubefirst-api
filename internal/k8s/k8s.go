@@ -59,6 +59,6 @@ func UpdateSecretV2(clientset *kubernetes.Clientset, namespace string, secretNam
 		return fmt.Errorf("error updating secret: %w", err)
 	}
 
-	log.Info().Msgf("updated Secret %s in Namespace %s", currentSecret.Name, currentSecret.Namespace)
+	log.Info().Msgf("updated secret %q in namespace %q", currentSecret.Name, currentSecret.Namespace)
 	return nil
 }

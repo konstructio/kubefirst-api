@@ -73,7 +73,7 @@ func InsertEnvironment(clientSet *kubernetes.Clientset, env pkgtypes.Environment
 	}
 
 	if secretReference.Name == "" {
-		CreateSecretReference(clientSet, KubefirstEnvironmentSecretName, pkgtypes.SecretListReference{
+		UpsertSecretReference(clientSet, KubefirstEnvironmentSecretName, pkgtypes.SecretListReference{
 			Name: "environments",
 			List: []string{env.Name},
 		})

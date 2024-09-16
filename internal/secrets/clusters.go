@@ -14,6 +14,7 @@ import (
 	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
 	log "github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -91,23 +92,23 @@ func GetClusters(clientSet *kubernetes.Clientset) ([]pkgtypes.Cluster, error) {
 
 // InsertCluster
 func InsertCluster(clientSet *kubernetes.Clientset, cl pkgtypes.Cluster) error {
-	secretReference, err := GetSecretReference(clientSet, secretName)
-	if err != nil {
+	_, err := GetSecretReference(clientSet, secretName)
+	if err != nil && !apierrors.IsNotFound(err) {
 		return fmt.Errorf("unable to get secret cluster reference: %w", err)
 	}
 
-	if secretReference.Name == "" {
-		secretReference = pkgtypes.SecretListReference{
+	if apierrors.IsNotFound(err) {
+		secretReference := pkgtypes.SecretListReference{
 			Name: "clusters",
 			List: []string{cl.ClusterName},
 		}
-		if err := CreateSecretReference(clientSet, secretName, secretReference); err != nil {
+		if err := UpsertSecretReference(clientSet, secretName, secretReference); err != nil {
 			return fmt.Errorf("when inserting cluster: error creating secret reference: %w", err)
 		}
-	} else {
-		if err := AddSecretReferenceItem(clientSet, secretName, cl.ClusterName); err != nil {
-			return fmt.Errorf("when inserting cluster: error adding secret reference item: %w", err)
-		}
+	}
+
+	if err := AddSecretReferenceItem(clientSet, secretName, cl.ClusterName); err != nil {
+		return fmt.Errorf("when inserting cluster: error adding secret reference item: %w", err)
 	}
 
 	bytes, err := json.Marshal(cl)
