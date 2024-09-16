@@ -138,12 +138,12 @@ func GetKubernetesClient(clusterName string) *k8s.KubernetesClient {
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
 	// Create Kubernetes Client Context
-	inCluster := env.InCluster == "true"
+	inCluster := env.InCluster
 	homeDir, _ := os.UserHomeDir()
 	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, clusterName)
 	kubeconfigPath := fmt.Sprintf("%s/kubeconfig", clusterDir)
 
-	if env.K1LocalDebug == "true" {
+	if env.K1LocalDebug {
 		kubeconfigPath = env.K1LocalKubeconfigPath
 	}
 

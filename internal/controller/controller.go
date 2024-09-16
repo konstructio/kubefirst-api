@@ -381,7 +381,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	}
 
 	if !recordExists {
-		if env.K1LocalDebug == "true" {
+		if env.K1LocalDebug {
 			err = utils.CreateKubefirstNamespace(clctrl.KubernetesClient)
 			if err != nil {
 				return fmt.Errorf("error creating Kubefirst namespace: %w", err)

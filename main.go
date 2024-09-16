@@ -94,7 +94,7 @@ func main() {
 		ParentClusterId:   env.ParentClusterID,
 		UserId:            env.ClusterID,
 	}
-	if env.IsClusterZero != "true" {
+	if !env.IsClusterZero {
 		// Subroutine to automatically update gitops catalog
 		go utils.ScheduledGitopsCatalogUpdate()
 	}

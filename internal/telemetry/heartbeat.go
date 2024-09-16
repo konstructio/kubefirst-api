@@ -23,7 +23,7 @@ func Heartbeat(event telemetry.TelemetryEvent) {
 func HeartbeatWorkloadClusters(event telemetry.TelemetryEvent) error {
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
-	if env.IsClusterZero == "true" {
+	if env.IsClusterZero {
 		return nil
 	}
 

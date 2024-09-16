@@ -50,7 +50,7 @@ func TestEnv(t *testing.T) {
 		t.Errorf("unexpected error: %v", err)
 	}
 
-	if env.ServerPort != "8081" {
+	if env.ServerPort != 8081 {
 		t.Errorf("expected ServerPort to be 8081, but got %v", env.ServerPort)
 	}
 
@@ -102,11 +102,11 @@ func TestEnv(t *testing.T) {
 		t.Errorf("expected AWSProfile to be 'aws_profile', but got '%s'", env.AWSProfile)
 	}
 
-	if env.IsClusterZero != "true" {
+	if env.IsClusterZero != true {
 		t.Errorf("expected IsClusterZero to be true, but got %v", env.IsClusterZero)
 	}
 
-	if env.InCluster != "false" {
+	if env.InCluster != false {
 		t.Errorf("expected InCluster to be false, but got %v", env.InCluster)
 	}
 

@@ -22,7 +22,7 @@ func ImportClusterIfEmpty() (pkgtypes.Cluster, error) {
 	cluster := pkgtypes.Cluster{}
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
-	if env.IsClusterZero == "true" {
+	if env.IsClusterZero {
 		log.Info().Msg("IS_CLUSTER_ZERO is set to true, skipping import cluster logic.")
 		return cluster, nil
 	}

@@ -304,10 +304,15 @@ func PostCreateCluster(c *gin.Context) {
 	useSecretForAuth := false
 	k1AuthSecret := map[string]string{}
 
-	env, _ := env.GetEnv(constants.SilenceGetEnv)
+	env, err := env.GetEnv(constants.SilenceGetEnv)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: fmt.Sprintf("error getting environment variables: %s", err),
+		})
+		return
+	}
 
-	inCluster := env.InCluster == "true"
-
+	inCluster := env.InCluster
 	if inCluster {
 		kcfg := utils.GetKubernetesClient("")
 		k1AuthSecret, err := k8s.ReadSecretV2(kcfg.Clientset, constants.KubefirstNamespace, constants.KubefirstAuthSecretName)
