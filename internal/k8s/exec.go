@@ -213,7 +213,7 @@ func ReturnPodObject(kubeConfigPath, matchLabel, matchLabelValue, namespace stri
 	}
 
 	labelSelector := fmt.Sprintf("%s=%s", matchLabel, matchLabelValue)
-	log.Info().Msgf("Waiting for Pod with label %s=%s to be created in namespace %q", matchLabel, matchLabelValue, namespace)
+	log.Info().Msgf("waiting for pod with label %s=%s to be created in namespace %q", matchLabel, matchLabelValue, namespace)
 
 	var pod *v1.Pod
 
@@ -224,12 +224,12 @@ func ReturnPodObject(kubeConfigPath, matchLabel, matchLabelValue, namespace stri
 		if err != nil {
 			// If we couldn't connect, retry
 			if isNetworkingError(err) {
-				log.Warn().Msgf("Connection error, retrying: %s", err.Error())
+				log.Warn().Msgf("connection error, retrying: %s", err.Error())
 				return false, nil
 			}
 
 			// For other errors, log and return the error to stop polling
-			log.Error().Msgf("Error listing Pods: %v", err)
+			log.Error().Msgf("error listing Pods: %v", err)
 			return false, err
 		}
 
@@ -248,7 +248,7 @@ func ReturnPodObject(kubeConfigPath, matchLabel, matchLabelValue, namespace stri
 		return false, nil
 	})
 	if err != nil {
-		log.Error().Msg("The Pod was not created within the timeout period")
+		log.Error().Msg("the pod was not created within the timeout period")
 		return nil, fmt.Errorf("the Pod %q in Namespace %q was not created within the timeout period: %w", matchLabelValue, namespace, err)
 	}
 
@@ -258,7 +258,7 @@ func ReturnPodObject(kubeConfigPath, matchLabel, matchLabelValue, namespace stri
 // ReturnStatefulSetObject returns a matching appsv1.StatefulSet object based on the filters
 func ReturnStatefulSetObject(clientset *kubernetes.Clientset, matchLabel, matchLabelValue, namespace string, timeoutSeconds int) (*appsv1.StatefulSet, error) {
 	labelSelector := fmt.Sprintf("%s=%s", matchLabel, matchLabelValue)
-	log.Info().Msgf("Waiting for StatefulSet with label %s=%s to be created in namespace %q", matchLabel, matchLabelValue, namespace)
+	log.Info().Msgf("waiting for StatefulSet with label %s=%s to be created in namespace %q", matchLabel, matchLabelValue, namespace)
 
 	var statefulSet *appsv1.StatefulSet
 
@@ -269,12 +269,12 @@ func ReturnStatefulSetObject(clientset *kubernetes.Clientset, matchLabel, matchL
 		if err != nil {
 			// If we couldn't connect, retry
 			if isNetworkingError(err) {
-				log.Warn().Msgf("Connection error, retrying: %s", err.Error())
+				log.Warn().Msgf("connection error, retrying: %s", err.Error())
 				return false, nil
 			}
 
 			// For other errors, log and return the error to stop polling
-			log.Error().Msgf("Error listing StatefulSets: %v", err)
+			log.Error().Msgf("error listing StatefulSets: %v", err)
 			return false, err
 		}
 
@@ -293,7 +293,7 @@ func ReturnStatefulSetObject(clientset *kubernetes.Clientset, matchLabel, matchL
 		return false, nil
 	})
 	if err != nil {
-		log.Error().Msg("The StatefulSet was not created within the timeout period")
+		log.Error().Msg("the StatefulSet was not created within the timeout period")
 		return nil, fmt.Errorf("the StatefulSet %q in Namespace %q was not created within the timeout period: %w", matchLabelValue, namespace, err)
 	}
 
@@ -307,12 +307,12 @@ func WaitForDeploymentReady(clientset *kubernetes.Clientset, deployment *appsv1.
 
 	// Get the desired number of replicas from the deployment spec
 	if deployment.Spec.Replicas == nil {
-		log.Error().Msgf("Deployment %s in Namespace %s has nil Spec.Replicas", deploymentName, namespace)
+		log.Error().Msgf("deployment %q in namespace %q has nil spec.replicas field", deploymentName, namespace)
 		return false, fmt.Errorf("deployment %q in Namespace %q has nil Spec.Replicas", deploymentName, namespace)
 	}
 	desiredReplicas := *deployment.Spec.Replicas
 
-	log.Info().Msgf("Waiting for Deployment %s in Namespace %s to be ready - this could take up to %v seconds", deploymentName, namespace, timeoutSeconds)
+	log.Info().Msgf("waiting for deployment %q in namespace %q to be ready - this could take up to %v seconds", deploymentName, namespace, timeoutSeconds)
 
 	err := wait.PollImmediate(5*time.Second, time.Duration(timeoutSeconds)*time.Second, func() (bool, error) {
 		// Get the latest Deployment object
@@ -320,17 +320,17 @@ func WaitForDeploymentReady(clientset *kubernetes.Clientset, deployment *appsv1.
 		if err != nil {
 			// If we couldn't connect, retry
 			if isNetworkingError(err) {
-				log.Warn().Msgf("Connection error, retrying: %s", err.Error())
+				log.Warn().Msgf("connection error, retrying: %s", err.Error())
 				return false, nil
 			}
 
 			// For other errors, log and return the error to stop polling
-			log.Error().Msgf("Error when getting Deployment %s in Namespace %s: %v", deploymentName, namespace, err)
+			log.Error().Msgf("error when getting deployment %q in namespace %q: %v", deploymentName, namespace, err)
 			return false, err
 		}
 
 		if currentDeployment.Status.ReadyReplicas == desiredReplicas {
-			log.Info().Msgf("All Pods in Deployment %s are ready", deploymentName)
+			log.Info().Msgf("all pods in deployment %q are ready", deploymentName)
 			return true, nil
 		}
 
@@ -338,7 +338,7 @@ func WaitForDeploymentReady(clientset *kubernetes.Clientset, deployment *appsv1.
 		return false, nil
 	})
 	if err != nil {
-		log.Error().Msgf("The Deployment %s in Namespace %s was not ready within the timeout period", deploymentName, namespace)
+		log.Error().Msgf("the deployment %q in namespace %q was not ready within the timeout period", deploymentName, namespace)
 		return false, fmt.Errorf("the Deployment %q in Namespace %q was not ready within the timeout period: %w", deploymentName, namespace, err)
 	}
 
@@ -350,7 +350,7 @@ func WaitForPodReady(clientset *kubernetes.Clientset, pod *v1.Pod, timeoutSecond
 	podName := pod.Name
 	namespace := pod.Namespace
 
-	log.Info().Msgf("Waiting for Pod %s in Namespace %s to be ready - this could take up to %v seconds", podName, namespace, timeoutSeconds)
+	log.Info().Msgf("waiting for pod %q in namespace %q to be ready - this could take up to %v seconds", podName, namespace, timeoutSeconds)
 
 	err := wait.PollImmediate(5*time.Second, time.Duration(timeoutSeconds)*time.Second, func() (bool, error) {
 		// Get the latest Pod object
@@ -358,17 +358,17 @@ func WaitForPodReady(clientset *kubernetes.Clientset, pod *v1.Pod, timeoutSecond
 		if err != nil {
 			// If we couldn't connect, retry
 			if isNetworkingError(err) {
-				log.Warn().Msgf("Connection error, retrying: %s", err.Error())
+				log.Warn().Msgf("connection error, retrying: %s", err.Error())
 				return false, nil
 			}
 
 			// For other errors, log and return the error to stop polling
-			log.Error().Msgf("Error when getting Pod %s in Namespace %s: %v", podName, namespace, err)
+			log.Error().Msgf("error getting pod %q in namespace %q: %v", podName, namespace, err)
 			return false, err
 		}
 
 		if currentPod.Status.Phase == v1.PodRunning {
-			log.Info().Msgf("Pod %s is %s.", podName, currentPod.Status.Phase)
+			log.Info().Msgf("pod %q has status %q", podName, currentPod.Status.Phase)
 			return true, nil
 		}
 
@@ -376,7 +376,7 @@ func WaitForPodReady(clientset *kubernetes.Clientset, pod *v1.Pod, timeoutSecond
 		return false, nil
 	})
 	if err != nil {
-		log.Error().Msgf("The operation timed out while waiting for Pod %s in Namespace %s to become ready", podName, namespace)
+		log.Error().Msgf("the operation timed out while waiting for pod %q in namespace %q to become ready", podName, namespace)
 		return false, fmt.Errorf("the operation timed out while waiting for Pod %q in Namespace %q: %w", podName, namespace, err)
 	}
 
@@ -390,12 +390,12 @@ func WaitForStatefulSetReady(clientset *kubernetes.Clientset, statefulset *appsv
 
 	// Get the desired number of replicas from the StatefulSet spec
 	if statefulset.Spec.Replicas == nil {
-		log.Error().Msgf("StatefulSet %s in Namespace %s has nil Spec.Replicas", statefulSetName, namespace)
+		log.Error().Msgf("statefulSet %q in namespace %s has nil spec.replicas", statefulSetName, namespace)
 		return false, fmt.Errorf("StatefulSet %q in Namespace %q has nil Spec.Replicas", statefulSetName, namespace)
 	}
 	desiredReplicas := *statefulset.Spec.Replicas
 
-	log.Info().Msgf("Waiting for StatefulSet %s in Namespace %s to be ready - this could take up to %v seconds", statefulSetName, namespace, timeoutSeconds)
+	log.Info().Msgf("waiting for statefulset %q in namespace %q to be ready - this could take up to %v seconds", statefulSetName, namespace, timeoutSeconds)
 
 	err := wait.PollImmediate(5*time.Second, time.Duration(timeoutSeconds)*time.Second, func() (bool, error) {
 		// Get the latest StatefulSet object
@@ -403,12 +403,12 @@ func WaitForStatefulSetReady(clientset *kubernetes.Clientset, statefulset *appsv
 		if err != nil {
 			// If we couldn't connect, retry
 			if isNetworkingError(err) {
-				log.Warn().Msgf("Connection error, retrying: %s", err.Error())
+				log.Warn().Msgf("connection error, retrying: %s", err.Error())
 				return false, nil
 			}
 
 			// For other errors, log and return the error to stop polling
-			log.Error().Msgf("Error when getting StatefulSet %s in Namespace %s: %v", statefulSetName, namespace, err)
+			log.Error().Msgf("error when getting statefulset %q in namespace %s: %v", statefulSetName, namespace, err)
 			return false, err
 		}
 
@@ -424,11 +424,11 @@ func WaitForStatefulSetReady(clientset *kubernetes.Clientset, statefulset *appsv
 				if err != nil {
 					// If we couldn't connect, retry
 					if isNetworkingError(err) {
-						log.Warn().Msg("Connection refused while listing Pods, retrying...")
+						log.Warn().Msg("connection refused while listing pods, retrying...")
 						return false, nil
 					}
 
-					log.Error().Msgf("Could not find Pods owned by StatefulSet %s in Namespace %s: %v", statefulSetName, namespace, err)
+					log.Error().Msgf("could not find pods owned by statefulset %q in namespace %q: %v", statefulSetName, namespace, err)
 					return false, err
 				}
 
@@ -442,14 +442,14 @@ func WaitForStatefulSetReady(clientset *kubernetes.Clientset, statefulset *appsv
 				}
 
 				if allRunning {
-					log.Info().Msgf("All Pods in StatefulSet %s are running.", statefulSetName)
+					log.Info().Msgf("all pods in statefulset %q are running", statefulSetName)
 					return true, nil
 				}
 			}
 		} else {
 			// Check if ReadyReplicas match desired replicas
 			if currentStatefulSet.Status.ReadyReplicas == desiredReplicas {
-				log.Info().Msgf("All Pods in StatefulSet %s are ready.", statefulSetName)
+				log.Info().Msgf("all pods in statefulset %q are ready", statefulSetName)
 				return true, nil
 			}
 		}
@@ -458,7 +458,7 @@ func WaitForStatefulSetReady(clientset *kubernetes.Clientset, statefulset *appsv
 		return false, nil
 	})
 	if err != nil {
-		log.Error().Msgf("The StatefulSet %s in Namespace %s was not ready within the timeout period", statefulSetName, namespace)
+		log.Error().Msgf("the statefulset %q in namespace %q was not ready within the timeout period", statefulSetName, namespace)
 		return false, fmt.Errorf("the StatefulSet %q in Namespace %q was not ready within the timeout period: %w", statefulSetName, namespace, err)
 	}
 
