@@ -24,7 +24,7 @@ func ImportClusterIfEmpty() (*pkgtypes.Cluster, error) {
 
 	if env.IsClusterZero {
 		log.Info().Msg("IS_CLUSTER_ZERO is set to true, skipping import cluster logic.")
-		return nil, nil
+		return nil, nil //nolint:nilnil // this is the expected behavior
 	}
 
 	kcfg, err := k8s.CreateKubeConfig(true, "")
@@ -72,9 +72,9 @@ func ImportClusterIfEmpty() (*pkgtypes.Cluster, error) {
 		// log cluster
 		log.Info().Msgf("inserted cluster record to db. adding default services. %s", cluster.ClusterName)
 
-		return nil, nil
+		return nil, nil //nolint:nilnil // this is the expected behavior
 	}
 
 	log.Info().Msgf("cluster record for %s already exists - skipping", cluster.ClusterName)
-	return nil, nil
+	return nil, nil //nolint:nilnil // this is the expected behavior
 }
