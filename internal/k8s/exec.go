@@ -230,7 +230,7 @@ func ReturnPodObject(kubeConfigPath, matchLabel, matchLabelValue, namespace stri
 
 			// For other errors, log and return the error to stop polling
 			log.Error().Msgf("error listing Pods: %v", err)
-			return false, err
+			return false, fmt.Errorf("error listing pods: %w", err)
 		}
 
 		if len(podList.Items) == 0 {
@@ -275,7 +275,7 @@ func ReturnStatefulSetObject(clientset *kubernetes.Clientset, matchLabel, matchL
 
 			// For other errors, log and return the error to stop polling
 			log.Error().Msgf("error listing StatefulSets: %v", err)
-			return false, err
+			return false, fmt.Errorf("error listing statefulsets: %w", err)
 		}
 
 		if len(statefulSets.Items) == 0 {
@@ -326,7 +326,7 @@ func WaitForDeploymentReady(clientset *kubernetes.Clientset, deployment *appsv1.
 
 			// For other errors, log and return the error to stop polling
 			log.Error().Msgf("error when getting deployment %q in namespace %q: %v", deploymentName, namespace, err)
-			return false, err
+			return false, fmt.Errorf("error listing statefulsets: %w", err)
 		}
 
 		if currentDeployment.Status.ReadyReplicas == desiredReplicas {
@@ -364,7 +364,7 @@ func WaitForPodReady(clientset *kubernetes.Clientset, pod *v1.Pod, timeoutSecond
 
 			// For other errors, log and return the error to stop polling
 			log.Error().Msgf("error getting pod %q in namespace %q: %v", podName, namespace, err)
-			return false, err
+			return false, fmt.Errorf("error listing pods: %w", err)
 		}
 
 		if currentPod.Status.Phase == v1.PodRunning {
@@ -409,7 +409,7 @@ func WaitForStatefulSetReady(clientset *kubernetes.Clientset, statefulset *appsv
 
 			// For other errors, log and return the error to stop polling
 			log.Error().Msgf("error when getting statefulset %q in namespace %s: %v", statefulSetName, namespace, err)
-			return false, err
+			return false, fmt.Errorf("error listing statefulsets: %w", err)
 		}
 
 		if ignoreReady {
@@ -429,7 +429,7 @@ func WaitForStatefulSetReady(clientset *kubernetes.Clientset, statefulset *appsv
 					}
 
 					log.Error().Msgf("could not find pods owned by statefulset %q in namespace %q: %v", statefulSetName, namespace, err)
-					return false, err
+					return false, fmt.Errorf("error listing statefulsets: %w", err)
 				}
 
 				// Check if all Pods are in Running phase
