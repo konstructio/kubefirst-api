@@ -84,7 +84,7 @@ func ReadService(kubeConfigPath, namespace, serviceName string) (*v1.Service, er
 
 	service, err := clientset.CoreV1().Services(namespace).Get(context.Background(), serviceName, metav1.GetOptions{})
 	if err != nil {
-		log.Error().Msgf("error getting Service %q in Namespace %q: %s\n", serviceName, namespace, err)
+		log.Error().Msgf("error getting Service %q in Namespace %q: %s", serviceName, namespace, err)
 		return &v1.Service{}, fmt.Errorf("error getting Service %q in Namespace %q: %w", serviceName, namespace, err)
 	}
 

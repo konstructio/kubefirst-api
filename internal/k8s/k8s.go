@@ -35,7 +35,7 @@ func ReadSecretV2Old(clientset *kubernetes.Clientset, namespace string, secretNa
 func DeleteSecretV2(clientset *kubernetes.Clientset, namespace string, secretName string) error {
 	err := clientset.CoreV1().Secrets(namespace).Delete(context.Background(), secretName, metav1.DeleteOptions{})
 	if err != nil {
-		log.Error().Msgf("error deleting secret: %s\n", err)
+		log.Error().Msgf("error deleting secret: %s", err)
 		return fmt.Errorf("error deleting secret: %w", err)
 	}
 	return nil

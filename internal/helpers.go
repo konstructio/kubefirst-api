@@ -54,7 +54,7 @@ func SetupViper(config *configs.Config, silent bool) error {
 
 	if _, err := os.Stat(viperConfigFile); errors.Is(err, os.ErrNotExist) {
 		if !silent {
-			log.Info().Msgf("Config file not found, creating a blank one: %s \n", viperConfigFile)
+			log.Info().Msgf("Config file not found, creating a blank one: %s", viperConfigFile)
 		}
 
 		if err := os.WriteFile(viperConfigFile, []byte(""), 0o600); err != nil {

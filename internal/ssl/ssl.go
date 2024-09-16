@@ -88,7 +88,7 @@ func Backup(backupDir, kubeconfigPath string) error {
 			secret.SetUID("")
 
 			fileName := fmt.Sprintf("%s/%s-%s.yaml", backupDir+"/secrets", secret.Namespace, secret.Name)
-			log.Info().Msgf("writing file: %s\n\n", fileName)
+			log.Info().Msgf("writing file: %q", fileName)
 			yamlContent, err := yaml.Marshal(secret)
 			if err != nil {
 				return fmt.Errorf("unable to marshal yaml: %w", err)

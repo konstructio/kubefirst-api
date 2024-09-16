@@ -110,7 +110,7 @@ func (conf *Configuration) TestHostedZoneLiveness(hostedZoneName string) bool {
 		} else {
 			for _, ip := range ips {
 				// todo check ip against route53RecordValue in some capacity so we can pivot the value for testing
-				log.Info().Msgf("%s. in TXT record value: %s\n", recordName, ip)
+				log.Info().Msgf("%s. in TXT record value: %s", recordName, ip)
 				count = 101
 			}
 		}

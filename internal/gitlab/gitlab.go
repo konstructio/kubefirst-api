@@ -490,7 +490,7 @@ func (gl *Wrapper) DeleteGroupRunners(runners []gitlab.Runner) error {
 			return fmt.Errorf("could not delete runner %s / %s / %v / %s: %w", runner.Name, runner.IPAddress, runner.ID, runner.Description, err)
 		}
 
-		log.Info().Msgf("deleted runner %s / %s / %v / %s\n", runner.Name, runner.IPAddress, runner.ID, runner.Description)
+		log.Info().Msgf("deleted runner %s / %s / %v / %s", runner.Name, runner.IPAddress, runner.ID, runner.Description)
 	}
 
 	return nil

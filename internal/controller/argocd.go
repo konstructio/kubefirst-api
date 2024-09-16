@@ -242,19 +242,19 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 
 		retryAttempts := 2
 		for attempt := 1; attempt <= retryAttempts; attempt++ {
-			log.Info().Msgf("Attempt #%d to create Argo CD application...\n", attempt)
+			log.Info().Msgf("Attempt #%d to create Argo CD application...", attempt)
 
 			app, err := argocdClient.ArgoprojV1alpha1().Applications("argocd").Create(context.Background(), registryApplicationObject, metav1.CreateOptions{})
 			if err != nil {
 				if attempt == retryAttempts {
 					return fmt.Errorf("failed to create Argo CD application on attempt #%d: %w", attempt, err)
 				}
-				log.Info().Msgf("Error creating Argo CD application on attempt number #%d: %v\n", attempt, err)
+				log.Info().Msgf("Error creating Argo CD application on attempt number #%d: %v", attempt, err)
 				time.Sleep(5 * time.Second)
 				continue
 			}
 
-			log.Info().Msgf("Argo CD application created successfully on attempt #%d: %s\n", attempt, app.Name)
+			log.Info().Msgf("Argo CD application created successfully on attempt #%d: %s", attempt, app.Name)
 			break
 		}
 

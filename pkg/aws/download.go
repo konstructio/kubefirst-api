@@ -46,7 +46,7 @@ func DownloadTools(awsConfig *providerConfigs.ProviderConfig, kubectlClientVersi
 		}
 
 		kubectlStdOut, kubectlStdErr, err := pkg.ExecShellReturnStrings(awsConfig.KubectlClient, "version", "--client=true", "-oyaml")
-		log.Info().Msgf("-> kubectl version:\n\t%s\n\t%s\n", kubectlStdOut, kubectlStdErr)
+		log.Info().Msgf("-> kubectl version:\n\t%s\n\t%s", kubectlStdOut, kubectlStdErr)
 		if err != nil {
 			return fmt.Errorf("failed to call kubectl version: %w", err)
 		}

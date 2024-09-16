@@ -59,7 +59,7 @@ func GetInstance() *progressPrinter {
 // Used for general initialization of tracker object and overall counter
 func SetupProgress(numTrackers int, silentMode bool) {
 	flag.Parse()
-	log.Debug().Msg(fmt.Sprintf("Init actions: %d expected tasks ...\n\n", numTrackers))
+	log.Debug().Msg(fmt.Sprintf("Init actions: %d expected tasks ...", numTrackers))
 	// if silent mode, dont show progress bar render
 	if silentMode {
 		return

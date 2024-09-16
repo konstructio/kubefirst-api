@@ -39,7 +39,7 @@ func DownloadTools(kubectlClientPath, kubectlClientVersion, localOs, localArchit
 		}
 
 		kubectlStdOut, kubectlStdErr, err := pkg.ExecShellReturnStrings(kubectlClientPath, "version", "--client=true", "-oyaml")
-		log.Info().Msgf("-> kubectl version:\n\t%s\n\t%s\n", kubectlStdOut, kubectlStdErr)
+		log.Info().Msgf("-> kubectl version:\n\t%s\n\t%s", kubectlStdOut, kubectlStdErr)
 		if err != nil {
 			return fmt.Errorf("failed to call kubectl version: %w", err)
 		}

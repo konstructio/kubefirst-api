@@ -59,6 +59,6 @@ func OpenPortForwardPodWrapper(
 		log.Info().Msg("port forwarding is ready to get traffic")
 	}
 
-	log.Info().Msgf("pod %q at namespace %q has port-forward accepting local connections at port %d\n", podName, namespace, podLocalPort)
+	log.Info().Msgf("pod %q at namespace %q has port-forward accepting local connections at port %d", podName, namespace, podLocalPort)
 	return nil
 }

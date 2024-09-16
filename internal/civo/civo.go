@@ -77,7 +77,7 @@ func (c *Configuration) TestDomainLiveness(domainName, domainID string) bool {
 		} else {
 			for _, ip := range ips {
 				// todo check ip against route53RecordValue in some capacity so we can pivot the value for testing
-				log.Info().Msgf("%s. in TXT record value: %s\n", civoRecordName, ip)
+				log.Info().Msgf("%s. in TXT record value: %s", civoRecordName, ip)
 				count = 101
 			}
 		}
