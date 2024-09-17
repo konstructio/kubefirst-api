@@ -8,6 +8,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -188,8 +189,15 @@ func GetCluster(c *gin.Context) {
 	// Retrieve cluster info
 	cluster, err := secrets.GetCluster(kcfg.Clientset, clusterName)
 	if err != nil {
+		if errors.Is(err, &secrets.ClusterNotFoundError{}) {
+			c.JSON(http.StatusNotFound, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+
 		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-			Message: "cluster not found",
+			Message: "unable to find cluster: " + err.Error(),
 		})
 		return
 	}

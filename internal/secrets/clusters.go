@@ -41,13 +41,38 @@ func DeleteCluster(clientSet *kubernetes.Clientset, clusterName string) error {
 	return nil
 }
 
+func isMapEmpty(m map[string]interface{}) bool {
+	return len(m) == 0
+}
+
+type ClusterNotFoundError struct {
+	ClusterName string
+}
+
+func (e *ClusterNotFoundError) Error() string {
+	return fmt.Sprintf("cluster %q not found", e.ClusterName)
+}
+
+func (e *ClusterNotFoundError) Is(target error) bool {
+	_, ok := target.(*ClusterNotFoundError)
+	return ok
+}
+
 // GetCluster
 func GetCluster(clientSet *kubernetes.Clientset, clusterName string) (*pkgtypes.Cluster, error) {
 	cluster := pkgtypes.Cluster{}
 
 	clusterSecret, err := k8s.ReadSecretV2Old(clientSet, "kubefirst", fmt.Sprintf("%s-%s", clusterPrefix, clusterName))
 	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, &ClusterNotFoundError{ClusterName: clusterName}
+		}
+
 		return nil, fmt.Errorf("secret not found: %w", err)
+	}
+
+	if isMapEmpty(clusterSecret) {
+		return nil, &ClusterNotFoundError{ClusterName: clusterName}
 	}
 
 	jsonString, err := MapToStructuredJSON(clusterSecret)

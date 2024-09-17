@@ -236,6 +236,7 @@ func CreateAkamaiCluster(definition *pkgtypes.ClusterDefinition) error {
 	cl, err := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
 	if err != nil {
 		log.Error().Msgf("error getting cluster %s: %s", ctrl.ClusterName, err)
+		ctrl.UpdateClusterOnError(err.Error())
 		return fmt.Errorf("error getting cluster %s: %w", ctrl.ClusterName, err)
 	}
 

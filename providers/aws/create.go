@@ -235,7 +235,9 @@ func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 	// Create default service entries
 	cl, err := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
 	if err != nil {
-		return fmt.Errorf("error getting cluster for default service entries registration: %w", err)
+		log.Error().Msgf("error getting cluster %s: %s", ctrl.ClusterName, err)
+		ctrl.UpdateClusterOnError(err.Error())
+		return fmt.Errorf("error getting cluster %s: %w", ctrl.ClusterName, err)
 	}
 
 	if err := services.AddDefaultServices(cl); err != nil {

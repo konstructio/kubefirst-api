@@ -8,6 +8,7 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -29,7 +30,6 @@ import (
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -137,7 +137,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 
 	// Get cluster record if it exists
 	rec, err := secrets.GetCluster(clctrl.KubernetesClient, def.ClusterName)
-	if err != nil && !apierrors.IsNotFound(err) {
+	if err != nil && !errors.Is(err, &secrets.ClusterNotFoundError{}) {
 		return fmt.Errorf("could not read cluster secret %s: %w", def.ClusterName, err)
 	}
 
