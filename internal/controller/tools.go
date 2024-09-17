@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package controller
 
 import (
+	"github.com/konstructio/kubefirst-api/internal/azure"
 	"github.com/konstructio/kubefirst-api/internal/civo"
 	"github.com/konstructio/kubefirst-api/internal/digitalocean"
 	"github.com/konstructio/kubefirst-api/internal/secrets"
@@ -48,6 +49,19 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 				&clctrl.ProviderConfig,
 				providerConfigs.KubectlClientVersion,
 				providerConfigs.TerraformClientVersion,
+			)
+			if err != nil {
+				log.Error().Msgf("error downloading dependencies: %s", err)
+				return err
+			}
+		case "azure":
+			err := azure.DownloadTools(
+				clctrl.ProviderConfig.KubectlClient,
+				providerConfigs.KubectlClientVersion,
+				providerConfigs.LocalhostOS,
+				providerConfigs.LocalhostArch,
+				providerConfigs.TerraformClientVersion,
+				toolsDir,
 			)
 			if err != nil {
 				log.Error().Msgf("error downloading dependencies: %s", err)
