@@ -28,7 +28,7 @@ type ContainerRegistryAuth struct {
 	GithubOwner           string
 	ContainerRegistryHost string
 
-	Clientset *kubernetes.Clientset
+	Clientset kubernetes.Interface
 }
 
 // CreateContainerRegistrySecret

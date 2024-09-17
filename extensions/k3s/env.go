@@ -19,7 +19,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func readVaultTokenFromSecret(clientset *kubernetes.Clientset) string {
+func readVaultTokenFromSecret(clientset kubernetes.Interface) string {
 	existingKubernetesSecret, err := k8s.ReadSecretV2(clientset, vault.VaultNamespace, vault.VaultSecretName)
 	if err != nil || existingKubernetesSecret == nil {
 		log.Printf("Error reading existing Secret data: %s", err)
@@ -75,7 +75,7 @@ func GetGitlabTerraformEnvs(envs map[string]string, gid int, cl *pkgtypes.Cluste
 	return envs
 }
 
-func GetUsersTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster, envs map[string]string) map[string]string {
+func GetUsersTerraformEnvs(clientset kubernetes.Interface, cl *pkgtypes.Cluster, envs map[string]string) map[string]string {
 	envs["VAULT_TOKEN"] = readVaultTokenFromSecret(clientset)
 	envs["VAULT_ADDR"] = providerConfigs.VaultPortForwardURL
 	envs[fmt.Sprintf("%s_TOKEN", strings.ToUpper(cl.GitProvider))] = cl.GitAuth.Token
@@ -90,7 +90,7 @@ func GetUsersTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster
 	return envs
 }
 
-func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster, envs map[string]string) map[string]string {
+func GetVaultTerraformEnvs(clientset kubernetes.Interface, cl *pkgtypes.Cluster, envs map[string]string) map[string]string {
 	envs[fmt.Sprintf("%s_TOKEN", strings.ToUpper(cl.GitProvider))] = cl.GitAuth.Token
 	envs[fmt.Sprintf("%s_OWNER", strings.ToUpper(cl.GitProvider))] = cl.GitAuth.Owner
 	envs["TF_VAR_email_address"] = cl.AlertsEmail

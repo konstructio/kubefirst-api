@@ -17,7 +17,7 @@ import (
 // and only returns once they're all healthy
 //
 // This helps prevent race conditions and timeouts
-func VerifyArgoCDReadiness(clientset *kubernetes.Clientset, highAvailabilityEnabled bool, timeoutSeconds int) (bool, error) {
+func VerifyArgoCDReadiness(clientset kubernetes.Interface, highAvailabilityEnabled bool, timeoutSeconds int) (bool, error) {
 	// Wait for ArgoCD StatefulSet Pods to transition to Running
 	argoCDStatefulSet, err := ReturnStatefulSetObject(
 		clientset,

@@ -10,7 +10,7 @@ import (
 )
 
 func OpenPortForwardPodWrapper(
-	clientset *kubernetes.Clientset,
+	clientset kubernetes.Interface,
 	restConfig *rest.Config,
 	podName string,
 	namespace string,

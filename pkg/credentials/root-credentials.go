@@ -41,7 +41,7 @@ func EvalAuth(expectedCloudProvider string, expectedGitProvider string) (bool, e
 }
 
 // ParseAuthData gets base root credentials for platform components
-func ParseAuthData(clientset *kubernetes.Clientset, cloudProvider string, domainName string, opts *CredentialOptions) error {
+func ParseAuthData(clientset kubernetes.Interface, cloudProvider string, domainName string, opts *CredentialOptions) error {
 	// Retrieve vault root token
 	var vaultRootToken string
 	vaultUnsealSecretData, err := k8s.ReadSecretV2(clientset, "vault", "vault-unseal-secret")

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,6 +23,7 @@ func CreateSecretsIfNotExist(ctx context.Context, k8s kubernetes.Interface, secr
 	for _, s := range secrets {
 		secret := createSecret(s)
 
+		log.Info().Msgf("creating secret %q", secret.Name)
 		_, err := k8s.CoreV1().Secrets(secret.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
 		if err != nil {
 			if apierrors.IsNotFound(err) {
@@ -29,7 +31,7 @@ func CreateSecretsIfNotExist(ctx context.Context, k8s kubernetes.Interface, secr
 					return fmt.Errorf("error creating secret %s in namespace %s: %w", secret.Name, secret.Namespace, err)
 				}
 
-				return nil
+				continue
 			}
 
 			return fmt.Errorf("error retrieving secret %s in namespace %s: %w", secret.Name, secret.Namespace, err)

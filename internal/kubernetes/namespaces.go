@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,6 +19,7 @@ type Namespace struct {
 
 func createNamespace(ctx context.Context, k8s kubernetes.Interface, namespaces []*v1.Namespace) error {
 	for _, ns := range namespaces {
+		log.Info().Msgf("creating namespace %q", ns.Name)
 		if _, err := k8s.CoreV1().Namespaces().Create(ctx, ns, metav1.CreateOptions{}); err != nil {
 			if apierrors.IsAlreadyExists(err) {
 				continue

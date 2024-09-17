@@ -29,7 +29,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func ReadKubefirstAPITokenFromSecret(clientset *kubernetes.Clientset) (string, error) {
+func ReadKubefirstAPITokenFromSecret(clientset kubernetes.Interface) (string, error) {
 	namespace := os.Getenv("KUBE_NAMESPACE")
 	if namespace == "" {
 		return "", errors.New("error namespace can not be empty")

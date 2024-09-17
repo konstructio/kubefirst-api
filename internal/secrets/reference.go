@@ -18,7 +18,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func GetSecretReference(clientSet *kubernetes.Clientset, secretName string) (*pkgtypes.SecretListReference, error) {
+func GetSecretReference(clientSet kubernetes.Interface, secretName string) (*pkgtypes.SecretListReference, error) {
 	kubefirstSecrets, err := k8s.ReadSecretV2Old(clientSet, "kubefirst", secretName)
 	if err != nil {
 		return nil, fmt.Errorf("unable to fetch secret: %w", err)
@@ -43,7 +43,7 @@ func GetSecretReference(clientSet *kubernetes.Clientset, secretName string) (*pk
 	return &secretReference, nil
 }
 
-func DeleteSecretReference(clientSet *kubernetes.Clientset, secretName string, valueToDelete string) error {
+func DeleteSecretReference(clientSet kubernetes.Interface, secretName string, valueToDelete string) error {
 	filteredReferenceList := pkgtypes.SecretListReference{}
 	referenceList, err := GetSecretReference(clientSet, secretName)
 	if err != nil {
@@ -67,7 +67,7 @@ func DeleteSecretReference(clientSet *kubernetes.Clientset, secretName string, v
 }
 
 // UpdateSecretReference
-func UpdateSecretReference(clientSet *kubernetes.Clientset, secretName string, secretReference pkgtypes.SecretListReference) error {
+func UpdateSecretReference(clientSet kubernetes.Interface, secretName string, secretReference pkgtypes.SecretListReference) error {
 	bytes, err := json.Marshal(secretReference)
 	if err != nil {
 		return fmt.Errorf("error marshalling json: %w", err)
@@ -86,7 +86,7 @@ func UpdateSecretReference(clientSet *kubernetes.Clientset, secretName string, s
 	return nil
 }
 
-func UpsertSecretReference(clientSet *kubernetes.Clientset, secretName string, secretReference pkgtypes.SecretListReference) error {
+func UpsertSecretReference(clientSet kubernetes.Interface, secretName string, secretReference pkgtypes.SecretListReference) error {
 	bytes, err := json.Marshal(secretReference)
 	if err != nil {
 		return fmt.Errorf("error marshalling json: %w", err)
@@ -117,7 +117,7 @@ func UpsertSecretReference(clientSet *kubernetes.Clientset, secretName string, s
 	return nil
 }
 
-func AddSecretReferenceItem(clientSet *kubernetes.Clientset, secretName string, valueToAdd string) error {
+func AddSecretReferenceItem(clientSet kubernetes.Interface, secretName string, valueToAdd string) error {
 	secretReference, err := GetSecretReference(clientSet, secretName)
 	if err != nil {
 		return fmt.Errorf("unable to get secret reference %s: %w", secretName, err)

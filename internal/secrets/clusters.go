@@ -25,7 +25,7 @@ const (
 )
 
 // DeleteCluster
-func DeleteCluster(clientSet *kubernetes.Clientset, clusterName string) error {
+func DeleteCluster(clientSet kubernetes.Interface, clusterName string) error {
 	err := DeleteSecretReference(clientSet, secretName, clusterName)
 	if err != nil {
 		return fmt.Errorf("error deleting cluster %s reference", clusterName)
@@ -59,7 +59,7 @@ func (e *ClusterNotFoundError) Is(target error) bool {
 }
 
 // GetCluster
-func GetCluster(clientSet *kubernetes.Clientset, clusterName string) (*pkgtypes.Cluster, error) {
+func GetCluster(clientSet kubernetes.Interface, clusterName string) (*pkgtypes.Cluster, error) {
 	cluster := pkgtypes.Cluster{}
 
 	clusterSecret, err := k8s.ReadSecretV2Old(clientSet, "kubefirst", fmt.Sprintf("%s-%s", clusterPrefix, clusterName))
@@ -94,7 +94,7 @@ func GetCluster(clientSet *kubernetes.Clientset, clusterName string) (*pkgtypes.
 }
 
 // GetCluster
-func GetClusters(clientSet *kubernetes.Clientset) ([]pkgtypes.Cluster, error) {
+func GetClusters(clientSet kubernetes.Interface) ([]pkgtypes.Cluster, error) {
 	clusterList := []pkgtypes.Cluster{}
 	clusterReferenceList, err := GetSecretReference(clientSet, secretName)
 	if err != nil {
@@ -116,7 +116,7 @@ func GetClusters(clientSet *kubernetes.Clientset) ([]pkgtypes.Cluster, error) {
 }
 
 // InsertCluster
-func InsertCluster(clientSet *kubernetes.Clientset, cl pkgtypes.Cluster) error {
+func InsertCluster(clientSet kubernetes.Interface, cl pkgtypes.Cluster) error {
 	_, err := GetSecretReference(clientSet, secretName)
 	if err != nil && !apierrors.IsNotFound(err) {
 		return fmt.Errorf("unable to get secret cluster reference: %w", err)
@@ -163,7 +163,7 @@ func InsertCluster(clientSet *kubernetes.Clientset, cl pkgtypes.Cluster) error {
 }
 
 // UpdateCluster
-func UpdateCluster(clientSet *kubernetes.Clientset, cluster pkgtypes.Cluster) error {
+func UpdateCluster(clientSet kubernetes.Interface, cluster pkgtypes.Cluster) error {
 	bytes, err := json.Marshal(cluster)
 	if err != nil {
 		return fmt.Errorf("error marshalling json: %w", err)

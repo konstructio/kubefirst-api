@@ -21,7 +21,7 @@ import (
 const kubefirstServicesPrefix = "kubefirst-service"
 
 // CreateClusterServiceList adds an entry for a cluster to the service list
-func CreateClusterServiceList(clientSet *kubernetes.Clientset, clusterName string) error {
+func CreateClusterServiceList(clientSet kubernetes.Interface, clusterName string) error {
 	clusterServices, err := GetServices(clientSet, clusterName)
 	if err != nil {
 		return fmt.Errorf("error creating kubernetes service secret: %w", err)
@@ -62,7 +62,7 @@ func CreateClusterServiceList(clientSet *kubernetes.Clientset, clusterName strin
 }
 
 // DeleteClusterServiceListEntry removes a service entry from a cluster's service list
-func DeleteClusterServiceListEntry(clientSet *kubernetes.Clientset, clusterName string, def *types.Service) error {
+func DeleteClusterServiceListEntry(clientSet kubernetes.Interface, clusterName string, def *types.Service) error {
 	// Find
 	clusterServices, err := GetServices(clientSet, clusterName)
 	if err != nil {
@@ -99,7 +99,7 @@ func DeleteClusterServiceListEntry(clientSet *kubernetes.Clientset, clusterName 
 }
 
 // GetService returns a single service associated with a given cluster
-func GetService(clientSet *kubernetes.Clientset, clusterName string, serviceName string) (types.Service, error) {
+func GetService(clientSet kubernetes.Interface, clusterName string, serviceName string) (types.Service, error) {
 	// Find
 	clusterServices, _ := GetServices(clientSet, clusterName)
 
@@ -113,7 +113,7 @@ func GetService(clientSet *kubernetes.Clientset, clusterName string, serviceName
 }
 
 // GetServices returns services associated with a given cluster
-func GetServices(clientSet *kubernetes.Clientset, clusterName string) (types.ClusterServiceList, error) {
+func GetServices(clientSet kubernetes.Interface, clusterName string) (types.ClusterServiceList, error) {
 	clusterServices := types.ClusterServiceList{}
 
 	kubefirstSecrets, err := k8s.ReadSecretV2Old(clientSet, "kubefirst", fmt.Sprintf("%s-%s", kubefirstServicesPrefix, clusterName))
@@ -140,7 +140,7 @@ func GetServices(clientSet *kubernetes.Clientset, clusterName string) (types.Clu
 }
 
 // InsertClusterServiceListEntry appends a service entry for a cluster's service list
-func InsertClusterServiceListEntry(clientSet *kubernetes.Clientset, clusterName string, def *types.Service) error {
+func InsertClusterServiceListEntry(clientSet kubernetes.Interface, clusterName string, def *types.Service) error {
 	// Find
 	clusterServices, err := GetServices(clientSet, clusterName)
 	if err != nil {

@@ -20,7 +20,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func readVaultTokenFromSecret(clientset *kubernetes.Clientset) (string, error) {
+func readVaultTokenFromSecret(clientset kubernetes.Interface) (string, error) {
 	existingKubernetesSecret, err := k8s.ReadSecretV2(clientset, vault.VaultNamespace, vault.VaultSecretName)
 	if err != nil || existingKubernetesSecret == nil {
 		log.Error().Msgf("Error reading existing Secret data: %s", err)
@@ -72,7 +72,7 @@ func GetGitlabTerraformEnvs(envs map[string]string, gid int, cl *pkgtypes.Cluste
 	return envs
 }
 
-func GetUsersTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster, envs map[string]string) map[string]string {
+func GetUsersTerraformEnvs(clientset kubernetes.Interface, cl *pkgtypes.Cluster, envs map[string]string) map[string]string {
 	vaultToken, err := readVaultTokenFromSecret(clientset)
 	if err != nil {
 		return envs
@@ -90,7 +90,7 @@ func GetUsersTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster
 	return envs
 }
 
-func GetVaultTerraformEnvs(clientset *kubernetes.Clientset, cl *pkgtypes.Cluster, envs map[string]string) map[string]string {
+func GetVaultTerraformEnvs(clientset kubernetes.Interface, cl *pkgtypes.Cluster, envs map[string]string) map[string]string {
 	vaultToken, err := readVaultTokenFromSecret(clientset)
 	if err != nil {
 		return envs

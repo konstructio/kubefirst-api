@@ -18,7 +18,7 @@ import (
 )
 
 // ReturnJobObject returns a matching appsv1.StatefulSet object based on the filters
-func ReturnJobObject(clientset *kubernetes.Clientset, namespace, jobName string) (*batchv1.Job, error) {
+func ReturnJobObject(clientset kubernetes.Interface, namespace, jobName string) (*batchv1.Job, error) {
 	job, err := clientset.BatchV1().Jobs(namespace).Get(context.Background(), jobName, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve Job %q in namespace %q: %w", jobName, namespace, err)
@@ -28,7 +28,7 @@ func ReturnJobObject(clientset *kubernetes.Clientset, namespace, jobName string)
 }
 
 // WaitForJobComplete waits for a target Job to reach completion
-func WaitForJobComplete(clientset *kubernetes.Clientset, jobName, jobNamespace string, timeoutSeconds int64) (bool, error) {
+func WaitForJobComplete(clientset kubernetes.Interface, jobName, jobNamespace string, timeoutSeconds int64) (bool, error) {
 	// Format list for metav1.ListOptions for watch
 	watchOptions := metav1.ListOptions{
 		FieldSelector: fmt.Sprintf(

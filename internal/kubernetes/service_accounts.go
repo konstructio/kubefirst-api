@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,6 +23,7 @@ func CreateServiceAccountsIfNotExist(ctx context.Context, k8s kubernetes.Interfa
 	for _, sa := range serviceAccounts {
 		serviceAccount := createServiceAccount(sa)
 
+		log.Info().Msgf("creating service account %q", serviceAccount.Name)
 		_, err := k8s.CoreV1().ServiceAccounts(serviceAccount.Namespace).Get(ctx, serviceAccount.Name, metav1.GetOptions{})
 		if err != nil {
 			if apierrors.IsNotFound(err) {
@@ -29,7 +31,7 @@ func CreateServiceAccountsIfNotExist(ctx context.Context, k8s kubernetes.Interfa
 					return fmt.Errorf("error creating service account %s in namespace %s: %w", serviceAccount.Name, serviceAccount.Namespace, err)
 				}
 
-				return nil
+				continue
 			}
 
 			return fmt.Errorf("error retrieving service account %s in namespace %s: %w", serviceAccount.Name, serviceAccount.Namespace, err)

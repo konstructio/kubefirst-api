@@ -18,7 +18,7 @@ import (
 	"sigs.k8s.io/aws-iam-authenticator/pkg/token"
 )
 
-func NewClientset(cluster *eks.Cluster) (*kubernetes.Clientset, error) {
+func NewClientset(cluster *eks.Cluster) (kubernetes.Interface, error) {
 	log.Printf("%+v", cluster)
 	gen, err := token.NewGenerator(true, false)
 	if err != nil {

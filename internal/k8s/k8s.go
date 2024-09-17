@@ -11,7 +11,7 @@ import (
 )
 
 // ReadSecretV2 reads the content of a Kubernetes Secret
-func ReadSecretV2Old(clientset *kubernetes.Clientset, namespace string, secretName string) (map[string]interface{}, error) {
+func ReadSecretV2Old(clientset kubernetes.Interface, namespace string, secretName string) (map[string]interface{}, error) {
 	secret, err := clientset.CoreV1().Secrets(namespace).Get(context.Background(), secretName, metav1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -32,7 +32,7 @@ func ReadSecretV2Old(clientset *kubernetes.Clientset, namespace string, secretNa
 }
 
 // DeleteSecretV2 reads the content of a Kubernetes Secret
-func DeleteSecretV2(clientset *kubernetes.Clientset, namespace string, secretName string) error {
+func DeleteSecretV2(clientset kubernetes.Interface, namespace string, secretName string) error {
 	err := clientset.CoreV1().Secrets(namespace).Delete(context.Background(), secretName, metav1.DeleteOptions{})
 	if err != nil {
 		log.Error().Msgf("error deleting secret: %s", err)
@@ -42,7 +42,7 @@ func DeleteSecretV2(clientset *kubernetes.Clientset, namespace string, secretNam
 }
 
 // UpdateSecretV2 updates the key value pairs of a Kubernetes Secret
-func UpdateSecretV2(clientset *kubernetes.Clientset, namespace string, secretName string, secretValues map[string][]byte) error {
+func UpdateSecretV2(clientset kubernetes.Interface, namespace string, secretName string, secretValues map[string][]byte) error {
 	currentSecret, err := clientset.CoreV1().Secrets(namespace).Get(context.Background(), secretName, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("error getting secret: %w", err)

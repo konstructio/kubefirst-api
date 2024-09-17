@@ -63,7 +63,7 @@ type PortForwardAServiceRequest struct {
 	ReadyCh chan struct{}
 }
 
-func PortForwardPodWithRetry(clientset *kubernetes.Clientset, req PortForwardAPodRequest) error {
+func PortForwardPodWithRetry(clientset kubernetes.Interface, req PortForwardAPodRequest) error {
 	var err error
 	for i := 0; i < 10; i++ {
 		err = PortForwardPod(clientset, req)
@@ -78,7 +78,7 @@ func PortForwardPodWithRetry(clientset *kubernetes.Clientset, req PortForwardAPo
 
 // PortForwardPod receives a PortForwardAPodRequest, and enables port forwarding for the specified resource.
 // If the provided Pod name matches a running Pod, it will try to port forward for that Pod on the specified port.
-func PortForwardPod(clientset *kubernetes.Clientset, req PortForwardAPodRequest) error {
+func PortForwardPod(clientset kubernetes.Interface, req PortForwardAPodRequest) error {
 	podList, err := clientset.CoreV1().Pods(req.Pod.Namespace).List(context.Background(), metav1.ListOptions{})
 	if err != nil || len(podList.Items) == 0 {
 		fmt.Fprintln(os.Stderr, err)

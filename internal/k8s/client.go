@@ -22,7 +22,7 @@ import (
 )
 
 type KubernetesClient struct {
-	Clientset      *kubernetes.Clientset
+	Clientset      kubernetes.Interface
 	RestConfig     *rest.Config
 	KubeConfigPath string
 }

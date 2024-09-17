@@ -21,7 +21,7 @@ import (
 )
 
 // ApplyArgoCDKustomize
-func ApplyArgoCDKustomize(clientset *kubernetes.Clientset, argoCDInstallPath string) error {
+func ApplyArgoCDKustomize(clientset kubernetes.Interface, argoCDInstallPath string) error {
 	var (
 		enabled   = true
 		name      = "argocd-bootstrap"

@@ -20,7 +20,7 @@ const (
 )
 
 // GetEnvironments
-func GetEnvironments(clientSet *kubernetes.Clientset) ([]pkgtypes.Environment, error) {
+func GetEnvironments(clientSet kubernetes.Interface) ([]pkgtypes.Environment, error) {
 	environmentList := []pkgtypes.Environment{}
 	environmentReferenceList, err := GetSecretReference(clientSet, KubefirstEnvironmentSecretName)
 	if err != nil {
@@ -38,7 +38,7 @@ func GetEnvironments(clientSet *kubernetes.Clientset) ([]pkgtypes.Environment, e
 }
 
 // GetEnvironment
-func GetEnvironment(clientSet *kubernetes.Clientset, name string) (pkgtypes.Environment, error) {
+func GetEnvironment(clientSet kubernetes.Interface, name string) (pkgtypes.Environment, error) {
 	environment := pkgtypes.Environment{}
 
 	kubefirstSecrets, _ := k8s.ReadSecretV2Old(clientSet, "kubefirst", fmt.Sprintf("%s-%s", kubefirstEnvironmentPrefix, name))
@@ -58,7 +58,7 @@ func GetEnvironment(clientSet *kubernetes.Clientset, name string) (pkgtypes.Envi
 }
 
 // InsertEnvironment
-func InsertEnvironment(clientSet *kubernetes.Clientset, env pkgtypes.Environment) (pkgtypes.Environment, error) {
+func InsertEnvironment(clientSet kubernetes.Interface, env pkgtypes.Environment) (pkgtypes.Environment, error) {
 	environment := pkgtypes.Environment{
 		ID:                primitive.NewObjectID(),
 		Name:              env.Name,
@@ -110,7 +110,7 @@ func InsertEnvironment(clientSet *kubernetes.Clientset, env pkgtypes.Environment
 	return environment, nil
 }
 
-func DeleteEnvironment(clientSet *kubernetes.Clientset, envID string) error {
+func DeleteEnvironment(clientSet kubernetes.Interface, envID string) error {
 	objectID, err := primitive.ObjectIDFromHex(envID)
 	if err != nil {
 		return fmt.Errorf("unable to cast object id: %w", err)
@@ -146,7 +146,7 @@ func DeleteEnvironment(clientSet *kubernetes.Clientset, envID string) error {
 	return nil
 }
 
-func UpdateEnvironment(clientSet *kubernetes.Clientset, id string, env types.EnvironmentUpdateRequest) error {
+func UpdateEnvironment(clientSet kubernetes.Interface, id string, env types.EnvironmentUpdateRequest) error {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return fmt.Errorf("unable to cast object id: %w", err)

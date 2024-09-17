@@ -121,7 +121,7 @@ func (conf *Configuration) GetContainerClusterAuth(clusterName string, keyFile [
 	// }
 	//
 	// var kubeConfig *rest.Config
-	// var clientset *kubernetes.Clientset
+	// var clientset kubernetes.Interface
 
 	// for clusterName := range config.Clusters {
 	// kubeConfig, err = clientcmd.NewNonInteractiveClientConfig(config, clusterName, &clientcmd.ConfigOverrides{CurrentContext: clusterName}, nil).ClientConfig()

@@ -23,7 +23,7 @@ import (
 const kubefirstCatalogSecretName = "kubefirst-catalog"
 
 // CreateGitopsCatalogApps
-func CreateGitopsCatalogApps(clientSet *kubernetes.Clientset, catalogApps types.GitopsCatalogApps) error {
+func CreateGitopsCatalogApps(clientSet kubernetes.Interface, catalogApps types.GitopsCatalogApps) error {
 	bytes, err := json.Marshal(catalogApps)
 	if err != nil {
 		return fmt.Errorf("error marshalling json: %w", err)
@@ -50,7 +50,7 @@ func CreateGitopsCatalogApps(clientSet *kubernetes.Clientset, catalogApps types.
 }
 
 // GetGitopsCatalogApps
-func GetGitopsCatalogApps(clientSet *kubernetes.Clientset) (types.GitopsCatalogApps, error) {
+func GetGitopsCatalogApps(clientSet kubernetes.Interface) (types.GitopsCatalogApps, error) {
 	catalogApps := types.GitopsCatalogApps{}
 
 	kubefirstSecrets, err := k8s.ReadSecretV2Old(clientSet, "kubefirst", kubefirstCatalogSecretName)
@@ -77,7 +77,7 @@ func GetGitopsCatalogApps(clientSet *kubernetes.Clientset) (types.GitopsCatalogA
 }
 
 // GetGitopsCatalogAppsByCloudProvider
-func GetGitopsCatalogAppsByCloudProvider(clientSet *kubernetes.Clientset, cloudProvider string, gitProvider string) (types.GitopsCatalogApps, error) {
+func GetGitopsCatalogAppsByCloudProvider(clientSet kubernetes.Interface, cloudProvider string, gitProvider string) (types.GitopsCatalogApps, error) {
 	result, err := GetGitopsCatalogApps(clientSet)
 	if err != nil {
 		return result, fmt.Errorf("error getting gitops catalog apps: %w", err)
@@ -97,7 +97,7 @@ func GetGitopsCatalogAppsByCloudProvider(clientSet *kubernetes.Clientset, cloudP
 }
 
 // UpdateGitopsCatalogApps
-func UpdateGitopsCatalogApps(clientSet *kubernetes.Clientset) error {
+func UpdateGitopsCatalogApps(clientSet kubernetes.Interface) error {
 	mpapps, err := gitopsCatalog.ReadActiveApplications()
 	if err != nil {
 		log.Error().Msgf("error reading gitops catalog apps at startup: %s", err)

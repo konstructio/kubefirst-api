@@ -28,7 +28,7 @@ import (
 )
 
 // CreateSecretV2 creates a Kubernetes Secret
-func CreateSecretV2(clientset *kubernetes.Clientset, secret *v1.Secret) error {
+func CreateSecretV2(clientset kubernetes.Interface, secret *v1.Secret) error {
 	_, err := clientset.CoreV1().Secrets(secret.Namespace).Create(
 		context.Background(),
 		secret,
@@ -61,7 +61,7 @@ func ReadConfigMapV2(kubeConfigPath, namespace, configMapName string) (map[strin
 }
 
 // ReadSecretV2 reads the content of a Kubernetes Secret
-func ReadSecretV2(clientset *kubernetes.Clientset, namespace, secretName string) (map[string]string, error) {
+func ReadSecretV2(clientset kubernetes.Interface, namespace, secretName string) (map[string]string, error) {
 	secret, err := clientset.CoreV1().Secrets(namespace).Get(context.Background(), secretName, metav1.GetOptions{})
 	if err != nil {
 		log.Warn().Msgf("no secret found: %s", err)
@@ -256,7 +256,7 @@ func ReturnPodObject(kubeConfigPath, matchLabel, matchLabelValue, namespace stri
 }
 
 // ReturnStatefulSetObject returns a matching appsv1.StatefulSet object based on the filters
-func ReturnStatefulSetObject(clientset *kubernetes.Clientset, matchLabel, matchLabelValue, namespace string, timeoutSeconds int) (*appsv1.StatefulSet, error) {
+func ReturnStatefulSetObject(clientset kubernetes.Interface, matchLabel, matchLabelValue, namespace string, timeoutSeconds int) (*appsv1.StatefulSet, error) {
 	labelSelector := fmt.Sprintf("%s=%s", matchLabel, matchLabelValue)
 	log.Info().Msgf("waiting for StatefulSet with label %s=%s to be created in namespace %q", matchLabel, matchLabelValue, namespace)
 
@@ -301,7 +301,7 @@ func ReturnStatefulSetObject(clientset *kubernetes.Clientset, matchLabel, matchL
 }
 
 // WaitForDeploymentReady waits for a target Deployment to become ready
-func WaitForDeploymentReady(clientset *kubernetes.Clientset, deployment *appsv1.Deployment, timeoutSeconds int) (bool, error) {
+func WaitForDeploymentReady(clientset kubernetes.Interface, deployment *appsv1.Deployment, timeoutSeconds int) (bool, error) {
 	deploymentName := deployment.Name
 	namespace := deployment.Namespace
 
@@ -346,7 +346,7 @@ func WaitForDeploymentReady(clientset *kubernetes.Clientset, deployment *appsv1.
 }
 
 // WaitForPodReady waits for a target Pod to become ready
-func WaitForPodReady(clientset *kubernetes.Clientset, pod *v1.Pod, timeoutSeconds int) (bool, error) {
+func WaitForPodReady(clientset kubernetes.Interface, pod *v1.Pod, timeoutSeconds int) (bool, error) {
 	podName := pod.Name
 	namespace := pod.Namespace
 
@@ -384,7 +384,7 @@ func WaitForPodReady(clientset *kubernetes.Clientset, pod *v1.Pod, timeoutSecond
 }
 
 // WaitForStatefulSetReady waits for a target StatefulSet to become ready
-func WaitForStatefulSetReady(clientset *kubernetes.Clientset, statefulset *appsv1.StatefulSet, timeoutSeconds int, ignoreReady bool) (bool, error) {
+func WaitForStatefulSetReady(clientset kubernetes.Interface, statefulset *appsv1.StatefulSet, timeoutSeconds int, ignoreReady bool) (bool, error) {
 	statefulSetName := statefulset.Name
 	namespace := statefulset.Namespace
 

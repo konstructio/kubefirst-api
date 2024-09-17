@@ -101,7 +101,7 @@ type ClusterController struct {
 	KubefirstStateStoreBucketName string
 	KubefirstArtifactsBucketName  string
 
-	KubernetesClient *kubernetes.Clientset
+	KubernetesClient kubernetes.Interface
 
 	// Telemetry
 	TelemetryEvent telemetry.TelemetryEvent
