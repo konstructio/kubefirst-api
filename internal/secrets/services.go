@@ -14,6 +14,7 @@ import (
 	"github.com/konstructio/kubefirst-api/pkg/types"
 	log "github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -23,41 +24,42 @@ const kubefirstServicesPrefix = "kubefirst-service"
 // CreateClusterServiceList adds an entry for a cluster to the service list
 func CreateClusterServiceList(clientSet kubernetes.Interface, clusterName string) error {
 	clusterServices, err := GetServices(clientSet, clusterName)
-	if err != nil {
+	if err != nil && !errors.IsNotFound(err) {
 		return fmt.Errorf("error creating kubernetes service secret: %w", err)
 	}
 
-	if clusterServices.ClusterName == "" {
-		clusterServices = types.ClusterServiceList{
-			ClusterName: clusterName,
-			Services:    []types.Service{},
-		}
-
-		bytes, err := json.Marshal(clusterServices)
-		if err != nil {
-			return fmt.Errorf("error marshalling json: %w", err)
-		}
-
-		secretValuesMap, err := ParseJSONToMap(string(bytes))
-		if err != nil {
-			return fmt.Errorf("error parsing json: %w", err)
-		}
-
-		secretToCreate := &v1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      fmt.Sprintf("%s-%s", kubefirstServicesPrefix, clusterName),
-				Namespace: "kubefirst",
-			},
-			Data: secretValuesMap,
-		}
-
-		err = k8s.CreateSecretV2(clientSet, secretToCreate)
-		if err != nil {
-			return fmt.Errorf("error creating kubernetes service secret: %w", err)
-		}
+	if clusterServices != nil {
+		log.Info().Msgf("cluster service list record for %s already exists - skipping", clusterName)
+		return nil
 	}
 
-	log.Info().Msgf("cluster service list record for %s already exists - skipping", clusterName)
+	clusterServices = &types.ClusterServiceList{
+		ClusterName: clusterName,
+		Services:    []types.Service{},
+	}
+
+	bytes, err := json.Marshal(clusterServices)
+	if err != nil {
+		return fmt.Errorf("error marshalling json: %w", err)
+	}
+
+	secretValuesMap, err := ParseJSONToMap(string(bytes))
+	if err != nil {
+		return fmt.Errorf("error parsing json: %w", err)
+	}
+
+	secretToCreate := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("%s-%s", kubefirstServicesPrefix, clusterName),
+			Namespace: "kubefirst",
+		},
+		Data: secretValuesMap,
+	}
+
+	if err := k8s.CreateSecretV2(clientSet, secretToCreate); err != nil {
+		return fmt.Errorf("error creating kubernetes service secret: %w", err)
+	}
+
 	return nil
 }
 
@@ -66,6 +68,10 @@ func DeleteClusterServiceListEntry(clientSet kubernetes.Interface, clusterName s
 	// Find
 	clusterServices, err := GetServices(clientSet, clusterName)
 	if err != nil {
+		if errors.IsNotFound(err) {
+			return fmt.Errorf("error deleting service list entry %q: secret not found: %w", def.Name, err)
+		}
+
 		return fmt.Errorf("error deleting service list entry %s: %w", def.Name, err)
 	}
 
@@ -113,30 +119,29 @@ func GetService(clientSet kubernetes.Interface, clusterName string, serviceName 
 }
 
 // GetServices returns services associated with a given cluster
-func GetServices(clientSet kubernetes.Interface, clusterName string) (types.ClusterServiceList, error) {
-	clusterServices := types.ClusterServiceList{}
-
+func GetServices(clientSet kubernetes.Interface, clusterName string) (*types.ClusterServiceList, error) {
 	kubefirstSecrets, err := k8s.ReadSecretV2Old(clientSet, "kubefirst", fmt.Sprintf("%s-%s", kubefirstServicesPrefix, clusterName))
 	if err != nil {
-		return clusterServices, fmt.Errorf("error reading kubernetes service secret %s: %w", clusterName, err)
+		return nil, fmt.Errorf("error reading kubernetes service secret %s: %w", clusterName, err)
 	}
 
 	jsonString, err := MapToStructuredJSON(kubefirstSecrets)
 	if err != nil {
-		return clusterServices, fmt.Errorf("error parsing json: %w", err)
+		return nil, fmt.Errorf("error parsing json: %w", err)
 	}
 
 	jsonData, err := json.Marshal(jsonString)
 	if err != nil {
-		return clusterServices, fmt.Errorf("error marshalling json: %w", err)
+		return nil, fmt.Errorf("error marshalling json: %w", err)
 	}
 
+	clusterServices := types.ClusterServiceList{}
 	err = json.Unmarshal(jsonData, &clusterServices)
 	if err != nil {
-		return clusterServices, fmt.Errorf("unable to cast environment: %w", err)
+		return nil, fmt.Errorf("unable to cast environment: %w", err)
 	}
 
-	return clusterServices, nil
+	return &clusterServices, nil
 }
 
 // InsertClusterServiceListEntry appends a service entry for a cluster's service list

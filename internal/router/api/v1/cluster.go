@@ -271,14 +271,25 @@ func PostCreateCluster(c *gin.Context) {
 	// Retrieve cluster info
 	cluster, err := secrets.GetCluster(kcfg.Clientset, clusterName)
 	if err != nil {
+		if errors.Is(err, &secrets.ClusterNotFoundError{}) {
+			log.Info().Msgf("cluster %s does not exist, continuing", clusterName)
+		} else {
+			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
 		log.Info().Msgf("cluster %s does not exist, continuing", clusterName)
-	} else {
+	}
+
+	if cluster != nil {
 		if cluster.InProgress {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: fmt.Sprintf("%s has an active process running and another create cannot be enqeued", clusterName),
 			})
 			return
 		}
+
 		if cluster.LastCondition != "" {
 			cluster.LastCondition = ""
 			err = secrets.UpdateCluster(kcfg.Clientset, *cluster)
@@ -286,6 +297,7 @@ func PostCreateCluster(c *gin.Context) {
 				log.Warn().Msgf("error updating cluster last_condition field: %s", err)
 			}
 		}
+
 		if cluster.Status == constants.ClusterStatusError {
 			cluster.Status = constants.ClusterStatusProvisioning
 			err = secrets.UpdateCluster(kcfg.Clientset, *cluster)
@@ -293,19 +305,19 @@ func PostCreateCluster(c *gin.Context) {
 				log.Warn().Msgf("error updating cluster status field: %s", err)
 			}
 		}
-	}
 
-	// Retry mechanism
-	if cluster != nil && cluster.ClusterName != "" {
-		// Assign cloud and git credentials
-		clusterDefinition.AkamaiAuth = cluster.AkamaiAuth
-		clusterDefinition.AWSAuth = cluster.AWSAuth
-		clusterDefinition.CivoAuth = cluster.CivoAuth
-		clusterDefinition.VultrAuth = cluster.VultrAuth
-		clusterDefinition.DigitaloceanAuth = cluster.DigitaloceanAuth
-		clusterDefinition.GoogleAuth = cluster.GoogleAuth
-		clusterDefinition.K3sAuth = cluster.K3sAuth
-		clusterDefinition.GitAuth = cluster.GitAuth
+		// Retry mechanism
+		if cluster.ClusterName != "" {
+			// Assign cloud and git credentials
+			clusterDefinition.AkamaiAuth = cluster.AkamaiAuth
+			clusterDefinition.AWSAuth = cluster.AWSAuth
+			clusterDefinition.CivoAuth = cluster.CivoAuth
+			clusterDefinition.VultrAuth = cluster.VultrAuth
+			clusterDefinition.DigitaloceanAuth = cluster.DigitaloceanAuth
+			clusterDefinition.GoogleAuth = cluster.GoogleAuth
+			clusterDefinition.K3sAuth = cluster.K3sAuth
+			clusterDefinition.GitAuth = cluster.GitAuth
+		}
 	}
 
 	// Determine authentication type
@@ -323,19 +335,25 @@ func PostCreateCluster(c *gin.Context) {
 	inCluster := env.InCluster
 	if inCluster {
 		kcfg := utils.GetKubernetesClient("")
+
 		k1AuthSecret, err := k8s.ReadSecretV2(kcfg.Clientset, constants.KubefirstNamespace, constants.KubefirstAuthSecretName)
 		if err != nil {
 			log.Warn().Msgf("authentication secret does not exist, continuing: %s", err)
-		} else {
-			log.Info().Msg("authentication secret exists, checking contents")
-			if k1AuthSecret == nil {
-				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-					Message: "authentication secret found but contains no data, please check and try again",
-				})
-				return
-			}
-			useSecretForAuth = true
+			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
+				Message: fmt.Sprintf("error reading authentication secret: %s", err),
+			})
+			return
 		}
+
+		log.Info().Msg("authentication secret exists, checking contents")
+		if k1AuthSecret == nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: "authentication secret found but contains no data, please check and try again",
+			})
+			return
+		}
+		useSecretForAuth = true
+
 	}
 
 	switch clusterDefinition.CloudProvider {
