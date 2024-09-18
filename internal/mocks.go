@@ -14,7 +14,8 @@ import (
 
 type HTTPMock struct{}
 
-func (httpMock HTTPMock) Do(req *http.Request) (*http.Response, error) {
+func (httpMock HTTPMock) Do(_ *http.Request) (*http.Response, error) {
+	//nolint:nilnil // This is a mock
 	return nil, nil
 }
 
@@ -24,6 +25,6 @@ func (segmentIOMock SegmentIOMock) Close() error {
 	return nil
 }
 
-func (segmentIOMock SegmentIOMock) Enqueue(message analytics.Message) error {
+func (segmentIOMock SegmentIOMock) Enqueue(_ analytics.Message) error {
 	return nil
 }

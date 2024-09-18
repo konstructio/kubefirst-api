@@ -17,39 +17,41 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster, error) {
+func ImportClusterIfEmpty() (*pkgtypes.Cluster, error) {
 	// find the secret in mgmt cluster's kubefirst namespace and read import payload and clustername
 	cluster := pkgtypes.Cluster{}
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
-	var isClusterZero bool = true
-	if env.IsClusterZero == "false" {
-		isClusterZero = false
-	}
-
-	if isClusterZero {
+	if env.IsClusterZero {
 		log.Info().Msg("IS_CLUSTER_ZERO is set to true, skipping import cluster logic.")
-		return cluster, nil
+		return nil, nil //nolint:nilnil // this is the expected behavior
 	}
 
-	kcfg := k8s.CreateKubeConfig(true, "")
+	kcfg, err := k8s.CreateKubeConfig(true, "")
+	if err != nil {
+		return nil, fmt.Errorf("error creating kubeconfig: %w", err)
+	}
+
 	log.Info().Msg("reading secret kubefirst-initial-state to determine if import is needed")
 	secData, err := k8s.ReadSecretV2Old(kcfg.Clientset, "kubefirst", "kubefirst-initial-state")
 	if err != nil {
 		log.Info().Msgf("error reading secret kubefirst-initial-state. %s", err)
-		return cluster, err
+		return nil, fmt.Errorf("failed to read secret kubefirst-initial-state: %w", err)
 	}
 
-	jsonString, _ := MapToStructuredJSON(secData)
+	jsonString, err := MapToStructuredJSON(secData)
+	if err != nil {
+		return nil, fmt.Errorf("error mapping to structured JSON: %w", err)
+	}
 
 	jsonData, err := json.Marshal(jsonString)
 	if err != nil {
-		return cluster, fmt.Errorf("error marshalling json: %s", err)
+		return nil, fmt.Errorf("error marshalling json from secret data: %w", err)
 	}
 
-	err = json.Unmarshal([]byte(jsonData), &cluster)
+	err = json.Unmarshal(jsonData, &cluster)
 	if err != nil {
-		return cluster, fmt.Errorf("unable to cast cluster: %s", err)
+		return nil, fmt.Errorf("unable to cast unmarshalled JSON to cluster type: %w", err)
 	}
 
 	log.Info().Msgf("import cluster secret discovered for cluster %s", cluster.ClusterName)
@@ -65,15 +67,14 @@ func ImportClusterIfEmpty(silent bool) (pkgtypes.Cluster, error) {
 		// Create if entry does not exist
 		err = InsertCluster(kcfg.Clientset, cluster)
 		if err != nil {
-			return cluster, fmt.Errorf("error inserting cluster %v: %s", cluster, err)
+			return nil, fmt.Errorf("error inserting cluster record %v into database: %w", cluster, err)
 		}
 		// log cluster
 		log.Info().Msgf("inserted cluster record to db. adding default services. %s", cluster.ClusterName)
 
-		return cluster, nil
-	} else {
-		log.Info().Msgf("cluster record for %s already exists - skipping", cluster.ClusterName)
+		return nil, nil //nolint:nilnil // this is the expected behavior
 	}
 
-	return pkgtypes.Cluster{}, nil
+	log.Info().Msgf("cluster record for %s already exists - skipping", cluster.ClusterName)
+	return nil, nil //nolint:nilnil // this is the expected behavior
 }

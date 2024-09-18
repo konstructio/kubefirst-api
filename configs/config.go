@@ -22,11 +22,15 @@ This is an initial implementation of Config. Please keep in mind we're still wor
 environment variables and general config data.
 */
 
-const DefaultK1Version = "development"
-const DefaultGitOpsTemplateBranch = "main"
+const (
+	DefaultK1Version            = "development"
+	DefaultGitOpsTemplateBranch = "main"
+)
 
 // K1Version is used on version command. The value is dynamically updated on build time via ldflag. Built Kubefirst
 // versions will follow semver value like 1.9.0, when not using the built version, "development" is used.
+//
+//nolint:gochecknoglobals // used to store the version of the built binary
 var K1Version = DefaultK1Version
 
 // Config host application configuration
@@ -119,16 +123,18 @@ type Config struct {
 }
 
 // ReadConfig - load default values from kubefirst installer
-func ReadConfig() *Config {
+func ReadConfig() (*Config, error) {
 	config := Config{}
 
 	if err := env.Parse(&config); err != nil {
-		log.Fatal().Msgf("something went wrong loading the environment variables: %s", err)
+		log.Error().Msgf("something went wrong loading the environment variables: %s", err)
+		return nil, fmt.Errorf("unable to load environment variables: %w", err)
 	}
 
 	homePath, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatal().Msgf("something went wrong getting home path: %s", err)
+		log.Error().Msgf("something went wrong getting home path: %s", err)
+		return nil, fmt.Errorf("unable to get home path: %w", err)
 	}
 
 	config.HomePath = homePath
@@ -206,8 +212,8 @@ func ReadConfig() *Config {
 	// AWS SDK client will take it in advance
 	err = os.Setenv("AWS_SDK_LOAD_CONFIG", "1")
 	if err != nil {
-		log.Error().Msgf("unable to set AWS_SDK_LOAD_CONFIG enviroment value, error is: %v", err)
+		log.Error().Msgf("unable to set AWS_SDK_LOAD_CONFIG environment value, error is: %v", err)
 	}
 
-	return &config
+	return &config, nil
 }

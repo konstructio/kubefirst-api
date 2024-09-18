@@ -15,7 +15,7 @@ import (
 )
 
 // CreateSpaceBucket
-func (c *DigitaloceanConfiguration) CreateSpaceBucket(cr DigitaloceanSpacesCredentials, bucketName string) error {
+func (c *Configuration) CreateSpaceBucket(cr SpacesCredentials, bucketName string) error {
 	ctx := context.Background()
 	useSSL := true
 
@@ -25,13 +25,13 @@ func (c *DigitaloceanConfiguration) CreateSpaceBucket(cr DigitaloceanSpacesCrede
 		Secure: useSSL,
 	})
 	if err != nil {
-		return fmt.Errorf("error initializing minio client for digitalocean: %s", err)
+		return fmt.Errorf("error initializing minio client for digitalocean: %w", err)
 	}
 
 	location := "us-east-1"
 	err = minioClient.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{Region: location})
 	if err != nil {
-		return fmt.Errorf("error creating bucket %s for %s: %s", bucketName, cr.Endpoint, err)
+		return fmt.Errorf("error creating bucket %s for %s: %w", bucketName, cr.Endpoint, err)
 	}
 
 	return nil

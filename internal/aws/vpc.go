@@ -24,7 +24,7 @@ const (
 // CheckAvailabilityZones determines whether or not an aws region is compatible
 // with the minimum availability zone requirement specified by consumption of
 // aws Terraform modules
-func (conf *AWSConfiguration) CheckAvailabilityZones(region string) (bool, error) {
+func (conf *Configuration) CheckAvailabilityZones(region string) (bool, error) {
 	ec2Client := ec2.NewFromConfig(conf.Config, func(o *ec2.Options) {
 		o.Region = region
 	})
@@ -34,7 +34,7 @@ func (conf *AWSConfiguration) CheckAvailabilityZones(region string) (bool, error
 		&ec2.DescribeAvailabilityZonesInput{},
 	)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("error getting availability zones for region %s: %w", region, err)
 	}
 
 	numAavailabilityZones := len(availabilityZones.AvailabilityZones)
@@ -49,6 +49,7 @@ func (conf *AWSConfiguration) CheckAvailabilityZones(region string) (bool, error
 			log.Error().Msgf("error getting valid aws regions - skipping: %s", err)
 		}
 
+		//nolint:revive,stylecheck // error message is meant to be displayed
 		return false, fmt.Errorf(
 			"aws region %s has %v availability zones - kubefirst requires at least %v - please select a different region\n\nthe following regions are compatible:\n\n%v\n",
 			region,
@@ -63,7 +64,7 @@ func (conf *AWSConfiguration) CheckAvailabilityZones(region string) (bool, error
 
 // ListCompatibleRegions returns aws regions that have the minimum number of availability zones
 // required to support the kubefirst platform
-func (conf *AWSConfiguration) ListCompatibleRegions() ([]string, error) {
+func (conf *Configuration) ListCompatibleRegions() ([]string, error) {
 	ec2Client := ec2.NewFromConfig(conf.Config)
 
 	regions, err := ec2Client.DescribeRegions(
@@ -71,7 +72,7 @@ func (conf *AWSConfiguration) ListCompatibleRegions() ([]string, error) {
 		&ec2.DescribeRegionsInput{},
 	)
 	if err != nil {
-		return []string{}, err
+		return nil, fmt.Errorf("error getting aws regions: %w", err)
 	}
 
 	filterName := "region-name"
@@ -92,7 +93,7 @@ func (conf *AWSConfiguration) ListCompatibleRegions() ([]string, error) {
 			},
 		)
 		if err != nil {
-			return []string{}, err
+			return nil, fmt.Errorf("error getting availability zones for region %s: %w", *region.RegionName, err)
 		}
 
 		if len(availabilityZones.AvailabilityZones) >= minimumAvailabilityZones {

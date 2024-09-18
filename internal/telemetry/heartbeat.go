@@ -11,7 +11,6 @@ import (
 )
 
 func Heartbeat(event telemetry.TelemetryEvent) {
-
 	telemetry.SendEvent(event, telemetry.KubefirstHeartbeat, "")
 	HeartbeatWorkloadClusters(event)
 
@@ -24,7 +23,7 @@ func Heartbeat(event telemetry.TelemetryEvent) {
 func HeartbeatWorkloadClusters(event telemetry.TelemetryEvent) error {
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
-	if env.IsClusterZero == "true" {
+	if env.IsClusterZero {
 		return nil
 	}
 
@@ -36,7 +35,6 @@ func HeartbeatWorkloadClusters(event telemetry.TelemetryEvent) error {
 		if cluster.Status == constants.ClusterStatusProvisioned {
 			for _, workloadCluster := range cluster.WorkloadClusters {
 				if workloadCluster.Status == constants.ClusterStatusProvisioned {
-
 					telemetryEvent := telemetry.TelemetryEvent{
 						CliVersion:        event.CliVersion,
 						CloudProvider:     workloadCluster.CloudProvider,

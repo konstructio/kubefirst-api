@@ -8,13 +8,13 @@ package aws
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 )
 
-func (conf *AWSConfiguration) GetIamRole(roleName string) (*iam.GetRoleOutput, error) {
-
+func (conf *Configuration) GetIamRole(roleName string) (*iam.GetRoleOutput, error) {
 	// fmt.Println("looking up iam role: ", roleName) // todo add helpful logs about if found or not
 	iamClient := iam.NewFromConfig(conf.Config)
 
@@ -22,7 +22,7 @@ func (conf *AWSConfiguration) GetIamRole(roleName string) (*iam.GetRoleOutput, e
 		RoleName: aws.String(roleName),
 	})
 	if err != nil {
-		return &iam.GetRoleOutput{}, err
+		return nil, fmt.Errorf("failed to get IAM role %q: %w", roleName, err)
 	}
 
 	return role, nil

@@ -16,11 +16,11 @@ spec:
             arguments:
               parameters:
                 - name: appName
-                  value: '{{workflow.parameters.appName}}'
+                  value: "{{workflow.parameters.appName}}"
                 - name: branch
-                  value: '{{workflow.parameters.branch}}'
+                  value: "{{workflow.parameters.branch}}"
                 - name: gitUrlNoProtocol
-                  value: '{{workflow.parameters.gitUrlNoProtocol}}'
+                  value: "{{workflow.parameters.gitUrlNoProtocol}}"
         - - name: pull-commit-empty-push
             templateRef:
               name: cwft-git-v2
@@ -29,11 +29,11 @@ spec:
             arguments:
               artifacts:
                 - name: repo-source
-                  from: '{{steps.checkout-repos.outputs.artifacts.repo-source}}'
+                  from: "{{steps.checkout-repos.outputs.artifacts.repo-source}}"
               parameters:
                 - name: commitMessage
-                  value: 'chore: triggered an empty commit against main branch'
+                  value: "chore: triggered an empty commit against main branch"
                 - name: gitUrlNoProtocol
-                  value: '{{workflow.parameters.gitUrlNoProtocol}}'
+                  value: "{{workflow.parameters.gitUrlNoProtocol}}"
                 - name: repoName
-                  value: '{{workflow.parameters.appName}}'
+                  value: "{{workflow.parameters.appName}}"

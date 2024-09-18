@@ -29,7 +29,7 @@ import (
 func (clctrl *ClusterController) GitInit() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster: %w", err)
 	}
 
 	if !cl.GitInitCheck {
@@ -46,13 +46,13 @@ func (clctrl *ClusterController) GitInit() error {
 		}
 		err := gitShim.InitializeGitProvider(&initGitParameters)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to initialize git provider: %w", err)
 		}
 
 		clctrl.Cluster.GitInitCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster after git initialization: %w", err)
 		}
 	}
 
@@ -63,10 +63,10 @@ func (clctrl *ClusterController) GitInit() error {
 func (clctrl *ClusterController) RunGitTerraform() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster for terraform execution: %w", err)
 	}
 
-	// //* create teams and repositories in github
+	// // * create teams and repositories in github
 
 	telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.GitTerraformApplyStarted, "")
 
@@ -80,36 +80,36 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 		case "github":
 			switch clctrl.CloudProvider {
 			case "akamai":
-				tfEnvs = akamaiext.GetGithubTerraformEnvs(tfEnvs, &cl)
+				tfEnvs = akamaiext.GetGithubTerraformEnvs(tfEnvs, cl)
 			case "aws":
-				tfEnvs = awsext.GetGithubTerraformEnvs(tfEnvs, &cl)
+				tfEnvs = awsext.GetGithubTerraformEnvs(tfEnvs, cl)
 			case "civo":
-				tfEnvs = civoext.GetGithubTerraformEnvs(tfEnvs, &cl)
+				tfEnvs = civoext.GetGithubTerraformEnvs(tfEnvs, cl)
 			case "google":
-				tfEnvs = googleext.GetGithubTerraformEnvs(tfEnvs, &cl)
+				tfEnvs = googleext.GetGithubTerraformEnvs(tfEnvs, cl)
 			case "digitalocean":
-				tfEnvs = digitaloceanext.GetGithubTerraformEnvs(tfEnvs, &cl)
+				tfEnvs = digitaloceanext.GetGithubTerraformEnvs(tfEnvs, cl)
 			case "vultr":
-				tfEnvs = vultrext.GetGithubTerraformEnvs(tfEnvs, &cl)
+				tfEnvs = vultrext.GetGithubTerraformEnvs(tfEnvs, cl)
 			case "k3s":
-				tfEnvs = k3sext.GetGithubTerraformEnvs(tfEnvs, &cl)
+				tfEnvs = k3sext.GetGithubTerraformEnvs(tfEnvs, cl)
 			}
 		case "gitlab":
 			switch clctrl.CloudProvider {
 			case "akamai":
-				tfEnvs = akamaiext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
+				tfEnvs = akamaiext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, cl)
 			case "aws":
-				tfEnvs = awsext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
+				tfEnvs = awsext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, cl)
 			case "civo":
-				tfEnvs = civoext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
+				tfEnvs = civoext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, cl)
 			case "google":
-				tfEnvs = googleext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
+				tfEnvs = googleext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, cl)
 			case "digitalocean":
-				tfEnvs = digitaloceanext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
+				tfEnvs = digitaloceanext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, cl)
 			case "vultr":
-				tfEnvs = vultrext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
+				tfEnvs = vultrext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, cl)
 			case "k3s":
-				tfEnvs = k3sext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, &cl)
+				tfEnvs = k3sext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, cl)
 			}
 		}
 
@@ -123,7 +123,7 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				msg := fmt.Sprintf("error creating %s resources with terraform %s: %s", clctrl.GitProvider, tfEntrypoint, err)
 				log.Error().Msg(msg)
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.GitTerraformApplyFailed, err.Error())
-				return fmt.Errorf(msg)
+				return fmt.Errorf("failed to apply terraform for git resources: %q", msg)
 			}
 		}
 
@@ -132,9 +132,8 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 
 		clctrl.Cluster.GitTerraformApplyCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
-
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster after terraform application: %w", err)
 		}
 	}
 
@@ -149,21 +148,20 @@ func (clctrl *ClusterController) GetRepoURL() (string, error) {
 	case "github":
 
 		// Define constant url based on flag input, only expecting 2 protocols
-		switch clctrl.GitProtocol {
-		case "ssh": //"ssh"
+		if clctrl.ProviderConfig.GitProtocol == "ssh" {
 			destinationGitopsRepoURL = clctrl.ProviderConfig.DestinationGitopsRepoGitURL
 		}
 	case "gitlab":
 		gitlabClient, err := gitlab.NewGitLabClient(clctrl.GitAuth.Token, clctrl.GitAuth.Owner)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("failed to create GitLab client: %w", err)
 		}
 		// Format git url based on full path to group
 		switch clctrl.ProviderConfig.GitProtocol {
 		case "https":
 			// Update the urls in the cluster for gitlab parent groups
-			clctrl.ProviderConfig.DestinationGitopsRepoHttpsURL = fmt.Sprintf("https://gitlab.com/%s/gitops.git", gitlabClient.ParentGroupPath)
-			clctrl.ProviderConfig.DestinationMetaphorRepoHttpsURL = fmt.Sprintf("https://gitlab.com/%s/metaphor.git", gitlabClient.ParentGroupPath)
+			clctrl.ProviderConfig.DestinationGitopsRepoHTTPSURL = fmt.Sprintf("https://gitlab.com/%s/gitops.git", gitlabClient.ParentGroupPath)
+			clctrl.ProviderConfig.DestinationMetaphorRepoHTTPSURL = fmt.Sprintf("https://gitlab.com/%s/metaphor.git", gitlabClient.ParentGroupPath)
 		default:
 			// Update the urls in the cluster for gitlab parent group
 			clctrl.ProviderConfig.DestinationGitopsRepoGitURL = fmt.Sprintf("git@gitlab.com:%s/gitops.git", gitlabClient.ParentGroupPath)

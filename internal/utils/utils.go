@@ -30,8 +30,10 @@ func CreateK1Directory(clusterName string) {
 	// Create k1 dir if it doesn't exist
 	homePath, err := os.UserHomeDir()
 	if err != nil {
-		log.Info().Msg(err.Error())
+		log.Info().Msg(fmt.Errorf("error getting user home directory: %w", err).Error())
+		return
 	}
+
 	k1Dir := fmt.Sprintf("%s/.k1/%s", homePath, clusterName)
 	if _, err := os.Stat(k1Dir); os.IsNotExist(err) {
 		err := os.MkdirAll(k1Dir, os.ModePerm)
@@ -56,7 +58,7 @@ func FindStringInSlice(s []string, str string) bool {
 func ReadFileContents(filePath string) (string, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error reading file contents from %s: %w", filePath, err)
 	}
 	return string(data), nil
 }
@@ -66,7 +68,8 @@ func ReadFileContentType(filePath string) (string, error) {
 	// Open File
 	f, err := os.Open(filePath)
 	if err != nil {
-		log.Error().Msg(err.Error())
+		log.Error().Msg(fmt.Errorf("error opening file %q: %w", filePath, err).Error())
+		return "", fmt.Errorf("error opening file %q: %w", filePath, err)
 	}
 	defer f.Close()
 
@@ -75,7 +78,7 @@ func ReadFileContentType(filePath string) (string, error) {
 
 	_, err = f.Read(buffer)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error reading file %s: %w", filePath, err)
 	}
 
 	// Use the net/http package's handy DectectContentType function. Always returns a valid
@@ -94,7 +97,7 @@ func RemoveFromSlice[T comparable](slice []T, i int) []T {
 
 var BackupResolver = &net.Resolver{
 	PreferGo: true,
-	Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+	Dial: func(ctx context.Context, network, _ string) (net.Conn, error) {
 		d := net.Dialer{
 			Timeout: time.Millisecond * time.Duration(10000),
 		}
@@ -134,33 +137,32 @@ func GetKubernetesClient(clusterName string) *k8s.KubernetesClient {
 	// Get Environment variables
 	env, _ := env.GetEnv(constants.SilenceGetEnv)
 
-	//Create Kubernetes Client Context
-	var inCluster bool = false
-	if env.InCluster == "true" {
-		inCluster = true
-	}
-
+	// Create Kubernetes Client Context
+	inCluster := env.InCluster
 	homeDir, _ := os.UserHomeDir()
 	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, clusterName)
 	kubeconfigPath := fmt.Sprintf("%s/kubeconfig", clusterDir)
 
-	if env.K1LocalDebug == "true" {
+	if env.K1LocalDebug {
 		kubeconfigPath = env.K1LocalKubeconfigPath
 	}
 
-	kcfg := k8s.CreateKubeConfig(inCluster, kubeconfigPath)
+	kcfg, err := k8s.CreateKubeConfig(inCluster, kubeconfigPath)
+	if err != nil {
+		log.Error().Msg(fmt.Errorf("error creating kubeconfig: %w", err).Error())
+	}
 
 	return kcfg
 }
 
-func CreateKubefirstNamespace(clientSet *kubernetes.Clientset) error {
+func CreateKubefirstNamespaceIfNotExists(clientSet kubernetes.Interface) error {
 	_, err := clientSet.CoreV1().Namespaces().Get(context.TODO(), "kubefirst", metav1.GetOptions{})
 	if err != nil {
 		namespace := &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "kubefirst"}}
 		_, err = clientSet.CoreV1().Namespaces().Create(context.TODO(), namespace, metav1.CreateOptions{})
 		if err != nil {
-			log.Error().Err(err).Msg("")
-			return fmt.Errorf("error creating namespace %s: %s", "kubefirst", err)
+			log.Error().Err(fmt.Errorf("error creating namespace %s: %w", "kubefirst", err)).Msg("")
+			return fmt.Errorf("error creating namespace %s: %w", "kubefirst", err)
 		}
 		log.Info().Msgf("namespace created: %s", "kubefirst")
 	} else {

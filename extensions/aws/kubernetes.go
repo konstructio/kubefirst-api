@@ -9,6 +9,7 @@ package aws
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
@@ -48,18 +49,18 @@ func CreateEKSKubeconfig(awsConfig *aws.Config, clusterName string) *k8s.Kuberne
 func newEKSConfig(cluster *eksTypes.Cluster) (*kubernetes.Clientset, *rest.Config, error) {
 	gen, err := token.NewGenerator(true, false)
 	if err != nil {
-		return &kubernetes.Clientset{}, &rest.Config{}, err
+		return nil, nil, fmt.Errorf("error creating token generator: %w", err)
 	}
 	opts := &token.GetTokenOptions{
 		ClusterID: *aws.String(*cluster.Name),
 	}
 	tok, err := gen.GetWithOptions(opts)
 	if err != nil {
-		return &kubernetes.Clientset{}, &rest.Config{}, err
+		return nil, nil, fmt.Errorf("error getting token: %w", err)
 	}
 	ca, err := base64.StdEncoding.DecodeString(*aws.String(*cluster.CertificateAuthority.Data))
 	if err != nil {
-		return &kubernetes.Clientset{}, &rest.Config{}, err
+		return nil, nil, fmt.Errorf("error decoding certificate authority: %w", err)
 	}
 	clientset, err := kubernetes.NewForConfig(
 		&rest.Config{
@@ -71,7 +72,7 @@ func newEKSConfig(cluster *eksTypes.Cluster) (*kubernetes.Clientset, *rest.Confi
 		},
 	)
 	if err != nil {
-		return &kubernetes.Clientset{}, &rest.Config{}, err
+		return nil, nil, fmt.Errorf("error creating clientset: %w", err)
 	}
 
 	restConfig := &rest.Config{

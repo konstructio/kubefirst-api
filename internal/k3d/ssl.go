@@ -20,7 +20,7 @@ import (
 )
 
 // GenerateTLSSecrets generates default certificates for k3d
-func GenerateTLSSecrets(clientset *kubernetes.Clientset, config K3dConfig) error {
+func GenerateTLSSecrets(clientset kubernetes.Interface, config Config) error {
 	sslPemDir := config.MkCertPemDir
 	if _, err := os.Stat(sslPemDir); os.IsNotExist(err) {
 		err := os.MkdirAll(sslPemDir, os.ModePerm)
@@ -36,7 +36,7 @@ func GenerateTLSSecrets(clientset *kubernetes.Clientset, config K3dConfig) error
 			_, err = clientset.CoreV1().Namespaces().Create(context.TODO(), namespace, metav1.CreateOptions{})
 			if err != nil {
 				log.Error().Err(err).Msg("")
-				return fmt.Errorf("error creating namespace")
+				return fmt.Errorf("error creating namespace for app %s: %w", app.AppName, err)
 			}
 			log.Info().Msgf("%d, %s", i, app.Namespace)
 			log.Info().Msgf("namespace created: %s", app.Namespace)
@@ -44,12 +44,12 @@ func GenerateTLSSecrets(clientset *kubernetes.Clientset, config K3dConfig) error
 			log.Warn().Msgf("namespace %s already exists - skipping", app.Namespace)
 		}
 
-		//* generate certificate
+		// * generate certificate
 		fullAppAddress := app.AppName + "." + DomainName                      // example: app-name.kubefirst.dev
 		certFileName := config.MkCertPemDir + "/" + app.AppName + "-cert.pem" // example: app-name-cert.pem
 		keyFileName := config.MkCertPemDir + "/" + app.AppName + "-key.pem"   // example: app-name-key.pem
 
-		//* generate the mkcert
+		// * generate the mkcert
 		log.Info().Msgf("generating certificate %s.%s on %s", app.AppName, DomainName, config.MkCertClient)
 		_, _, err = pkg.ExecShellReturnStrings(
 			config.MkCertClient,
@@ -61,17 +61,17 @@ func GenerateTLSSecrets(clientset *kubernetes.Clientset, config K3dConfig) error
 			fullAppAddress,
 		)
 		if err != nil {
-			return err
+			return fmt.Errorf("error executing shell command for app %s: %w", app.AppName, err)
 		}
 
-		//* read certificate files
+		// * read certificate files
 		certPem, err := os.ReadFile(fmt.Sprintf("%s/ssl/%s/pem/%s-cert.pem", config.K1Dir, DomainName, app.AppName))
 		if err != nil {
-			return fmt.Errorf("error reading %s file %s", fmt.Sprintf("%s/ssl/%s/pem/%s-cert.pem", config.K1Dir, DomainName, app.AppName), err)
+			return fmt.Errorf("error reading certificate file for app %s: %w", app.AppName, err)
 		}
 		keyPem, err := os.ReadFile(fmt.Sprintf("%s/ssl/%s/pem/%s-key.pem", config.K1Dir, DomainName, app.AppName))
 		if err != nil {
-			return fmt.Errorf("error reading %s file %s", fmt.Sprintf("%s/ssl/%s/pem/%s-key.pem", config.K1Dir, DomainName, app.AppName), err)
+			return fmt.Errorf("error reading key file for app %s: %w", app.AppName, err)
 		}
 
 		_, err = clientset.CoreV1().Secrets(app.Namespace).Get(context.TODO(), app.AppName, metav1.GetOptions{})
@@ -85,13 +85,13 @@ func GenerateTLSSecrets(clientset *kubernetes.Clientset, config K3dConfig) error
 					Namespace: app.Namespace,
 				},
 				Data: map[string][]byte{
-					"tls.crt": []byte(certPem),
-					"tls.key": []byte(keyPem),
+					"tls.crt": certPem,
+					"tls.key": keyPem,
 				},
 			}, metav1.CreateOptions{})
 			if err != nil {
 				log.Error().Msgf("error creating kubernetes secret %s/%s: %s", app.Namespace, app.AppName, err)
-				return err
+				return fmt.Errorf("error creating kubernetes secret for app %s in namespace %s: %w", app.AppName, app.Namespace, err)
 			}
 			log.Info().Msgf("created kubernetes secret: %s/%s", app.Namespace, app.AppName)
 		}
@@ -101,8 +101,8 @@ func GenerateTLSSecrets(clientset *kubernetes.Clientset, config K3dConfig) error
 
 // GenerateSingleTLSSecret creates a single certificate for a host for k3d
 func GenerateSingleTLSSecret(
-	clientset *kubernetes.Clientset,
-	config K3dConfig,
+	clientset kubernetes.Interface,
+	config Config,
 	app string,
 	ns string,
 ) error {
@@ -112,19 +112,19 @@ func GenerateSingleTLSSecret(
 		_, err = clientset.CoreV1().Namespaces().Create(context.TODO(), namespace, metav1.CreateOptions{})
 		if err != nil {
 			log.Error().Err(err).Msg("")
-			return fmt.Errorf("error creating namespace")
+			return fmt.Errorf("error creating namespace for app %s: %w", app, err)
 		}
 		log.Info().Msgf("namespace created: %s", ns)
 	} else {
 		log.Warn().Msgf("namespace %s already exists - skipping", ns)
 	}
 
-	//* generate certificate
+	// * generate certificate
 	fullAppAddress := app + "." + DomainName                      // example: app-name.kubefirst.dev
 	certFileName := config.MkCertPemDir + "/" + app + "-cert.pem" // example: app-name-cert.pem
 	keyFileName := config.MkCertPemDir + "/" + app + "-key.pem"   // example: app-name-key.pem
 
-	//* generate the mkcert
+	// * generate the mkcert
 	log.Info().Msgf("generating certificate %s.%s on %s", app, DomainName, config.MkCertClient)
 	_, _, err = pkg.ExecShellReturnStrings(
 		config.MkCertClient,
@@ -136,17 +136,17 @@ func GenerateSingleTLSSecret(
 		fullAppAddress,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("error executing shell command for app %s: %w", app, err)
 	}
 
-	//* read certificate files
+	// * read certificate files
 	certPem, err := os.ReadFile(fmt.Sprintf("%s/ssl/%s/pem/%s-cert.pem", config.K1Dir, DomainName, app))
 	if err != nil {
-		return fmt.Errorf("error reading %s file %s", fmt.Sprintf("%s/ssl/%s/pem/%s-cert.pem", config.K1Dir, DomainName, app), err)
+		return fmt.Errorf("error reading certificate file for app %s: %w", app, err)
 	}
 	keyPem, err := os.ReadFile(fmt.Sprintf("%s/ssl/%s/pem/%s-key.pem", config.K1Dir, DomainName, app))
 	if err != nil {
-		return fmt.Errorf("error reading %s file %s", fmt.Sprintf("%s/ssl/%s/pem/%s-key.pem", config.K1Dir, DomainName, app), err)
+		return fmt.Errorf("error reading key file for app %s: %w", app, err)
 	}
 
 	_, err = clientset.CoreV1().Secrets(ns).Get(context.TODO(), app, metav1.GetOptions{})
@@ -160,13 +160,13 @@ func GenerateSingleTLSSecret(
 				Namespace: ns,
 			},
 			Data: map[string][]byte{
-				"tls.crt": []byte(certPem),
-				"tls.key": []byte(keyPem),
+				"tls.crt": certPem,
+				"tls.key": keyPem,
 			},
 		}, metav1.CreateOptions{})
 		if err != nil {
 			log.Error().Msgf("error creating kubernetes secret %s/%s: %s", ns, app, err)
-			return err
+			return fmt.Errorf("error creating kubernetes secret for app %s in namespace %s: %w", app, ns, err)
 		}
 		log.Info().Msgf("created kubernetes secret: %s/%s", ns, app)
 	}

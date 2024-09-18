@@ -8,9 +8,7 @@ package digitalocean
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -22,6 +20,7 @@ import (
 	"github.com/konstructio/kubefirst-api/internal/digitalocean"
 	"github.com/konstructio/kubefirst-api/internal/errors"
 	gitlab "github.com/konstructio/kubefirst-api/internal/gitlab"
+	"github.com/konstructio/kubefirst-api/internal/httpCommon"
 	"github.com/konstructio/kubefirst-api/internal/k8s"
 	"github.com/konstructio/kubefirst-api/internal/secrets"
 	"github.com/konstructio/kubefirst-api/internal/utils"
@@ -35,15 +34,26 @@ import (
 func DeleteDigitaloceanCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEvent) error {
 	telemetry.SendEvent(telemetryEvent, telemetry.ClusterDeleteStarted, "")
 
-	// Instantiate digitalocean config
-	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.Token, "")
+	// Instantiate provider config
+	config, err := providerConfigs.GetConfig(
+		cl.ClusterName,
+		cl.DomainName,
+		cl.GitProvider,
+		cl.GitAuth.Owner,
+		cl.GitProtocol,
+		cl.CloudflareAuth.APIToken,
+		cl.CloudflareAuth.OriginCaIssuerKey,
+	)
+	if err != nil {
+		return fmt.Errorf("error getting provider config: %w", err)
+	}
 
 	kcfg := utils.GetKubernetesClient(cl.ClusterName)
 
 	cl.Status = constants.ClusterStatusDeleting
-	err := secrets.UpdateCluster(kcfg.Clientset, *cl)
-	if err != nil {
-		return err
+
+	if err := secrets.UpdateCluster(kcfg.Clientset, *cl); err != nil {
+		return fmt.Errorf("error updating cluster: %w", err)
 	}
 
 	switch cl.GitProvider {
@@ -59,14 +69,14 @@ func DeleteDigitaloceanCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Te
 			if err != nil {
 				log.Printf("error executing terraform destroy %s", tfEntrypoint)
 				errors.HandleClusterError(cl, err.Error())
-				return err
+				return fmt.Errorf("error executing terraform destroy %s: %w", tfEntrypoint, err)
 			}
 			log.Info().Msg("github resources terraform destroyed")
 
 			cl.GitTerraformApplyCheck = false
 			err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 			if err != nil {
-				return err
+				return fmt.Errorf("error updating cluster: %w", err)
 			}
 		}
 	case "gitlab":
@@ -74,12 +84,12 @@ func DeleteDigitaloceanCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Te
 			log.Info().Msg("destroying gitlab resources with terraform")
 			gitlabClient, err := gitlab.NewGitLabClient(cl.GitAuth.Token, cl.GitAuth.Owner)
 			if err != nil {
-				return err
+				return fmt.Errorf("error creating new GitLab client: %w", err)
 			}
 
 			// Before removing Terraform resources, remove any container registry repositories
 			// since failing to remove them beforehand will result in an apply failure
-			var projectsForDeletion = []string{"gitops", "metaphor"}
+			projectsForDeletion := []string{"gitops", "metaphor"}
 			for _, project := range projectsForDeletion {
 				projectExists, err := gitlabClient.CheckProjectExists(project)
 				if err != nil {
@@ -114,23 +124,25 @@ func DeleteDigitaloceanCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Te
 			if err != nil {
 				log.Info().Msgf("error executing terraform destroy %s", tfEntrypoint)
 				errors.HandleClusterError(cl, err.Error())
-				return err
+				return fmt.Errorf("error executing terraform destroy %s: %w", tfEntrypoint, err)
 			}
 
 			log.Info().Msg("gitlab resources terraform destroyed")
 
 			cl.GitTerraformApplyCheck = false
 			err = secrets.UpdateCluster(kcfg.Clientset, *cl)
-
 			if err != nil {
-				return err
+				return fmt.Errorf("error updating cluster: %w", err)
 			}
 		}
 	}
 
 	// Should be a "cluster was created" check
 	if cl.CloudTerraformApplyCheck {
-		kcfg := k8s.CreateKubeConfig(false, config.Kubeconfig)
+		kcfg, err := k8s.CreateKubeConfig(false, config.Kubeconfig)
+		if err != nil {
+			return fmt.Errorf("error creating kubeconfig: %w", err)
+		}
 
 		// Remove applications with external dependencies
 		removeArgoCDApps := []string{
@@ -143,7 +155,7 @@ func DeleteDigitaloceanCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Te
 			"vault-components",
 			"vault",
 		}
-		err = argocd.ArgoCDApplicationCleanup(kcfg.Clientset, removeArgoCDApps)
+		err = argocd.ApplicationCleanup(kcfg.Clientset, removeArgoCDApps)
 		if err != nil {
 			log.Error().Msgf("encountered error during argocd application cleanup: %s", err)
 		}
@@ -153,25 +165,28 @@ func DeleteDigitaloceanCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Te
 	}
 
 	// Fetch cluster resources prior to deletion
-	digitaloceanConf := digitalocean.DigitaloceanConfiguration{
+	digitaloceanConf := digitalocean.Configuration{
 		Client:  digitalocean.NewDigitalocean(cl.DigitaloceanAuth.Token),
 		Context: context.Background(),
 	}
 	resources, err := digitaloceanConf.GetKubernetesAssociatedResources(cl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting kubernetes associated resources: %w", err)
 	}
 
 	if cl.CloudTerraformApplyCheck || cl.CloudTerraformApplyFailedCheck {
 		if !cl.ArgoCDDeleteRegistryCheck {
-			kcfg := k8s.CreateKubeConfig(false, config.Kubeconfig)
+			kcfg, err := k8s.CreateKubeConfig(false, config.Kubeconfig)
+			if err != nil {
+				return fmt.Errorf("error creating kubeconfig: %w", err)
+			}
 
 			log.Info().Msg("destroying digitalocean resources with terraform")
 
 			// Only port-forward to ArgoCD and delete registry if ArgoCD was installed
 			if cl.ArgoCDInstallCheck {
 				log.Info().Msg("opening argocd port forward")
-				//* ArgoCD port-forward
+				// * ArgoCD port-forward
 				argoCDStopChannel := make(chan struct{}, 1)
 				defer func() {
 					close(argoCDStopChannel)
@@ -190,25 +205,23 @@ func DeleteDigitaloceanCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Te
 
 				secData, err := k8s.ReadSecretV2(kcfg.Clientset, "argocd", "argocd-initial-admin-secret")
 				if err != nil {
-					return err
+					return fmt.Errorf("error reading argocd initial admin secret: %w", err)
 				}
 				argocdPassword := secData["password"]
 
 				argocdAuthToken, err := argocd.GetArgoCDToken("admin", argocdPassword)
 				if err != nil {
-					return err
+					return fmt.Errorf("error getting argocd token: %w", err)
 				}
 
 				log.Info().Msgf("port-forward to argocd is available at %s", providerConfigs.ArgocdPortForwardURL)
 
-				customTransport := http.DefaultTransport.(*http.Transport).Clone()
-				customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-				argocdHttpClient := http.Client{Transport: customTransport}
+				client := httpCommon.CustomHTTPClient(true)
 				log.Info().Msg("deleting the registry application")
-				httpCode, _, err := argocd.DeleteApplication(&argocdHttpClient, config.RegistryAppName, argocdAuthToken, "true")
+				httpCode, _, err := argocd.DeleteApplication(client, config.RegistryAppName, argocdAuthToken, "true")
 				if err != nil {
 					errors.HandleClusterError(cl, err.Error())
-					return err
+					return fmt.Errorf("error deleting the registry application: %w", err)
 				}
 				log.Info().Msgf("http status code %d", httpCode)
 			}
@@ -220,7 +233,7 @@ func DeleteDigitaloceanCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Te
 			cl.ArgoCDDeleteRegistryCheck = true
 			err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 			if err != nil {
-				return err
+				return fmt.Errorf("error updating cluster: %w", err)
 			}
 		}
 
@@ -233,9 +246,9 @@ func DeleteDigitaloceanCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Te
 		case "github":
 			tfEnvs = digitaloceanext.GetGithubTerraformEnvs(tfEnvs, cl)
 		case "gitlab":
-			gid, err := strconv.Atoi(fmt.Sprint(cl.GitlabOwnerGroupID))
+			gid, err := strconv.Atoi(strconv.Itoa(cl.GitlabOwnerGroupID))
 			if err != nil {
-				return fmt.Errorf("couldn't convert gitlab group id to int: %s", err)
+				return fmt.Errorf("couldn't convert gitlab group id to int: %w", err)
 			}
 			tfEnvs = digitaloceanext.GetGitlabTerraformEnvs(tfEnvs, gid, cl)
 		}
@@ -243,30 +256,29 @@ func DeleteDigitaloceanCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Te
 		if err != nil {
 			log.Printf("error executing terraform destroy %s", tfEntrypoint)
 			errors.HandleClusterError(cl, err.Error())
-			return err
+			return fmt.Errorf("error executing terraform destroy %s: %w", tfEntrypoint, err)
 		}
 		log.Info().Msg("digitalocean resources terraform destroyed")
 
 		cl.CloudTerraformApplyCheck = false
 		cl.CloudTerraformApplyFailedCheck = false
 		err = secrets.UpdateCluster(kcfg.Clientset, *cl)
-
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating cluster: %w", err)
 		}
 	}
 
 	// Remove hanging volumes
 	err = digitaloceanConf.DeleteKubernetesClusterVolumes(resources)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting kubernetes cluster volumes: %w", err)
 	}
 
 	// remove ssh key provided one was created
 	if cl.GitProvider == "gitlab" {
 		gitlabClient, err := gitlab.NewGitLabClient(cl.GitAuth.Token, cl.GitAuth.Owner)
 		if err != nil {
-			return err
+			return fmt.Errorf("error creating new GitLab client: %w", err)
 		}
 		log.Info().Msgf("attempting to delete managed ssh key...")
 		err = gitlabClient.DeleteUserSSHKey("kbot-ssh-key")
@@ -280,12 +292,12 @@ func DeleteDigitaloceanCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.Te
 	cl.Status = constants.ClusterStatusDeleted
 	err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating cluster: %w", err)
 	}
 
 	err = pkg.ResetK1Dir(config.K1Dir)
 	if err != nil {
-		return err
+		return fmt.Errorf("error resetting K1 directory: %w", err)
 	}
 
 	return nil

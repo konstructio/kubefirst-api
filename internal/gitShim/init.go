@@ -4,9 +4,10 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package gitShim
+package gitShim //nolint:revive,stylecheck // allowing name during code cleanup
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/konstructio/kubefirst-api/internal/github"
@@ -43,14 +44,14 @@ func InitializeGitProvider(p *GitInitParameters) error {
 
 			if responseStatusCode == repositoryExistsStatusCode {
 				log.Info().Msgf("repository https://github.com/%s/%s exists", p.GithubOrg, repositoryName)
-				errorMsg = errorMsg + fmt.Sprintf("https://github.com/%s/%s\n\t", p.GithubOrg, repositoryName)
+				errorMsg += fmt.Sprintf("https://github.com/%s/%s\n\t", p.GithubOrg, repositoryName)
 				newRepositoryExists = true
 			} else if responseStatusCode == repositoryDoesNotExistStatusCode {
 				log.Info().Msgf("repository https://github.com/%s/%s does not exist, continuing", p.GithubOrg, repositoryName)
 			}
 		}
 		if newRepositoryExists {
-			return fmt.Errorf(errorMsg)
+			return errors.New(errorMsg)
 		}
 
 		newTeamExists := false
@@ -65,26 +66,28 @@ func InitializeGitProvider(p *GitInitParameters) error {
 
 			if responseStatusCode == teamExistsStatusCode {
 				log.Info().Msgf("team https://github.com/%s/%s exists", p.GithubOrg, teamName)
-				errorMsg = errorMsg + fmt.Sprintf("https://github.com/orgs/%s/teams/%s\n\t", p.GithubOrg, teamName)
+				errorMsg += fmt.Sprintf("https://github.com/orgs/%s/teams/%s\n\t", p.GithubOrg, teamName)
 				newTeamExists = true
 			} else if responseStatusCode == teamDoesNotExistStatusCode {
 				log.Info().Msgf("https://github.com/orgs/%s/teams/%s does not exist, continuing", p.GithubOrg, teamName)
 			}
 		}
 		if newTeamExists {
-			return fmt.Errorf(errorMsg)
+			return errors.New(errorMsg)
 		}
 	case "gitlab":
 		gitlabClient, err := gitlab.NewGitLabClient(p.GitToken, p.GitlabGroup)
 		if err != nil {
-			return err
+			return fmt.Errorf("couldn't create gitlab client: %w", err)
 		}
 
 		// Check for existing base projects
 		projects, err := gitlabClient.GetProjects()
 		if err != nil {
 			log.Error().Msgf("couldn't get gitlab projects: %s", err)
+			return fmt.Errorf("couldn't get gitlab projects: %w", err)
 		}
+
 		for _, repositoryName := range p.Repositories {
 			for _, project := range projects {
 				if project.Name == repositoryName {
@@ -98,7 +101,9 @@ func InitializeGitProvider(p *GitInitParameters) error {
 		subgroups, err := gitlabClient.GetSubGroups()
 		if err != nil {
 			log.Error().Msgf("couldn't get gitlab subgroups for group %s: %s", p.GitOwner, err)
+			return fmt.Errorf("couldn't get gitlab subgroups for group %s: %w", p.GitOwner, err)
 		}
+
 		for _, teamName := range p.Repositories {
 			for _, sg := range subgroups {
 				if sg.Name == teamName {

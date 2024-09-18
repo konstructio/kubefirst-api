@@ -22,9 +22,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-var GitlabSecretClient coreV1Types.SecretInterface
-
-type PatchJson struct {
+type PatchJSON struct {
 	Op   string `json:"op"`
 	Path string `json:"path"`
 }
@@ -42,12 +40,12 @@ func GetClientSet(kubeconfigPath string) (*kubernetes.Clientset, error) {
 	kubeconfig, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
 	if err != nil {
 		log.Error().Err(err).Msg("Error getting kubeconfig")
-		return nil, err
+		return nil, fmt.Errorf("error getting kubeconfig: %w", err)
 	}
 	clientset, err := kubernetes.NewForConfig(kubeconfig)
 	if err != nil {
 		log.Error().Err(err).Msg("Error getting clientset")
-		return clientset, err
+		return clientset, fmt.Errorf("error getting clientset: %w", err)
 	}
 
 	return clientset, nil
@@ -59,7 +57,7 @@ func GetClientConfig(kubeconfigPath string) (*rest.Config, error) {
 	clientconfig, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
 	if err != nil {
 		log.Error().Err(err).Msg("Error getting kubeconfig")
-		return nil, err
+		return nil, fmt.Errorf("error getting kubeconfig: %w", err)
 	}
 
 	return clientconfig, nil

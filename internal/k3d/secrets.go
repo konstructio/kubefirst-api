@@ -8,40 +8,22 @@ package k3d
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/konstructio/kubefirst-api/internal/k8s"
 	"github.com/rs/zerolog/log"
-
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func AddK3DSecrets(
-	atlantisWebhookSecret string,
-	kbotPublicKey string,
-	destinationGitopsRepoURL string,
-	kbotPrivateKey string,
-	gitProvider string,
-	gitUser string,
-	gitOwner string,
-	kubeconfigPath string,
-	tokenValue string,
-) error {
+func AddK3DSecrets(destinationGitopsRepoURL, kbotPrivateKey, gitProvider, gitUser, kubeconfigPath, tokenValue string) error {
 	clientset, err := k8s.GetClientSet(kubeconfigPath)
 	if err != nil {
 		log.Info().Msg("error getting kubernetes clientset")
+		return fmt.Errorf("error getting kubernetes clientset: %w", err)
 	}
-
-	// Set git provider token value
-	// var containerRegistryHost string
-	// switch gitProvider {
-	// case "github":
-	// 	containerRegistryHost = "https://ghcr.io/"
-	// case "gitlab":
-	// 	containerRegistryHost = "registry.gitlab.io"
-	// }
 
 	// todo audit
 	newNamespaces := []string{
@@ -58,7 +40,7 @@ func AddK3DSecrets(
 			_, err = clientset.CoreV1().Namespaces().Create(context.TODO(), namespace, metav1.CreateOptions{})
 			if err != nil {
 				log.Error().Err(err).Msg("")
-				return fmt.Errorf("error creating namespace")
+				return errors.New("error creating namespace")
 			}
 			log.Info().Msgf("%d, %s", i, s)
 			log.Info().Msgf("namespace created: %s", s)
@@ -70,7 +52,7 @@ func AddK3DSecrets(
 	// Create secrets
 
 	// swap secret data based on https flag
-	secretData := map[string][]byte{}
+	var secretData map[string][]byte
 
 	if strings.Contains(destinationGitopsRepoURL, "https") {
 		// http basic auth
@@ -111,14 +93,14 @@ func AddK3DSecrets(
 			_, err = clientset.CoreV1().Secrets(secret.ObjectMeta.Namespace).Create(context.TODO(), secret, metav1.CreateOptions{})
 			if err != nil {
 				log.Error().Msgf("error creating kubernetes secret %s/%s: %s", secret.Namespace, secret.Name, err)
-				return err
+				return fmt.Errorf("error creating kubernetes secret %s/%s: %w", secret.Namespace, secret.Name, err)
 			}
 			log.Info().Msgf("created kubernetes secret: %s/%s", secret.Namespace, secret.Name)
 		}
 	}
 
 	// Data used for service account creation
-	var automountServiceAccountToken bool = true
+	automountServiceAccountToken := true
 
 	// Create service accounts
 	createServiceAccounts := []*v1.ServiceAccount{
@@ -140,7 +122,7 @@ func AddK3DSecrets(
 			_, err = clientset.CoreV1().ServiceAccounts(serviceAccount.ObjectMeta.Namespace).Create(context.TODO(), serviceAccount, metav1.CreateOptions{})
 			if err != nil {
 				log.Error().Msgf("error creating kubernetes service account %s/%s: %s", serviceAccount.Namespace, serviceAccount.Name, err)
-				return err
+				return fmt.Errorf("error creating kubernetes service account %s/%s: %w", serviceAccount.Namespace, serviceAccount.Name, err)
 			}
 			log.Info().Msgf("created kubernetes service account: %s/%s", serviceAccount.Namespace, serviceAccount.Name)
 		}

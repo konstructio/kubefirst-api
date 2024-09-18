@@ -42,7 +42,7 @@ var (
 	VaultURL               = fmt.Sprintf("https://vault.%s", DomainName)
 )
 
-type K3dConfig struct {
+type Config struct {
 	GithubToken string
 	GitlabToken string
 
@@ -50,8 +50,8 @@ type K3dConfig struct {
 	DestinationGitopsRepoURL        string
 	DestinationMetaphorRepoURL      string
 	DestinationMetaphorRepoGitURL   string
-	DestinationGitopsRepoHttpsURL   string
-	DestinationMetaphorRepoHttpsURL string
+	DestinationGitopsRepoHTTPSURL   string
+	DestinationMetaphorRepoHTTPSURL string
 	GitopsDir                       string
 	GitProvider                     string
 	GitProtocol                     string
@@ -69,16 +69,18 @@ type K3dConfig struct {
 }
 
 // GetConfig - load default values from kubefirst installer
-func GetConfig(clusterName string, gitProvider string, gitOwner string, gitProtocol string) *K3dConfig {
-	config := K3dConfig{}
+func GetConfig(clusterName, gitProvider, gitOwner, gitProtocol string) (*Config, error) {
+	config := Config{}
 
 	if err := env.Parse(&config); err != nil {
 		log.Error().Msgf("something went wrong loading the environment variables: %s", err)
+		return nil, fmt.Errorf("unable to parse environment variables: %w", err)
 	}
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatal().Msgf("something went wrong getting home path: %s", err)
+		log.Error().Msgf("something went wrong getting home path: %s", err)
+		return nil, fmt.Errorf("unable to get home path: %w", err)
 	}
 
 	// cGitHost describes which git host to use depending on gitProvider
@@ -110,7 +112,7 @@ func GetConfig(clusterName string, gitProvider string, gitOwner string, gitProto
 	config.TerraformClient = fmt.Sprintf("%s/.k1/%s/tools/terraform", homeDir, clusterName)
 	config.ToolsDir = fmt.Sprintf("%s/.k1/%s/tools", homeDir, clusterName)
 
-	return &config
+	return &config, nil
 }
 
 type GitopsDirectoryValues struct {
@@ -120,7 +122,7 @@ type GitopsDirectoryValues struct {
 	GitlabOwnerGroupID            int
 	GitlabUser                    string
 	GitopsRepoGitURL              string
-	GitopsRepoHttpsURL            string
+	GitopsRepoHTTPSURL            string
 	DomainName                    string
 	AtlantisAllowList             string
 	AlertsEmail                   string
@@ -141,7 +143,7 @@ type GitopsDirectoryValues struct {
 	UseTelemetry                  string
 	GitProvider                   string
 	CloudProvider                 string
-	ClusterId                     string
+	ClusterID                     string
 	KubeconfigPath                string
 }
 

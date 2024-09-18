@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/pem"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/konstructio/kubefirst-api/internal/gitlab"
@@ -16,13 +15,11 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func CreateSshKeyPair() (string, string, error) {
-
+func CreateSSHKeyPair() (string, string, error) {
 	// Generate a key pair
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to generate key pair: %v\n", err)
-		return "", "", err
+		return "", "", fmt.Errorf("failed to generate key pair: %w", err)
 	}
 
 	// Encode private key in PEM format
@@ -35,7 +32,7 @@ func CreateSshKeyPair() (string, string, error) {
 	// Encode public key in OpenSSH authorized_keys format
 	authKey, err := ssh.NewPublicKey(publicKey)
 	if err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("failed to create public key: %w", err)
 	}
 	pubKey := ssh.MarshalAuthorizedKey(authKey)
 
@@ -47,15 +44,16 @@ func EvalSSHKey(req *types.EvalSSHKeyRequest) error {
 	if req.GitProvider == "gitlab" {
 		gitlabClient, err := gitlab.NewGitLabClient(req.GitToken, req.GitlabGroupFlag)
 		if err != nil {
-			return err
+			return fmt.Errorf("error creating gitlab client: %w", err)
 		}
 		keys, err := gitlabClient.GetUserSSHKeys()
 		if err != nil {
-			log.Fatal().Msgf("unable to check for ssh keys in gitlab: %s", err.Error())
+			log.Error().Msgf("unable to check for ssh keys in gitlab: %s", err.Error())
+			return fmt.Errorf("error checking for ssh keys in gitlab: %w", err)
 		}
 
-		var keyName = "kbot-ssh-key"
-		var keyFound bool = false
+		keyName := "kbot-ssh-key"
+		keyFound := false
 		for _, key := range keys {
 			if key.Title == keyName {
 				if strings.Contains(key.Key, strings.TrimSuffix(viper.GetString("kbot.public-key"), "\n")) {
@@ -65,7 +63,7 @@ func EvalSSHKey(req *types.EvalSSHKeyRequest) error {
 					log.Warn().Msgf("ssh key %s already exists and key data has drifted - it will be recreated", keyName)
 					err := gitlabClient.DeleteUserSSHKey(keyName)
 					if err != nil {
-						return fmt.Errorf("error deleting gitlab user ssh key %s: %s", keyName, err)
+						return fmt.Errorf("error deleting gitlab user ssh key %q: %w", keyName, err)
 					}
 				}
 			}
@@ -74,7 +72,8 @@ func EvalSSHKey(req *types.EvalSSHKeyRequest) error {
 			log.Info().Msgf("creating ssh key %s...", keyName)
 			err := gitlabClient.AddUserSSHKey(keyName, viper.GetString("kbot.public-key"))
 			if err != nil {
-				log.Fatal().Msgf("error adding ssh key %s: %s", keyName, err.Error())
+				log.Error().Msgf("error adding ssh key %s: %s", keyName, err.Error())
+				return fmt.Errorf("error adding ssh key %s: %w", keyName, err)
 			}
 			viper.Set("kbot.gitlab-user-based-ssh-key-title", keyName)
 			viper.WriteConfig()

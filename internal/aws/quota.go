@@ -8,6 +8,7 @@ package aws
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
@@ -20,7 +21,7 @@ type QuotaDetailResponse struct {
 }
 
 // GetServiceQuotas
-func (conf *AWSConfiguration) GetServiceQuotas(services []string) (map[string][]QuotaDetailResponse, error) {
+func (conf *Configuration) GetServiceQuotas(services []string) (map[string][]QuotaDetailResponse, error) {
 	// Retrieve all quota information
 	serviceQuotasClient := servicequotas.NewFromConfig(conf.Config)
 	allQuotas := make(map[string][]sqTypes.ServiceQuota)
@@ -35,7 +36,7 @@ func (conf *AWSConfiguration) GetServiceQuotas(services []string) (map[string][]
 		for {
 			resp, err := serviceQuotasClient.ListServiceQuotas(context.Background(), &req)
 			if err != nil {
-				return map[string][]QuotaDetailResponse{}, err
+				return nil, fmt.Errorf("error getting service quotas: %w", err)
 			}
 			scopedQuotas = append(scopedQuotas, resp.Quotas...)
 			req.NextToken = resp.NextToken
@@ -58,5 +59,4 @@ func (conf *AWSConfiguration) GetServiceQuotas(services []string) (map[string][]
 	}
 
 	return returnQuotas, nil
-
 }

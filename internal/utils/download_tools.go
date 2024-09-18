@@ -1,40 +1,27 @@
-/*
-Copyright (C) 2021-2023, Kubefirst
-
-This program is licensed under MIT.
-See the LICENSE file for more details.
-*/
-package digitalocean
+package utils
 
 import (
 	"fmt"
 	"os"
-	"sync"
 
 	pkg "github.com/konstructio/kubefirst-api/internal"
 	"github.com/konstructio/kubefirst-api/internal/downloadManager"
-	"github.com/rs/zerolog/log"
+	log "github.com/rs/zerolog/log"
+	"golang.org/x/sync/errgroup"
 )
 
 func DownloadTools(kubectlClientPath, kubectlClientVersion, localOs, localArchitecture, terraformClientVersion, toolsDirPath string) error {
-
 	log.Info().Msg("starting downloads...")
 
 	// create folder if it doesn't exist
 	err := pkg.CreateDirIfNotExist(toolsDirPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating tools dir: %w", err)
 	}
 
-	errorChannel := make(chan error)
-	wgDone := make(chan bool)
-	// create a waiting group (translating: create a queue of functions, and only pass the wg.Wait() function down
-	// bellow after all the wg.Add(3) functions are done (wg.Done)
-	var wg sync.WaitGroup
-	wg.Add(2)
+	group := errgroup.Group{}
 
-	go func() {
-
+	group.Go(func() error {
 		kubectlDownloadURL := fmt.Sprintf(
 			"https://dl.k8s.io/release/%s/bin/%s/%s/kubectl",
 			kubectlClientVersion,
@@ -44,28 +31,24 @@ func DownloadTools(kubectlClientPath, kubectlClientVersion, localOs, localArchit
 		log.Info().Msgf("Downloading kubectl from: %s", kubectlDownloadURL)
 		err = downloadManager.DownloadFile(kubectlClientPath, kubectlDownloadURL)
 		if err != nil {
-			errorChannel <- err
-			return
+			return fmt.Errorf("error downloading kubectl file: %w", err)
 		}
 
-		err = os.Chmod(kubectlClientPath, 0755)
-		if err != nil {
-			errorChannel <- err
-			return
+		if err := os.Chmod(kubectlClientPath, 0o755); err != nil {
+			return fmt.Errorf("failed to chmod kubectl: %w", err)
 		}
 
 		kubectlStdOut, kubectlStdErr, err := pkg.ExecShellReturnStrings(kubectlClientPath, "version", "--client=true", "-oyaml")
-		log.Info().Msgf("-> kubectl version:\n\t%s\n\t%s\n", kubectlStdOut, kubectlStdErr)
+		log.Info().Msgf("-> kubectl version:\n\t%s\n\t%s", kubectlStdOut, kubectlStdErr)
 		if err != nil {
-			errorChannel <- fmt.Errorf("failed to call kubectlVersionCmd.Run(): %v", err)
-			return
+			return fmt.Errorf("failed to call kubectl version: %w", err)
 		}
-		wg.Done()
+
 		log.Info().Msg("Kubectl download finished")
-	}()
+		return nil
+	})
 
-	go func() {
-
+	group.Go(func() error {
 		terraformDownloadURL := fmt.Sprintf(
 			"https://releases.hashicorp.com/terraform/%s/terraform_%s_%s_%s.zip",
 			terraformClientVersion,
@@ -77,44 +60,33 @@ func DownloadTools(kubectlClientPath, kubectlClientVersion, localOs, localArchit
 		terraformDownloadZipPath := fmt.Sprintf("%s/terraform.zip", toolsDirPath)
 		err = downloadManager.DownloadFile(terraformDownloadZipPath, terraformDownloadURL)
 		if err != nil {
-			errorChannel <- fmt.Errorf("error downloading terraform file, %v", err)
-			return
+			return fmt.Errorf("error downloading terraform file: %w", err)
 		}
 
-		downloadManager.Unzip(terraformDownloadZipPath, toolsDirPath)
-
-		err = os.Chmod(toolsDirPath, 0777)
-		if err != nil {
-			errorChannel <- err
-			return
+		if err := downloadManager.Unzip(terraformDownloadZipPath, toolsDirPath); err != nil {
+			return fmt.Errorf("error unzipping terraform file: %w", err)
 		}
 
-		err = os.Chmod(fmt.Sprintf("%s/terraform", toolsDirPath), 0755)
-		if err != nil {
-			errorChannel <- err
-			return
+		if err := os.Chmod(toolsDirPath, 0o777); err != nil {
+			return fmt.Errorf("failed to chmod %q: %w", toolsDirPath, err)
 		}
-		err = os.RemoveAll(fmt.Sprintf("%s/terraform.zip", toolsDirPath))
-		if err != nil {
-			errorChannel <- err
-			return
+
+		if err := os.Chmod(fmt.Sprintf("%s/terraform", toolsDirPath), 0o755); err != nil {
+			return fmt.Errorf("failed to chmod %q: %w", fmt.Sprintf("%s/terraform", toolsDirPath), err)
 		}
+
+		if err := os.RemoveAll(fmt.Sprintf("%s/terraform.zip", toolsDirPath)); err != nil {
+			return fmt.Errorf("failed to remove terraform.zip: %w", err)
+		}
+
 		// todo output terraform client version to be consistent with others
-		wg.Done()
 		log.Info().Msg("Terraform download finished")
-	}()
-
-	go func() {
-		wg.Wait()
-		close(wgDone)
-	}()
-
-	select {
-	case <-wgDone:
-		log.Info().Msg("downloads finished")
 		return nil
-	case err = <-errorChannel:
-		close(errorChannel)
-		return err
+	})
+
+	if err := group.Wait(); err != nil {
+		return fmt.Errorf("error downloading tools: %w", err)
 	}
+
+	return nil
 }

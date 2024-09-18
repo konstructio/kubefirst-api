@@ -4,12 +4,14 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package gitShim
+package gitShim //nolint:revive,stylecheck // allowed during code reorg
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"net/http"
 
 	"github.com/google/go-github/v52/github"
 )
@@ -28,7 +30,7 @@ func (gh *GitHubClient) GetGitopsCatalogRepo() (*github.Repository, error) {
 		KubefirstGitopsCatalogRepository,
 	)
 	if err != nil {
-		return &github.Repository{}, err
+		return nil, fmt.Errorf("error getting gitops catalog repository: %w", err)
 	}
 
 	return repo, nil
@@ -45,7 +47,7 @@ func (gh *GitHubClient) ReadGitopsCatalogRepoContents() ([]*github.RepositoryCon
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting gitops catalog repository contents: %w", err)
 	}
 
 	return directoryContent, nil
@@ -61,7 +63,7 @@ func (gh *GitHubClient) ReadGitopsCatalogRepoDirectory(path string) ([]*github.R
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting gitops catalog repository directory contents: %w", err)
 	}
 
 	return directoryContent, nil
@@ -70,20 +72,16 @@ func (gh *GitHubClient) ReadGitopsCatalogRepoDirectory(path string) ([]*github.R
 // ReadGitopsCatalogIndex reads the gitops catalog repository index
 func (gh *GitHubClient) ReadGitopsCatalogIndex(contents []*github.RepositoryContent) ([]byte, error) {
 	for _, content := range contents {
-		switch *content.Type {
-		case "file":
-			switch *content.Name {
-			case "index.yaml":
-				b, err := gh.readFileContents(content)
-				if err != nil {
-					return b, err
-				}
-				return b, nil
+		if *content.Type == "file" && *content.Name == "index.yaml" {
+			b, err := gh.readFileContents(content)
+			if err != nil {
+				return b, err
 			}
+			return b, nil
 		}
 	}
 
-	return []byte{}, fmt.Errorf("index.yaml not found in gitops catalog repository")
+	return []byte{}, errors.New("index.yaml not found in gitops catalog repository")
 }
 
 // ReadGitopsCatalogAppDirectory reads the file content in a gitops catalog app directory
@@ -106,9 +104,9 @@ func (gh *GitHubClient) ReadGitopsCatalogAppDirectory(contents []*github.Reposit
 			}
 
 			return res, nil
-		} else {
-			continue
 		}
+
+		continue
 	}
 
 	return [][]byte{}, nil
@@ -116,7 +114,7 @@ func (gh *GitHubClient) ReadGitopsCatalogAppDirectory(contents []*github.Reposit
 
 // readFileContents parses the contents of a file in a GitHub repository
 func (gh *GitHubClient) readFileContents(content *github.RepositoryContent) ([]byte, error) {
-	rc, _, err := gh.Client.Repositories.DownloadContents(
+	rc, resp, err := gh.Client.Repositories.DownloadContents(
 		context.Background(),
 		KubefirstGitHubOrganization,
 		KubefirstGitopsCatalogRepository,
@@ -124,13 +122,17 @@ func (gh *GitHubClient) readFileContents(content *github.RepositoryContent) ([]b
 		nil,
 	)
 	if err != nil {
-		return []byte{}, err
+		return nil, fmt.Errorf("error downloading file contents: %w", err)
 	}
 	defer rc.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error downloading file contents: %d", resp.StatusCode)
+	}
+
 	b, err := io.ReadAll(rc)
 	if err != nil {
-		return []byte{}, err
+		return nil, fmt.Errorf("error reading file contents: %w", err)
 	}
 
 	return b, nil

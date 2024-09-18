@@ -22,7 +22,7 @@ import (
 )
 
 // TestHostedZoneLiveness checks Route53 for the liveness test record
-func (conf *AWSConfiguration) TestHostedZoneLiveness(hostedZoneName string) bool {
+func (conf *Configuration) TestHostedZoneLiveness(hostedZoneName string) bool {
 	route53RecordName := fmt.Sprintf("kubefirst-liveness.%s", hostedZoneName)
 	route53RecordValue := "domain record propagated"
 
@@ -105,7 +105,7 @@ func (conf *AWSConfiguration) TestHostedZoneLiveness(hostedZoneName string) bool
 		} else {
 			for _, ip := range ips {
 				// todo check ip against route53RecordValue in some capacity so we can pivot the value for testing
-				log.Info().Msgf("%s. in TXT record value: %s\n", route53RecordName, ip)
+				log.Info().Msgf("%s. in TXT record value: %s", route53RecordName, ip)
 				count = 101
 			}
 		}
@@ -118,7 +118,7 @@ func (conf *AWSConfiguration) TestHostedZoneLiveness(hostedZoneName string) bool
 }
 
 // GetHostedZoneID returns the ID of a hosted zone if valid
-func (conf *AWSConfiguration) GetHostedZoneID(hostedZoneName string) (string, error) {
+func (conf *Configuration) GetHostedZoneID(hostedZoneName string) (string, error) {
 	route53Client := route53.NewFromConfig(conf.Config)
 	hostedZones, err := route53Client.ListHostedZonesByName(
 		context.Background(),
@@ -127,47 +127,46 @@ func (conf *AWSConfiguration) GetHostedZoneID(hostedZoneName string) (string, er
 		},
 	)
 	if err != nil {
-		return "", fmt.Errorf("error listing hosted zones: %s", err)
+		return "", fmt.Errorf("error listing hosted zones: %w", err)
 	}
 
-	var hostedZoneId string
+	var hostedZoneID string
 
 	for _, zone := range hostedZones.HostedZones {
 		if *zone.Name == fmt.Sprintf(`%s%s`, hostedZoneName, ".") {
-			hostedZoneId = strings.Split(*zone.Id, "/")[2]
+			hostedZoneID = strings.Split(*zone.Id, "/")[2]
 		}
 	}
 
-	if hostedZoneId == "" {
+	if hostedZoneID == "" {
 		return "", fmt.Errorf("error finding hosted zone ID for hosted zone %s", hostedZoneName)
 	}
 
-	return hostedZoneId, nil
+	return hostedZoneID, nil
 }
 
 // GetHostedZone returns an object detailing a hosted zone
-func (conf *AWSConfiguration) GetHostedZone(hostedZoneID string) (*route53.GetHostedZoneOutput, error) {
+func (conf *Configuration) GetHostedZone(hostedZoneID string) (*route53.GetHostedZoneOutput, error) {
 	route53Client := route53.NewFromConfig(conf.Config)
 	hostedZone, err := route53Client.GetHostedZone(context.Background(), &route53.GetHostedZoneInput{
 		Id: aws.String(hostedZoneID),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error fetching details for hosted zone %s: %s", hostedZoneID, err)
+		return nil, fmt.Errorf("error fetching details for hosted zone %s: %w", hostedZoneID, err)
 	}
 
 	return hostedZone, nil
 }
 
 // GetHostedZone returns an object detailing a hosted zone
-func (conf *AWSConfiguration) GetHostedZones() ([]string, error) {
+func (conf *Configuration) GetHostedZones() ([]string, error) {
 	route53Client := route53.NewFromConfig(conf.Config)
 	hostedZones, err := route53Client.ListHostedZones(context.Background(), &route53.ListHostedZonesInput{})
 	if err != nil {
-		return nil, fmt.Errorf("error listing hosted zones: %s", err)
+		return nil, fmt.Errorf("error listing hosted zones: %w", err)
 	}
 
-	var domainList []string
-
+	domainList := make([]string, 0, len(hostedZones.HostedZones))
 	for _, domain := range hostedZones.HostedZones {
 		domainList = append(domainList, *domain.Name)
 	}
@@ -177,7 +176,7 @@ func (conf *AWSConfiguration) GetHostedZones() ([]string, error) {
 
 // GetHostedZoneNameServers returns nameservers for a hosted zone if available
 // for private zones, nothing is returned
-func (conf *AWSConfiguration) GetHostedZoneNameServers(domainName string) (bool, []string, error) {
+func (conf *Configuration) GetHostedZoneNameServers(domainName string) (bool, []string, error) {
 	hostedZoneID, err := conf.GetHostedZoneID(domainName)
 	if err != nil {
 		return false, nil, err

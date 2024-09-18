@@ -1,9 +1,3 @@
-/*
-Copyright (C) 2021-2023, Kubefirst
-
-This program is licensed under MIT.
-See the LICENSE file for more details.
-*/
 package k8s
 
 import (
@@ -15,31 +9,15 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// OpenPortForwardPodWrapper wrapper for PortForwardPod function. This functions make it easier to open and close port
-// forward request. By providing the function parameters, the function will manage to create the port forward. The
-// parameter for the stopChannel controls when the port forward must be closed.
-//
-// Example:
-//
-//	vaultStopChannel := make(chan struct{}, 1)
-//	go func() {
-//		OpenPortForwardWrapper(
-//			pkg.VaultPodName,
-//			pkg.VaultNamespace,
-//			pkg.VaultPodPort,
-//			pkg.VaultPodLocalPort,
-//			vaultStopChannel)
-//		wg.Done()
-//	}()
 func OpenPortForwardPodWrapper(
-	clientset *kubernetes.Clientset,
+	clientset kubernetes.Interface,
 	restConfig *rest.Config,
 	podName string,
 	namespace string,
 	podPort int,
 	podLocalPort int,
 	stopChannel chan struct{},
-) {
+) error {
 	// readyCh communicate when the port forward is ready to get traffic
 	readyCh := make(chan struct{})
 
@@ -60,7 +38,8 @@ func OpenPortForwardPodWrapper(
 	// Check to see if the port is already used
 	err := CheckForExistingPortForwards(podLocalPort)
 	if err != nil {
-		log.Fatal().Msgf("unable to start port forward for pod %s in namespace %s: %s", podName, namespace, err)
+		log.Error().Msgf("unable to start port forward for pod %s in namespace %s: %s", podName, namespace, err)
+		return err
 	}
 
 	go func() {
@@ -80,6 +59,6 @@ func OpenPortForwardPodWrapper(
 		log.Info().Msg("port forwarding is ready to get traffic")
 	}
 
-	log.Info().Msgf("pod %q at namespace %q has port-forward accepting local connections at port %d\n", podName, namespace, podLocalPort)
-
+	log.Info().Msgf("pod %q at namespace %q has port-forward accepting local connections at port %d", podName, namespace, podLocalPort)
+	return nil
 }

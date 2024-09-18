@@ -8,14 +8,15 @@ package k8s
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -35,7 +36,7 @@ type PortForwardAPodRequest struct {
 	PodPort int
 
 	//// Steams configures where to write or read input from
-	//Streams genericclioptions.IOStreams
+	// Streams genericclioptions.IOStreams
 
 	// StopCh is the channel used to manage the port forward lifecycle
 	StopCh <-chan struct{}
@@ -54,7 +55,7 @@ type PortForwardAServiceRequest struct {
 	ServicePort int
 
 	//// Steams configures where to write or read input from
-	//Streams genericclioptions.IOStreams
+	// Streams genericclioptions.IOStreams
 
 	// StopCh is the channel used to manage the port forward lifecycle
 	StopCh <-chan struct{}
@@ -62,7 +63,7 @@ type PortForwardAServiceRequest struct {
 	ReadyCh chan struct{}
 }
 
-func PortForwardPodWithRetry(clientset *kubernetes.Clientset, req PortForwardAPodRequest) error {
+func PortForwardPodWithRetry(clientset kubernetes.Interface, req PortForwardAPodRequest) error {
 	var err error
 	for i := 0; i < 10; i++ {
 		err = PortForwardPod(clientset, req)
@@ -72,13 +73,12 @@ func PortForwardPodWithRetry(clientset *kubernetes.Clientset, req PortForwardAPo
 		time.Sleep(20 * time.Second)
 	}
 
-	return fmt.Errorf("not able to open port-forward: %s", err)
-
+	return fmt.Errorf("not able to open port-forward: %w", err)
 }
 
 // PortForwardPod receives a PortForwardAPodRequest, and enables port forwarding for the specified resource.
 // If the provided Pod name matches a running Pod, it will try to port forward for that Pod on the specified port.
-func PortForwardPod(clientset *kubernetes.Clientset, req PortForwardAPodRequest) error {
+func PortForwardPod(clientset kubernetes.Interface, req PortForwardAPodRequest) error {
 	podList, err := clientset.CoreV1().Pods(req.Pod.Namespace).List(context.Background(), metav1.ListOptions{})
 	if err != nil || len(podList.Items) == 0 {
 		fmt.Fprintln(os.Stderr, err)
@@ -89,21 +89,21 @@ func PortForwardPod(clientset *kubernetes.Clientset, req PortForwardAPodRequest)
 	for _, pod := range podList.Items {
 		// pick the first pod found to be running
 		if pod.Status.Phase == v1.PodRunning && strings.HasPrefix(pod.Name, req.Pod.Name) {
-			runningPod = &pod
+			runningPod = pod.DeepCopy()
 			break
 		}
 	}
 	if runningPod == nil {
-		return fmt.Errorf("error reading pod details")
+		return errors.New("error reading pod details")
 	}
 
-	log.Println("Namespace for PF", runningPod.Namespace)
-	log.Println("Name for PF", runningPod.Name)
+	log.Print("Namespace for port forwarding", runningPod.Namespace)
+	log.Print("Name for port forwarding", runningPod.Name)
 
 	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", runningPod.Namespace, runningPod.Name)
 	hostURL, err := url.Parse(req.RestConfig.Host)
 	if err != nil {
-		return fmt.Errorf("could not parse kubernetes host url: %s", err)
+		return fmt.Errorf("could not parse kubernetes host url: %w", err)
 	}
 
 	if hostURL.Host == "" {
@@ -111,7 +111,7 @@ func PortForwardPod(clientset *kubernetes.Clientset, req PortForwardAPodRequest)
 	}
 	transport, upgrader, err := spdy.RoundTripperFor(req.RestConfig)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not create round tripper: %w", err)
 	}
 
 	dialer := spdy.NewDialer(
@@ -136,12 +136,12 @@ func PortForwardPod(clientset *kubernetes.Clientset, req PortForwardAPodRequest)
 		nil,
 		nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not create port forward: %w", err)
 	}
 
 	err = fw.ForwardPorts()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not forward ports: %w", err)
 	}
 
 	return nil

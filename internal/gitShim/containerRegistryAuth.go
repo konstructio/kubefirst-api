@@ -4,7 +4,7 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package gitShim
+package gitShim //nolint:revive,stylecheck // allowing name during code cleanup
 
 import (
 	"encoding/base64"
@@ -28,14 +28,13 @@ type ContainerRegistryAuth struct {
 	GithubOwner           string
 	ContainerRegistryHost string
 
-	Clientset *kubernetes.Clientset
+	Clientset kubernetes.Interface
 }
 
 // CreateContainerRegistrySecret
 func CreateContainerRegistrySecret(obj *ContainerRegistryAuth) (string, error) {
 	// Handle secret creation for container registry authentication
 	switch obj.GitProvider {
-
 	// GitHub docker auth secret
 	// kaniko requires a specific format for Docker auth created as a secret
 	// For GitHub, this becomes the provided token (pat)
@@ -67,11 +66,11 @@ func CreateContainerRegistrySecret(obj *ContainerRegistryAuth) (string, error) {
 	case "gitlab":
 		gitlabClient, err := gitlab.NewGitLabClient(obj.GitToken, obj.GitlabGroupFlag)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("error while creating gitlab client: %w", err)
 		}
 
 		// Create argo workflows pull secret
-		var p = gitlab.DeployTokenCreateParameters{
+		p := gitlab.DeployTokenCreateParameters{
 			Name:     secretName,
 			Username: secretName,
 			Scopes:   []string{"read_registry", "write_registry"},

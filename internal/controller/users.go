@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package controller
 
 import (
+	"fmt"
 	"time"
 
 	akamaiext "github.com/konstructio/kubefirst-api/extensions/akamai"
@@ -27,7 +28,7 @@ import (
 func (clctrl *ClusterController) RunUsersTerraform() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster: %w", err)
 	}
 
 	if !cl.UsersTerraformApplyCheck {
@@ -37,12 +38,15 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 		case "akamai", "civo", "digitalocean", "k3s", "vultr":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			if err != nil {
+				return fmt.Errorf("failed to create Kubernetes config: %w", err)
+			}
 		case "google":
 			var err error
 			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get Google container cluster auth: %w", err)
 			}
 		}
 
@@ -54,26 +58,26 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 
 		switch clctrl.CloudProvider {
 		case "akamai":
-			tfEnvs = akamaiext.GetAkamaiTerraformEnvs(tfEnvs, &cl)
-			tfEnvs = akamaiext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEnvs = akamaiext.GetAkamaiTerraformEnvs(tfEnvs, cl)
+			tfEnvs = akamaiext.GetUsersTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
 		case "aws":
-			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, &cl)
-			tfEnvs = awsext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, cl)
+			tfEnvs = awsext.GetUsersTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
 		case "civo":
-			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, &cl)
-			tfEnvs = civoext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, cl)
+			tfEnvs = civoext.GetUsersTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
 		case "google":
-			tfEnvs = googleext.GetGoogleTerraformEnvs(tfEnvs, &cl)
-			tfEnvs = googleext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEnvs = googleext.GetGoogleTerraformEnvs(tfEnvs, cl)
+			tfEnvs = googleext.GetUsersTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
 		case "digitalocean":
-			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, &cl)
-			tfEnvs = digitaloceanext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEnvs = digitaloceanext.GetDigitaloceanTerraformEnvs(tfEnvs, cl)
+			tfEnvs = digitaloceanext.GetUsersTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
 		case "vultr":
-			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, &cl)
-			tfEnvs = vultrext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEnvs = vultrext.GetVultrTerraformEnvs(tfEnvs, cl)
+			tfEnvs = vultrext.GetUsersTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
 		case "k3s":
-			tfEnvs = k3sext.GetK3sTerraformEnvs(tfEnvs, &cl)
-			tfEnvs = k3sext.GetUsersTerraformEnvs(kcfg.Clientset, &cl, tfEnvs)
+			tfEnvs = k3sext.GetK3sTerraformEnvs(tfEnvs, cl)
+			tfEnvs = k3sext.GetUsersTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
 		}
 		tfEntrypoint = clctrl.ProviderConfig.GitopsDir + "/terraform/users"
 		terraformClient = clctrl.ProviderConfig.TerraformClient
@@ -86,7 +90,7 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 			if err != nil {
 				log.Error().Msgf("error applying users terraform: %s", err)
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.UsersTerraformApplyFailed, err.Error())
-				return err
+				return fmt.Errorf("failed to apply users terraform on retry: %w", err)
 			}
 		}
 		log.Info().Msg("executed users terraform successfully")
@@ -97,7 +101,7 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		clctrl.Cluster.VaultAuth.RootToken = clctrl.VaultAuth.RootToken
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster after applying terraform: %w", err)
 		}
 
 		// Set kbot password in object
@@ -109,7 +113,7 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		clctrl.Cluster.UsersTerraformApplyCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster with new status details: %w", err)
 		}
 	}
 

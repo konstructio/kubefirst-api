@@ -8,6 +8,7 @@ package k8s
 
 import (
 	// b64 "encoding/base64"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -20,17 +21,15 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-var fs afero.Fs = afero.NewOsFs()
-
 type KubernetesClient struct {
-	Clientset      *kubernetes.Clientset
+	Clientset      kubernetes.Interface
 	RestConfig     *rest.Config
 	KubeConfigPath string
 }
 
 // CreateKubeConfig returns a struct KubernetesClient with references to a clientset,
 // restConfig, and path to the Kubernetes config used to generate the client
-func CreateKubeConfig(inCluster bool, kubeConfigPath string) *KubernetesClient {
+func CreateKubeConfig(inCluster bool, kubeConfigPath string) (*KubernetesClient, error) {
 	// inCluster is either true or false
 	// If it's true, we pull Kubernetes API authentication from Pod SA
 	// If it's false, we use local machine settings
@@ -38,22 +37,25 @@ func CreateKubeConfig(inCluster bool, kubeConfigPath string) *KubernetesClient {
 		config, err := rest.InClusterConfig()
 		if err != nil {
 			log.Errorf("error creating kubernetes config: %s", err)
+			return nil, fmt.Errorf("error creating kubernetes config: %w", err)
 		}
 
 		clientset, err := kubernetes.NewForConfig(config)
 		if err != nil {
 			log.Errorf("error creating kubernetes client: %s", err)
+			return nil, fmt.Errorf("error creating kubernetes client: %w", err)
 		}
 
 		return &KubernetesClient{
 			Clientset:      clientset,
 			RestConfig:     config,
 			KubeConfigPath: "in-cluster",
-		}
+		}, nil
 	}
 
 	// Set path to kubeconfig
 	kubeconfig := returnKubeConfigPath(kubeConfigPath)
+	fs := afero.NewOsFs()
 
 	// Check to make sure kubeconfig actually exists
 	// If it doesn't, go fetch it
@@ -68,19 +70,21 @@ func CreateKubeConfig(inCluster bool, kubeConfigPath string) *KubernetesClient {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		log.Errorf("unable to locate kubeconfig file - checked path: %s", kubeconfig)
+		return nil, fmt.Errorf("unable to locate kubeconfig file - checked path: %s", kubeconfig)
 	}
 
 	// Create clientset, which is used to run operations against the API
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		log.Errorf("error creating kubernetes client: %s", err)
+		return nil, fmt.Errorf("error creating kubernetes client: %w", err)
 	}
 
 	return &KubernetesClient{
 		Clientset:      clientset,
 		RestConfig:     config,
 		KubeConfigPath: kubeconfig,
-	}
+	}, nil
 }
 
 // returnKubeConfigPath generates the path in the filesystem to kubeconfig

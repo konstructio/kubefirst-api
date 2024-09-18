@@ -15,7 +15,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/konstructio/kubefirst-api/internal/httpCommon"
 	"github.com/konstructio/kubefirst-api/pkg/reports"
+	"github.com/rs/zerolog/log"
 )
 
 const letsDebugHost = "https://letsdebug.net/certwatch-query"
@@ -23,9 +25,9 @@ const letsDebugHost = "https://letsdebug.net/certwatch-query"
 // CheckCertificateUsage polls letsdebug to get information about used certificates
 func CheckCertificateUsage(domain string) error {
 	// Retrieve response from letsdebug regarding used certificates
-	req, err := http.NewRequest("GET", letsDebugHost, nil)
+	req, err := http.NewRequest(http.MethodGet, letsDebugHost, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create HTTP request for certificate usage: %w", err)
 	}
 	query := fmt.Sprintf(`WITH ci AS ( SELECT min(sub.CERTIFICATE_ID) ID, min(sub.ISSUER_CA_ID) ISSUER_CA_ID, sub.CERTIFICATE DER FROM (SELECT * FROM certificate_and_identities cai WHERE plainto_tsquery('%s') @@ identities(cai.CERTIFICATE) AND cai.NAME_VALUE ILIKE ('%%' || '%s' || '%%') LIMIT 10000 ) sub GROUP BY sub.CERTIFICATE ) SELECT ci.ID crtsh_id, ci.DER der FROM ci LEFT JOIN LATERAL ( SELECT min(ctle.ENTRY_TIMESTAMP) ENTRY_TIMESTAMP FROM ct_log_entry ctle WHERE ctle.CERTIFICATE_ID = ci.ID ) le ON TRUE, ca WHERE ci.ISSUER_CA_ID = ca.ID AND x509_notBefore(ci.DER) >= NOW() - INTERVAL '169 hours' AND ci.ISSUER_CA_ID IN (16418, 183267, 183283) ORDER BY le.ENTRY_TIMESTAMP DESC;`,
 		domain,
@@ -35,19 +37,16 @@ func CheckCertificateUsage(domain string) error {
 	q.Add("q", query)
 	req.URL.RawQuery = q.Encode()
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := httpCommon.CustomHTTPClient(false).Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to check certificate usage for domain %q: %w", domain, err)
 	}
 	defer resp.Body.Close()
 
-	var output Response
-
 	// Decode response into struct
-	err = json.NewDecoder(resp.Body).Decode(&output)
-	if err != nil {
-		return err
+	var output Response
+	if err := json.NewDecoder(resp.Body).Decode(&output); err != nil {
+		return fmt.Errorf("unable to decode response for domain %q: %w", domain, err)
 	}
 
 	// Iterate over returned certificates
@@ -55,11 +54,13 @@ func CheckCertificateUsage(domain string) error {
 	for _, result := range output.Results {
 		sDec, err := base64.StdEncoding.DecodeString(result.Der)
 		if err != nil {
-			fmt.Println(err)
+			log.Error().Msgf("unable to decode certificate: %s", err)
+			return fmt.Errorf("unable to decode certificate for domain %q: %w", domain, err)
 		}
 		cert, err := x509.ParseCertificate(sDec)
 		if err != nil {
-			return err
+			log.Error().Msgf("unable to parse certificate: %s", err)
+			return fmt.Errorf("unable to parse certificate for domain %q: %w", domain, err)
 		}
 		detail := CertificateDetail{
 			Issued:         cert.NotBefore,
@@ -119,7 +120,6 @@ func printLetsEncryptCertData(messageHeader string, params []CertificateDetail, 
 	}
 
 	return certificateData.String()
-
 }
 
 // removeDuplicates takes []CertificateDetail and removes duplicate entries

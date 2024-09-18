@@ -27,22 +27,24 @@ import (
 func (clctrl *ClusterController) InstallArgoCD() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster: %w", err)
 	}
 
 	if !cl.ArgoCDInstallCheck {
-
 		var kcfg *k8s.KubernetesClient
 
 		switch clctrl.CloudProvider {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 		case "akamai", "civo", "digitalocean", "k3s", "vultr":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			if err != nil {
+				return fmt.Errorf("failed to create Kubernetes config: %w", err)
+			}
 		case "google":
 			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get Google container cluster auth: %w", err)
 			}
 		}
 
@@ -54,7 +56,7 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 		err = argocd.ApplyArgoCDKustomize(kcfg.Clientset, argoCDInstallPath)
 		if err != nil {
 			telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.ArgoCDInstallFailed, err.Error())
-			return err
+			return fmt.Errorf("failed to apply ArgoCD kustomize: %w", err)
 		}
 
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.ArgoCDInstallCompleted, "")
@@ -63,13 +65,13 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 		_, err = k8s.VerifyArgoCDReadiness(kcfg.Clientset, true, 300)
 		if err != nil {
 			log.Error().Msgf("error waiting for ArgoCD to become ready: %s", err)
-			return err
+			return fmt.Errorf("failed to verify ArgoCD readiness: %w", err)
 		}
 
 		clctrl.Cluster.ArgoCDInstallCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster: %w", err)
 		}
 	}
 
@@ -80,7 +82,7 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 func (clctrl *ClusterController) InitializeArgoCD() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster: %w", err)
 	}
 
 	if !cl.ArgoCDInitializeCheck {
@@ -90,12 +92,15 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 		case "akamai", "civo", "digitalocean", "k3s", "vultr":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			if err != nil {
+				return fmt.Errorf("failed to create Kubernetes config: %w", err)
+			}
 		case "google":
 			var err error
 			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get Google container cluster auth: %w", err)
 			}
 		}
 
@@ -132,9 +137,8 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 			)
 
 			argoCDToken, err = argocd.GetArgoCDToken("admin", argocdPassword)
-
 			if err != nil {
-				return fmt.Errorf("error getting argoCDToken : %w", err)
+				return fmt.Errorf("failed to get ArgoCD token: %w", err)
 			}
 		}
 
@@ -146,19 +150,17 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster: %w", err)
 		}
 	}
 
 	return nil
 }
 
-func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, namespace string, deployment_name string) error {
-
-	deploy, err := clientset.AppsV1().Deployments(namespace).Get(ctx, deployment_name, metav1.GetOptions{})
-
+func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, namespace string, deploymentName string) error {
+	deploy, err := clientset.AppsV1().Deployments(namespace).Get(ctx, deploymentName, metav1.GetOptions{})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get deployment %s: %w", deploymentName, err)
 	}
 
 	if deploy.Spec.Template.ObjectMeta.Annotations == nil {
@@ -168,7 +170,6 @@ func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, name
 	deploy.Spec.Template.ObjectMeta.Annotations["kubectl.kubernetes.io/restartedAt"] = time.Now().Format(time.RFC3339)
 
 	_, err = clientset.AppsV1().Deployments(namespace).Update(ctx, deploy, metav1.UpdateOptions{})
-
 	if err != nil {
 		return fmt.Errorf("unable to update deployment %q: %w", deploy, err)
 	}
@@ -180,7 +181,7 @@ func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, name
 func (clctrl *ClusterController) DeployRegistryApplication() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster: %w", err)
 	}
 
 	if !cl.ArgoCDCreateRegistryCheck {
@@ -190,26 +191,29 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		case "aws":
 			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
 		case "akamai", "civo", "digitalocean", "k3s", "vultr":
-			kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			if err != nil {
+				return fmt.Errorf("failed to create Kubernetes config: %w", err)
+			}
 		case "google":
 			var err error
 			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get Google container cluster auth: %w", err)
 			}
 		}
 
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.CreateRegistryStarted, "")
 		argocdClient, err := argocdapi.NewForConfig(kcfg.RestConfig)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to create ArgoCD client: %w", err)
 		}
 
 		log.Info().Msg("applying the registry application to argocd")
 
 		registryURL, err := clctrl.GetRepoURL()
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get repository URL: %w", err)
 		}
 
 		var registryPath string
@@ -225,30 +229,32 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		)
 
 		if clctrl.Kcfg == nil {
-			clctrl.Kcfg = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			clctrl.Kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+			if err != nil {
+				return fmt.Errorf("failed to create Kubernetes config: %w", err)
+			}
 		}
 
 		err = RestartDeployment(context.Background(), clctrl.Kcfg.Clientset, "argocd", "argocd-applicationset-controller")
-
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to restart deployment: %w", err)
 		}
 
 		retryAttempts := 2
 		for attempt := 1; attempt <= retryAttempts; attempt++ {
-			log.Info().Msgf("Attempt #%d to create Argo CD application...\n", attempt)
+			log.Info().Msgf("Attempt #%d to create Argo CD application...", attempt)
 
 			app, err := argocdClient.ArgoprojV1alpha1().Applications("argocd").Create(context.Background(), registryApplicationObject, metav1.CreateOptions{})
 			if err != nil {
 				if attempt == retryAttempts {
-					return err
+					return fmt.Errorf("failed to create Argo CD application on attempt #%d: %w", attempt, err)
 				}
-				log.Info().Msgf("Error creating Argo CD application on attempt number #%d: %v\n", attempt, err)
+				log.Info().Msgf("Error creating Argo CD application on attempt number #%d: %v", attempt, err)
 				time.Sleep(5 * time.Second)
 				continue
 			}
 
-			log.Info().Msgf("Argo CD application created successfully on attempt #%d: %s\n", attempt, app.Name)
+			log.Info().Msgf("Argo CD application created successfully on attempt #%d: %s", attempt, app.Name)
 			break
 		}
 
@@ -257,7 +263,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 		clctrl.Cluster.ArgoCDCreateRegistryCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster: %w", err)
 		}
 	}
 

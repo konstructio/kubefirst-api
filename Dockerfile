@@ -1,3 +1,7 @@
+LABEL org.opencontainers.image.source=https://github.com/konstructio/kubefirst-api
+LABEL org.opencontainers.image.description="Kubefirst API that serves console frontend"
+LABEL org.opencontainers.image.licenses=MIT
+
 FROM golang:alpine AS builder
 
 ENV GO111MODULE=on \

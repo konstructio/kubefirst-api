@@ -18,33 +18,33 @@ import (
 )
 
 // ReturnJobObject returns a matching appsv1.StatefulSet object based on the filters
-func ReturnJobObject(clientset *kubernetes.Clientset, namespace string, jobName string) (*batchv1.Job, error) {
+func ReturnJobObject(clientset kubernetes.Interface, namespace, jobName string) (*batchv1.Job, error) {
 	job, err := clientset.BatchV1().Jobs(namespace).Get(context.Background(), jobName, metav1.GetOptions{})
 	if err != nil {
-		return &batchv1.Job{}, err
+		return nil, fmt.Errorf("failed to retrieve Job %q in namespace %q: %w", jobName, namespace, err)
 	}
 
 	return job, nil
 }
 
 // WaitForJobComplete waits for a target Job to reach completion
-func WaitForJobComplete(clientset *kubernetes.Clientset, job *batchv1.Job, timeoutSeconds int64) (bool, error) {
+func WaitForJobComplete(clientset kubernetes.Interface, jobName, jobNamespace string, timeoutSeconds int64) (bool, error) {
 	// Format list for metav1.ListOptions for watch
 	watchOptions := metav1.ListOptions{
 		FieldSelector: fmt.Sprintf(
-			"metadata.name=%s", job.Name),
+			"metadata.name=%s", jobName),
 	}
 
 	// Create watch operation
 	objWatch, err := clientset.
 		BatchV1().
-		Jobs(job.ObjectMeta.Namespace).
+		Jobs(jobNamespace).
 		Watch(context.Background(), watchOptions)
 	if err != nil {
 		log.Error().Msgf("error when attempting to wait for Job: %s", err)
-		return false, err
+		return false, fmt.Errorf("unable to create watch for Job %q in namespace %q: %w", jobName, jobNamespace, err)
 	}
-	log.Info().Msgf("waiting for %s Job completion. This could take up to %v seconds.", job.Name, timeoutSeconds)
+	log.Info().Msgf("waiting for %s Job completion. This could take up to %v seconds.", jobName, timeoutSeconds)
 
 	// Feed events using provided channel
 	objChan := objWatch.ResultChan()
@@ -56,17 +56,18 @@ func WaitForJobComplete(clientset *kubernetes.Clientset, job *batchv1.Job, timeo
 		case event, ok := <-objChan:
 			if !ok {
 				// Error if the channel closes
-				log.Error().Msgf("failed to wait for job %s to complete", job.Name)
+				log.Error().Msgf("failed to wait for job %s to complete", jobName)
+				return false, fmt.Errorf("job %q channel closed unexpectedly while waiting for completion", jobName)
 			}
 			if event.
 				Object.(*batchv1.Job).
 				Status.Succeeded > 0 {
-				log.Info().Msgf("job %s completed at %s.", job.Name, event.Object.(*batchv1.Job).Status.CompletionTime)
+				log.Info().Msgf("job %s completed at %s.", jobName, event.Object.(*batchv1.Job).Status.CompletionTime)
 				return true, nil
 			}
 		case <-time.After(time.Duration(timeoutSeconds) * time.Second):
 			log.Error().Msg("the operation timed out while waiting for the Job to complete")
-			return false, fmt.Errorf("the operation timed out while waiting for the Job to complete")
+			return false, fmt.Errorf("the operation timed out while waiting for Job %q in namespace %s to complete", jobName, jobNamespace)
 		}
 	}
 }

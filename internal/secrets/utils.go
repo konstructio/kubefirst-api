@@ -6,13 +6,16 @@ See the LICENSE file for more details.
 */
 package secrets
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 func ParseJSONToMap(jsonStr string) (map[string][]byte, error) {
 	var result map[string]interface{}
 	err := json.Unmarshal([]byte(jsonStr), &result)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error unmarshalling JSON: %w", err)
 	}
 
 	secretData := make(map[string][]byte)
@@ -21,13 +24,13 @@ func ParseJSONToMap(jsonStr string) (map[string][]byte, error) {
 		case map[string]interface{}, []interface{}: // For nested structures, marshal back to JSON
 			bytes, err := json.Marshal(v)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("error marshalling value for key %s: %w", key, err)
 			}
 			secretData[key] = bytes
 		default:
 			bytes, err := json.Marshal(v)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("error marshalling value for key %s: %w", key, err)
 			}
 			secretData[key] = bytes
 		}

@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package vultr
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/rs/zerolog/log"
@@ -14,18 +15,18 @@ import (
 )
 
 // GetKubernetesAssociatedVolumes returns block storage associated with a Vultr Kubernetes cluster
-func (c *VultrConfiguration) GetKubernetesAssociatedBlockStorage(clusterName string, returnAll bool) ([]govultr.BlockStorage, error) {
+func (c *Configuration) GetKubernetesAssociatedBlockStorage(clusterName string, returnAll bool) ([]govultr.BlockStorage, error) {
 	// Probably needs pagination
 	allBlockStorage, _, _, err := c.Client.BlockStorage.List(c.Context, &govultr.ListOptions{})
 	if err != nil {
-		return []govultr.BlockStorage{}, err
+		return nil, fmt.Errorf("error listing block storage resources while retrieving associated volumes: %w", err)
 	}
 
 	if !returnAll {
 		// Return only volumes associated with droplets part of the target cluster's node pool
 		clusters, _, _, err := c.Client.Kubernetes.ListClusters(c.Context, &govultr.ListOptions{})
 		if err != nil {
-			return []govultr.BlockStorage{}, err
+			return nil, fmt.Errorf("error listing Kubernetes clusters when checking associated block storage: %w", err)
 		}
 
 		var clusterID string
@@ -35,12 +36,12 @@ func (c *VultrConfiguration) GetKubernetesAssociatedBlockStorage(clusterName str
 			}
 		}
 		if clusterID == "" {
-			return []govultr.BlockStorage{}, fmt.Errorf("could not find cluster ID for cluster name %s", clusterName)
+			return nil, fmt.Errorf("could not find cluster ID for cluster name %q when fetching block storage", clusterName)
 		}
 
 		cluster, _, err := c.Client.Kubernetes.GetCluster(c.Context, clusterID)
 		if err != nil {
-			return []govultr.BlockStorage{}, err
+			return nil, fmt.Errorf("error retrieving cluster details for cluster ID %q: %w", clusterID, err)
 		}
 
 		// Construct a slice of node IDs associated with a cluster's node pool
@@ -73,16 +74,16 @@ func (c *VultrConfiguration) GetKubernetesAssociatedBlockStorage(clusterName str
 }
 
 // DeleteBlockStorage iterates over target volumes and deletes them
-func (c *VultrConfiguration) DeleteBlockStorage(blockStorage []govultr.BlockStorage) error {
+func (c *Configuration) DeleteBlockStorage(blockStorage []govultr.BlockStorage) error {
 	if len(blockStorage) == 0 {
-		return fmt.Errorf("no block storage resources are available for deletion with the provided parameters")
+		return errors.New("no block storage resources are available for deletion when calling DeleteBlockStorage")
 	}
 
 	for _, blst := range blockStorage {
 		log.Info().Msg("removing block storage with name: " + blst.Label)
 		err := c.Client.BlockStorage.Delete(c.Context, blst.ID)
 		if err != nil {
-			return err
+			return fmt.Errorf("error deleting block storage resource with ID %q: %w", blst.ID, err)
 		}
 		log.Info().Msg("volume " + blst.ID + " deleted")
 	}
@@ -90,29 +91,27 @@ func (c *VultrConfiguration) DeleteBlockStorage(blockStorage []govultr.BlockStor
 	return nil
 }
 
-func (c *VultrConfiguration) GetKubeconfig(clusterName string)(string, error) {
+func (c *Configuration) GetKubeconfig(clusterName string) (string, error) {
 	clusters, _, _, err := c.Client.Kubernetes.ListClusters(c.Context, &govultr.ListOptions{})
-
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error listing Kubernetes clusters when fetching kubeconfig: %w", err)
 	}
 
-	var clusterId string
-	for  _, cluster := range clusters {
+	var clusterID string
+	for _, cluster := range clusters {
 		if cluster.Label == clusterName {
-			clusterId = cluster.ID
+			clusterID = cluster.ID
 			continue
 		}
 	}
 
-	if clusterId == "" {
-		return "", fmt.Errorf("could not find cluster ID for cluster name %s", clusterName)
+	if clusterID == "" {
+		return "", fmt.Errorf("could not find cluster ID for cluster name %q when retrieving kubeconfig", clusterName)
 	}
 
-	kubeConfig, _, err := c.Client.Kubernetes.GetKubeConfig(c.Context, clusterId)
-
+	kubeConfig, _, err := c.Client.Kubernetes.GetKubeConfig(c.Context, clusterID)
 	if err != nil {
-		return "", err 
+		return "", fmt.Errorf("error getting kubeconfig for cluster ID %q: %w", clusterID, err)
 	}
 
 	return kubeConfig.KubeConfig, nil

@@ -15,8 +15,10 @@ import (
 )
 
 func DownloadTools(clusterName string, gitProvider string, gitOwner string, toolsDir string, gitProtocol string) error {
-
-	config := GetConfig(clusterName, gitProvider, gitOwner, gitProtocol)
+	config, err := GetConfig(clusterName, gitProvider, gitOwner, gitProtocol)
+	if err != nil {
+		return fmt.Errorf("error while trying to get config: %w", err)
+	}
 
 	if _, err := os.Stat(toolsDir); os.IsNotExist(err) {
 		err := os.MkdirAll(toolsDir, os.ModePerm)
@@ -25,24 +27,24 @@ func DownloadTools(clusterName string, gitProvider string, gitOwner string, tool
 		}
 	}
 
-	//* k3d
-	k3dDownloadUrl := fmt.Sprintf(
+	// * k3d
+	k3dDownloadURL := fmt.Sprintf(
 		"https://github.com/k3d-io/k3d/releases/download/%s/k3d-%s-%s",
 		K3dVersion,
 		LocalhostOS,
 		LocalhostARCH,
 	)
-	err := downloadManager.DownloadFile(config.K3dClient, k3dDownloadUrl)
+	err = downloadManager.DownloadFile(config.K3dClient, k3dDownloadURL)
 	if err != nil {
-		return fmt.Errorf("error while trying to download k3d: %s", err)
+		return fmt.Errorf("error while trying to download k3d: %w", err)
 	}
 
-	err = os.Chmod(config.K3dClient, 0755)
+	err = os.Chmod(config.K3dClient, 0o755)
 	if err != nil {
-		return err
+		return fmt.Errorf("error while trying to chmod k3d: %w", err)
 	}
 
-	//* kubectl
+	// * kubectl
 	kubectlDownloadURL := fmt.Sprintf(
 		"https://dl.k8s.io/release/%s/bin/%s/%s/kubectl",
 		KubectlVersion,
@@ -52,12 +54,12 @@ func DownloadTools(clusterName string, gitProvider string, gitOwner string, tool
 
 	err = downloadManager.DownloadFile(config.KubectlClient, kubectlDownloadURL)
 	if err != nil {
-		return fmt.Errorf("error while trying to download kubectl: %s", err)
+		return fmt.Errorf("error while trying to download kubectl: %w", err)
 	}
 
-	err = os.Chmod(config.KubectlClient, 0755)
+	err = os.Chmod(config.KubectlClient, 0o755)
 	if err != nil {
-		return err
+		return fmt.Errorf("error while trying to chmod kubectl: %w", err)
 	}
 
 	// * mkcert
@@ -72,14 +74,14 @@ func DownloadTools(clusterName string, gitProvider string, gitOwner string, tool
 
 	err = downloadManager.DownloadFile(config.MkCertClient, mkCertDownloadURL)
 	if err != nil {
-		return fmt.Errorf("error while trying to download mkcert: %s", err)
+		return fmt.Errorf("error while trying to download mkcert: %w", err)
 	}
-	err = os.Chmod(config.MkCertClient, 0755)
+	err = os.Chmod(config.MkCertClient, 0o755)
 	if err != nil {
-		return err
+		return fmt.Errorf("error while trying to chmod mkcert: %w", err)
 	}
 
-	//* terraform
+	// * terraform
 	terraformDownloadURL := fmt.Sprintf(
 		"https://releases.hashicorp.com/terraform/%s/terraform_%s_%s_%s.zip",
 		TerraformVersion,
@@ -91,7 +93,7 @@ func DownloadTools(clusterName string, gitProvider string, gitOwner string, tool
 
 	err = downloadManager.DownloadZip(config.ToolsDir, terraformDownloadURL, zipPath)
 	if err != nil {
-		return fmt.Errorf("error while trying to download terraform: %s", err)
+		return fmt.Errorf("error while trying to download terraform: %w", err)
 	}
 
 	return nil

@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package google
 
 import (
+	"errors"
 	"fmt"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
@@ -18,14 +19,14 @@ import (
 )
 
 // CreateBucket creates a GCS bucket
-func (conf *GoogleConfiguration) CreateBucket(bucketName string, keyFile []byte) (*storage.BucketAttrs, error) {
+func (conf *Configuration) CreateBucket(bucketName string, keyFile []byte) (*storage.BucketAttrs, error) {
 	creds, err := google.CredentialsFromJSON(conf.Context, keyFile, secretmanager.DefaultAuthScopes()...)
 	if err != nil {
-		return nil, fmt.Errorf("could not create google storage client credentials: %s", err)
+		return nil, fmt.Errorf("could not create google storage client credentials: %w", err)
 	}
 	client, err := storage.NewClient(conf.Context, option.WithCredentials(creds))
 	if err != nil {
-		return nil, fmt.Errorf("could not create google storage client: %s", err)
+		return nil, fmt.Errorf("could not create google storage client: %w", err)
 	}
 
 	// Create bucket
@@ -33,17 +34,17 @@ func (conf *GoogleConfiguration) CreateBucket(bucketName string, keyFile []byte)
 
 	err = client.Bucket(bucketName).Create(conf.Context, conf.Project, &storage.BucketAttrs{})
 	if err != nil {
-		return nil, fmt.Errorf("error creating gcs bucket %s: %s", bucketName, err)
+		return nil, fmt.Errorf("error creating gcs bucket %s: %w", bucketName, err)
 	}
 
 	it := client.Buckets(conf.Context, conf.Project)
 	for {
 		pair, err := it.Next()
-		if err == iterator.Done {
-			return nil, fmt.Errorf("error fetching created bucket: %s", err)
+		if errors.Is(err, iterator.Done) {
+			return nil, nil //nolint:nilnil // need to return nil here
 		}
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not list buckets: %w", err)
 		}
 		if pair.Name == bucketName {
 			return pair, nil
@@ -52,14 +53,14 @@ func (conf *GoogleConfiguration) CreateBucket(bucketName string, keyFile []byte)
 }
 
 // DeleteBucket deletes a GCS bucket
-func (conf *GoogleConfiguration) DeleteBucket(bucketName string, keyFile []byte) error {
+func (conf *Configuration) DeleteBucket(bucketName string, keyFile []byte) error {
 	creds, err := google.CredentialsFromJSON(conf.Context, keyFile, secretmanager.DefaultAuthScopes()...)
 	if err != nil {
-		return fmt.Errorf("could not create google storage client credentials: %s", err)
+		return fmt.Errorf("could not create google storage client credentials: %w", err)
 	}
 	client, err := storage.NewClient(conf.Context, option.WithCredentials(creds))
 	if err != nil {
-		return fmt.Errorf("could not create google storage client: %s", err)
+		return fmt.Errorf("could not create google storage client: %w", err)
 	}
 	defer client.Close()
 
@@ -69,24 +70,21 @@ func (conf *GoogleConfiguration) DeleteBucket(bucketName string, keyFile []byte)
 	bucket := client.Bucket(bucketName)
 	err = bucket.Delete(conf.Context)
 	if err != nil {
-		return fmt.Errorf("error deleting gcs bucket %s: %s", bucketName, err)
+		return fmt.Errorf("error deleting gcs bucket %s: %w", bucketName, err)
 	}
 
 	return nil
 }
 
 // ListBuckets lists all GCS buckets for a project
-func (conf *GoogleConfiguration) ListBuckets(keyFile []byte) ([]*storage.BucketAttrs, error) {
+func (conf *Configuration) ListBuckets(keyFile []byte) ([]*storage.BucketAttrs, error) {
 	creds, err := google.CredentialsFromJSON(conf.Context, keyFile, secretmanager.DefaultAuthScopes()...)
 	if err != nil {
-		return nil, fmt.Errorf("could not create google storage client credentials: %s", err)
+		return nil, fmt.Errorf("could not create google storage client credentials: %w", err)
 	}
 	client, err := storage.NewClient(conf.Context, option.WithCredentials(creds))
 	if err != nil {
-		return nil, fmt.Errorf("could not create google storage client: %s", err)
-	}
-	if err != nil {
-		return nil, fmt.Errorf("could not create google storage client: %s", err)
+		return nil, fmt.Errorf("could not create google storage client: %w", err)
 	}
 	defer client.Close()
 
@@ -95,11 +93,11 @@ func (conf *GoogleConfiguration) ListBuckets(keyFile []byte) ([]*storage.BucketA
 	it := client.Buckets(conf.Context, conf.Project)
 	for {
 		pair, err := it.Next()
-		if err == iterator.Done {
+		if errors.Is(err, iterator.Done) {
 			break
 		}
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not list buckets: %w", err)
 		}
 		buckets = append(buckets, pair)
 	}

@@ -17,10 +17,16 @@ import (
 )
 
 // ZerologSetup setup Zerolog and return the configured Zerolog instance
-func ZerologSetup(logFile *os.File, level zerolog.Level) zerolog.Logger {
+func ZerologSetup(logFile *os.File, level zerolog.Level) (zerolog.Logger, error) {
 	zerolog.CallerMarshalFunc = shortCallerMarshalFunc
 	zerolog.SetGlobalLevel(level)
-	return log.Output(zerolog.ConsoleWriter{Out: logFile, NoColor: true, TimeFormat: "2006-01-02T15:04"}).With().Timestamp().Caller().Logger()
+
+	if logFile == nil {
+		log.Error().Msgf("logFile is nil")
+		return zerolog.Logger{}, nil
+	}
+
+	return log.Output(zerolog.ConsoleWriter{Out: logFile, NoColor: true, TimeFormat: "2006-01-02T15:04"}).With().Timestamp().Caller().Logger(), nil
 }
 
 // shortCallerMarshalFunc is a custom marshal function for zerolog.CallerMarshalFunc variable.
@@ -61,7 +67,6 @@ func shortCallerMarshalFunc(pc uintptr, file string, line int) string {
 // debug (zerolog.DebugLevel, 0)
 // trace (zerolog.TraceLevel, -1)
 func GetLogLevelByString(logLevel string) zerolog.Level {
-
 	level := make(map[string]zerolog.Level)
 	level["trace"] = zerolog.TraceLevel
 	level["debug"] = zerolog.DebugLevel
@@ -72,5 +77,4 @@ func GetLogLevelByString(logLevel string) zerolog.Level {
 	level["panic"] = zerolog.PanicLevel
 
 	return level[logLevel]
-
 }

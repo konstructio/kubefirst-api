@@ -22,10 +22,14 @@ func TestArgoCDLivenessIntegration(t *testing.T) {
 		t.Skip("skipping integration test")
 	}
 
-	config := configs.ReadConfig()
-	err := pkg.SetupViper(config, false)
+	config, err := configs.ReadConfig()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
+	}
+
+	err = pkg.SetupViper(config, false)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	var argoURL string
@@ -37,16 +41,16 @@ func TestArgoCDLivenessIntegration(t *testing.T) {
 
 	req, err := http.NewRequest(http.MethodGet, argoURL, nil)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if res.StatusCode != http.StatusOK {
-		t.Errorf("wanted http status code 200, got %d", res.StatusCode)
+		t.Fatalf("wanted http status code 200, got %d", res.StatusCode)
 	}
 }
 
@@ -56,10 +60,14 @@ func TestArgoWorkflowLivenessIntegration(t *testing.T) {
 		t.Skip("skipping integration test")
 	}
 
-	config := configs.ReadConfig()
-	err := pkg.SetupViper(config, false)
+	config, err := configs.ReadConfig()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
+	}
+
+	err = pkg.SetupViper(config, false)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	var argoURL string
@@ -71,15 +79,15 @@ func TestArgoWorkflowLivenessIntegration(t *testing.T) {
 
 	req, err := http.NewRequest(http.MethodGet, argoURL, nil)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if res.StatusCode != http.StatusOK {
-		t.Errorf("wanted http status code 200, got %d", res.StatusCode)
+		t.Fatalf("wanted http status code 200, got %d", res.StatusCode)
 	}
 }

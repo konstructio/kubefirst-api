@@ -7,10 +7,7 @@ See the LICENSE file for more details.
 package civo
 
 import (
-	"crypto/tls"
 	"fmt"
-	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/civo/civogo"
@@ -21,6 +18,7 @@ import (
 	"github.com/konstructio/kubefirst-api/internal/constants"
 	"github.com/konstructio/kubefirst-api/internal/errors"
 	gitlab "github.com/konstructio/kubefirst-api/internal/gitlab"
+	"github.com/konstructio/kubefirst-api/internal/httpCommon"
 	"github.com/konstructio/kubefirst-api/internal/k8s"
 	"github.com/konstructio/kubefirst-api/internal/secrets"
 	"github.com/konstructio/kubefirst-api/internal/utils"
@@ -34,15 +32,26 @@ import (
 func DeleteCivoCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEvent) error {
 	telemetry.SendEvent(telemetryEvent, telemetry.ClusterDeleteStarted, "")
 
-	// Instantiate civo config
-	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.APIToken, cl.CloudflareAuth.OriginCaIssuerKey)
+	// Instantiate provider config
+	config, err := providerConfigs.GetConfig(
+		cl.ClusterName,
+		cl.DomainName,
+		cl.GitProvider,
+		cl.GitAuth.Owner,
+		cl.GitProtocol,
+		cl.CloudflareAuth.APIToken,
+		cl.CloudflareAuth.OriginCaIssuerKey,
+	)
+	if err != nil {
+		return fmt.Errorf("error getting provider config for cluster %s: %w", cl.ClusterName, err)
+	}
 
 	kcfg := utils.GetKubernetesClient(cl.ClusterName)
 
 	cl.Status = constants.ClusterStatusDeleting
-	err := secrets.UpdateCluster(kcfg.Clientset, *cl)
-	if err != nil {
-		return err
+
+	if err := secrets.UpdateCluster(kcfg.Clientset, *cl); err != nil {
+		return fmt.Errorf("error updating cluster status for cluster %s: %w", cl.ClusterName, err)
 	}
 
 	tfEnvs := map[string]string{}
@@ -59,12 +68,12 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryE
 		case "gitlab":
 			gitlabClient, err := gitlab.NewGitLabClient(cl.GitAuth.Token, cl.GitAuth.Owner)
 			if err != nil {
-				return err
+				return fmt.Errorf("error creating GitLab client for cluster %s: %w", cl.ClusterName, err)
 			}
 
 			// Before removing Terraform resources, remove any container registry repositories
 			// since failing to remove them beforehand will result in an apply failure
-			var projectsForDeletion = []string{"gitops", "metaphor"}
+			projectsForDeletion := []string{"gitops", "metaphor"}
 			for _, project := range projectsForDeletion {
 				projectExists, err := gitlabClient.CheckProjectExists(project)
 				if err != nil {
@@ -99,7 +108,7 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryE
 		if err != nil {
 			log.Info().Msgf("error executing terraform destroy %s", tfEntrypoint)
 			errors.HandleClusterError(cl, err.Error())
-			return err
+			return fmt.Errorf("error executing terraform destroy for %s: %w", tfEntrypoint, err)
 		}
 
 		log.Info().Msgf("%s resources terraform destroyed", cl.GitProvider)
@@ -107,36 +116,39 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryE
 		cl.GitTerraformApplyCheck = false
 		err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating cluster status after terraform destroy for cluster %s: %w", cl.ClusterName, err)
 		}
 	}
 
 	if cl.CloudTerraformApplyCheck || cl.CloudTerraformApplyFailedCheck {
 		if !cl.ArgoCDDeleteRegistryCheck {
-			kcfg := k8s.CreateKubeConfig(false, config.Kubeconfig)
+			kcfg, err := k8s.CreateKubeConfig(false, config.Kubeconfig)
+			if err != nil {
+				return fmt.Errorf("error creating kubeconfig for cluster %s: %w", cl.ClusterName, err)
+			}
 
 			log.Info().Msg("destroying civo resources with terraform")
 
 			client, err := civogo.NewClient(cl.CivoAuth.Token, cl.CloudRegion)
 			if err != nil {
-				return fmt.Errorf(err.Error())
+				return fmt.Errorf("error creating Civo client for cluster %s: %w", cl.ClusterName, err)
 			}
 
 			cluster, err := client.FindKubernetesCluster(cl.ClusterName)
 			if err != nil {
-				return err
+				return fmt.Errorf("error finding Civo Kubernetes cluster %s: %w", cl.ClusterName, err)
 			}
 			log.Info().Msg("cluster name: " + cluster.ID)
 
 			clusterVolumes, err := client.ListVolumesForCluster(cluster.ID)
 			if err != nil {
-				return err
+				return fmt.Errorf("error listing Civo volumes for cluster %s: %w", cl.ClusterName, err)
 			}
 
 			// Only port-forward to ArgoCD and delete registry if ArgoCD was installed
 			if cl.ArgoCDInstallCheck {
 				log.Info().Msg("opening argocd port forward")
-				//* ArgoCD port-forward
+				// * ArgoCD port-forward
 				argoCDStopChannel := make(chan struct{}, 1)
 				defer func() {
 					close(argoCDStopChannel)
@@ -155,25 +167,23 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryE
 
 				secData, err := k8s.ReadSecretV2(kcfg.Clientset, "argocd", "argocd-initial-admin-secret")
 				if err != nil {
-					return err
+					return fmt.Errorf("error reading ArgoCD secret for cluster %s: %w", cl.ClusterName, err)
 				}
 				argocdPassword := secData["password"]
 
 				argocdAuthToken, err := argocd.GetArgoCDToken("admin", argocdPassword)
 				if err != nil {
-					return err
+					return fmt.Errorf("error getting ArgoCD token for cluster %s: %w", cl.ClusterName, err)
 				}
 
 				log.Info().Msgf("port-forward to argocd is available at %s", providerConfigs.ArgocdPortForwardURL)
 
-				customTransport := http.DefaultTransport.(*http.Transport).Clone()
-				customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-				argocdHttpClient := http.Client{Transport: customTransport}
+				client := httpCommon.CustomHTTPClient(true)
 				log.Info().Msg("deleting the registry application")
-				httpCode, _, err := argocd.DeleteApplication(&argocdHttpClient, config.RegistryAppName, argocdAuthToken, "true")
+				httpCode, _, err := argocd.DeleteApplication(client, config.RegistryAppName, argocdAuthToken, "true")
 				if err != nil {
 					errors.HandleClusterError(cl, err.Error())
-					return err
+					return fmt.Errorf("error deleting ArgoCD application for cluster %s: %w", cl.ClusterName, err)
 				}
 				log.Info().Msgf("http status code %d", httpCode)
 			}
@@ -182,7 +192,7 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryE
 				log.Info().Msg("removing volume with name: " + vol.Name)
 				_, err := client.DeleteVolume(vol.ID)
 				if err != nil {
-					return err
+					return fmt.Errorf("error deleting Civo volume %s for cluster %s: %w", vol.Name, cl.ClusterName, err)
 				}
 				log.Info().Msg("volume " + vol.ID + " deleted")
 			}
@@ -194,7 +204,7 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryE
 			cl.ArgoCDDeleteRegistryCheck = true
 			err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 			if err != nil {
-				return err
+				return fmt.Errorf("error updating cluster status after volume deletion for cluster %s: %w", cl.ClusterName, err)
 			}
 		}
 
@@ -207,17 +217,13 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryE
 		case "github":
 			tfEnvs = civoext.GetGithubTerraformEnvs(tfEnvs, cl)
 		case "gitlab":
-			gid, err := strconv.Atoi(fmt.Sprint(cl.GitlabOwnerGroupID))
-			if err != nil {
-				return fmt.Errorf("couldn't convert gitlab group id to int: %s", err)
-			}
-			tfEnvs = civoext.GetGitlabTerraformEnvs(tfEnvs, gid, cl)
+			tfEnvs = civoext.GetGitlabTerraformEnvs(tfEnvs, cl.GitlabOwnerGroupID, cl)
 		}
 		err = terraformext.InitDestroyAutoApprove(config.TerraformClient, tfEntrypoint, tfEnvs)
 		if err != nil {
 			log.Printf("error executing terraform destroy %s", tfEntrypoint)
 			errors.HandleClusterError(cl, err.Error())
-			return err
+			return fmt.Errorf("error executing terraform destroy for %s: %w", tfEntrypoint, err)
 		}
 		log.Info().Msg("civo resources terraform destroyed")
 
@@ -225,7 +231,7 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryE
 		cl.CloudTerraformApplyFailedCheck = false
 		err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating cluster status after cloud resource destruction for cluster %s: %w", cl.ClusterName, err)
 		}
 	}
 
@@ -233,7 +239,7 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryE
 	if cl.GitProvider == "gitlab" {
 		gitlabClient, err := gitlab.NewGitLabClient(cl.GitAuth.Token, cl.GitAuth.Owner)
 		if err != nil {
-			return err
+			return fmt.Errorf("error creating GitLab client for SSH key deletion for cluster %s: %w", cl.ClusterName, err)
 		}
 		log.Info().Msg("attempting to delete managed ssh key...")
 		err = gitlabClient.DeleteUserSSHKey("kbot-ssh-key")
@@ -247,12 +253,12 @@ func DeleteCivoCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryE
 	cl.Status = constants.ClusterStatusDeleted
 	err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating cluster status to deleted for cluster %s: %w", cl.ClusterName, err)
 	}
 
 	err = pkg.ResetK1Dir(config.K1Dir)
 	if err != nil {
-		return err
+		return fmt.Errorf("error resetting K1 directory for cluster %s: %w", cl.ClusterName, err)
 	}
 
 	return nil

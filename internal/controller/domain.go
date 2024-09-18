@@ -8,6 +8,7 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	cloudflare_api "github.com/cloudflare/cloudflare-go"
@@ -25,48 +26,48 @@ import (
 func (clctrl *ClusterController) DomainLivenessTest() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get cluster for domain liveness test: %w", err)
 	}
 
 	if !cl.DomainLivenessCheck {
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.DomainLivenessStarted, "")
 
-		switch clctrl.DnsProvider {
+		switch clctrl.DNSProvider {
 		case "aws":
 			domainLiveness := clctrl.AwsClient.TestHostedZoneLiveness(clctrl.DomainName)
 
 			err = clctrl.HandleDomainLiveness(domainLiveness)
 			if err != nil {
-				return err
+				return fmt.Errorf("domain liveness check failed for AWS: %w", err)
 			}
 		case "civo":
-			civoConf := civo.CivoConfiguration{
+			civoConf := civo.Configuration{
 				Client:  civo.NewCivo(cl.CivoAuth.Token, cl.CloudRegion),
 				Context: context.Background(),
 			}
 
 			// domain id
-			domainId, err := civoConf.GetDNSInfo(clctrl.DomainName, clctrl.CloudRegion)
+			domainID, err := civoConf.GetDNSInfo(clctrl.DomainName)
 			if err != nil {
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.DomainLivenessFailed, err.Error())
 				log.Info().Msg(err.Error())
 			}
 
-			log.Info().Msgf("domainId: %s", domainId)
-			domainLiveness := civoConf.TestDomainLiveness(clctrl.DomainName, domainId, clctrl.CloudRegion)
+			log.Info().Msgf("domainId: %s", domainID)
+			domainLiveness := civoConf.TestDomainLiveness(clctrl.DomainName, domainID)
 
 			err = clctrl.HandleDomainLiveness(domainLiveness)
 			if err != nil {
-				return err
+				return fmt.Errorf("domain liveness check failed for Civo: %w", err)
 			}
 		case "cloudflare":
 
 			client, err := cloudflare_api.NewWithAPIToken(clctrl.CloudflareAuth.APIToken)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to create Cloudflare client: %w", err)
 			}
 
-			cloudflareConf := cloudflare.CloudflareConfiguration{
+			cloudflareConf := cloudflare.Configuration{
 				Client:  client,
 				Context: context.Background(),
 			}
@@ -75,54 +76,53 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 
 			err = clctrl.HandleDomainLiveness(domainLiveness)
 			if err != nil {
-				return err
+				return fmt.Errorf("domain liveness check failed for Cloudflare: %w", err)
 			}
 		case "digitalocean":
-			digitaloceanConf := digitalocean.DigitaloceanConfiguration{
+			digitaloceanConf := digitalocean.Configuration{
 				Client:  digitalocean.NewDigitalocean(cl.DigitaloceanAuth.Token),
 				Context: context.Background(),
 			}
 
 			// domain id
-			domainId, err := digitaloceanConf.GetDNSInfo(clctrl.DomainName)
+			domainID, err := digitaloceanConf.GetDNSInfo(clctrl.DomainName)
 			if err != nil {
 				log.Info().Msg(err.Error())
 			}
 
-			log.Info().Msgf("domainId: %s", domainId)
+			log.Info().Msgf("domainId: %s", domainID)
 			domainLiveness := digitaloceanConf.TestDomainLiveness(clctrl.DomainName)
 
 			err = clctrl.HandleDomainLiveness(domainLiveness)
 			if err != nil {
-				return err
+				return fmt.Errorf("domain liveness check failed for DigitalOcean: %w", err)
 			}
 		case "vultr":
-			vultrConf := vultr.VultrConfiguration{
+			vultrConf := vultr.Configuration{
 				Client:  vultr.NewVultr(cl.VultrAuth.Token),
 				Context: context.Background(),
 			}
 
 			// domain id
-			domainId, err := vultrConf.GetDNSInfo(clctrl.DomainName)
+			domainID, err := vultrConf.GetDNSInfo(clctrl.DomainName)
 			if err != nil {
 				log.Info().Msg(err.Error())
 			}
 
 			// viper values set in above function
-			log.Info().Msgf("domainId: %s", domainId)
+			log.Info().Msgf("domainId: %s", domainID)
 			domainLiveness := vultrConf.TestDomainLiveness(clctrl.DomainName)
 
 			err = clctrl.HandleDomainLiveness(domainLiveness)
 			if err != nil {
-				return err
+				return fmt.Errorf("domain liveness check failed for Vultr: %w", err)
 			}
 		}
 
 		clctrl.Cluster.DomainLivenessCheck = true
 		err = secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
-
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update cluster after domain liveness test: %w", err)
 		}
 
 		telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.DomainLivenessCompleted, "")
@@ -142,10 +142,10 @@ func (clctrl *ClusterController) HandleDomainLiveness(domainLiveness bool) error
 		}
 		msg := fmt.Sprintf("failed to verify domain liveness for domain %s", clctrl.DomainName)
 		if len(foundRecords) != 0 {
-			msg = msg + fmt.Sprintf(" - last result: %s - it may be necessary to wait for propagation", foundRecords)
+			msg += fmt.Sprintf(" - last result: %s - it may be necessary to wait for propagation", foundRecords)
 		}
-		return fmt.Errorf(msg)
-	} else {
-		return nil
+		return errors.New(msg)
 	}
+
+	return nil
 }

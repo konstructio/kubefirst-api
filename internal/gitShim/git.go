@@ -4,7 +4,7 @@ Copyright (C) 2021-2023, Kubefirst
 This program is licensed under MIT.
 See the LICENSE file for more details.
 */
-package gitShim
+package gitShim //nolint:revive,stylecheck // allowed during code reorg
 
 import (
 	"fmt"
@@ -33,7 +33,7 @@ func PullWithAuth(repo *git.Repository, remote string, branch string, auth trans
 		Auth:          auth,
 	})
 	if err != nil {
-		return fmt.Errorf("error during git pull: %s", err)
+		return fmt.Errorf("error during git pull: %w", err)
 	}
 
 	return nil
@@ -42,61 +42,52 @@ func PullWithAuth(repo *git.Repository, remote string, branch string, auth trans
 func PrepareMgmtCluster(cluster pkgtypes.Cluster) error {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatal().Msgf("error getting home path: %s", err)
+		log.Error().Msgf("error getting home path: %s", err)
+		return fmt.Errorf("error getting home path: %w", err)
 	}
+
 	clusterDir := fmt.Sprintf("%s/.k1/%s", homeDir, cluster.ClusterName)
 	gitopsDir := fmt.Sprintf("%s/.k1/%s/gitops", homeDir, cluster.ClusterName)
 
 	if _, err := os.Stat(clusterDir); os.IsNotExist(err) {
-		err := os.MkdirAll(clusterDir, 0777)
+		err := os.MkdirAll(clusterDir, 0o777)
 		if err != nil {
-			log.Fatal().Msgf("error creating home dir: %s", err)
-			return err
+			log.Error().Msgf("error creating cluster directory at %q: %s", clusterDir, err)
+			return fmt.Errorf("error creating cluster directory at %q: %w", clusterDir, err)
 		}
 	}
 
 	gitopsRepo, err := gitClient.CloneRefSetMain(cluster.GitopsTemplateBranch, gitopsDir, cluster.GitopsTemplateURL)
 	if err != nil {
-		log.Fatal().Msgf("error cloning repository: %s", err)
-
-		return err
+		log.Error().Msgf("error cloning repository: %s", err)
+		return fmt.Errorf("error cloning repository: %w", err)
 	}
 	err = gitClient.AddRemote(fmt.Sprintf("https://%s/%s/gitops", cluster.GitHost, cluster.GitAuth.Owner), cluster.GitProvider, gitopsRepo)
 	if err != nil {
-		log.Fatal().Msgf("error cloning repository: %s", err)
-
-		return err
-	}
-
-	if err != nil {
-		log.Fatal().Msgf("error cloning repository: %s", err)
-		return err
-
+		log.Error().Msgf("error adding repository remote: %s", err)
+		return fmt.Errorf("error adding repository remote: %w", err)
 	}
 
 	return nil
 }
 
 func PrepareGitEnvironment(cluster *pkgtypes.Cluster, gitopsDir string) error {
-
-	repoUrl := fmt.Sprintf("https://%s/%s/gitops", cluster.GitHost, cluster.GitAuth.Owner)
-	_, err := gitClient.ClonePrivateRepo("main", gitopsDir, repoUrl, cluster.GitAuth.User, cluster.GitAuth.Token)
+	repoURL := fmt.Sprintf("https://%s/%s/gitops", cluster.GitHost, cluster.GitAuth.Owner)
+	_, err := gitClient.ClonePrivateRepo("main", gitopsDir, repoURL, cluster.GitAuth.User, cluster.GitAuth.Token)
 	if err != nil {
-		log.Fatal().Msgf("error cloning repository: %s", err)
-
-		return err
+		log.Error().Msgf("error cloning private repository: %s", err)
+		return fmt.Errorf("error cloning private repository: %w", err)
 	}
 
 	return nil
 }
 
 func PrepareGitOpsCatalog(gitopsCatalogDir string) error {
-	repoUrl := fmt.Sprintf("https://github.com/%s/%s", KubefirstGitHubOrganization, KubefirstGitopsCatalogRepository)
-	_, err := gitClient.Clone("main", gitopsCatalogDir, repoUrl)
+	repoURL := fmt.Sprintf("https://github.com/%s/%s", KubefirstGitHubOrganization, KubefirstGitopsCatalogRepository)
+	_, err := gitClient.Clone("main", gitopsCatalogDir, repoURL)
 	if err != nil {
-		log.Fatal().Msgf("error cloning repository: %s", err)
-
-		return err
+		log.Error().Msgf("error cloning repository: %s", err)
+		return fmt.Errorf("error cloning repository: %w", err)
 	}
 
 	return nil

@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -10,12 +11,16 @@ import (
 )
 
 // ReadSecretV2 reads the content of a Kubernetes Secret
-func ReadSecretV2Old(clientset *kubernetes.Clientset, namespace string, secretName string) (map[string]interface{}, error) {
+func ReadSecretV2Old(clientset kubernetes.Interface, namespace string, secretName string) (map[string]interface{}, error) {
 	secret, err := clientset.CoreV1().Secrets(namespace).Get(context.Background(), secretName, metav1.GetOptions{})
 	if err != nil {
-		if !errors.IsNotFound(err) {
-			return nil, err
+		if errors.IsNotFound(err) {
+			log.Warn().Msgf("no secret found: %s", err)
+			return nil, fmt.Errorf("no secret found: %w", err)
 		}
+
+		log.Warn().Msgf("unable to pull secret: %s", err)
+		return nil, fmt.Errorf("unable to pull secret: %w", err)
 	}
 
 	parsedSecretData := make(map[string]interface{})
@@ -27,20 +32,20 @@ func ReadSecretV2Old(clientset *kubernetes.Clientset, namespace string, secretNa
 }
 
 // DeleteSecretV2 reads the content of a Kubernetes Secret
-func DeleteSecretV2(clientset *kubernetes.Clientset, namespace string, secretName string) error {
+func DeleteSecretV2(clientset kubernetes.Interface, namespace string, secretName string) error {
 	err := clientset.CoreV1().Secrets(namespace).Delete(context.Background(), secretName, metav1.DeleteOptions{})
 	if err != nil {
-		log.Error().Msgf("error deleting secret: %s\n", err)
-		return err
+		log.Error().Msgf("error deleting secret: %s", err)
+		return fmt.Errorf("error deleting secret: %w", err)
 	}
 	return nil
 }
 
 // UpdateSecretV2 updates the key value pairs of a Kubernetes Secret
-func UpdateSecretV2(clientset *kubernetes.Clientset, namespace string, secretName string, secretValues map[string][]byte) error {
+func UpdateSecretV2(clientset kubernetes.Interface, namespace string, secretName string, secretValues map[string][]byte) error {
 	currentSecret, err := clientset.CoreV1().Secrets(namespace).Get(context.Background(), secretName, metav1.GetOptions{})
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting secret: %w", err)
 	}
 
 	currentSecret.Data = secretValues
@@ -50,11 +55,10 @@ func UpdateSecretV2(clientset *kubernetes.Clientset, namespace string, secretNam
 		currentSecret,
 		metav1.UpdateOptions{},
 	)
-
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating secret: %w", err)
 	}
 
-	log.Info().Msgf("updated Secret %s in Namespace %s\n", currentSecret.Name, currentSecret.Namespace)
+	log.Info().Msgf("updated secret %q in namespace %q", currentSecret.Name, currentSecret.Namespace)
 	return nil
 }

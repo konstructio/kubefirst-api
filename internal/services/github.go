@@ -11,10 +11,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 
 	pkg "github.com/konstructio/kubefirst-api/internal"
+	"github.com/rs/zerolog/log"
 )
 
 type GitHubService struct {
@@ -37,21 +37,20 @@ func NewGitHubService(httpClient pkg.HTTPDoer) *GitHubService {
 
 // CheckUserCodeConfirmation checks if the user gave permission to the device flow request
 func (service GitHubService) CheckUserCodeConfirmation(deviceCode string) (string, error) {
-
 	gitHubAccessTokenURL := "https://github.com/login/oauth/access_token"
 
 	jsonData, err := json.Marshal(map[string]string{
-		"client_id":   pkg.GitHubOAuthClientId,
+		"client_id":   pkg.GitHubOAuthClientID,
 		"device_code": deviceCode,
 		"grant_type":  "urn:ietf:params:oauth:grant-type:device_code",
 	})
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to marshal JSON data for GitHub access token request: %w", err)
 	}
 
 	req, err := http.NewRequest(http.MethodPost, gitHubAccessTokenURL, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return "", nil
+		return "", fmt.Errorf("failed to create new HTTP request for GitHub access token: %w", err)
 	}
 
 	req.Header.Add("Content-Type", pkg.JSONContentType)
@@ -59,24 +58,24 @@ func (service GitHubService) CheckUserCodeConfirmation(deviceCode string) (strin
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return "", nil
+		return "", fmt.Errorf("failed to make HTTP request to GitHub: %w", err)
 	}
 
 	if res.StatusCode != http.StatusOK {
 		log.Printf("waiting user to authorize at GitHub page..., current status code = %d", res.StatusCode)
-		return "", fmt.Errorf("unable to issue a GitHub token")
+		return "", fmt.Errorf("unable to issue a GitHub token, received status code: %d", res.StatusCode)
 	}
 
 	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return "", nil
+		return "", fmt.Errorf("failed to read response body from GitHub access token request: %w", err)
 	}
 
 	var gitHubAccessToken gitHubAccessCode
 	err = json.Unmarshal(body, &gitHubAccessToken)
 	if err != nil {
-		log.Println(err)
+		return "", fmt.Errorf("failed to unmarshal GitHub access token response: %w", err)
 	}
 
 	return gitHubAccessToken.AccessToken, nil

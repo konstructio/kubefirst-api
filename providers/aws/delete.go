@@ -7,9 +7,7 @@ See the LICENSE file for more details.
 package aws
 
 import (
-	"crypto/tls"
 	"fmt"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -21,6 +19,7 @@ import (
 	"github.com/konstructio/kubefirst-api/internal/constants"
 	"github.com/konstructio/kubefirst-api/internal/errors"
 	gitlab "github.com/konstructio/kubefirst-api/internal/gitlab"
+	"github.com/konstructio/kubefirst-api/internal/httpCommon"
 	"github.com/konstructio/kubefirst-api/internal/k8s"
 	"github.com/konstructio/kubefirst-api/internal/secrets"
 	"github.com/konstructio/kubefirst-api/internal/utils"
@@ -34,15 +33,26 @@ import (
 func DeleteAWSCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEvent) error {
 	telemetry.SendEvent(telemetryEvent, telemetry.ClusterDeleteStarted, "")
 
-	// Instantiate aws config
-	config := providerConfigs.GetConfig(cl.ClusterName, cl.DomainName, cl.GitProvider, cl.GitAuth.Owner, cl.GitProtocol, cl.CloudflareAuth.APIToken, cl.CloudflareAuth.OriginCaIssuerKey)
+	// Instantiate provider config
+	config, err := providerConfigs.GetConfig(
+		cl.ClusterName,
+		cl.DomainName,
+		cl.GitProvider,
+		cl.GitAuth.Owner,
+		cl.GitProtocol,
+		cl.CloudflareAuth.APIToken,
+		cl.CloudflareAuth.OriginCaIssuerKey,
+	)
+	if err != nil {
+		return fmt.Errorf("error getting provider config for cluster %s: %w", cl.ClusterName, err)
+	}
 
 	kcfg := utils.GetKubernetesClient(cl.ClusterName)
 
 	cl.Status = constants.ClusterStatusDeleting
-	err := secrets.UpdateCluster(kcfg.Clientset, *cl)
-	if err != nil {
-		return err
+
+	if err := secrets.UpdateCluster(kcfg.Clientset, *cl); err != nil {
+		return fmt.Errorf("error updating cluster status for cluster %s: %w", cl.ClusterName, err)
 	}
 
 	switch cl.GitProvider {
@@ -58,7 +68,7 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEv
 			if err != nil {
 				log.Error().Msgf("error executing terraform destroy %s", tfEntrypoint)
 				errors.HandleClusterError(cl, err.Error())
-				return err
+				return fmt.Errorf("failed to execute terraform destroy for GitHub resources at %s: %w", tfEntrypoint, err)
 			}
 			log.Info().Msg("github resources terraform destroyed")
 
@@ -67,7 +77,7 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEv
 			cl.GitTerraformApplyCheck = false
 			err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 			if err != nil {
-				return err
+				return fmt.Errorf("error updating cluster after destroying github resources for cluster %s: %w", cl.ClusterName, err)
 			}
 		}
 	case "gitlab":
@@ -75,12 +85,12 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEv
 			log.Info().Msg("destroying gitlab resources with terraform")
 			gitlabClient, err := gitlab.NewGitLabClient(cl.GitAuth.Token, cl.GitAuth.Owner)
 			if err != nil {
-				return err
+				return fmt.Errorf("error creating gitlab client for cluster %s: %w", cl.ClusterName, err)
 			}
 
 			// Before removing Terraform resources, remove any container registry repositories
 			// since failing to remove them beforehand will result in an apply failure
-			var projectsForDeletion = []string{"gitops", "metaphor"}
+			projectsForDeletion := []string{"gitops", "metaphor"}
 			for _, project := range projectsForDeletion {
 				projectExists, err := gitlabClient.CheckProjectExists(project)
 				if err != nil {
@@ -115,29 +125,34 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEv
 			if err != nil {
 				log.Error().Msgf("error executing terraform destroy %s", tfEntrypoint)
 				errors.HandleClusterError(cl, err.Error())
-				return err
+				return fmt.Errorf("failed to execute terraform destroy for GitLab resources at %s: %w", tfEntrypoint, err)
 			}
 
 			log.Info().Msg("gitlab resources terraform destroyed")
 
 			cl.GitTerraformApplyCheck = false
 			err = secrets.UpdateCluster(kcfg.Clientset, *cl)
-
 			if err != nil {
-				return err
+				return fmt.Errorf("error updating cluster after destroying gitlab resources for cluster %s: %w", cl.ClusterName, err)
 			}
 		}
 	}
 
 	if cl.CloudTerraformApplyCheck || cl.CloudTerraformApplyFailedCheck {
 		if !cl.ArgoCDDeleteRegistryCheck {
-			awsClient := &awsinternal.AWSConfiguration{
-				Config: awsinternal.NewAwsV3(
-					cl.CloudRegion,
-					cl.AWSAuth.AccessKeyID,
-					cl.AWSAuth.SecretAccessKey,
-					cl.AWSAuth.SessionToken,
-				),
+			conf, err := awsinternal.NewAwsV3(
+				cl.CloudRegion,
+				cl.AWSAuth.AccessKeyID,
+				cl.AWSAuth.SecretAccessKey,
+				cl.AWSAuth.SessionToken,
+			)
+			if err != nil {
+				errors.HandleClusterError(cl, err.Error())
+				return fmt.Errorf("error creating aws client for cluster %s: %w", cl.ClusterName, err)
+			}
+
+			awsClient := &awsinternal.Configuration{
+				Config: conf,
 			}
 			kcfg := awsext.CreateEKSKubeconfig(&awsClient.Config, cl.ClusterName)
 
@@ -146,13 +161,13 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEv
 			// Only port-forward to ArgoCD and delete registry if ArgoCD was installed
 			if cl.ArgoCDInstallCheck {
 				removeArgoCDApps := []string{"ingress-nginx-components", "ingress-nginx"}
-				err = argocd.ArgoCDApplicationCleanup(kcfg.Clientset, removeArgoCDApps)
+				err = argocd.ApplicationCleanup(kcfg.Clientset, removeArgoCDApps)
 				if err != nil {
 					log.Error().Msgf("encountered error during argocd application cleanup: %s", err)
 				}
 
 				log.Info().Msg("opening argocd port forward")
-				//* ArgoCD port-forward
+				// * ArgoCD port-forward
 				argoCDStopChannel := make(chan struct{}, 1)
 				defer func() {
 					close(argoCDStopChannel)
@@ -171,25 +186,23 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEv
 
 				secData, err := k8s.ReadSecretV2(kcfg.Clientset, "argocd", "argocd-initial-admin-secret")
 				if err != nil {
-					return err
+					return fmt.Errorf("error reading argocd secret for cluster %s: %w", cl.ClusterName, err)
 				}
 				argocdPassword := secData["password"]
 
 				argocdAuthToken, err := argocd.GetArgoCDToken("admin", argocdPassword)
 				if err != nil {
-					return err
+					return fmt.Errorf("error getting argocd token for cluster %s: %w", cl.ClusterName, err)
 				}
 
 				log.Info().Msgf("port-forward to argocd is available at %s", providerConfigs.ArgocdPortForwardURL)
 
-				customTransport := http.DefaultTransport.(*http.Transport).Clone()
-				customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-				argocdHttpClient := http.Client{Transport: customTransport}
+				client := httpCommon.CustomHTTPClient(true)
 				log.Info().Msg("deleting the registry application")
-				httpCode, _, err := argocd.DeleteApplication(&argocdHttpClient, config.RegistryAppName, argocdAuthToken, "true")
+				httpCode, _, err := argocd.DeleteApplication(client, config.RegistryAppName, argocdAuthToken, "true")
 				if err != nil {
 					errors.HandleClusterError(cl, err.Error())
-					return err
+					return fmt.Errorf("failed to delete ArgoCD application %s for cluster %s: %w", config.RegistryAppName, cl.ClusterName, err)
 				}
 				log.Info().Msgf("http status code %d", httpCode)
 			}
@@ -200,9 +213,8 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEv
 
 			cl.ArgoCDDeleteRegistryCheck = true
 			err = secrets.UpdateCluster(kcfg.Clientset, *cl)
-
 			if err != nil {
-				return err
+				return fmt.Errorf("error updating cluster after ArgoCD cleanup for cluster %s: %w", cl.ClusterName, err)
 			}
 		}
 
@@ -210,15 +222,15 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEv
 		tfEntrypoint := config.GitopsDir + fmt.Sprintf("/terraform/%s", cl.CloudProvider)
 		tfEnvs := map[string]string{}
 		tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, cl)
-		tfEnvs["TF_VAR_aws_account_id"] = cl.AWSAccountId
+		tfEnvs["TF_VAR_aws_account_id"] = cl.AWSAccountID
 
 		switch cl.GitProvider {
 		case "github":
 			tfEnvs = awsext.GetGithubTerraformEnvs(tfEnvs, cl)
 		case "gitlab":
-			gid, err := strconv.Atoi(fmt.Sprint(cl.GitlabOwnerGroupID))
+			gid, err := strconv.Atoi(strconv.Itoa(cl.GitlabOwnerGroupID))
 			if err != nil {
-				return fmt.Errorf("couldn't convert gitlab group id to int: %s", err)
+				return fmt.Errorf("couldn't convert gitlab group id to int for cluster %s: %w", cl.ClusterName, err)
 			}
 			tfEnvs = awsext.GetGitlabTerraformEnvs(tfEnvs, gid, cl)
 		}
@@ -226,21 +238,20 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEv
 		if err != nil {
 			log.Error().Msgf("error executing terraform destroy %s", tfEntrypoint)
 			errors.HandleClusterError(cl, err.Error())
-			return err
+			return fmt.Errorf("failed to execute terraform destroy for AWS resources at %s: %w", tfEntrypoint, err)
 		}
 		log.Info().Msg("aws resources terraform destroyed")
 
 		cl.CloudTerraformApplyCheck = false
 		err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating cluster after destroying aws resources for cluster %s: %w", cl.ClusterName, err)
 		}
 
 		cl.CloudTerraformApplyFailedCheck = false
 		err = secrets.UpdateCluster(kcfg.Clientset, *cl)
-
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating cluster after marking aws apply as failed for cluster %s: %w", cl.ClusterName, err)
 		}
 	}
 
@@ -248,12 +259,12 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEv
 	if cl.GitProvider == "gitlab" {
 		gitlabClient, err := gitlab.NewGitLabClient(cl.GitAuth.Token, cl.GitAuth.Owner)
 		if err != nil {
-			return err
+			return fmt.Errorf("error creating gitlab client for SSH key deletion for cluster %s: %w", cl.ClusterName, err)
 		}
 		log.Info().Msgf("attempting to delete managed ssh key...")
 		err = gitlabClient.DeleteUserSSHKey("kbot-ssh-key")
 		if err != nil {
-			log.Warn().Msg(err.Error())
+			log.Warn().Msgf("error deleting SSH key for cluster %s: %s", cl.ClusterName, err)
 		}
 	}
 
@@ -262,12 +273,12 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEv
 	cl.Status = constants.ClusterStatusDeleted
 	err = secrets.UpdateCluster(kcfg.Clientset, *cl)
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating cluster status to deleted for cluster %s: %w", cl.ClusterName, err)
 	}
 
 	err = pkg.ResetK1Dir(config.K1Dir)
 	if err != nil {
-		return err
+		return fmt.Errorf("error resetting k1 directory for cluster %s: %w", cl.ClusterName, err)
 	}
 
 	return nil

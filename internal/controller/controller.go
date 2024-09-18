@@ -8,6 +8,7 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -26,12 +27,10 @@ import (
 	"github.com/konstructio/kubefirst-api/pkg/handlers"
 	"github.com/konstructio/kubefirst-api/pkg/providerConfigs"
 	"github.com/konstructio/kubefirst-api/pkg/types"
-	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
-	"k8s.io/client-go/kubernetes"
-
 	log "github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"k8s.io/client-go/kubernetes"
 )
 
 type ClusterController struct {
@@ -42,26 +41,26 @@ type ClusterController struct {
 	ClusterType               string
 	DomainName                string
 	SubdomainName             string
-	DnsProvider               string
+	DNSProvider               string
 	UseCloudflareOriginIssuer bool
 	AlertsEmail               string
 
 	// auth
-	AkamaiAuth             pkgtypes.AkamaiAuth
-	AWSAuth                pkgtypes.AWSAuth
-	CivoAuth               pkgtypes.CivoAuth
-	DigitaloceanAuth       pkgtypes.DigitaloceanAuth
-	VultrAuth              pkgtypes.VultrAuth
-	CloudflareAuth         pkgtypes.CloudflareAuth
-	GitAuth                pkgtypes.GitAuth
-	VaultAuth              pkgtypes.VaultAuth
-	GoogleAuth             pkgtypes.GoogleAuth
-	K3sAuth                pkgtypes.K3sAuth
+	AkamaiAuth             types.AkamaiAuth
+	AWSAuth                types.AWSAuth
+	CivoAuth               types.CivoAuth
+	DigitaloceanAuth       types.DigitaloceanAuth
+	VultrAuth              types.VultrAuth
+	CloudflareAuth         types.CloudflareAuth
+	GitAuth                types.GitAuth
+	VaultAuth              types.VaultAuth
+	GoogleAuth             types.GoogleAuth
+	K3sAuth                types.K3sAuth
 	AwsAccessKeyID         string
 	AwsSecretAccessKey     string
 	NodeType               string
 	NodeCount              int
-	PostInstallCatalogApps []pkgtypes.GitopsCatalogApp
+	PostInstallCatalogApps []types.GitopsCatalogApp
 	InstallKubefirstPro    bool
 
 	// configs
@@ -83,7 +82,7 @@ type ClusterController struct {
 	ECR                   bool
 
 	// http
-	HttpClient *http.Client
+	Client *http.Client
 
 	// repositories
 	Repositories []string
@@ -102,20 +101,20 @@ type ClusterController struct {
 	KubefirstStateStoreBucketName string
 	KubefirstArtifactsBucketName  string
 
-	KubernetesClient *kubernetes.Clientset
+	KubernetesClient kubernetes.Interface
 
 	// Telemetry
 	TelemetryEvent telemetry.TelemetryEvent
 
 	// Provider clients
-	AwsClient    *awsinternal.AWSConfiguration
-	GoogleClient google.GoogleConfiguration
+	AwsClient    *awsinternal.Configuration
+	GoogleClient google.Configuration
 	Kcfg         *k8s.KubernetesClient
 	Cluster      types.Cluster
 }
 
 // InitController
-func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition) error {
+func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) error {
 	// Create k1 dir if it doesn't exist
 	utils.CreateK1Directory(def.ClusterName)
 
@@ -125,14 +124,24 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	kcfg := utils.GetKubernetesClient(def.ClusterName)
 	clctrl.KubernetesClient = kcfg.Clientset
 
+	// If on local environment, automatically create the namespace
+	// if it doesn't exist
+	if env.K1LocalDebug {
+		if err := utils.CreateKubefirstNamespaceIfNotExists(clctrl.KubernetesClient); err != nil {
+			return fmt.Errorf("error creating Kubefirst namespace: %w", err)
+		}
+	}
+
 	// Determine if record already exists
 	recordExists := true
+
+	// Get cluster record if it exists
 	rec, err := secrets.GetCluster(clctrl.KubernetesClient, def.ClusterName)
-	if err != nil {
+	if err != nil && !errors.Is(err, &secrets.ClusterNotFoundError{}) {
 		return fmt.Errorf("could not read cluster secret %s: %w", def.ClusterName, err)
 	}
 
-	if rec.ClusterID == "" {
+	if rec == nil {
 		recordExists = false
 		log.Info().Msg("cluster record doesn't exist, continuing")
 	}
@@ -149,7 +158,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	if recordExists && rec.Status == constants.ClusterStatusDeleted {
 		err = secrets.DeleteCluster(clctrl.KubernetesClient, def.ClusterName)
 		if err != nil {
-			return fmt.Errorf("could not delete existing cluster %s: %s", def.ClusterName, err)
+			return fmt.Errorf("error deleting existing cluster %q: %w", def.ClusterName, err)
 		}
 	}
 
@@ -163,7 +172,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	telemetryEvent := telemetry.TelemetryEvent{
 		CliVersion:        env.KubefirstVersion,
 		CloudProvider:     env.CloudProvider,
-		ClusterID:         env.ClusterId,
+		ClusterID:         env.ClusterID,
 		ClusterType:       env.ClusterType,
 		DomainName:        env.DomainName,
 		ErrorMessage:      "",
@@ -172,10 +181,10 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		KubefirstClient:   "api",
 		KubefirstTeam:     env.KubefirstTeam,
 		KubefirstTeamInfo: env.KubefirstTeamInfo,
-		MachineID:         env.ClusterId,
-		ParentClusterId:   env.ParentClusterId,
+		MachineID:         env.ClusterID,
+		ParentClusterId:   env.ParentClusterID,
 		MetricName:        telemetry.ClusterInstallCompleted,
-		UserId:            env.ClusterId,
+		UserId:            env.ClusterID,
 	}
 	clctrl.TelemetryEvent = telemetryEvent
 
@@ -187,9 +196,9 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	clctrl.ClusterID = clusterID
 	clctrl.DomainName = def.DomainName
 	clctrl.SubdomainName = def.SubdomainName
-	clctrl.DnsProvider = def.DnsProvider
+	clctrl.DNSProvider = def.DNSProvider
 	clctrl.ClusterType = def.Type
-	clctrl.HttpClient = http.DefaultClient
+	clctrl.Client = http.DefaultClient
 	clctrl.NodeType = def.NodeType
 	clctrl.NodeCount = def.NodeCount
 	clctrl.PostInstallCatalogApps = def.PostInstallCatalogApps
@@ -219,7 +228,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		if def.GitopsTemplateBranch != "" {
 			clctrl.GitopsTemplateURL = def.GitopsTemplateURL
 		} else {
-			return fmt.Errorf("must supply branch of gitops templatelog.Fatal().Msg( repo when supplying a gitops template url")
+			return fmt.Errorf("invalid GitOps template configuration: must supply branch when supplying a GitOps template URL")
 		}
 	} else {
 		clctrl.GitopsTemplateURL = "https://github.com/kubefirst/gitops-template.git"
@@ -253,60 +262,97 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 
 	err = clctrl.SetGitTokens(*def)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to set Git tokens: %w", err)
 	}
 
 	// Instantiate provider configuration
 	switch clctrl.CloudProvider {
 	case "akamai":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.APIToken, clctrl.CloudflareAuth.OriginCaIssuerKey)
+		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.APIToken, clctrl.CloudflareAuth.OriginCaIssuerKey)
+		if err != nil {
+			return fmt.Errorf("unable to get provider configuration for Akamai: %w", err)
+		}
+
+		clctrl.ProviderConfig = *conf
 		clctrl.ProviderConfig.AkamaiToken = clctrl.AkamaiAuth.Token
 	case "aws":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		if err != nil {
+			return fmt.Errorf("unable to get provider configuration for AWS: %w", err)
+		}
+
+		clctrl.ProviderConfig = *conf
 	case "civo":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.APIToken, clctrl.CloudflareAuth.OriginCaIssuerKey)
+		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.APIToken, clctrl.CloudflareAuth.OriginCaIssuerKey)
+		if err != nil {
+			return fmt.Errorf("unable to get provider configuration for Civo: %w", err)
+		}
+
+		clctrl.ProviderConfig = *conf
 		clctrl.ProviderConfig.CivoToken = clctrl.CivoAuth.Token
 	case "google":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		if err != nil {
+			return fmt.Errorf("unable to get provider configuration for Google: %w", err)
+		}
+
+		clctrl.ProviderConfig = *conf
 		clctrl.ProviderConfig.GoogleAuth = clctrl.GoogleAuth.KeyFile
-		clctrl.ProviderConfig.GoogleProject = clctrl.GoogleAuth.ProjectId
+		clctrl.ProviderConfig.GoogleProject = clctrl.GoogleAuth.ProjectID
 	case "digitalocean":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		if err != nil {
+			return fmt.Errorf("unable to get provider configuration for DigitalOcean: %w", err)
+		}
+
+		clctrl.ProviderConfig = *conf
 		clctrl.ProviderConfig.DigitaloceanToken = clctrl.DigitaloceanAuth.Token
 	case "vultr":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		if err != nil {
+			return fmt.Errorf("unable to get provider configuration for Vultr: %w", err)
+		}
+
+		clctrl.ProviderConfig = *conf
 		clctrl.ProviderConfig.VultrToken = clctrl.VultrAuth.Token
 	case "k3s":
-		clctrl.ProviderConfig = *providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.Token, "")
+		if err != nil {
+			return fmt.Errorf("unable to get provider configuration for K3s: %w", err)
+		}
+
+		clctrl.ProviderConfig = *conf
 		clctrl.ProviderConfig.K3sServersPrivateIps = clctrl.K3sAuth.K3sServersPrivateIps
 		clctrl.ProviderConfig.K3sServersPublicIps = clctrl.K3sAuth.K3sServersPublicIps
-		clctrl.ProviderConfig.K3sSshPrivateKey = clctrl.K3sAuth.K3sSshPrivateKey
-		clctrl.ProviderConfig.K3sSshUser = clctrl.K3sAuth.K3sSshUser
+		clctrl.ProviderConfig.K3sSSHPrivateKey = clctrl.K3sAuth.K3sSSHPrivateKey
+		clctrl.ProviderConfig.K3sSSHUser = clctrl.K3sAuth.K3sSSHUser
 		clctrl.ProviderConfig.K3sServersArgs = clctrl.K3sAuth.K3sServersArgs
 	}
 
 	// Instantiate provider clients and copy cluster controller to cluster type
 	switch clctrl.CloudProvider {
 	case "aws":
-		clctrl.AwsClient = &awsinternal.AWSConfiguration{
-			Config: awsinternal.NewAwsV3(
-				clctrl.CloudRegion,
-				clctrl.AWSAuth.AccessKeyID,
-				clctrl.AWSAuth.SecretAccessKey,
-				clctrl.AWSAuth.SessionToken,
-			),
-		}
-	case "google":
-		clctrl.GoogleClient = google.GoogleConfiguration{
-			Context: context.Background(),
-			Project: def.GoogleAuth.ProjectId,
-			Region:  clctrl.CloudRegion,
+		conf, err := awsinternal.NewAwsV3(
+			clctrl.CloudRegion,
+			clctrl.AWSAuth.AccessKeyID,
+			clctrl.AWSAuth.SecretAccessKey,
+			clctrl.AWSAuth.SessionToken,
+		)
+		if err != nil {
+			return fmt.Errorf("unable to create AWS client: %w", err)
 		}
 
+		clctrl.AwsClient = &awsinternal.Configuration{Config: conf}
+	case "google":
+		clctrl.GoogleClient = google.Configuration{
+			Context: context.Background(),
+			Project: def.GoogleAuth.ProjectID,
+			Region:  clctrl.CloudRegion,
+		}
 	}
 
 	// Write cluster record if it doesn't exist
-	clctrl.Cluster = pkgtypes.Cluster{
+	clctrl.Cluster = types.Cluster{
 		ID:                     primitive.NewObjectID(),
 		CreationTimestamp:      fmt.Sprintf("%v", primitive.NewDateTimeFromTime(time.Now().UTC())),
 		Status:                 constants.ClusterStatusProvisioning,
@@ -316,7 +362,7 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 		CloudRegion:            clctrl.CloudRegion,
 		DomainName:             clctrl.DomainName,
 		SubdomainName:          clctrl.SubdomainName,
-		DnsProvider:            clctrl.DnsProvider,
+		DNSProvider:            clctrl.DNSProvider,
 		ClusterID:              clctrl.ClusterID,
 		ECR:                    clctrl.ECR,
 		ClusterType:            clctrl.ClusterType,
@@ -345,30 +391,23 @@ func (clctrl *ClusterController) InitController(def *pkgtypes.ClusterDefinition)
 	}
 
 	if !recordExists {
-
-		if env.K1LocalDebug == "true" {
-			err = utils.CreateKubefirstNamespace(clctrl.KubernetesClient)
-			if err != nil {
-				return err
-			}
-		}
-
+		log.Info().Msg("cluster record doesn't exist after initialization, inserting")
 		err = secrets.InsertCluster(clctrl.KubernetesClient, clctrl.Cluster)
 		if err != nil {
-			return err
+			return fmt.Errorf("error inserting cluster record: %w", err)
 		}
 	} else {
-		clctrl.Cluster = rec
+		clctrl.Cluster = *rec
 	}
 
 	return nil
 }
 
 // GetCurrentClusterRecord will return an active cluster's record if it exists
-func (clctrl *ClusterController) SetGitTokens(def pkgtypes.ClusterDefinition) error {
+func (clctrl *ClusterController) SetGitTokens(def types.ClusterDefinition) error {
 	switch def.GitProvider {
 	case "github":
-		gitHubService := services.NewGitHubService(clctrl.HttpClient)
+		gitHubService := services.NewGitHubService(clctrl.Client)
 		gitHubHandler := handlers.NewGitHubHandler(gitHubService)
 
 		clctrl.GitHost = "github.com"
@@ -376,12 +415,12 @@ func (clctrl *ClusterController) SetGitTokens(def pkgtypes.ClusterDefinition) er
 		// Verify token scopes
 		err := github.VerifyTokenPermissions(def.GitAuth.Token)
 		if err != nil {
-			return err
+			return fmt.Errorf("GitHub token verification failed: %w", err)
 		}
 		// Get authenticated user's name
 		githubUser, err := gitHubHandler.GetGitHubUser(def.GitAuth.Token)
 		if err != nil {
-			return err
+			return fmt.Errorf("error retrieving GitHub user: %w", err)
 		}
 		clctrl.GitAuth.User = githubUser
 	case "gitlab":
@@ -390,47 +429,46 @@ func (clctrl *ClusterController) SetGitTokens(def pkgtypes.ClusterDefinition) er
 		// Verify token scopes
 		err := gitlab.VerifyTokenPermissions(def.GitAuth.Token)
 		if err != nil {
-			return err
+			return fmt.Errorf("GitLab token verification failed: %w", err)
 		}
 		gitlabClient, err := gitlab.NewGitLabClient(def.GitAuth.Token, def.GitAuth.Owner)
 		if err != nil {
-			return err
+			return fmt.Errorf("error creating GitLab client: %w", err)
 		}
 		clctrl.GitAuth.Owner = gitlabClient.ParentGroupPath
 		clctrl.GitlabOwnerGroupID = gitlabClient.ParentGroupID
 		// Get authenticated user's name
 		user, _, err := gitlabClient.Client.Users.CurrentUser()
 		if err != nil {
-			return fmt.Errorf("unable to get authenticated user info - please make sure GITLAB_TOKEN env var is set %s", err.Error())
+			return fmt.Errorf("unable to get authenticated user info from GitLab: %w", err)
 		}
 		clctrl.GitAuth.User = user.Username
 	default:
-		return fmt.Errorf("invalid git provider option")
+		return fmt.Errorf("invalid git provider option: %q", def.GitProvider)
 	}
 
 	return nil
 }
 
 // GetCurrentClusterRecord will return an active cluster's record if it exists
-func (clctrl *ClusterController) GetCurrentClusterRecord() (pkgtypes.Cluster, error) {
+func (clctrl *ClusterController) GetCurrentClusterRecord() (*types.Cluster, error) {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
-		return pkgtypes.Cluster{}, err
+		return nil, fmt.Errorf("error retrieving current cluster record: %w", err)
 	}
 
 	return cl, nil
 }
 
-// HandleError implements an error handler for cluster controller objects
-func (clctrl *ClusterController) HandleError(condition string) error {
+// UpdateClusterOnError implements an error handler for cluster controller objects
+func (clctrl *ClusterController) UpdateClusterOnError(condition string) error {
 	clctrl.Cluster.InProgress = false
 	clctrl.Cluster.Status = constants.ClusterStatusError
 	clctrl.Cluster.LastCondition = condition
 
-	err := secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster)
-
-	if err != nil {
-		return err
+	log.Error().Msgf("unexpected error: %s", condition)
+	if err := secrets.UpdateCluster(clctrl.KubernetesClient, clctrl.Cluster); err != nil {
+		return fmt.Errorf("error updating cluster after condition failure: %w", err)
 	}
 
 	return nil

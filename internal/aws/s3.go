@@ -18,7 +18,7 @@ import (
 )
 
 // CreateBucket
-func (conf *AWSConfiguration) CreateBucket(bucketName string) (*s3.CreateBucketOutput, error) {
+func (conf *Configuration) CreateBucket(bucketName string) (*s3.CreateBucketOutput, error) {
 	s3Client := s3.NewFromConfig(conf.Config)
 	log.Info().Msg(conf.Config.Region)
 
@@ -30,10 +30,9 @@ func (conf *AWSConfiguration) CreateBucket(bucketName string) (*s3.CreateBucketO
 		if string(location) == conf.Config.Region {
 			locationConstraint = conf.Config.Region
 			break
-		} else {
-			// It defaults to us-east-1 anyway
-			locationConstraint = "us-east-1"
 		}
+
+		locationConstraint = "us-east-1"
 	}
 
 	// Create bucket
@@ -49,7 +48,7 @@ func (conf *AWSConfiguration) CreateBucket(bucketName string) (*s3.CreateBucketO
 
 	bucket, err := s3Client.CreateBucket(context.Background(), s3CreateBucketInput)
 	if err != nil {
-		return &s3.CreateBucketOutput{}, fmt.Errorf("error creating s3 bucket %s: %s", bucketName, err)
+		return &s3.CreateBucketOutput{}, fmt.Errorf("error creating s3 bucket %s: %w", bucketName, err)
 	}
 
 	versionConfigInput := &s3.PutBucketVersioningInput{
@@ -61,13 +60,13 @@ func (conf *AWSConfiguration) CreateBucket(bucketName string) (*s3.CreateBucketO
 
 	_, err = s3Client.PutBucketVersioning(context.Background(), versionConfigInput)
 	if err != nil {
-		return &s3.CreateBucketOutput{}, fmt.Errorf("error creating s3 bucket %s: %s", bucketName, err)
+		return &s3.CreateBucketOutput{}, fmt.Errorf("error creating s3 bucket %s: %w", bucketName, err)
 	}
 	return bucket, nil
 }
 
 // DeleteBucket
-func (conf *AWSConfiguration) DeleteBucket(bucketName string) error {
+func (conf *Configuration) DeleteBucket(bucketName string) error {
 	s3Client := s3.NewFromConfig(conf.Config)
 
 	// Create bucket
@@ -78,19 +77,19 @@ func (conf *AWSConfiguration) DeleteBucket(bucketName string) error {
 
 	_, err := s3Client.DeleteBucket(context.Background(), s3DeleteBucketInput)
 	if err != nil {
-		return fmt.Errorf("error deleting s3 bucket %s: %s", bucketName, err)
+		return fmt.Errorf("error deleting s3 bucket %s: %w", bucketName, err)
 	}
 
 	return nil
 }
 
-func (conf *AWSConfiguration) ListBuckets() (*s3.ListBucketsOutput, error) {
-	fmt.Println("listing buckets")
+func (conf *Configuration) ListBuckets() (*s3.ListBucketsOutput, error) {
+	log.Info().Msg("listing s3 buckets")
 	s3Client := s3.NewFromConfig(conf.Config)
 
 	buckets, err := s3Client.ListBuckets(context.Background(), &s3.ListBucketsInput{})
 	if err != nil {
-		return &s3.ListBucketsOutput{}, err
+		return nil, fmt.Errorf("error listing s3 buckets: %w", err)
 	}
 
 	return buckets, nil

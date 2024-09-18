@@ -1,6 +1,6 @@
 module github.com/konstructio/kubefirst-api
 
-go 1.20
+go 1.23
 
 require (
 	cloud.google.com/go/compute v1.23.0
@@ -249,7 +249,7 @@ require (
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	golang.org/x/mod v0.13.0
 	golang.org/x/net v0.21.0 // indirect
-	golang.org/x/sync v0.4.0 // indirect
+	golang.org/x/sync v0.4.0
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/term v0.17.0
 	golang.org/x/time v0.3.0 // indirect

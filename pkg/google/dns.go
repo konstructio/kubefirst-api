@@ -8,6 +8,7 @@ package google
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"strings"
@@ -25,7 +26,7 @@ import (
 )
 
 // TestHostedZoneLiveness checks DNS for the liveness test record
-func (conf *GoogleConfiguration) TestHostedZoneLiveness(hostedZoneName string) bool {
+func (conf *Configuration) TestHostedZoneLiveness(hostedZoneName string) bool {
 	recordName := fmt.Sprintf("kubefirst-liveness.%s.", hostedZoneName)
 	recordValue := "domain record propagated"
 
@@ -109,7 +110,7 @@ func (conf *GoogleConfiguration) TestHostedZoneLiveness(hostedZoneName string) b
 		} else {
 			for _, ip := range ips {
 				// todo check ip against route53RecordValue in some capacity so we can pivot the value for testing
-				log.Info().Msgf("%s. in TXT record value: %s\n", recordName, ip)
+				log.Info().Msgf("%s. in TXT record value: %s", recordName, ip)
 				count = 101
 			}
 		}
@@ -121,26 +122,23 @@ func (conf *GoogleConfiguration) TestHostedZoneLiveness(hostedZoneName string) b
 	return true
 }
 
-func (conf *GoogleConfiguration) GetDNSDomains() ([]string, error) {
-	var zoneNames []string
-
+func (conf *Configuration) GetDNSDomains() ([]string, error) {
 	creds, err := google.CredentialsFromJSON(conf.Context, []byte(conf.KeyFile), secretmanager.DefaultAuthScopes()...)
 	if err != nil {
-		return nil, fmt.Errorf("could not create google storage client credentials: %s", err)
+		return nil, fmt.Errorf("unable to create google storage client credentials: %w", err)
 	}
 
 	dnsService, err := googleDNS.NewService(conf.Context, option.WithCredentials(creds))
-
 	if err != nil {
-		return zoneNames, err
+		return nil, fmt.Errorf("failed to create Google DNS service: %w", err)
 	}
 
 	zones, err := dnsService.ManagedZones.List(conf.Project).Do()
-
 	if err != nil {
-		return zoneNames, err
+		return nil, fmt.Errorf("error listing managed zones in project %q: %w", conf.Project, err)
 	}
 
+	zoneNames := make([]string, 0, len(zones.ManagedZones))
 	for _, zone := range zones.ManagedZones {
 		zoneNames = append(zoneNames, strings.TrimRight(zone.DnsName, "."))
 	}
@@ -148,15 +146,15 @@ func (conf *GoogleConfiguration) GetDNSDomains() ([]string, error) {
 	return zoneNames, nil
 }
 
-func (conf *GoogleConfiguration) ListInstances(zone string) ([]string, error) {
+func (conf *Configuration) ListInstances(zone string) ([]string, error) {
 	creds, err := google.CredentialsFromJSON(conf.Context, []byte(conf.KeyFile), secretmanager.DefaultAuthScopes()...)
 	if err != nil {
-		return nil, fmt.Errorf("could not create google storage client credentials: %s", err)
+		return nil, fmt.Errorf("unable to create google storage client credentials: %w", err)
 	}
 
 	machineTypeClient, err := compute.NewMachineTypesRESTClient(context.Background(), option.WithCredentials(creds))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create machine types REST client: %w", err)
 	}
 
 	defer machineTypeClient.Close()
@@ -169,11 +167,11 @@ func (conf *GoogleConfiguration) ListInstances(zone string) ([]string, error) {
 	var machineTypes []string
 	for {
 		m, err := machines.Next()
-		if err == iterator.Done {
+		if errors.Is(err, iterator.Done) {
 			break
 		}
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error fetching machine types in zone %q: %w", zone, err)
 		}
 
 		machineTypes = append(machineTypes, m.GetName())

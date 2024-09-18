@@ -7,6 +7,7 @@ See the LICENSE file for more details.
 package digitalocean
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -15,10 +16,10 @@ import (
 )
 
 // GetKubernetesAssociatedResources returns resources associated with a digitalocean Kubernetes cluster
-func (c *DigitaloceanConfiguration) GetKubernetesAssociatedResources(clusterName string) (*godo.KubernetesAssociatedResources, error) {
+func (c *Configuration) GetKubernetesAssociatedResources(clusterName string) (*godo.KubernetesAssociatedResources, error) {
 	clusters, _, err := c.Client.Kubernetes.List(c.Context, &godo.ListOptions{})
 	if err != nil {
-		return &godo.KubernetesAssociatedResources{}, err
+		return nil, fmt.Errorf("error listing kubernetes clusters: %w", err)
 	}
 
 	var clusterID string
@@ -28,21 +29,21 @@ func (c *DigitaloceanConfiguration) GetKubernetesAssociatedResources(clusterName
 		}
 	}
 	if clusterID == "" {
-		return &godo.KubernetesAssociatedResources{}, fmt.Errorf("could not find cluster ID for cluster name %s", err)
+		return nil, fmt.Errorf("could not find cluster ID for cluster name %w", err)
 	}
 
 	resources, _, err := c.Client.Kubernetes.ListAssociatedResourcesForDeletion(c.Context, clusterID)
 	if err != nil {
-		return &godo.KubernetesAssociatedResources{}, err
+		return nil, fmt.Errorf("error listing associated resources: %w", err)
 	}
 
 	return resources, nil
 }
 
 // DeleteKubernetesClusterVolumes iterates over resource volumes and deletes them
-func (c *DigitaloceanConfiguration) DeleteKubernetesClusterVolumes(resources *godo.KubernetesAssociatedResources) error {
+func (c *Configuration) DeleteKubernetesClusterVolumes(resources *godo.KubernetesAssociatedResources) error {
 	if len(resources.Volumes) == 0 {
-		return fmt.Errorf("no volumes are available for deletion with the provided parameters")
+		return errors.New("no volumes are available for deletion with the provided parameters")
 	}
 
 	for _, vol := range resources.Volumes {
@@ -50,7 +51,7 @@ func (c *DigitaloceanConfiguration) DeleteKubernetesClusterVolumes(resources *go
 		for i := 0; i < 24; i++ {
 			voldata, _, err := c.Client.Storage.GetVolume(c.Context, vol.ID)
 			if err != nil {
-				return err
+				return fmt.Errorf("error getting volume %s: %w", vol.ID, err)
 			}
 			if len(voldata.DropletIDs) != 0 {
 				log.Info().Msgf("volume %s is still attached to droplet(s) - waiting...", vol.ID)
@@ -64,6 +65,7 @@ func (c *DigitaloceanConfiguration) DeleteKubernetesClusterVolumes(resources *go
 		_, err := c.Client.Storage.DeleteVolume(c.Context, vol.ID)
 		if err != nil {
 			log.Error().Msgf("error deleting volume %s: %s", vol.ID, err)
+			return fmt.Errorf("error deleting volume %s: %w", vol.ID, err)
 		}
 		log.Info().Msg("volume " + vol.ID + " deleted")
 	}
