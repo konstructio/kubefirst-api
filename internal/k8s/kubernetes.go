@@ -36,7 +36,7 @@ func GetSecretValue(k8sClient coreV1Types.SecretInterface, secretName, key strin
 }
 
 // GetClientSet - Get reference to k8s credentials to use APIS
-func GetClientSet(kubeconfigPath string) (kubernetes.Interface, error) {
+func GetClientSet(kubeconfigPath string) (*kubernetes.Clientset, error) {
 	kubeconfig, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
 	if err != nil {
 		log.Error().Err(err).Msg("Error getting kubeconfig")

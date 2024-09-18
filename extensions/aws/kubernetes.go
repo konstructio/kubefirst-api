@@ -46,7 +46,7 @@ func CreateEKSKubeconfig(awsConfig *aws.Config, clusterName string) *k8s.Kuberne
 }
 
 // newEKSConfig
-func newEKSConfig(cluster *eksTypes.Cluster) (kubernetes.Interface, *rest.Config, error) {
+func newEKSConfig(cluster *eksTypes.Cluster) (*kubernetes.Clientset, *rest.Config, error) {
 	gen, err := token.NewGenerator(true, false)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error creating token generator: %w", err)

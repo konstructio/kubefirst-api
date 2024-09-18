@@ -353,7 +353,6 @@ func PostCreateCluster(c *gin.Context) {
 			return
 		}
 		useSecretForAuth = true
-
 	}
 
 	switch clusterDefinition.CloudProvider {
