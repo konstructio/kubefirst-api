@@ -8,10 +8,9 @@ package secrets
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
-	"github.com/konstructio/kubefirst-api/internal/constants"
-	"github.com/konstructio/kubefirst-api/internal/env"
 	"github.com/konstructio/kubefirst-api/internal/k8s"
 	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
 	"github.com/rs/zerolog/log"
@@ -19,13 +18,6 @@ import (
 
 func ImportClusterIfEmpty() (*pkgtypes.Cluster, error) {
 	// find the secret in mgmt cluster's kubefirst namespace and read import payload and clustername
-	cluster := pkgtypes.Cluster{}
-	env, _ := env.GetEnv(constants.SilenceGetEnv)
-
-	if env.IsClusterZero {
-		log.Info().Msg("IS_CLUSTER_ZERO is set to true, skipping import cluster logic.")
-		return nil, nil //nolint:nilnil // this is the expected behavior
-	}
 
 	kcfg, err := k8s.CreateKubeConfig(true, "")
 	if err != nil {
@@ -49,32 +41,33 @@ func ImportClusterIfEmpty() (*pkgtypes.Cluster, error) {
 		return nil, fmt.Errorf("error marshalling json from secret data: %w", err)
 	}
 
-	err = json.Unmarshal(jsonData, &cluster)
-	if err != nil {
+	var cluster pkgtypes.Cluster
+	if err := json.Unmarshal(jsonData, &cluster); err != nil {
 		return nil, fmt.Errorf("unable to cast unmarshalled JSON to cluster type: %w", err)
 	}
 
-	log.Info().Msgf("import cluster secret discovered for cluster %s", cluster.ClusterName)
+	log.Info().Msgf("import cluster secret discovered for cluster %q", cluster.ClusterName)
 
-	// if you find a record bail
 	existingCluster, err := GetCluster(kcfg.Clientset, cluster.ClusterName)
-	if err != nil {
-		return existingCluster, fmt.Errorf("unable to find cluster: %w", err)
+	if err != nil && !errors.Is(err, &ClusterNotFoundError{}) {
+		return nil, fmt.Errorf("unable to find cluster: %w", err)
 	}
 
-	if existingCluster.ClusterID == "" {
+	if errors.Is(err, &ClusterNotFoundError{}) {
 		log.Info().Stack().Msgf("did not find preexisting record for cluster %s. importing record.", cluster.ClusterName)
+
 		// Create if entry does not exist
-		err = InsertCluster(kcfg.Clientset, cluster)
-		if err != nil {
+		if err := InsertCluster(kcfg.Clientset, cluster); err != nil {
 			return nil, fmt.Errorf("error inserting cluster record %v into database: %w", cluster, err)
 		}
+
 		// log cluster
 		log.Info().Msgf("inserted cluster record to db. adding default services. %s", cluster.ClusterName)
 
-		return nil, nil //nolint:nilnil // this is the expected behavior
+		return &cluster, nil
 	}
 
+	// if you find a record bail
 	log.Info().Msgf("cluster record for %s already exists - skipping", cluster.ClusterName)
-	return nil, nil //nolint:nilnil // this is the expected behavior
+	return existingCluster, nil
 }

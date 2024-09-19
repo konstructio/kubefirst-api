@@ -199,14 +199,14 @@ func CreateAkamaiCluster(definition *pkgtypes.ClusterDefinition) error {
 		3600,
 	)
 	if err != nil {
-		log.Error().Msgf("Error finding crossplane Deployment: %s", err)
+		log.Error().Msgf("error finding crossplane Deployment: %s", err)
 		ctrl.UpdateClusterOnError(err.Error())
 		return fmt.Errorf("error finding crossplane Deployment: %w", err)
 	}
 	log.Info().Msg("waiting on dns, tls certificates from letsencrypt and remaining sync waves.\n this may take up to 60 minutes but regularly completes in under 20 minutes")
 	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, crossplaneDeployment, 3600)
 	if err != nil {
-		log.Error().Msgf("Error waiting for all Apps to sync ready state: %s", err)
+		log.Error().Msgf("error waiting for all Apps to sync ready state: %s", err)
 		ctrl.UpdateClusterOnError(err.Error())
 		return fmt.Errorf("error waiting for all Apps to sync ready state: %w", err)
 	}
@@ -218,7 +218,7 @@ func CreateAkamaiCluster(definition *pkgtypes.ClusterDefinition) error {
 	// * export and import cluster
 	err = ctrl.ExportClusterRecord()
 	if err != nil {
-		log.Error().Msgf("Error exporting cluster record: %s", err)
+		log.Error().Msgf("error exporting cluster record: %s", err)
 		ctrl.UpdateClusterOnError(err.Error())
 		return fmt.Errorf("error exporting cluster record: %w", err)
 	}
@@ -257,14 +257,14 @@ func CreateAkamaiCluster(definition *pkgtypes.ClusterDefinition) error {
 			1200,
 		)
 		if err != nil {
-			log.Error().Msgf("Error finding kubefirst api Deployment: %s", err)
+			log.Error().Msgf("error finding kubefirst api Deployment: %s", err)
 			ctrl.UpdateClusterOnError(err.Error())
 			return fmt.Errorf("error finding kubefirst api Deployment: %w", err)
 		}
 
 		_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, kubefirstAPI, 300)
 		if err != nil {
-			log.Error().Msgf("Error waiting for kubefirst-api to transition to Running: %s", err)
+			log.Error().Msgf("error waiting for kubefirst-api to transition to Running: %s", err)
 			ctrl.UpdateClusterOnError(err.Error())
 			return fmt.Errorf("error waiting for kubefirst-api to transition to Running: %w", err)
 		}
@@ -280,13 +280,13 @@ func CreateAkamaiCluster(definition *pkgtypes.ClusterDefinition) error {
 		3600,
 	)
 	if err != nil {
-		log.Error().Msgf("Error finding argocd Deployment: %s", err)
+		log.Error().Msgf("error finding argocd Deployment: %s", err)
 		ctrl.UpdateClusterOnError(err.Error())
 		return fmt.Errorf("error finding argocd Deployment: %w", err)
 	}
 	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, argocdDeployment, 3600)
 	if err != nil {
-		log.Error().Msgf("Error waiting for argocd deployment to enter Ready state: %s", err)
+		log.Error().Msgf("error waiting for argocd deployment to enter Ready state: %s", err)
 		ctrl.UpdateClusterOnError(err.Error())
 		return fmt.Errorf("error waiting for argocd deployment to enter Ready state: %w", err)
 	}

@@ -35,36 +35,23 @@ func main() {
 		log.Fatal().Msg(err.Error())
 	}
 
-	log.Info().Msg("checking for cluster import secret for management cluster")
-	// Import if needed
-	importedCluster, err := secrets.ImportClusterIfEmpty()
-	if err != nil {
-		log.Fatal().Msg(err.Error())
-	}
-
-	if importedCluster != nil && importedCluster.ClusterName != "" {
-		log.Info().Msgf("adding default services for cluster %s", importedCluster.ClusterName)
-		if err := services.AddDefaultServices(importedCluster); err != nil {
+	if env.IsClusterZero {
+		log.Info().Msg("IS_CLUSTER_ZERO is set to true, skipping import cluster logic")
+	} else {
+		log.Info().Msg("checking for cluster import secret for management cluster")
+		// Import if needed
+		importedCluster, err := secrets.ImportClusterIfEmpty()
+		if err != nil {
 			log.Fatal().Msg(err.Error())
-		}
+		} else {
+			log.Info().Msgf("adding default services for cluster %s", importedCluster.ClusterName)
+			if err := services.AddDefaultServices(importedCluster); err != nil {
+				log.Fatal().Msg(err.Error())
+			}
 
-		if importedCluster.PostInstallCatalogApps != nil {
-			go func() {
-				for _, catalogApp := range importedCluster.PostInstallCatalogApps {
-					log.Info().Msgf("installing catalog application %s", catalogApp.Name)
-
-					request := &types.GitopsCatalogAppCreateRequest{
-						User:       "kbot",
-						SecretKeys: catalogApp.SecretKeys,
-						ConfigKeys: catalogApp.ConfigKeys,
-					}
-
-					err := services.CreateService(importedCluster, catalogApp.Name, &catalogApp, request, true)
-					if err != nil {
-						log.Info().Msgf("Error creating default environments %s", err.Error())
-					}
-				}
-			}()
+			if importedCluster.PostInstallCatalogApps != nil {
+				go importResourcesInCluster(importedCluster)
+			}
 		}
 	}
 
@@ -106,5 +93,22 @@ func main() {
 	err = r.Run(fmt.Sprintf(":%v", env.ServerPort))
 	if err != nil {
 		log.Fatal().Msgf("Error starting API: %s", err)
+	}
+}
+
+func importResourcesInCluster(importedCluster *types.Cluster) {
+	for _, catalogApp := range importedCluster.PostInstallCatalogApps {
+		log.Info().Msgf("installing catalog application %s", catalogApp.Name)
+
+		request := &types.GitopsCatalogAppCreateRequest{
+			User:       "kbot",
+			SecretKeys: catalogApp.SecretKeys,
+			ConfigKeys: catalogApp.ConfigKeys,
+		}
+
+		err := services.CreateService(importedCluster, catalogApp.Name, &catalogApp, request, true)
+		if err != nil {
+			log.Info().Msgf("Error creating default environments %s", err.Error())
+		}
 	}
 }
