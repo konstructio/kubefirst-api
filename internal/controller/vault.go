@@ -77,7 +77,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 			if err != nil {
 				return fmt.Errorf("failed to create Kubernetes config for vault initialization: %w", err)
 			}
-			vaultHandlerPath = "github.com:konsturctio/manifests.git/vault-handler/replicas-3"
+			vaultHandlerPath = "github.com:konstructio/manifests.git/vault-handler/replicas-3"
 		case "google":
 			var err error
 			kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
