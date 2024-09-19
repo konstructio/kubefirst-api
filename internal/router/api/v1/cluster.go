@@ -36,6 +36,7 @@ import (
 	"github.com/konstructio/kubefirst-api/providers/vultr"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	log "github.com/rs/zerolog/log"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 // DeleteCluster godoc
@@ -271,14 +272,13 @@ func PostCreateCluster(c *gin.Context) {
 	// Retrieve cluster info
 	cluster, err := secrets.GetCluster(kcfg.Clientset, clusterName)
 	if err != nil {
-		if errors.Is(err, &secrets.ClusterNotFoundError{}) {
-			log.Info().Msgf("cluster %s does not exist, continuing", clusterName)
-		} else {
+		if !errors.Is(err, &secrets.ClusterNotFoundError{}) {
 			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
 				Message: err.Error(),
 			})
 			return
 		}
+
 		log.Info().Msgf("cluster %s does not exist, continuing", clusterName)
 	}
 
@@ -337,22 +337,20 @@ func PostCreateCluster(c *gin.Context) {
 		kcfg := utils.GetKubernetesClient("")
 
 		k1AuthSecret, err := k8s.ReadSecretV2(kcfg.Clientset, constants.KubefirstNamespace, constants.KubefirstAuthSecretName)
-		if err != nil {
-			log.Warn().Msgf("authentication secret does not exist, continuing: %s", err)
+		if err != nil && !apierrors.IsNotFound(err) {
 			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
-				Message: fmt.Sprintf("error reading authentication secret: %s", err),
+				Message: err.Error(),
 			})
 			return
 		}
 
-		log.Info().Msg("authentication secret exists, checking contents")
 		if k1AuthSecret == nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-				Message: "authentication secret found but contains no data, please check and try again",
-			})
-			return
+			log.Warn().Msgf("authentication secret not found, proceeding without it, using in-memory credentials")
+			useSecretForAuth = false
+		} else {
+			log.Info().Msgf("authentication secret found, proceeding with the credentials stored in it")
+			useSecretForAuth = true
 		}
-		useSecretForAuth = true
 	}
 
 	switch clusterDefinition.CloudProvider {
