@@ -140,6 +140,15 @@ func CreateBranch(repo *git.Repository, branchName string) error {
 		return fmt.Errorf("error creating branch %q: %w", branchName, err)
 	}
 
+	w, _ := repo.Worktree()
+	err = w.Checkout(&git.CheckoutOptions{
+		Branch: plumbing.NewBranchReferenceName(branchName),
+	})
+	if err != nil {
+		log.Error().Msgf("error checking out branch %q: %s", branchName, err)
+		return fmt.Errorf("error checking out branch %q: %w", branchName, err)
+	}
+
 	return nil
 }
 
@@ -152,10 +161,6 @@ func Commit(repo *git.Repository, commitMsg string) error {
 
 	log.Info().Msg(commitMsg)
 	w.AddGlob(".")
-
-	repo.CreateBranch(&gitConfig.Branch{
-		Name: "main",
-	})
 
 	_, err = w.Commit(commitMsg, &git.CommitOptions{
 		Author: &object.Signature{
