@@ -202,8 +202,6 @@ func copyContents(source, destination string, createPath bool) error {
 func AdjustMetaphorRepo(
 	destinationMetaphorRepoURL string,
 	gitopsRepoDir string,
-	gitProvider string,
-	cloudProvider string,
 	k1Dir string,
 ) error {
 	// * create ~/.k1/metaphor
@@ -309,7 +307,7 @@ func PrepareGitRepositories(
 
 	// ADJUST CONTENT
 	// * adjust the content for the metaphor repo
-	if err := AdjustMetaphorRepo(destinationMetaphorRepoURL, gitopsDir, gitProvider, cloudProvider, k1Dir); err != nil {
+	if err := AdjustMetaphorRepo(destinationMetaphorRepoURL, gitopsDir, k1Dir); err != nil {
 		log.Error().Msgf("unable to prepare metaphor repository: %s", err.Error())
 		return fmt.Errorf("unable to prepare metaphor repository: %w", err)
 	}
