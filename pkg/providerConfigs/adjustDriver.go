@@ -329,7 +329,7 @@ func PrepareGitRepositories(
 	// * set branch to main
 	gitopsRepo, err = gitClient.SetRefToMainBranch(gitopsRepo)
 	if err != nil {
-		log.Error().Msgf("unable to set ref to main branch: %s", err.Error())
+		return fmt.Errorf("unable to set ref to main branch: %w", err)
 	}
 
 	// * commit initial gitops-template content
