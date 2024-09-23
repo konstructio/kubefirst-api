@@ -105,7 +105,6 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 	secretsFilesToRestore, err := os.ReadDir(ctrl.ProviderConfig.SSLBackupDir + "/secrets")
 	if err != nil {
 		log.Info().Msg(err.Error())
-		return fmt.Errorf("error reading secrets directory for TLS: %w", err)
 	}
 	if len(secretsFilesToRestore) != 0 {
 		// todo would like these but requires CRD's and is not currently supported

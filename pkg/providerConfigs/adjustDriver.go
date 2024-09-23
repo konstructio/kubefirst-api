@@ -220,83 +220,16 @@ func AdjustMetaphorRepo(
 		return fmt.Errorf("error initializing git repository at %s: %w", metaphorDir, err)
 	}
 
-	switch fmt.Sprintf("%s-%s", cloudProvider, gitProvider) {
-	case AkamaiGitHub,
-		AwsGitHub,
-		AwsGitLab,
-		CivoGitHub,
-		CivoGitLab:
+	// * metaphor app source
+	metaphorContent := filepath.Join(gitopsRepoDir, "metaphor")
+	if err := copyContents(metaphorContent, metaphorDir, false); err != nil {
+		return err
+	}
 
-		// * metaphor app source
-		metaphorContent := filepath.Join(gitopsRepoDir, "metaphor")
-		if err := copyContents(metaphorContent, metaphorDir, false); err != nil {
-			return err
-		}
-
-		// Remove metaphor content from gitops repository directory
-		if err := os.RemoveAll(metaphorContent); err != nil {
-			log.Error().Msgf("Error removing %q from filesystem: %s", metaphorContent, err.Error())
-			return fmt.Errorf("error removing %q from filesystem: %w", metaphorContent, err)
-		}
-	default:
-		// * remove .argo and .github folders
-		var (
-			dotArgoFolder   = filepath.Join(metaphorDir, ".argo")
-			dotGitHubFolder = filepath.Join(metaphorDir, ".github")
-		)
-
-		if err := os.RemoveAll(dotArgoFolder); err != nil {
-			log.Error().Msgf("Error removing %q from filesystem: %s", dotArgoFolder, err.Error())
-			return fmt.Errorf("error removing %q from filesystem: %w", dotArgoFolder, err)
-		}
-
-		if err := os.RemoveAll(dotGitHubFolder); err != nil {
-			log.Error().Msgf("Error removing %q from filesystem: %s", dotGitHubFolder, err.Error())
-			return fmt.Errorf("error removing %q from filesystem: %w", dotGitHubFolder, err)
-		}
-
-		// * copy ci content
-		if gitProvider == "github" || gitProvider == "gitlab" {
-			var src, dest string
-
-			if gitProvider == "github" {
-				src = filepath.Join(k1Dir, "gitops", "ci", ".github")
-				dest = filepath.Join(metaphorDir, ".github")
-			} else {
-				src = filepath.Join(k1Dir, "gitops", "ci", ".gitlab-ci.yml")
-				dest = filepath.Join(metaphorDir, ".gitlab-ci.yml")
-			}
-
-			if err := copyContents(src, dest, true); err != nil {
-				return fmt.Errorf("error copying CI content: %w", err)
-			}
-		}
-
-		// * metaphor app source
-		metaphorLocation := filepath.Join(gitopsRepoDir, "metaphor")
-		if err := copyContents(metaphorLocation, metaphorDir, false); err != nil {
-			return fmt.Errorf("error copying metaphor app source: %w", err)
-		}
-
-		// * copy $HOME/.k1/gitops/ci/.argo/* $HOME/.k1/metaphor/.argo
-		argoWorkflowsSource := filepath.Join(k1Dir, "gitops", "ci", ".argo")
-		argoWorkflowsDest := filepath.Join(metaphorDir, ".argo")
-		if err := copyContents(argoWorkflowsSource, argoWorkflowsDest, true); err != nil {
-			return fmt.Errorf("error copying argo workflows content: %w", err)
-		}
-
-		// * copy $HOME/.k1/gitops/metaphor/Dockerfile $HOME/.k1/metaphor/build/Dockerfile
-		dockerfileSource := filepath.Join(metaphorDir, "Dockerfile")
-		dockerfileDest := filepath.Join(metaphorDir, "build", "Dockerfile")
-		if err := copyContents(dockerfileSource, dockerfileDest, true); err != nil {
-			return fmt.Errorf("error copying metaphor Dockerfile content: %w", err)
-		}
-
-		// Remove metaphor content from gitops repository directory
-		if err := os.RemoveAll(metaphorLocation); err != nil {
-			log.Error().Msgf("Error removing %q from filesystem: %s", metaphorLocation, err.Error())
-			return fmt.Errorf("error removing %q from filesystem: %w", metaphorLocation, err)
-		}
+	// Remove metaphor content from gitops repository directory
+	if err := os.RemoveAll(metaphorContent); err != nil {
+		log.Error().Msgf("Error removing %q from filesystem: %s", metaphorContent, err.Error())
+		return fmt.Errorf("error removing %q from filesystem: %w", metaphorContent, err)
 	}
 
 	if err := gitClient.Commit(metaphorRepo, "init commit pre ref change"); err != nil {
