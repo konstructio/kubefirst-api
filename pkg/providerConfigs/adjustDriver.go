@@ -326,6 +326,12 @@ func PrepareGitRepositories(
 		return fmt.Errorf("unable to initialize gitops repository at %s: %w", gitopsDir, err)
 	}
 
+	// * set branch to main
+	gitopsRepo, err = gitClient.SetRefToMainBranch(gitopsRepo)
+	if err != nil {
+		log.Error().Msgf("unable to set ref to main branch: %s", err.Error())
+	}
+
 	// * commit initial gitops-template content
 	err = gitClient.Commit(gitopsRepo, "committing initial detokenized gitops-template repo content")
 	if err != nil {
