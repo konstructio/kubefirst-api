@@ -323,12 +323,11 @@ func PrepareGitRepositories(
 	// * init gitops-template repo
 	gitopsRepo, err := git.PlainInit(gitopsDir, false)
 	if err != nil {
-		return fmt.Errorf("unable to initialize gitops repository at %s: %w", gitopsDir, err)
+		return fmt.Errorf("unable to initialize gitops repository at %q: %w", gitopsDir, err)
 	}
 
 	// * set branch to main
-	gitopsRepo, err = gitClient.SetRefToMainBranch(gitopsRepo)
-	if err != nil {
+	if err := gitClient.CreateBranch(gitopsRepo, "main"); err != nil {
 		return fmt.Errorf("unable to set ref to main branch: %w", err)
 	}
 

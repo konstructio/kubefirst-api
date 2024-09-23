@@ -99,12 +99,12 @@ func CloneRefSetMain(gitRef, repoLocalPath, repoURL string) (*git.Repository, er
 // SetRefToMainBranch sets the provided gitRef (branch or tag) to the main branch
 func SetRefToMainBranch(repo *git.Repository) (*git.Repository, error) {
 	w, _ := repo.Worktree()
-	branchName := plumbing.NewBranchReferenceName("main")
 	headRef, err := repo.Head()
 	if err != nil {
 		return nil, fmt.Errorf("error getting head reference: %w", err)
 	}
 
+	branchName := plumbing.NewBranchReferenceName("main")
 	ref := plumbing.NewHashReference(branchName, headRef.Hash())
 	err = repo.Storer.SetReference(ref)
 	if err != nil {
@@ -131,6 +131,19 @@ func AddRemote(newGitRemoteURL, remoteName string, repo *git.Repository) error {
 	return nil
 }
 
+func CreateBranch(repo *git.Repository, branchName string) error {
+	w, _ := repo.Worktree()
+	err := w.Checkout(&git.CheckoutOptions{
+		Branch: plumbing.NewBranchReferenceName(branchName),
+		Create: true,
+	})
+	if err != nil {
+		return fmt.Errorf("error creating branch %q: %w", branchName, err)
+	}
+
+	return nil
+}
+
 func Commit(repo *git.Repository, commitMsg string) error {
 	w, err := repo.Worktree()
 	if err != nil {
@@ -140,6 +153,10 @@ func Commit(repo *git.Repository, commitMsg string) error {
 
 	log.Info().Msg(commitMsg)
 	w.AddGlob(".")
+
+	repo.CreateBranch(&gitConfig.Branch{
+		Name: "main",
+	})
 
 	_, err = w.Commit(commitMsg, &git.CommitOptions{
 		Author: &object.Signature{
