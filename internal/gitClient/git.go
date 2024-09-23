@@ -132,12 +132,11 @@ func AddRemote(newGitRemoteURL, remoteName string, repo *git.Repository) error {
 }
 
 func CreateBranch(repo *git.Repository, branchName string) error {
-	w, _ := repo.Worktree()
-	err := w.Checkout(&git.CheckoutOptions{
-		Branch: plumbing.NewBranchReferenceName(branchName),
-		Create: true,
+	err := repo.CreateBranch(&gitConfig.Branch{
+		Name: branchName,
 	})
 	if err != nil {
+		log.Error().Msgf("error creating branch %q: %s", branchName, err)
 		return fmt.Errorf("error creating branch %q: %w", branchName, err)
 	}
 
