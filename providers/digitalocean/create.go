@@ -110,6 +110,7 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 			log.Info().Msgf("unable to check for TLS secrets to restore: %s", err.Error())
 		}
 	}
+
 	if len(secretsFilesToRestore) != 0 {
 		// todo would like these but requires CRD's and is not currently supported
 		// add crds ( use execShellReturnErrors? )
