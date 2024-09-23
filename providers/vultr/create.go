@@ -103,7 +103,8 @@ func CreateVultrCluster(definition *pkgtypes.ClusterDefinition) error {
 	log.Info().Msg("checking for tls secrets to restore")
 	secretsFilesToRestore, err := os.ReadDir(ctrl.ProviderConfig.SSLBackupDir + "/secrets")
 	if err != nil {
-		log.Info().Msg(err.Error())
+		log.Info().Msgf("ignoring error: directory %q couldn't be stat", ctrl.ProviderConfig.SSLBackupDir+"/secrets")
+
 	}
 	if len(secretsFilesToRestore) != 0 {
 		// todo would like these but requires CRD's and is not currently supported
