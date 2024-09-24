@@ -86,6 +86,29 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 			if err != nil {
 				return err
 			}
+		case "azure":
+			fmt.Println("hello, I'm azure")
+			err := providerConfigs.PrepareGitRepositories(
+				clctrl.CloudProvider,
+				clctrl.GitProvider,
+				clctrl.ClusterName,
+				clctrl.ClusterType,
+				clctrl.ProviderConfig.DestinationGitopsRepoURL,
+				clctrl.ProviderConfig.GitopsDir,
+				clctrl.GitopsTemplateBranch,
+				clctrl.GitopsTemplateURL,
+				clctrl.ProviderConfig.DestinationMetaphorRepoURL,
+				clctrl.ProviderConfig.K1Dir,
+				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), // tokens created on the fly
+				clctrl.ProviderConfig.MetaphorDir,
+				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), // tokens created on the fly
+				true,
+				cl.GitProtocol,
+				useCloudflareOriginIssuer,
+			)
+			if err != nil {
+				return err
+			}
 		case "civo":
 			err := providerConfigs.PrepareGitRepositories(
 				clctrl.CloudProvider,

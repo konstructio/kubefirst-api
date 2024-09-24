@@ -184,6 +184,35 @@ func AdjustGitopsRepo(
 		return nil
 	}
 
+	AZURE_GITHUB := "azure-github"
+
+	if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == AZURE_GITHUB {
+		driverContent := fmt.Sprintf("%s/%s-%s/", gitopsRepoDir, cloudProvider, gitProvider)
+		fmt.Println(driverContent)
+		err := cp.Copy(driverContent, gitopsRepoDir, opt)
+		if err != nil {
+			log.Info().Msgf("Error populating gitops repository with driver content: %s. error: %s", AZURE_GITHUB, err.Error())
+			return err
+		}
+		os.RemoveAll(driverContent)
+
+		//* copy $HOME/.k1/gitops/templates/${clusterType}/* $HOME/.k1/gitops/registry/${clusterName}
+		clusterContent := fmt.Sprintf("%s/templates/%s", gitopsRepoDir, clusterType)
+
+		fmt.Println(clusterContent)
+
+		// Remove apex content if apex content already exists
+		if apexContentExists {
+			log.Warn().Msgf("removing nginx-apex since apexContentExists was %v", apexContentExists)
+			os.Remove(fmt.Sprintf("%s/nginx-apex.yaml", clusterContent))
+			os.RemoveAll(fmt.Sprintf("%s/nginx-apex", clusterContent))
+		} else {
+			log.Warn().Msgf("will create nginx-apex since apexContentExists was %v", apexContentExists)
+		}
+	}
+
+	return fmt.Errorf("ttt2")
+
 	CIVO_GITHUB := "civo-github" //! i know i know i know.
 
 	if strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)) == CIVO_GITHUB {
@@ -977,6 +1006,7 @@ func PrepareGitRepositories(
 
 	// ADJUST CONTENT
 	//* adjust the content for the gitops repo
+	fmt.Println("adjusted")
 	err = AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsDir, gitProvider, k1Dir, apexContentExists, useCloudflareOriginIssuer)
 	if err != nil {
 		log.Info().Msgf("err: %v", err)
@@ -985,6 +1015,7 @@ func PrepareGitRepositories(
 
 	// DETOKENIZE
 	//* detokenize the gitops repo
+	fmt.Println("detokenised")
 	DetokenizeGitGitops(gitopsDir, gitopsTokens, gitProtocol, useCloudflareOriginIssuer)
 	if err != nil {
 		return err

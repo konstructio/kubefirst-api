@@ -149,6 +149,9 @@ func CreateTokensFromDatabaseRecord(cl *pkgtypes.Cluster, registryPath string, s
 	case "aws":
 		gitopsTemplateTokens.KubefirstArtifactsBucket = cl.StateStoreDetails.Name
 		gitopsTemplateTokens.AtlantisWebhookURL = cl.AtlantisWebhookURL
+	case "azure":
+		gitopsTemplateTokens.AzureStorageResourceGroup = "kubefirst-state" // @todo(sje): take from resourceGroup var in internal/controller/state.go#75
+		gitopsTemplateTokens.AzureStorageContainerName = "terraform"       // @todo(sje): take from containerName var in internal/controller/state.go#76
 	}
 
 	return gitopsTemplateTokens
