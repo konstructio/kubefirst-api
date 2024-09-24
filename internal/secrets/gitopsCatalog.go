@@ -16,6 +16,7 @@ import (
 	log "github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -104,7 +105,8 @@ func UpdateGitopsCatalogApps(clientSet kubernetes.Interface) error {
 	}
 
 	catalogApps, err := GetGitopsCatalogApps(clientSet)
-	if err != nil {
+
+	if err != nil && !errors.IsNotFound(err) {
 		log.Error().Msgf("error fetching gitops catalog apps: %s", err)
 		return fmt.Errorf("error fetching gitops catalog apps: %w", err)
 	}
