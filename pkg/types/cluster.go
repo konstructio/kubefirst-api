@@ -14,7 +14,7 @@ import (
 type ClusterDefinition struct {
 	// Cluster
 	AdminEmail             string             `json:"admin_email" binding:"required"`
-	CloudProvider          string             `json:"cloud_provider" binding:"required,oneof=akamai aws civo digitalocean google k3s vultr"`
+	CloudProvider          string             `json:"cloud_provider" binding:"required,oneof=akamai aws azure civo digitalocean google k3s vultr"`
 	CloudRegion            string             `json:"cloud_region" binding:"required"`
 	ClusterName            string             `json:"cluster_name,omitempty"`
 	DomainName             string             `json:"domain_name" binding:"required"`
@@ -38,9 +38,13 @@ type ClusterDefinition struct {
 	// AWS
 	ECR bool `json:"ecr,omitempty"`
 
+	// Azure
+	AzureDNSZoneResourceGroup string `json:"azure_dns_zone_resource_group,omitempty"`
+
 	// Auth
 	AkamaiAuth       AkamaiAuth       `json:"akamai_auth,omitempty"`
 	AWSAuth          AWSAuth          `json:"aws_auth,omitempty"`
+	AzureAuth        AzureAuth        `json:"azure_auth,omitempty"`
 	CivoAuth         CivoAuth         `json:"civo_auth,omitempty"`
 	DigitaloceanAuth DigitaloceanAuth `json:"do_auth,omitempty"`
 	VultrAuth        VultrAuth        `json:"vultr_auth,omitempty"`
@@ -76,6 +80,7 @@ type Cluster struct {
 	// Auth
 	AkamaiAuth       AkamaiAuth       `bson:"akamai_auth,omitempty" json:"akamai_auth,omitempty"`
 	AWSAuth          AWSAuth          `bson:"aws_auth,omitempty" json:"aws_auth,omitempty"`
+	AzureAuth        AzureAuth        `json:"azure_auth,omitempty"`
 	CivoAuth         CivoAuth         `bson:"civo_auth,omitempty" json:"civo_auth,omitempty"`
 	DigitaloceanAuth DigitaloceanAuth `bson:"do_auth,omitempty" json:"do_auth,omitempty"`
 	VultrAuth        VultrAuth        `bson:"vultr_auth,omitempty" json:"vultr_auth,omitempty"`

@@ -87,6 +87,10 @@ func detokenizeGitops(tokens *GitopsDirectoryValues, gitProtocol string, useClou
 			newContents = strings.ReplaceAll(newContents, "<AWS_IAM_ARN_ACCOUNT_ROOT>", tokens.AwsIamArnAccountRoot)
 			newContents = strings.ReplaceAll(newContents, "<AWS_NODE_CAPACITY_TYPE>", tokens.AwsNodeCapacityType)
 
+			// Azure
+			newContents = strings.ReplaceAll(newContents, "<KUBEFIRST_STATE_STORE_RESOURCE_GROUP>", tokens.AzureStorageResourceGroup)
+			newContents = strings.ReplaceAll(newContents, "<KUBEFIRST_STATE_STORE_CONTAINER_NAME>", tokens.AzureStorageContainerName)
+
 			// google
 			newContents = strings.ReplaceAll(newContents, "<GOOGLE_PROJECT>", tokens.GoogleProject)
 			newContents = strings.ReplaceAll(newContents, "<TERRAFORM_FORCE_DESTROY>", tokens.ForceDestroy)

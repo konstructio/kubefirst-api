@@ -14,6 +14,7 @@ import (
 
 	akamaiext "github.com/konstructio/kubefirst-api/extensions/akamai"
 	awsext "github.com/konstructio/kubefirst-api/extensions/aws"
+	azureext "github.com/konstructio/kubefirst-api/extensions/azure"
 	civoext "github.com/konstructio/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/konstructio/kubefirst-api/extensions/digitalocean"
 	googleext "github.com/konstructio/kubefirst-api/extensions/google"
@@ -65,6 +66,8 @@ func (clctrl *ClusterController) CreateCluster() error {
 			if err != nil {
 				return fmt.Errorf("failed to update cluster after getting AWS account ID: %w", err)
 			}
+		case "azure":
+			tfEnvs = azureext.GetAzureTerraformEnvs(tfEnvs, cl)
 		case "civo":
 			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, cl)
 		case "digitalocean":
@@ -141,6 +144,8 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			// provider auth secret gets mapped to these values
 			case "aws":
 				externalDNSProviderTokenEnvName = "not-used-uses-service-account"
+			case "azure":
+				externalDNSProviderTokenEnvName = "not-used-uses-managed-service-principal"
 			case "google":
 				// Normally this would be GOOGLE_APPLICATION_CREDENTIALS but we are using a service account instead and
 				// if you set externalDNSProviderTokenEnvName to GOOGLE_APPLICATION_CREDENTIALS then externaldns will overlook the service account
@@ -259,6 +264,9 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				// gitopsTemplateTokens.ContainerRegistryURL = fmt.Sprintf("%s/%s", clctrl.ContainerRegistryHost, clctrl.GitAuth.Owner)
 				log.Info().Msgf("NOT using ECR but instead %s URL %s", clctrl.GitProvider, gitopsTemplateTokens.ContainerRegistryURL)
 			}
+		case "azure":
+			gitopsTemplateTokens.AzureStorageResourceGroup = "kubefirst-state" // @todo(sje): take from resourceGroup var in internal/controller/state.go
+			gitopsTemplateTokens.AzureStorageContainerName = "terraform"       // @todo(sje): take from containerName var in internal/controller/state.go
 		case "k3s":
 			gitopsTemplateTokens.K3sServersPrivateIps = clctrl.K3sAuth.K3sServersPrivateIps
 			gitopsTemplateTokens.K3sServersPublicIps = clctrl.K3sAuth.K3sServersPublicIps
@@ -295,7 +303,7 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 	switch clctrl.CloudProvider {
 	case "aws":
 		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
-	case "akamai", "civo", "digitalocean", "k3s", "vultr":
+	case "akamai", "azure", "civo", "digitalocean", "k3s", "vultr":
 		kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 		if err != nil {
 			return fmt.Errorf("failed to create Kubernetes config during secrets bootstrap: %w", err)
@@ -339,6 +347,12 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 			if err != nil {
 				log.Error().Msgf("error adding Kubernetes secrets for bootstrap: %s", err)
 				return fmt.Errorf("error adding Kubernetes secrets for bootstrap on aws: %w", err)
+			}
+		case "azure":
+			err := azureext.BootstrapAzureMgmtCluster(clientSet, cl, destinationGitopsRepoGitURL)
+			if err != nil {
+				log.Error().Msgf("error adding Kubernetes secrets for bootstrap: %s", err)
+				return fmt.Errorf("error adding Kubernetes secrets for bootstrap on azure: %w", err)
 			}
 		case "civo":
 			err := civoext.BootstrapCivoMgmtCluster(clientSet, cl, destinationGitopsRepoGitURL)

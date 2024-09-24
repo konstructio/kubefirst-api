@@ -68,6 +68,36 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCredentialsCreateFailed, err.Error())
 				return fmt.Errorf("failed to update cluster after creating AWS state store: %w", err)
 			}
+		case "azure":
+			// Azure storage is non-S3 compliant
+			location := "eastus"               // @todo(sje): allow this to be configured
+			resourceGroup := "kubefirst-state" // @todo(sje): allow this to be configured
+			containerName := "terraform"       // @todo(sje): allow this to be configured
+
+			ctx := context.Background()
+
+			if _, err := clctrl.AzureClient.CreateResourceGroup(ctx, resourceGroup, location); err != nil {
+				msg := fmt.Sprintf("error creating azure storage resource group %s: %s", resourceGroup, err)
+				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, msg)
+				return fmt.Errorf(msg)
+			}
+
+			if _, err := clctrl.AzureClient.CreateStorageAccount(
+				ctx,
+				location,
+				resourceGroup,
+				clctrl.KubefirstStateStoreBucketName,
+			); err != nil {
+				msg := fmt.Sprintf("error creating azure storage account %s: %s", clctrl.KubefirstStateStoreBucketName, err)
+				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, msg)
+				return fmt.Errorf(msg)
+			}
+
+			if _, err := clctrl.AzureClient.CreateBlobContainer(ctx, clctrl.KubefirstStateStoreBucketName, containerName); err != nil {
+				msg := fmt.Sprintf("error creating blob storage container %s: %s", clctrl.KubefirstStateStoreBucketName, err)
+				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, msg)
+				return fmt.Errorf(msg)
+			}
 		case "civo":
 			civoConf := civo.Configuration{
 				Client:  civo.NewCivo(cl.CivoAuth.Token, cl.CloudRegion),

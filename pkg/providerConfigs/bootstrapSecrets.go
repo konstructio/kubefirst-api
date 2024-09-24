@@ -138,9 +138,7 @@ func BootstrapSecrets(client kubernetes.Interface, cl *pkgtypes.Cluster, extraSe
 		externalDNSToken = cl.VultrAuth.Token
 	case "digitalocean":
 		externalDNSToken = cl.DigitaloceanAuth.Token
-	case "aws":
-		externalDNSToken = "implement with cluster management"
-	case "google":
+	case "aws", "azure", "google":
 		externalDNSToken = "implement with cluster management"
 	case "cloudflare":
 		externalDNSToken = cl.CloudflareAuth.APIToken

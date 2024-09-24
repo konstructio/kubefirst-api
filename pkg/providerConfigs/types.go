@@ -51,6 +51,9 @@ type GitopsDirectoryValues struct {
 	AwsNodeCapacityType  string
 	AwsAccountID         string
 
+	AzureStorageResourceGroup string
+	AzureStorageContainerName string
+
 	GoogleAuth       string
 	GoogleProject    string
 	GoogleUniqueness string

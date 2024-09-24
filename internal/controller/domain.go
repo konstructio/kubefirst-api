@@ -40,6 +40,16 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 			if err != nil {
 				return fmt.Errorf("domain liveness check failed for AWS: %w", err)
 			}
+		case "azure":
+			domainLiveness, err := clctrl.AzureClient.TestHostedZoneLiveness(context.Background(), clctrl.DomainName, clctrl.AzureDNSZoneResourceGroup)
+			if err != nil {
+				return fmt.Errorf("domain liveness command failed for Azure: %w", err)
+			}
+
+			err = clctrl.HandleDomainLiveness(domainLiveness)
+			if err != nil {
+				return fmt.Errorf("domain liveness check failed for Azure: %w", err)
+			}
 		case "civo":
 			civoConf := civo.Configuration{
 				Client:  civo.NewCivo(cl.CivoAuth.Token, cl.CloudRegion),
