@@ -39,7 +39,7 @@ func (clctrl *ClusterController) InstallArgoCD() error {
 			if err != nil {
 				return fmt.Errorf("failed to create eks config: %w", err)
 			}
-		case "akamai", "civo", "digitalocean", "k3s", "vultr":
+		case "akamai", "azure", "civo", "digitalocean", "k3s", "vultr":
 			kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 			if err != nil {
 				return fmt.Errorf("failed to create Kubernetes config: %w", err)
@@ -97,7 +97,7 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 			if err != nil {
 				return fmt.Errorf("failed to create eks config: %w", err)
 			}
-		case "akamai", "civo", "digitalocean", "k3s", "vultr":
+		case "akamai", "azure", "civo", "digitalocean", "k3s", "vultr":
 			kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 			if err != nil {
 				return fmt.Errorf("failed to create Kubernetes config: %w", err)
@@ -125,7 +125,7 @@ func (clctrl *ClusterController) InitializeArgoCD() error {
 		var argoCDToken string
 
 		switch clctrl.CloudProvider {
-		case "aws", "civo", "google", "digitalocean", "vultr", "k3s":
+		case "aws", "azure", "civo", "google", "digitalocean", "vultr", "k3s":
 
 			// kcfg.Clientset.RbacV1().
 			argoCDStopChannel := make(chan struct{}, 1)
@@ -199,7 +199,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			if err != nil {
 				return fmt.Errorf("failed to create eks config: %w", err)
 			}
-		case "akamai", "civo", "digitalocean", "k3s", "vultr":
+		case "akamai", "azure", "civo", "digitalocean", "k3s", "vultr":
 			kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 			if err != nil {
 				return fmt.Errorf("failed to create Kubernetes config: %w", err)

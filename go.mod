@@ -7,6 +7,12 @@ require (
 	cloud.google.com/go/container v1.24.0
 	cloud.google.com/go/secretmanager v1.10.0
 	cloud.google.com/go/storage v1.29.0
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.14.0
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.7.0
+	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns v1.2.0
+	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.2.0
+	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage v1.6.0
+	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.4.1
 	github.com/argoproj/argo-cd/v2 v2.6.7
 	github.com/argoproj/gitops-engine v0.7.3
 	github.com/atotto/clipboard v0.1.4
@@ -44,7 +50,7 @@ require (
 	github.com/thanhpk/randstr v1.0.6
 	go.mongodb.org/mongo-driver v1.10.3
 	golang.org/x/oauth2 v0.8.0
-	golang.org/x/text v0.14.0
+	golang.org/x/text v0.16.0
 	google.golang.org/api v0.126.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.27.1
@@ -55,13 +61,18 @@ require (
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/internal v1.10.0 // indirect
+	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.2 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/go-resty/resty/v2 v2.11.0 // indirect
 	github.com/go-test/deep v1.0.4 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/hashicorp/go-hclog v1.3.0 // indirect
+	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/opencontainers/image-spec v1.0.3-0.20211202183452-c5a74bcca799 // indirect
+	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gotest.tools/v3 v3.4.0 // indirect
 )
@@ -158,7 +169,7 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/s2a-go v0.1.4 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
-	github.com/google/uuid v1.3.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.11.0 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
@@ -246,15 +257,15 @@ require (
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
-	golang.org/x/crypto v0.21.0
+	golang.org/x/crypto v0.25.0
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
-	golang.org/x/mod v0.13.0
-	golang.org/x/net v0.22.0 // indirect
-	golang.org/x/sync v0.4.0
-	golang.org/x/sys v0.18.0 // indirect
-	golang.org/x/term v0.18.0
+	golang.org/x/mod v0.17.0
+	golang.org/x/net v0.27.0 // indirect
+	golang.org/x/sync v0.7.0
+	golang.org/x/sys v0.22.0 // indirect
+	golang.org/x/term v0.22.0
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.14.0 // indirect
+	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230530153820-e85fd2cbaebc // indirect

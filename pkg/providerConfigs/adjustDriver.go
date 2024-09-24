@@ -27,6 +27,8 @@ const (
 	AkamaiGitHub       = "akamai-github"
 	AwsGitHub          = "aws-github"
 	AwsGitLab          = "aws-gitlab"
+	AzureGitHub        = "azure-github"
+	AzureGitLab        = "azure-gitlab"
 	CivoGitHub         = "civo-github"
 	CivoGitLab         = "civo-gitlab"
 	GoogleGitHub       = "google-github"
@@ -168,6 +170,8 @@ func AdjustGitopsRepo(
 	case AkamaiGitHub,
 		AwsGitHub,
 		AwsGitLab,
+		AzureGitHub,
+		AzureGitLab,
 		CivoGitHub,
 		CivoGitLab,
 		GoogleGitHub,

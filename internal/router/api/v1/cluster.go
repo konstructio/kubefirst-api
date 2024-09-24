@@ -29,6 +29,7 @@ import (
 	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
 	"github.com/konstructio/kubefirst-api/providers/akamai"
 	"github.com/konstructio/kubefirst-api/providers/aws"
+	"github.com/konstructio/kubefirst-api/providers/azure"
 	"github.com/konstructio/kubefirst-api/providers/civo"
 	"github.com/konstructio/kubefirst-api/providers/digitalocean"
 	"github.com/konstructio/kubefirst-api/providers/google"
@@ -319,6 +320,7 @@ func PostCreateCluster(c *gin.Context) {
 			// Assign cloud and git credentials
 			clusterDefinition.AkamaiAuth = cluster.AkamaiAuth
 			clusterDefinition.AWSAuth = cluster.AWSAuth
+			clusterDefinition.AzureAuth = cluster.AzureAuth
 			clusterDefinition.CivoAuth = cluster.CivoAuth
 			clusterDefinition.VultrAuth = cluster.VultrAuth
 			clusterDefinition.DigitaloceanAuth = cluster.DigitaloceanAuth
@@ -417,6 +419,37 @@ func PostCreateCluster(c *gin.Context) {
 			err = aws.CreateAWSCluster(&clusterDefinition)
 			if err != nil {
 				log.Error().Msg(err.Error())
+			}
+		}()
+
+		c.JSON(http.StatusAccepted, types.JSONSuccessResponse{
+			Message: "cluster create enqueued",
+		})
+	case "azure":
+		if useSecretForAuth {
+			err := utils.ValidateAuthenticationFields(k1AuthSecret)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+					Message: fmt.Sprintf("error checking azure auth: %s", err),
+				})
+				return
+			}
+			clusterDefinition.CivoAuth = pkgtypes.CivoAuth{
+				Token: k1AuthSecret["azure-token"],
+			}
+		} else if clusterDefinition.AzureAuth.ClientID == "" ||
+			clusterDefinition.AzureAuth.ClientSecret == "" ||
+			clusterDefinition.AzureAuth.SubscriptionID == "" ||
+			clusterDefinition.AzureAuth.TenantID == "" {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: "missing authentication credentials in request, please check and try again",
+			})
+			return
+		}
+		go func() {
+			err = azure.CreateAzureCluster(&clusterDefinition)
+			if err != nil {
+				log.Error().Msgf(err.Error())
 			}
 		}()
 

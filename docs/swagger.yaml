@@ -19,6 +19,17 @@ definitions:
       token:
         type: string
     type: object
+  types.AzureAuth:
+    properties:
+      client_id:
+        type: string
+      client_secret:
+        type: string
+      subscription_id:
+        type: string
+      tenant_id:
+        type: string
+    type: object
   types.CivoAuth:
     properties:
       token:
@@ -81,6 +92,11 @@ definitions:
       aws_kms_key_detokenized_check:
         type: boolean
       aws_kms_key_id:
+        type: string
+      azure_auth:
+        $ref: '#/definitions/types.AzureAuth'
+      azure_dns_zone_resource_group:
+        description: Azure
         type: string
       civo_auth:
         $ref: '#/definitions/types.CivoAuth'
@@ -207,12 +223,18 @@ definitions:
         description: Auth
       aws_auth:
         $ref: '#/definitions/types.AWSAuth'
+      azure_auth:
+        $ref: '#/definitions/types.AzureAuth'
+      azure_dns_zone_resource_group:
+        description: Azure
+        type: string
       civo_auth:
         $ref: '#/definitions/types.CivoAuth'
       cloud_provider:
         enum:
         - akamai
         - aws
+        - azure
         - civo
         - digitalocean
         - google

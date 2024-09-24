@@ -12,6 +12,7 @@ import (
 
 	akamaiext "github.com/konstructio/kubefirst-api/extensions/akamai"
 	awsext "github.com/konstructio/kubefirst-api/extensions/aws"
+	azureext "github.com/konstructio/kubefirst-api/extensions/azure"
 	civoext "github.com/konstructio/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/konstructio/kubefirst-api/extensions/digitalocean"
 	googleext "github.com/konstructio/kubefirst-api/extensions/google"
@@ -40,7 +41,7 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 			if err != nil {
 				return fmt.Errorf("failed to create eks config: %w", err)
 			}
-		case "akamai", "civo", "digitalocean", "k3s", "vultr":
+		case "akamai", "azure", "civo", "digitalocean", "k3s", "vultr":
 			kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 			if err != nil {
 				return fmt.Errorf("failed to create Kubernetes config: %w", err)
@@ -66,6 +67,9 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 		case "aws":
 			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, cl)
 			tfEnvs = awsext.GetUsersTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
+		case "azure":
+			tfEnvs = azureext.GetAzureTerraformEnvs(tfEnvs, cl)
+			tfEnvs = azureext.GetUsersTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
 		case "civo":
 			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, cl)
 			tfEnvs = civoext.GetUsersTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
