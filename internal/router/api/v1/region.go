@@ -25,16 +25,18 @@ import (
 )
 
 // PostRegions godoc
-// @Summary Return a list of regions for a cloud provider account
-// @Description Return a list of regions for a cloud provider account
-// @Tags region
-// @Accept json
-// @Produce json
-// @Param	request	body	types.RegionListRequest	true	"Region list request in JSON format"
-// @Success 200 {object} types.RegionListResponse
-// @Failure 400 {object} types.JSONFailureResponse
-// @Router /region/:cloud_provider [post]
-// @Param Authorization header string true "API key" default(Bearer <API key>)
+//
+//	@Summary		Return a list of regions for a cloud provider account
+//	@Description	Return a list of regions for a cloud provider account
+//	@Tags			region
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		types.RegionListRequest	true	"Region list request in JSON format"
+//	@Success		200		{object}	types.RegionListResponse
+//	@Failure		400		{object}	types.JSONFailureResponse
+//	@Router			/region/:cloud_provider [post]
+//	@Param			Authorization	header	string	true	"API key"	default(Bearer <API key>)
+//
 // PostRegions returns a list of regions for a cloud provider account
 func PostRegions(c *gin.Context) {
 	cloudProvider, param := c.Params.Get("cloud_provider")

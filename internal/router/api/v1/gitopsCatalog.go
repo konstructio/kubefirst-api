@@ -17,15 +17,17 @@ import (
 )
 
 // GetGitopsCatalogApps godoc
-// @Summary Returns a list of available Kubefirst gitops catalog applications
-// @Description Returns a list of available Kubefirst gitops catalog applications
-// @Tags gitops-catalog
-// @Accept json
-// @Produce json
-// @Success 200 {object} types.GitopsCatalogApps
-// @Failure 400 {object} types.JSONFailureResponse
-// @Router /gitops-catalog/:cluster_name/:cloud_provider/apps [get]
-// @Param Authorization header string true "API key" default(Bearer <API key>)
+//
+//	@Summary		Returns a list of available Kubefirst gitops catalog applications
+//	@Description	Returns a list of available Kubefirst gitops catalog applications
+//	@Tags			gitops-catalog
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	types.GitopsCatalogApps
+//	@Failure		400	{object}	types.JSONFailureResponse
+//	@Router			/gitops-catalog/:cluster_name/:cloud_provider/apps [get]
+//	@Param			Authorization	header	string	true	"API key"	default(Bearer <API key>)
+//
 // GetGitopsCatalogApps returns a list of available Kubefirst gitops catalog applications
 func GetGitopsCatalogApps(c *gin.Context) {
 	cloudProvider, param := c.Params.Get("cloud_provider")
@@ -65,15 +67,17 @@ func GetGitopsCatalogApps(c *gin.Context) {
 }
 
 // UpdateGitopsCatalogApps godoc
-// @Summary Updates the list of available Kubefirst gitops catalog applications
-// @Description Updates the list of available Kubefirst gitops catalog applications
-// @Tags gitops-catalog
-// @Accept json
-// @Produce json
-// @Success 200 {object} types.JSONSuccessResponse
-// @Failure 400 {object} types.JSONFailureResponse
-// @Router /gitops-catalog/apps/update [get]
-// @Param Authorization header string true "API key" default(Bearer <API key>)
+//
+//	@Summary		Updates the list of available Kubefirst gitops catalog applications
+//	@Description	Updates the list of available Kubefirst gitops catalog applications
+//	@Tags			gitops-catalog
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	types.JSONSuccessResponse
+//	@Failure		400	{object}	types.JSONFailureResponse
+//	@Router			/gitops-catalog/apps/update [get]
+//	@Param			Authorization	header	string	true	"API key"	default(Bearer <API key>)
+//
 // UpdateGitopsCatalogApps updates the list of available Kubefirst gitops catalog applications
 func UpdateGitopsCatalogApps(c *gin.Context) {
 	kcfg := utils.GetKubernetesClient("TODO: Secrets")

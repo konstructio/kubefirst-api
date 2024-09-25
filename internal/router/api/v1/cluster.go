@@ -40,16 +40,18 @@ import (
 )
 
 // DeleteCluster godoc
-// @Summary Delete a Kubefirst cluster
-// @Description Delete a Kubefirst cluster
-// @Tags cluster
-// @Accept json
-// @Produce json
-// @Param	cluster_name	path	string	true	"Cluster name"
-// @Success 202 {object} types.JSONSuccessResponse
-// @Failure 400 {object} types.JSONFailureResponse
-// @Router /cluster/:cluster_name [delete]
-// @Param Authorization header string true "API key" default(Bearer <API key>)
+//
+//	@Summary		Delete a Kubefirst cluster
+//	@Description	Delete a Kubefirst cluster
+//	@Tags			cluster
+//	@Accept			json
+//	@Produce		json
+//	@Param			cluster_name	path		string	true	"Cluster name"
+//	@Success		202				{object}	types.JSONSuccessResponse
+//	@Failure		400				{object}	types.JSONFailureResponse
+//	@Router			/cluster/:cluster_name [delete]
+//	@Param			Authorization	header	string	true	"API key"	default(Bearer <API key>)
+//
 // DeleteCluster handles a request to delete a cluster
 func DeleteCluster(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
@@ -165,16 +167,18 @@ func DeleteCluster(c *gin.Context) {
 }
 
 // GetCluster godoc
-// @Summary Return a configured Kubefirst cluster
-// @Description Return a configured Kubefirst cluster
-// @Tags cluster
-// @Accept json
-// @Produce json
-// @Param	cluster_name	path	string	true	"Cluster name"
-// @Success 200 {object} pkgtypes.Cluster
-// @Failure 400 {object} types.JSONFailureResponse
-// @Router /cluster/:cluster_name [get]
-// @Param Authorization header string true "API key" default(Bearer <API key>)
+//
+//	@Summary		Return a configured Kubefirst cluster
+//	@Description	Return a configured Kubefirst cluster
+//	@Tags			cluster
+//	@Accept			json
+//	@Produce		json
+//	@Param			cluster_name	path		string	true	"Cluster name"
+//	@Success		200				{object}	pkgtypes.Cluster
+//	@Failure		400				{object}	types.JSONFailureResponse
+//	@Router			/cluster/:cluster_name [get]
+//	@Param			Authorization	header	string	true	"API key"	default(Bearer <API key>)
+//
 // GetCluster returns a specific configured cluster
 func GetCluster(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
@@ -207,15 +211,17 @@ func GetCluster(c *gin.Context) {
 }
 
 // GetClusters godoc
-// @Summary Return all known configured Kubefirst clusters
-// @Description Return all known configured Kubefirst clusters
-// @Tags cluster
-// @Accept json
-// @Produce json
-// @Success 200 {object} []pkgtypes.Cluster
-// @Failure 400 {object} types.JSONFailureResponse
-// @Router /cluster [get]
-// @Param Authorization header string true "API key" default(Bearer <API key>)
+//
+//	@Summary		Return all known configured Kubefirst clusters
+//	@Description	Return all known configured Kubefirst clusters
+//	@Tags			cluster
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	[]pkgtypes.Cluster
+//	@Failure		400	{object}	types.JSONFailureResponse
+//	@Router			/cluster [get]
+//	@Param			Authorization	header	string	true	"API key"	default(Bearer <API key>)
+//
 // GetClusters returns all known configured clusters
 func GetClusters(c *gin.Context) {
 	kcfg := utils.GetKubernetesClient("TODO: SECRETS")
@@ -233,17 +239,19 @@ func GetClusters(c *gin.Context) {
 }
 
 // PostCreateCluster godoc
-// @Summary Create a Kubefirst cluster
-// @Description Create a Kubefirst cluster
-// @Tags cluster
-// @Accept json
-// @Produce json
-// @Param	cluster_name	path	string	true	"Cluster name"
-// @Param	definition	body	types.ClusterDefinition	true	"Cluster create request in JSON format"
-// @Success 202 {object} types.JSONSuccessResponse
-// @Failure 400 {object} types.JSONFailureResponse
-// @Router /cluster/:cluster_name [post]
-// @Param Authorization header string true "API key" default(Bearer <API key>)
+//
+//	@Summary		Create a Kubefirst cluster
+//	@Description	Create a Kubefirst cluster
+//	@Tags			cluster
+//	@Accept			json
+//	@Produce		json
+//	@Param			cluster_name	path		string					true	"Cluster name"
+//	@Param			definition		body		types.ClusterDefinition	true	"Cluster create request in JSON format"
+//	@Success		202				{object}	types.JSONSuccessResponse
+//	@Failure		400				{object}	types.JSONFailureResponse
+//	@Router			/cluster/:cluster_name [post]
+//	@Param			Authorization	header	string	true	"API key"	default(Bearer <API key>)
+//
 // PostCreateCluster handles a request to create a cluster
 func PostCreateCluster(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
@@ -583,16 +591,18 @@ func PostCreateCluster(c *gin.Context) {
 }
 
 // PostExportCluster godoc
-// @Summary Export a Kubefirst cluster database entry
-// @Description Export a Kubefirst cluster database entry
-// @Tags cluster
-// @Accept json
-// @Produce json
-// @Param	cluster_name	path	string	true	"Cluster name"
-// @Success 202 {object} types.JSONSuccessResponse
-// @Failure 400 {object} types.JSONFailureResponse
-// @Router /cluster/:cluster_name/export [post]
-// @Param Authorization header string true "API key" default(Bearer <API key>)
+//
+//	@Summary		Export a Kubefirst cluster database entry
+//	@Description	Export a Kubefirst cluster database entry
+//	@Tags			cluster
+//	@Accept			json
+//	@Produce		json
+//	@Param			cluster_name	path		string	true	"Cluster name"
+//	@Success		202				{object}	types.JSONSuccessResponse
+//	@Failure		400				{object}	types.JSONFailureResponse
+//	@Router			/cluster/:cluster_name/export [post]
+//	@Param			Authorization	header	string	true	"API key"	default(Bearer <API key>)
+//
 // PostExportCluster handles a request to export a cluster
 func GetExportCluster(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
@@ -755,16 +765,18 @@ func GetClusterKubeConfig(c *gin.Context) {
 }
 
 // PostImportCluster godoc
-// @Summary Import a Kubefirst cluster database entry
-// @Description Import a Kubefirst cluster database entry
-// @Tags cluster
-// @Accept json
-// @Produce json
-// @Param	request_body	body	types.Cluster	true	"Cluster import request in JSON format"
-// @Success 202 {object} types.JSONSuccessResponse
-// @Failure 400 {object} types.JSONFailureResponse
-// @Router /cluster/import [post]
-// @Param Authorization header string true "API key" default(Bearer <API key>)
+//
+//	@Summary		Import a Kubefirst cluster database entry
+//	@Description	Import a Kubefirst cluster database entry
+//	@Tags			cluster
+//	@Accept			json
+//	@Produce		json
+//	@Param			request_body	body		types.Cluster	true	"Cluster import request in JSON format"
+//	@Success		202				{object}	types.JSONSuccessResponse
+//	@Failure		400				{object}	types.JSONFailureResponse
+//	@Router			/cluster/import [post]
+//	@Param			Authorization	header	string	true	"API key"	default(Bearer <API key>)
+//
 // PostImportCluster handles a request to import a cluster
 func PostImportCluster(c *gin.Context) {
 	// Bind to variable as application/json, handle error
@@ -820,16 +832,18 @@ func PostImportCluster(c *gin.Context) {
 }
 
 // PostResetClusterProgress godoc
-// @Summary Remove a cluster progress marker from a cluster entry
-// @Description Remove a cluster progress marker from a cluster entry
-// @Tags cluster
-// @Accept json
-// @Produce json
-// @Param	cluster_name	path	string	true	"Cluster name"
-// @Success 202 {object} types.JSONSuccessResponse
-// @Failure 400 {object} types.JSONFailureResponse
-// @Router /cluster/:cluster_name/reset_progress [post]
-// @Param Authorization header string true "API key" default(Bearer <API key>)
+//
+//	@Summary		Remove a cluster progress marker from a cluster entry
+//	@Description	Remove a cluster progress marker from a cluster entry
+//	@Tags			cluster
+//	@Accept			json
+//	@Produce		json
+//	@Param			cluster_name	path		string	true	"Cluster name"
+//	@Success		202				{object}	types.JSONSuccessResponse
+//	@Failure		400				{object}	types.JSONFailureResponse
+//	@Router			/cluster/:cluster_name/reset_progress [post]
+//	@Param			Authorization	header	string	true	"API key"	default(Bearer <API key>)
+//
 // PostResetClusterProgress removes a cluster progress marker from a cluster entry
 func PostResetClusterProgress(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
@@ -860,16 +874,18 @@ func PostResetClusterProgress(c *gin.Context) {
 }
 
 // PostCreateVcluster godoc
-// @Summary Create default virtual clusters
-// @Description Create default virtual clusters
-// @Tags cluster
-// @Accept json
-// @Produce json
-// @Param	cluster_name	path	string	true	"Cluster name"
-// @Success 202 {object} types.JSONSuccessResponse
-// @Failure 400 {object} types.JSONFailureResponse
-// @Router /cluster/:cluster_name/vclusters [post]
-// @Param Authorization header string true "API key" default(Bearer <API key>)
+//
+//	@Summary		Create default virtual clusters
+//	@Description	Create default virtual clusters
+//	@Tags			cluster
+//	@Accept			json
+//	@Produce		json
+//	@Param			cluster_name	path		string	true	"Cluster name"
+//	@Success		202				{object}	types.JSONSuccessResponse
+//	@Failure		400				{object}	types.JSONFailureResponse
+//	@Router			/cluster/:cluster_name/vclusters [post]
+//	@Param			Authorization	header	string	true	"API key"	default(Bearer <API key>)
+//
 // PostCreateVcluster handles a request to create default virtual cluster for the mgmt cluster
 func PostCreateVcluster(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")

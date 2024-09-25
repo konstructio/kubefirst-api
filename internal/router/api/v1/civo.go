@@ -17,17 +17,19 @@ import (
 )
 
 // GetValidateCivoDomain godoc
-// @Summary Returns status of whether or not a Civo hosted zone is validated for use with Kubefirst
-// @Description Returns status of whether or not a Civo hosted zone is validated for use with Kubefirst
-// @Tags civo
-// @Accept json
-// @Produce json
-// @Param	domain	path	string	true	"Domain name, no trailing dot"
-// @Param	settings	body	types.CivoDomainValidationRequest	true	"Domain validation request in JSON format"
-// @Success 200 {object} types.CivoDomainValidationResponse
-// @Failure 400 {object} types.JSONFailureResponse
-// @Router /civo/domain/validate/:domain [get]
-// @Param Authorization header string true "API key" default(Bearer <API key>)
+//
+//	@Summary		Returns status of whether or not a Civo hosted zone is validated for use with Kubefirst
+//	@Description	Returns status of whether or not a Civo hosted zone is validated for use with Kubefirst
+//	@Tags			civo
+//	@Accept			json
+//	@Produce		json
+//	@Param			domain		path		string								true	"Domain name, no trailing dot"
+//	@Param			settings	body		types.CivoDomainValidationRequest	true	"Domain validation request in JSON format"
+//	@Success		200			{object}	types.CivoDomainValidationResponse
+//	@Failure		400			{object}	types.JSONFailureResponse
+//	@Router			/civo/domain/validate/:domain [get]
+//	@Param			Authorization	header	string	true	"API key"	default(Bearer <API key>)
+//
 // GetValidateCivoDomain returns status for a Civo domain validation
 func GetValidateCivoDomain(c *gin.Context) {
 	domainName, exists := c.Params.Get("domain")
