@@ -14,6 +14,11 @@ definitions:
       validated:
         type: boolean
     type: object
+  types.AkamaiAuth:
+    properties:
+      token:
+        type: string
+    type: object
   types.CivoAuth:
     properties:
       token:
@@ -43,6 +48,10 @@ definitions:
     properties:
       _id:
         type: string
+      akamai_auth:
+        allOf:
+        - $ref: '#/definitions/types.AkamaiAuth'
+        description: Auth
       alerts_email:
         description: Identifiers
         type: string
@@ -68,9 +77,7 @@ definitions:
         description: kms
         type: string
       aws_auth:
-        allOf:
-        - $ref: '#/definitions/types.AWSAuth'
-        description: Auth
+        $ref: '#/definitions/types.AWSAuth'
       aws_kms_key_detokenized_check:
         type: boolean
       aws_kms_key_id:
@@ -137,16 +144,24 @@ definitions:
       install_tools_check:
         description: Checks
         type: boolean
+      k3s_auth:
+        $ref: '#/definitions/types.K3sAuth'
       kbot_setup_check:
         type: boolean
       kubefirst_team:
         type: string
       last_condition:
         type: string
+      log_file:
+        type: string
       node_count:
         type: integer
       node_type:
         type: string
+      post_install_catalog_apps:
+        items:
+          $ref: '#/definitions/types.GitopsCatalogApp'
+        type: array
       state_store_create_check:
         type: boolean
       state_store_credentials:
@@ -186,19 +201,23 @@ definitions:
       admin_email:
         description: Cluster
         type: string
-      aws_auth:
+      akamai_auth:
         allOf:
-        - $ref: '#/definitions/types.AWSAuth'
+        - $ref: '#/definitions/types.AkamaiAuth'
         description: Auth
+      aws_auth:
+        $ref: '#/definitions/types.AWSAuth'
       civo_auth:
         $ref: '#/definitions/types.CivoAuth'
       cloud_provider:
         enum:
+        - akamai
         - aws
         - civo
         - digitalocean
-        - vultr
         - google
+        - k3s
+        - vultr
         type: string
       cloud_region:
         type: string
@@ -236,10 +255,20 @@ definitions:
         type: string
       google_auth:
         $ref: '#/definitions/types.GoogleAuth'
+      install_kubefirst_pro:
+        type: boolean
+      k3s_auth:
+        $ref: '#/definitions/types.K3sAuth'
+      log_file:
+        type: string
       node_count:
         type: integer
       node_type:
         type: string
+      post_install_catalog_apps:
+        items:
+          $ref: '#/definitions/types.GitopsCatalogApp'
+        type: array
       subdomain_name:
         type: string
       type:
@@ -281,6 +310,8 @@ definitions:
     type: object
   types.DomainListRequest:
     properties:
+      akamai_auth:
+        $ref: '#/definitions/types.AkamaiAuth'
       aws_auth:
         $ref: '#/definitions/types.AWSAuth'
       civo_auth:
@@ -335,34 +366,67 @@ definitions:
     properties:
       category:
         type: string
+      cloudDenylist:
+        items:
+          type: string
+        type: array
+      config_keys:
+        items:
+          $ref: '#/definitions/types.GitopsCatalogAppKeys'
+        type: array
       description:
         type: string
       display_name:
         type: string
+      gitDenylist:
+        items:
+          type: string
+        type: array
       image_url:
         type: string
+      is_template:
+        type: boolean
       name:
         type: string
       secret_keys:
         items:
-          $ref: '#/definitions/types.GitopsCatalogAppSecretKey'
+          $ref: '#/definitions/types.GitopsCatalogAppKeys'
         type: array
     type: object
   types.GitopsCatalogAppCreateRequest:
     properties:
+      config_keys:
+        items:
+          $ref: '#/definitions/types.GitopsCatalogAppKeys'
+        type: array
+      environment:
+        type: string
+      is_template:
+        type: boolean
       secret_keys:
         items:
-          $ref: '#/definitions/types.GitopsCatalogAppSecretKey'
+          $ref: '#/definitions/types.GitopsCatalogAppKeys'
         type: array
+      user:
+        type: string
+      workload_cluster_name:
+        type: string
     type: object
-  types.GitopsCatalogAppSecretKey:
+  types.GitopsCatalogAppKeys:
     properties:
+      env:
+        type: string
       label:
         type: string
       name:
         type: string
       value:
         type: string
+    type: object
+  types.GitopsCatalogAppValidateRequest:
+    properties:
+      can_delete_service:
+        type: boolean
     type: object
   types.GitopsCatalogApps:
     properties:
@@ -398,8 +462,29 @@ definitions:
         example: success
         type: string
     type: object
+  types.K3sAuth:
+    properties:
+      servers_args:
+        items:
+          type: string
+        type: array
+      servers_private_ips:
+        items:
+          type: string
+        type: array
+      servers_public_ips:
+        items:
+          type: string
+        type: array
+      ssh_privatekey:
+        type: string
+      ssh_user:
+        type: string
+    type: object
   types.RegionListRequest:
     properties:
+      akamai_auth:
+        $ref: '#/definitions/types.AkamaiAuth'
       aws_auth:
         $ref: '#/definitions/types.AWSAuth'
       civo_auth:
@@ -422,6 +507,8 @@ definitions:
     type: object
   types.Service:
     properties:
+      created_by:
+        type: string
       default:
         type: boolean
       description:
@@ -781,6 +868,37 @@ paths:
       summary: Remove a cluster progress marker from a cluster entry
       tags:
       - cluster
+  /cluster/:cluster_name/vclusters:
+    post:
+      consumes:
+      - application/json
+      description: Create default virtual clusters
+      parameters:
+      - description: Cluster name
+        in: path
+        name: cluster_name
+        required: true
+        type: string
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/types.JSONSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Create default virtual clusters
+      tags:
+      - cluster
   /cluster/import:
     post:
       consumes:
@@ -847,7 +965,7 @@ paths:
         account
       tags:
       - domain
-  /gitops-catalog/apps:
+  /gitops-catalog/:cluster_name/:cloud_provider/apps:
     get:
       consumes:
       - application/json
@@ -1059,7 +1177,49 @@ paths:
       summary: Add a gitops catalog application to a cluster as a service
       tags:
       - services
-  /stream:
+  /services/:cluster_name/:service_name/validate:
+    post:
+      consumes:
+      - application/json
+      description: Validate a gitops catalog application so it can be deleted
+      parameters:
+      - description: Cluster name
+        in: path
+        name: cluster_name
+        required: true
+        type: string
+      - description: Service name to be validated
+        in: path
+        name: service_name
+        required: true
+        type: string
+      - description: Service create request in JSON format
+        in: body
+        name: definition
+        required: true
+        schema:
+          $ref: '#/definitions/types.GitopsCatalogAppCreateRequest'
+      - default: Bearer <API key>
+        description: API key
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/types.GitopsCatalogAppValidateRequest'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.JSONFailureResponse'
+      summary: Validate gitops catalog application
+      tags:
+      - services
+  /stream/file_name:
     get:
       description: Stream API server logs
       parameters:

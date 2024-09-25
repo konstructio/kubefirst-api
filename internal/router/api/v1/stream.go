@@ -28,11 +28,13 @@ func setHeaders(c *gin.Context) {
 }
 
 // GetLogs godoc
-// @Summary Stream API server logs
-// @Description Stream API server logs
-// @Tags logs
-// @Router /stream/file_name [get]
-// @Param Authorization header string true "API key" default(Bearer <API key>)
+//
+//	@Summary		Stream API server logs
+//	@Description	Stream API server logs
+//	@Tags			logs
+//	@Router			/stream/file_name [get]
+//	@Param			Authorization	header	string	true	"API key"	default(Bearer <API key>)
+//
 // GetLogs
 func GetLogs(c *gin.Context) {
 	setHeaders(c)

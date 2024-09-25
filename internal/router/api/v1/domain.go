@@ -25,16 +25,18 @@ import (
 )
 
 // PostDomains godoc
-// @Summary Return a list of registered domains/hosted zones for a cloud provider account
-// @Description Return a list of registered domains/hosted zones for a cloud provider account
-// @Tags domain
-// @Accept json
-// @Produce json
-// @Param	request	body	types.DomainListRequest	true	"Domain list request in JSON format"
-// @Success 200 {object} types.DomainListResponse
-// @Failure 400 {object} types.JSONFailureResponse
-// @Router /domain/:cloud_provider [post]
-// @Param Authorization header string true "API key" default(Bearer <API key>)
+//
+//	@Summary		Return a list of registered domains/hosted zones for a cloud provider account
+//	@Description	Return a list of registered domains/hosted zones for a cloud provider account
+//	@Tags			domain
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		types.DomainListRequest	true	"Domain list request in JSON format"
+//	@Success		200		{object}	types.DomainListResponse
+//	@Failure		400		{object}	types.JSONFailureResponse
+//	@Router			/domain/:cloud_provider [post]
+//	@Param			Authorization	header	string	true	"API key"	default(Bearer <API key>)
+//
 // PostDomains returns registered domains/hosted zones for a cloud provider account
 func PostDomains(c *gin.Context) {
 	dnsProvider, param := c.Params.Get("dns_provider")

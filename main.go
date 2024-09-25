@@ -21,13 +21,13 @@ import (
 	log "github.com/rs/zerolog/log"
 )
 
-// @title Kubefirst API
-// @version 1.0
-// @description Kubefirst API
-// @contact.name Kubefirst
-// @contact.email help@kubefirst.io
-// @host localhost:port
-// @BasePath /api/v1
+//	@title			Kubefirst API
+//	@version		1.0
+//	@description	Kubefirst API
+//	@contact.name	Kubefirst
+//	@contact.email	help@kubefirst.io
+//	@host			localhost:port
+//	@BasePath		/api/v1
 
 func main() {
 	env, err := env.GetEnv(false)

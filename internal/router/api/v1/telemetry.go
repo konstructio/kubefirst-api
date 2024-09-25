@@ -19,15 +19,17 @@ import (
 )
 
 // PostTelemetry godoc
-// @Summary Create a Telemetry Event
-// @Description Create a Telemetry Event
-// @Tags telemetry
-// @Accept json
-// @Param	cluster_name	path	string	true	"Cluster name"
-// @Param	definition	body	types.TelemetryRequest	true	"event request in JSON format"
-// @Success 202 {object} types.JSONSuccessResponse
-// @Router /telemetry/:cluster_name [post]
-// @Param Authorization header string true "API key" default(Bearer <API key>)
+//
+//	@Summary		Create a Telemetry Event
+//	@Description	Create a Telemetry Event
+//	@Tags			telemetry
+//	@Accept			json
+//	@Param			cluster_name	path		string					true	"Cluster name"
+//	@Param			definition		body		types.TelemetryRequest	true	"event request in JSON format"
+//	@Success		202				{object}	types.JSONSuccessResponse
+//	@Router			/telemetry/:cluster_name [post]
+//	@Param			Authorization	header	string	true	"API key"	default(Bearer <API key>)
+//
 // PostTelemetry sents a new telemetry event
 func PostTelemetry(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")

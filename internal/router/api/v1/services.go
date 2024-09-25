@@ -20,16 +20,18 @@ import (
 )
 
 // GetServices godoc
-// @Summary Returns a list of services for a cluster
-// @Description Returns a list of services for a cluster
-// @Tags services
-// @Accept json
-// @Produce json
-// @Param	cluster_name	path	string	true	"Cluster name"
-// @Success 200 {object} types.ClusterServiceList
-// @Failure 400 {object} types.JSONFailureResponse
-// @Router /services/:cluster_name [get]
-// @Param Authorization header string true "API key" default(Bearer <API key>)
+//
+//	@Summary		Returns a list of services for a cluster
+//	@Description	Returns a list of services for a cluster
+//	@Tags			services
+//	@Accept			json
+//	@Produce		json
+//	@Param			cluster_name	path		string	true	"Cluster name"
+//	@Success		200				{object}	types.ClusterServiceList
+//	@Failure		400				{object}	types.JSONFailureResponse
+//	@Router			/services/:cluster_name [get]
+//	@Param			Authorization	header	string	true	"API key"	default(Bearer <API key>)
+//
 // GetServices returns a list of services for a cluster
 func GetServices(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
@@ -55,18 +57,20 @@ func GetServices(c *gin.Context) {
 }
 
 // PostAddServiceToCluster godoc
-// @Summary Add a gitops catalog application to a cluster as a service
-// @Description Add a gitops catalog application to a cluster as a service
-// @Tags services
-// @Accept json
-// @Produce json
-// @Param	cluster_name	path	string	true	"Cluster name"
-// @Param	service_name	path	string	true	"Service name to be added"
-// @Param	definition	body	types.GitopsCatalogAppCreateRequest	true	"Service create request in JSON format"
-// @Success 202 {object} types.JSONSuccessResponse
-// @Failure 400 {object} types.JSONFailureResponse
-// @Router /services/:cluster_name/:service_name [post]
-// @Param Authorization header string true "API key" default(Bearer <API key>)
+//
+//	@Summary		Add a gitops catalog application to a cluster as a service
+//	@Description	Add a gitops catalog application to a cluster as a service
+//	@Tags			services
+//	@Accept			json
+//	@Produce		json
+//	@Param			cluster_name	path		string								true	"Cluster name"
+//	@Param			service_name	path		string								true	"Service name to be added"
+//	@Param			definition		body		types.GitopsCatalogAppCreateRequest	true	"Service create request in JSON format"
+//	@Success		202				{object}	types.JSONSuccessResponse
+//	@Failure		400				{object}	types.JSONFailureResponse
+//	@Router			/services/:cluster_name/:service_name [post]
+//	@Param			Authorization	header	string	true	"API key"	default(Bearer <API key>)
+//
 // PostAddServiceToCluster handles a request to add a service to a cluster based on a gitops catalog app
 func PostAddServiceToCluster(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
@@ -190,18 +194,20 @@ func PostAddServiceToCluster(c *gin.Context) {
 }
 
 // PostValidateService godoc
-// @Summary Validate gitops catalog application
-// @Description Validate a gitops catalog application so it can be deleted
-// @Tags services
-// @Accept json
-// @Produce json
-// @Param	cluster_name	path	string	true	"Cluster name"
-// @Param	service_name	path	string	true	"Service name to be validated"
-// @Param	definition	body	types.GitopsCatalogAppCreateRequest	true	"Service create request in JSON format"
-// @Success 202 {object} types.GitopsCatalogAppValidateRequest
-// @Failure 400 {object} types.JSONFailureResponse
-// @Router /services/:cluster_name/:service_name/validate [post]
-// @Param Authorization header string true "API key" default(Bearer <API key>)
+//
+//	@Summary		Validate gitops catalog application
+//	@Description	Validate a gitops catalog application so it can be deleted
+//	@Tags			services
+//	@Accept			json
+//	@Produce		json
+//	@Param			cluster_name	path		string								true	"Cluster name"
+//	@Param			service_name	path		string								true	"Service name to be validated"
+//	@Param			definition		body		types.GitopsCatalogAppCreateRequest	true	"Service create request in JSON format"
+//	@Success		202				{object}	types.GitopsCatalogAppValidateRequest
+//	@Failure		400				{object}	types.JSONFailureResponse
+//	@Router			/services/:cluster_name/:service_name/validate [post]
+//	@Param			Authorization	header	string	true	"API key"	default(Bearer <API key>)
+//
 // PostValidateService handles a request to add a service to a cluster based on a gitops catalog app
 func PostValidateService(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")
@@ -286,17 +292,19 @@ func PostValidateService(c *gin.Context) {
 }
 
 // DeleteServiceFromCluster godoc
-// @Summary Remove a gitops catalog application from a cluster
-// @Description Remove a gitops catalog application from a cluster
-// @Tags services
-// @Accept json
-// @Produce json
-// @Param	cluster_name	path	string	true	"Cluster name"
-// @Param	service_name	path	string	true	"Service name to be removed"
-// @Success 202 {object} types.JSONSuccessResponse
-// @Failure 400 {object} types.JSONFailureResponse
-// @Router /services/:cluster_name/:service_name [delete]
-// @Param Authorization header string true "API key" default(Bearer <API key>)
+//
+//	@Summary		Remove a gitops catalog application from a cluster
+//	@Description	Remove a gitops catalog application from a cluster
+//	@Tags			services
+//	@Accept			json
+//	@Produce		json
+//	@Param			cluster_name	path		string	true	"Cluster name"
+//	@Param			service_name	path		string	true	"Service name to be removed"
+//	@Success		202				{object}	types.JSONSuccessResponse
+//	@Failure		400				{object}	types.JSONFailureResponse
+//	@Router			/services/:cluster_name/:service_name [delete]
+//	@Param			Authorization	header	string	true	"API key"	default(Bearer <API key>)
+//
 // DeleteServiceFromCluster handles a request to remove a gitops catalog application from a cluster
 func DeleteServiceFromCluster(c *gin.Context) {
 	clusterName, param := c.Params.Get("cluster_name")

@@ -396,6 +396,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/cluster/:cluster_name/vclusters": {
+            "post": {
+                "description": "Create default virtual clusters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "Create default virtual clusters",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cluster name",
+                        "name": "cluster_name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONFailureResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/cluster/import": {
             "post": {
                 "description": "Import a Kubefirst cluster database entry",
@@ -492,7 +538,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/gitops-catalog/apps": {
+        "/gitops-catalog/:cluster_name/:cloud_provider/apps": {
             "get": {
                 "description": "Returns a list of available Kubefirst gitops catalog applications",
                 "consumes": [
@@ -807,7 +853,69 @@ const docTemplate = `{
                 }
             }
         },
-        "/stream": {
+        "/services/:cluster_name/:service_name/validate": {
+            "post": {
+                "description": "Validate a gitops catalog application so it can be deleted",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "services"
+                ],
+                "summary": "Validate gitops catalog application",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cluster name",
+                        "name": "cluster_name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Service name to be validated",
+                        "name": "service_name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Service create request in JSON format",
+                        "name": "definition",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.GitopsCatalogAppCreateRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "default": "Bearer \u003cAPI key\u003e",
+                        "description": "API key",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/types.GitopsCatalogAppValidateRequest"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/types.JSONFailureResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/stream/file_name": {
             "get": {
                 "description": "Stream API server logs",
                 "tags": [
@@ -897,6 +1005,14 @@ const docTemplate = `{
                 }
             }
         },
+        "types.AkamaiAuth": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
         "types.CivoAuth": {
             "type": "object",
             "properties": {
@@ -946,6 +1062,14 @@ const docTemplate = `{
                 "_id": {
                     "type": "string"
                 },
+                "akamai_auth": {
+                    "description": "Auth",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/types.AkamaiAuth"
+                        }
+                    ]
+                },
                 "alerts_email": {
                     "description": "Identifiers",
                     "type": "string"
@@ -982,12 +1106,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "aws_auth": {
-                    "description": "Auth",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/types.AWSAuth"
-                        }
-                    ]
+                    "$ref": "#/definitions/types.AWSAuth"
                 },
                 "aws_kms_key_detokenized_check": {
                     "type": "boolean"
@@ -1087,6 +1206,9 @@ const docTemplate = `{
                     "description": "Checks",
                     "type": "boolean"
                 },
+                "k3s_auth": {
+                    "$ref": "#/definitions/types.K3sAuth"
+                },
                 "kbot_setup_check": {
                     "type": "boolean"
                 },
@@ -1096,11 +1218,20 @@ const docTemplate = `{
                 "last_condition": {
                     "type": "string"
                 },
+                "log_file": {
+                    "type": "string"
+                },
                 "node_count": {
                     "type": "integer"
                 },
                 "node_type": {
                     "type": "string"
+                },
+                "post_install_catalog_apps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.GitopsCatalogApp"
+                    }
                 },
                 "state_store_create_check": {
                     "type": "boolean"
@@ -1167,13 +1298,16 @@ const docTemplate = `{
                     "description": "Cluster",
                     "type": "string"
                 },
-                "aws_auth": {
+                "akamai_auth": {
                     "description": "Auth",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/types.AWSAuth"
+                            "$ref": "#/definitions/types.AkamaiAuth"
                         }
                     ]
+                },
+                "aws_auth": {
+                    "$ref": "#/definitions/types.AWSAuth"
                 },
                 "civo_auth": {
                     "$ref": "#/definitions/types.CivoAuth"
@@ -1181,11 +1315,13 @@ const docTemplate = `{
                 "cloud_provider": {
                     "type": "string",
                     "enum": [
+                        "akamai",
                         "aws",
                         "civo",
                         "digitalocean",
-                        "vultr",
-                        "google"
+                        "google",
+                        "k3s",
+                        "vultr"
                     ]
                 },
                 "cloud_region": {
@@ -1240,11 +1376,26 @@ const docTemplate = `{
                 "google_auth": {
                     "$ref": "#/definitions/types.GoogleAuth"
                 },
+                "install_kubefirst_pro": {
+                    "type": "boolean"
+                },
+                "k3s_auth": {
+                    "$ref": "#/definitions/types.K3sAuth"
+                },
+                "log_file": {
+                    "type": "string"
+                },
                 "node_count": {
                     "type": "integer"
                 },
                 "node_type": {
                     "type": "string"
+                },
+                "post_install_catalog_apps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.GitopsCatalogApp"
+                    }
                 },
                 "subdomain_name": {
                     "type": "string"
@@ -1292,6 +1443,9 @@ const docTemplate = `{
         "types.DomainListRequest": {
             "type": "object",
             "properties": {
+                "akamai_auth": {
+                    "$ref": "#/definitions/types.AkamaiAuth"
+                },
                 "aws_auth": {
                     "$ref": "#/definitions/types.AWSAuth"
                 },
@@ -1375,14 +1529,35 @@ const docTemplate = `{
                 "category": {
                     "type": "string"
                 },
+                "cloudDenylist": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "config_keys": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.GitopsCatalogAppKeys"
+                    }
+                },
                 "description": {
                     "type": "string"
                 },
                 "display_name": {
                     "type": "string"
                 },
+                "gitDenylist": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "image_url": {
                     "type": "string"
+                },
+                "is_template": {
+                    "type": "boolean"
                 },
                 "name": {
                     "type": "string"
@@ -1390,7 +1565,7 @@ const docTemplate = `{
                 "secret_keys": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/types.GitopsCatalogAppSecretKey"
+                        "$ref": "#/definitions/types.GitopsCatalogAppKeys"
                     }
                 }
             }
@@ -1398,17 +1573,38 @@ const docTemplate = `{
         "types.GitopsCatalogAppCreateRequest": {
             "type": "object",
             "properties": {
+                "config_keys": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.GitopsCatalogAppKeys"
+                    }
+                },
+                "environment": {
+                    "type": "string"
+                },
+                "is_template": {
+                    "type": "boolean"
+                },
                 "secret_keys": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/types.GitopsCatalogAppSecretKey"
+                        "$ref": "#/definitions/types.GitopsCatalogAppKeys"
                     }
+                },
+                "user": {
+                    "type": "string"
+                },
+                "workload_cluster_name": {
+                    "type": "string"
                 }
             }
         },
-        "types.GitopsCatalogAppSecretKey": {
+        "types.GitopsCatalogAppKeys": {
             "type": "object",
             "properties": {
+                "env": {
+                    "type": "string"
+                },
                 "label": {
                     "type": "string"
                 },
@@ -1417,6 +1613,14 @@ const docTemplate = `{
                 },
                 "value": {
                     "type": "string"
+                }
+            }
+        },
+        "types.GitopsCatalogAppValidateRequest": {
+            "type": "object",
+            "properties": {
+                "can_delete_service": {
+                    "type": "boolean"
                 }
             }
         },
@@ -1472,9 +1676,41 @@ const docTemplate = `{
                 }
             }
         },
+        "types.K3sAuth": {
+            "type": "object",
+            "properties": {
+                "servers_args": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "servers_private_ips": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "servers_public_ips": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ssh_privatekey": {
+                    "type": "string"
+                },
+                "ssh_user": {
+                    "type": "string"
+                }
+            }
+        },
         "types.RegionListRequest": {
             "type": "object",
             "properties": {
+                "akamai_auth": {
+                    "$ref": "#/definitions/types.AkamaiAuth"
+                },
                 "aws_auth": {
                     "$ref": "#/definitions/types.AWSAuth"
                 },
@@ -1509,6 +1745,9 @@ const docTemplate = `{
         "types.Service": {
             "type": "object",
             "properties": {
+                "created_by": {
+                    "type": "string"
+                },
                 "default": {
                     "type": "boolean"
                 },

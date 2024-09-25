@@ -16,16 +16,18 @@ import (
 )
 
 // GetValidateAWSDomain godoc
-// @Summary Returns status of whether or not an AWS hosted zone is validated for use with Kubefirst
-// @Description Returns status of whether or not an AWS hosted zone is validated for use with Kubefirst
-// @Tags aws
-// @Accept json
-// @Produce json
-// @Param	domain	path	string	true	"Domain name, no trailing dot"
-// @Success 200 {object} types.AWSDomainValidateResponse
-// @Failure 400 {object} types.JSONFailureResponse
-// @Router /aws/domain/validate/:domain [get]
-// @Param Authorization header string true "API key" default(Bearer <API key>)
+//
+//	@Summary		Returns status of whether or not an AWS hosted zone is validated for use with Kubefirst
+//	@Description	Returns status of whether or not an AWS hosted zone is validated for use with Kubefirst
+//	@Tags			aws
+//	@Accept			json
+//	@Produce		json
+//	@Param			domain	path		string	true	"Domain name, no trailing dot"
+//	@Success		200		{object}	types.AWSDomainValidateResponse
+//	@Failure		400		{object}	types.JSONFailureResponse
+//	@Router			/aws/domain/validate/:domain [get]
+//	@Param			Authorization	header	string	true	"API key"	default(Bearer <API key>)
+//
 // GetValidateAWSDomain returns status for an AWS domain validation
 func GetValidateAWSDomain(c *gin.Context) {
 	domainName, exists := c.Params.Get("domain")
