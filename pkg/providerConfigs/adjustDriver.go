@@ -21,7 +21,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var ai_support = []string{"civo"}
+var aiSupport = []string{"civo"}
 
 const (
 	AkamaiGitHub       = "akamai-github"
@@ -146,7 +146,7 @@ func AdjustGitopsRepo(
 		removeAllWithLogger(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/workload-vcluster/41-cloudflare-origin-ca-issuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
 		removeAllWithLogger(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/workload-vcluster/45-cloudflare-origin-issuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
 
-		for _, cloud := range ai_support {
+		for _, cloud := range aiSupport {
 			if cloud == cloudProvider {
 				removeAllWithLogger(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/ai-cluster/cloudflare-origin-issuer", gitopsRepoDir, cloudProvider, gitProvider)))
 				removeAllWithLogger(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/ai-cluster/40-cloudflare-origin-issuer-crd.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
