@@ -155,7 +155,6 @@ func AdjustGitopsRepo(
 				break
 			}
 		}
-
 	}
 
 	cloudAndGitProvider := strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider))
