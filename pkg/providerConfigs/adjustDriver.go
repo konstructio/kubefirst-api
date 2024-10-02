@@ -21,6 +21,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+var ai_support = []string{"civo"}
+
 const (
 	AkamaiGitHub       = "akamai-github"
 	AwsGitHub          = "aws-github"
@@ -143,6 +145,17 @@ func AdjustGitopsRepo(
 		removeAllWithLogger(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/workload-vcluster/40-cloudflare-origin-issuer-crd.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
 		removeAllWithLogger(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/workload-vcluster/41-cloudflare-origin-ca-issuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
 		removeAllWithLogger(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/workload-vcluster/45-cloudflare-origin-issuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
+
+		for _, cloud := range ai_support {
+			if cloud == cloudProvider {
+				removeAllWithLogger(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/ai-cluster/cloudflare-origin-issuer", gitopsRepoDir, cloudProvider, gitProvider)))
+				removeAllWithLogger(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/ai-cluster/40-cloudflare-origin-issuer-crd.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
+				removeAllWithLogger(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/ai-cluster/41-cloudflare-origin-ca-issuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
+				removeAllWithLogger(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/ai-cluster/45-cloudflare-origin-issuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
+				break
+			}
+		}
+
 	}
 
 	cloudAndGitProvider := strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider))
