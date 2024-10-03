@@ -267,6 +267,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 		case "azure":
 			gitopsTemplateTokens.AzureStorageResourceGroup = "kubefirst-state" // @todo(sje): take from resourceGroup var in internal/controller/state.go
 			gitopsTemplateTokens.AzureStorageContainerName = "terraform"       // @todo(sje): take from containerName var in internal/controller/state.go
+			gitopsTemplateTokens.AzureDNSZoneResourceGroup = clctrl.AzureDNSZoneResourceGroup
 		case "k3s":
 			gitopsTemplateTokens.K3sServersPrivateIps = clctrl.K3sAuth.K3sServersPrivateIps
 			gitopsTemplateTokens.K3sServersPublicIps = clctrl.K3sAuth.K3sServersPublicIps

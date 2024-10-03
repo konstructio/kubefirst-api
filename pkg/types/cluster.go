@@ -119,6 +119,9 @@ type Cluster struct {
 	AWSKMSKeyID               string `bson:"aws_kms_key_id,omitempty" json:"aws_kms_key_id,omitempty"`
 	AWSKMSKeyDetokenizedCheck bool   `bson:"aws_kms_key_detokenized_check" json:"aws_kms_key_detokenized_check"`
 
+	// Azure
+	AzureDNSZoneResourceGroup string `bson:"azure_dns_zone_resource_group,omitempty" json:"azure_dns_zone_resource_group,omitempty"`
+
 	// Telemetry
 	UseTelemetry bool `bson:"use_telemetry"`
 

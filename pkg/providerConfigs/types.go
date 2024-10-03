@@ -53,6 +53,7 @@ type GitopsDirectoryValues struct {
 
 	AzureStorageResourceGroup string
 	AzureStorageContainerName string
+	AzureDNSZoneResourceGroup string
 
 	GoogleAuth       string
 	GoogleProject    string

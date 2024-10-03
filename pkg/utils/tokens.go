@@ -152,6 +152,7 @@ func CreateTokensFromDatabaseRecord(cl *pkgtypes.Cluster, registryPath string, s
 		// @todo(sje): is this not used?
 		gitopsTemplateTokens.AzureStorageResourceGroup = "kubefirst-state" // @todo(sje): take from resourceGroup var in internal/controller/state.go
 		gitopsTemplateTokens.AzureStorageContainerName = "terraform"       // @todo(sje): take from containerName var in internal/controller/state.go
+		gitopsTemplateTokens.AzureDNSZoneResourceGroup = cl.AzureDNSZoneResourceGroup
 	}
 
 	return gitopsTemplateTokens

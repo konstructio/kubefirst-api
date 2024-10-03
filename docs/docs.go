@@ -1134,6 +1134,10 @@ const docTemplate = `{
                 "azure_auth": {
                     "$ref": "#/definitions/types.AzureAuth"
                 },
+                "azure_dns_zone_resource_group": {
+                    "description": "Azure",
+                    "type": "string"
+                },
                 "civo_auth": {
                     "$ref": "#/definitions/types.CivoAuth"
                 },

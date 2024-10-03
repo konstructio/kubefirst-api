@@ -15,7 +15,6 @@ func BootstrapAzureMgmtCluster(clientset kubernetes.Interface, cl *pkgtypes.Clus
 		DestinationGitopsRepoURL: destinationGitopsRepoURL,
 		GitProtocol:              cl.GitProtocol,
 		CloudflareAPIToken:       cl.CloudflareAuth.APIToken,
-		CloudAuth:                cl.CivoAuth.Token,
 		DNSProvider:              cl.DNSProvider,
 		CloudProvider:            cl.CloudProvider,
 		HTTPSPassword:            cl.GitAuth.Token,
