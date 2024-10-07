@@ -17,9 +17,10 @@ import (
 )
 
 const (
-	KubefirstGitHubOrganization      = "kubefirst"
+	KubefirstGitHubOrganization      = "konstructio"
 	KubefirstGitopsCatalogRepository = "gitops-catalog"
 	basePath                         = "/"
+	branch                           = "main"
 )
 
 // GetGitopsCatalogRepo returns an object detailing the Kubefirst gitops catalog GitHub repository
@@ -39,12 +40,15 @@ func (gh *GitHubClient) GetGitopsCatalogRepo() (*github.Repository, error) {
 // ReadGitopsCatalogRepoContents reads the file and directory contents of the Kubefirst gitops catalog
 // GitHub repository
 func (gh *GitHubClient) ReadGitopsCatalogRepoContents() ([]*github.RepositoryContent, error) {
+	opts := &github.RepositoryContentGetOptions{
+		Ref: branch,
+	}
 	_, directoryContent, _, err := gh.Client.Repositories.GetContents(
 		context.Background(),
 		KubefirstGitHubOrganization,
 		KubefirstGitopsCatalogRepository,
 		basePath,
-		nil,
+		opts,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error getting gitops catalog repository contents: %w", err)
