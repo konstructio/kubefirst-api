@@ -183,7 +183,7 @@ spec:
                 - name: appName
                   value: "charts"
                 - name: chartDir
-                  value: "kubefirst"
+                  value: "charts/kubefirst"
                 - name: ghRepo
                   value: "{{workflow.parameters.ghRepo}}"
                 - name: ghUser
