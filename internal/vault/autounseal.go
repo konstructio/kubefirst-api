@@ -31,8 +31,6 @@ func (conf *Configuration) AutoUnseal() (*vaultapi.InitResponse, error) {
 	initResponse, err := vaultClient.Sys().Init(&vaultapi.InitRequest{
 		RecoveryShares:    RecoveryShares,
 		RecoveryThreshold: RecoveryThreshold,
-		SecretShares:      SecretShares,
-		SecretThreshold:   SecretThreshold,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error initializing vault: %w", err)
