@@ -101,8 +101,6 @@ spec:
                   value: "{{workflow.parameters.appName}}"
                 - name: chartDir
                   value: "charts/{{workflow.parameters.appName}}"
-                - name: chartVersion
-                  value: "{{steps.get-initial-micro-chart-version.outputs.result}}-rc.{{workflow.parameters.shortSha}}"
                 - name: ghRepo
                   value: "{{workflow.parameters.ghRepo}}"
                 - name: ghUser
@@ -186,8 +184,6 @@ spec:
                   value: "charts"
                 - name: chartDir
                   value: "kubefirst"
-                - name: chartVersion
-                  value: "{{steps.get-current-macro-chart-version.outputs.result}}"
                 - name: ghRepo
                   value: "{{workflow.parameters.ghRepo}}"
                 - name: ghUser
