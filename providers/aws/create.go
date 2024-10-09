@@ -247,23 +247,23 @@ func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 	}
 
 	if ctrl.InstallKubefirstPro {
-		log.Info().Msg("waiting for kubefirst-api Deployment to transition to Running")
-		kubefirstAPI, err := k8s.ReturnDeploymentObject(
+		log.Info().Msg("waiting for kubefirst-pro-api Deployment to transition to Running")
+		kubefirstProAPI, err := k8s.ReturnDeploymentObject(
 			ctrl.Kcfg.Clientset,
 			"app.kubernetes.io/name",
-			"kubefirst-api",
+			"kubefirst-pro-api",
 			"kubefirst",
 			1200,
 		)
 		if err != nil {
 			ctrl.UpdateClusterOnError(err.Error())
-			return fmt.Errorf("error finding kubefirst-api Deployment: %w", err)
+			return fmt.Errorf("error finding kubefirst-pro-api Deployment: %w", err)
 		}
 
-		_, err = k8s.WaitForDeploymentReady(ctrl.Kcfg.Clientset, kubefirstAPI, 300)
+		_, err = k8s.WaitForDeploymentReady(ctrl.Kcfg.Clientset, kubefirstProAPI, 300)
 		if err != nil {
 			ctrl.UpdateClusterOnError(err.Error())
-			return fmt.Errorf("error waiting for kubefirst-api deployment to enter Ready state: %w", err)
+			return fmt.Errorf("error waiting for kubefirst-pro-api deployment to enter Ready state: %w", err)
 		}
 	}
 

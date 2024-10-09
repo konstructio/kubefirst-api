@@ -235,25 +235,25 @@ func CreateDigitaloceanCluster(definition *pkgtypes.ClusterDefinition) error {
 	}
 
 	if ctrl.InstallKubefirstPro {
-		log.Info().Msg("waiting for kubefirst-api Deployment to transition to Running")
-		kubefirstAPI, err := k8s.ReturnDeploymentObject(
+		log.Info().Msg("waiting for kubefirst-pro-api Deployment to transition to Running")
+		kubefirstProAPI, err := k8s.ReturnDeploymentObject(
 			kcfg.Clientset,
 			"app.kubernetes.io/name",
-			"kubefirst-api",
+			"kubefirst-pro-api",
 			"kubefirst",
 			1200,
 		)
 		if err != nil {
-			log.Error().Msgf("Error finding kubefirst api Deployment: %s", err)
+			log.Error().Msgf("Error finding kubefirst-pro-api Deployment: %s", err)
 			ctrl.UpdateClusterOnError(err.Error())
-			return fmt.Errorf("error finding kubefirst api Deployment: %w", err)
+			return fmt.Errorf("error finding kubefirst-pro-api Deployment: %w", err)
 		}
 
-		_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, kubefirstAPI, 300)
+		_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, kubefirstProAPI, 300)
 		if err != nil {
-			log.Error().Msgf("Error waiting for kubefirst-api to transition to Running: %s", err)
+			log.Error().Msgf("Error waiting for kubefirst-pro-api to transition to Running: %s", err)
 			ctrl.UpdateClusterOnError(err.Error())
-			return fmt.Errorf("error waiting for kubefirst-api to transition to Running: %w", err)
+			return fmt.Errorf("error waiting for kubefirst-pro-api to transition to Running: %w", err)
 		}
 	}
 
