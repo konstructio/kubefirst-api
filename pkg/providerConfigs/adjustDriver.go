@@ -148,10 +148,10 @@ func AdjustGitopsRepo(
 
 		for _, cloud := range aiSupport {
 			if cloud == cloudProvider {
-				removeAllWithLogger(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/ai-cluster/cloudflare-origin-issuer", gitopsRepoDir, cloudProvider, gitProvider)))
-				removeAllWithLogger(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/ai-cluster/40-cloudflare-origin-issuer-crd.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
-				removeAllWithLogger(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/ai-cluster/41-cloudflare-origin-ca-issuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
-				removeAllWithLogger(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/ai-cluster/45-cloudflare-origin-issuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
+				removeAllWithLogger(filepath.Join(gitopsRepoDir, strings.ToLower(cloudProvider), strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)), "templates", "ai-cluster", "cloudflare-origin-issuer"))
+				removeAllWithLogger(filepath.Join(gitopsRepoDir, strings.ToLower(cloudProvider), strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)), "templates", "ai-cluster", "40-cloudflare-origin-issuer-crd.yaml"))
+				removeAllWithLogger(filepath.Join(gitopsRepoDir, strings.ToLower(cloudProvider), strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)), "templates", "ai-cluster", "41-cloudflare-origin-ca-issuer.yaml"))
+				removeAllWithLogger(filepath.Join(gitopsRepoDir, strings.ToLower(cloudProvider), strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)), "templates", "ai-cluster", "45-cloudflare-origin-issuer.yaml"))
 				break
 			}
 		}
