@@ -21,7 +21,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var aiSupport = []string{"civo"}
+var gpuSupport = []string{"civo"}
 
 const (
 	AkamaiGitHub       = "akamai-github"
@@ -146,13 +146,18 @@ func AdjustGitopsRepo(
 		removeAllWithLogger(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/workload-vcluster/41-cloudflare-origin-ca-issuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
 		removeAllWithLogger(strings.ToLower(fmt.Sprintf("%s/%s-%s/templates/workload-vcluster/45-cloudflare-origin-issuer.yaml", gitopsRepoDir, cloudProvider, gitProvider)))
 
-		for _, cloud := range aiSupport {
-			if cloud == cloudProvider {
-				removeAllWithLogger(filepath.Join(gitopsRepoDir, strings.ToLower(cloudProvider), strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)), "templates", "ai-cluster", "cloudflare-origin-issuer"))
-				removeAllWithLogger(filepath.Join(gitopsRepoDir, strings.ToLower(cloudProvider), strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)), "templates", "ai-cluster", "40-cloudflare-origin-issuer-crd.yaml"))
-				removeAllWithLogger(filepath.Join(gitopsRepoDir, strings.ToLower(cloudProvider), strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)), "templates", "ai-cluster", "41-cloudflare-origin-ca-issuer.yaml"))
-				removeAllWithLogger(filepath.Join(gitopsRepoDir, strings.ToLower(cloudProvider), strings.ToLower(fmt.Sprintf("%s-%s", cloudProvider, gitProvider)), "templates", "ai-cluster", "45-cloudflare-origin-issuer.yaml"))
-				break
+		for _, cloudProvider := range gpuSupport {
+			basePath := filepath.Join(gitopsRepoDir, fmt.Sprintf("%s-%s", cloudProvider, gitProvider), "templates", "gpu-cluster")
+			lowerPath := strings.ToLower(basePath)
+
+			for _, cloud := range gpuSupport {
+				if cloud == cloudProvider {
+					removeAllWithLogger(filepath.Join(lowerPath, "cloudflare-origin-issuer"))
+					removeAllWithLogger(filepath.Join(lowerPath, "40-cloudflare-origin-issuer-crd.yaml"))
+					removeAllWithLogger(filepath.Join(lowerPath, "41-cloudflare-origin-ca-issuer.yaml"))
+					removeAllWithLogger(filepath.Join(lowerPath, "45-cloudflare-origin-issuer.yaml"))
+					break
+				}
 			}
 		}
 	}
