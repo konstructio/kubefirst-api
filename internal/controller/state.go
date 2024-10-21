@@ -93,6 +93,17 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				return fmt.Errorf(msg)
 			}
 
+			keys, err := clctrl.AzureClient.GetStorageAccessKeys(ctx, resourceGroup, clctrl.KubefirstStateStoreBucketName)
+			if err != nil {
+				msg := fmt.Sprintf("error retrieving azure storage account keys %s: %s", clctrl.KubefirstStateStoreBucketName, err)
+				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, msg)
+				return fmt.Errorf(msg)
+			}
+
+			stateStoreData = pkgtypes.StateStoreCredentials{
+				SecretAccessKey: keys.Key1,
+			}
+
 			if _, err := clctrl.AzureClient.CreateBlobContainer(ctx, clctrl.KubefirstStateStoreBucketName, containerName); err != nil {
 				msg := fmt.Sprintf("error creating blob storage container %s: %s", clctrl.KubefirstStateStoreBucketName, err)
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, msg)
