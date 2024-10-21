@@ -18,6 +18,8 @@ var SupportedPlatforms = []string{
 	"akamai-github",
 	"aws-github",
 	"aws-gitlab",
+	"azure-github",
+	"azure-gitlab",
 	"civo-github",
 	"civo-gitlab",
 	"digitalocean-github",

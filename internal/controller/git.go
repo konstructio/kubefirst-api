@@ -12,6 +12,7 @@ import (
 
 	akamaiext "github.com/konstructio/kubefirst-api/extensions/akamai"
 	awsext "github.com/konstructio/kubefirst-api/extensions/aws"
+	azureext "github.com/konstructio/kubefirst-api/extensions/azure"
 	civoext "github.com/konstructio/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/konstructio/kubefirst-api/extensions/digitalocean"
 	googleext "github.com/konstructio/kubefirst-api/extensions/google"
@@ -83,6 +84,8 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				tfEnvs = akamaiext.GetGithubTerraformEnvs(tfEnvs, cl)
 			case "aws":
 				tfEnvs = awsext.GetGithubTerraformEnvs(tfEnvs, cl)
+			case "azure":
+				tfEnvs = azureext.GetGithubTerraformEnvs(tfEnvs, cl)
 			case "civo":
 				tfEnvs = civoext.GetGithubTerraformEnvs(tfEnvs, cl)
 			case "google":
@@ -100,6 +103,8 @@ func (clctrl *ClusterController) RunGitTerraform() error {
 				tfEnvs = akamaiext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, cl)
 			case "aws":
 				tfEnvs = awsext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, cl)
+			case "azure":
+				tfEnvs = azureext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, cl)
 			case "civo":
 				tfEnvs = civoext.GetGitlabTerraformEnvs(tfEnvs, clctrl.GitlabOwnerGroupID, cl)
 			case "google":

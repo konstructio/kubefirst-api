@@ -1013,6 +1013,23 @@ const docTemplate = `{
                 }
             }
         },
+        "types.AzureAuth": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "string"
+                },
+                "client_secret": {
+                    "type": "string"
+                },
+                "subscription_id": {
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "type": "string"
+                }
+            }
+        },
         "types.CivoAuth": {
             "type": "object",
             "properties": {
@@ -1112,6 +1129,13 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "aws_kms_key_id": {
+                    "type": "string"
+                },
+                "azure_auth": {
+                    "$ref": "#/definitions/types.AzureAuth"
+                },
+                "azure_dns_zone_resource_group": {
+                    "description": "Azure",
                     "type": "string"
                 },
                 "civo_auth": {
@@ -1309,6 +1333,13 @@ const docTemplate = `{
                 "aws_auth": {
                     "$ref": "#/definitions/types.AWSAuth"
                 },
+                "azure_auth": {
+                    "$ref": "#/definitions/types.AzureAuth"
+                },
+                "azure_dns_zone_resource_group": {
+                    "description": "Azure",
+                    "type": "string"
+                },
                 "civo_auth": {
                     "$ref": "#/definitions/types.CivoAuth"
                 },
@@ -1317,6 +1348,7 @@ const docTemplate = `{
                     "enum": [
                         "akamai",
                         "aws",
+                        "azure",
                         "civo",
                         "digitalocean",
                         "google",

@@ -11,10 +11,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"time"
 
 	runtime "github.com/konstructio/kubefirst-api/internal"
 	awsinternal "github.com/konstructio/kubefirst-api/internal/aws"
+	azureinternal "github.com/konstructio/kubefirst-api/internal/azure"
 	"github.com/konstructio/kubefirst-api/internal/constants"
 	"github.com/konstructio/kubefirst-api/internal/env"
 	"github.com/konstructio/kubefirst-api/internal/github"
@@ -48,6 +50,7 @@ type ClusterController struct {
 	// auth
 	AkamaiAuth             types.AkamaiAuth
 	AWSAuth                types.AWSAuth
+	AzureAuth              types.AzureAuth
 	CivoAuth               types.CivoAuth
 	DigitaloceanAuth       types.DigitaloceanAuth
 	VultrAuth              types.VultrAuth
@@ -106,8 +109,12 @@ type ClusterController struct {
 	// Telemetry
 	TelemetryEvent telemetry.TelemetryEvent
 
+	// Azure
+	AzureDNSZoneResourceGroup string
+
 	// Provider clients
 	AwsClient    *awsinternal.Configuration
+	AzureClient  *azureinternal.Client
 	GoogleClient google.Configuration
 	Kcfg         *k8s.KubernetesClient
 	Cluster      types.Cluster
@@ -206,6 +213,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 
 	clctrl.AkamaiAuth = def.AkamaiAuth
 	clctrl.AWSAuth = def.AWSAuth
+	clctrl.AzureAuth = def.AzureAuth
 	clctrl.CivoAuth = def.CivoAuth
 	clctrl.DigitaloceanAuth = def.DigitaloceanAuth
 	clctrl.VultrAuth = def.VultrAuth
@@ -233,9 +241,22 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	} else {
 		clctrl.GitopsTemplateURL = "https://github.com/kubefirst/gitops-template.git"
 	}
-	if def.CloudProvider == "akamai" {
+	switch def.CloudProvider {
+	case "akamai":
 		clctrl.KubefirstStateStoreBucketName = clctrl.ClusterName
-	} else {
+	case "azure":
+		// Azure storage accounts are 3-24 characters and only letters/numbers
+		maxLen := 24
+		reg := regexp.MustCompile(`\W`)
+
+		storeName := fmt.Sprintf("k1%s%s", clusterID, clctrl.ClusterName)
+
+		clctrl.KubefirstStateStoreBucketName = reg.ReplaceAllString(storeName, "")
+
+		if len(clctrl.KubefirstStateStoreBucketName) > maxLen {
+			clctrl.KubefirstStateStoreBucketName = clctrl.KubefirstStateStoreBucketName[:maxLen]
+		}
+	default:
 		clctrl.KubefirstStateStoreBucketName = fmt.Sprintf("k1-state-store-%s-%s", clctrl.ClusterName, clusterID)
 	}
 
@@ -282,6 +303,14 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		}
 
 		clctrl.ProviderConfig = *conf
+	case "azure":
+		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.APIToken, clctrl.CloudflareAuth.OriginCaIssuerKey)
+		if err != nil {
+			return fmt.Errorf("unable to get provider configuration for AWS: %w", err)
+		}
+
+		clctrl.ProviderConfig = *conf
+		clctrl.AzureDNSZoneResourceGroup = def.AzureDNSZoneResourceGroup
 	case "civo":
 		conf, err := providerConfigs.GetConfig(clctrl.ClusterName, clctrl.DomainName, clctrl.GitProvider, clctrl.GitAuth.Owner, clctrl.GitProtocol, clctrl.CloudflareAuth.APIToken, clctrl.CloudflareAuth.OriginCaIssuerKey)
 		if err != nil {
@@ -343,6 +372,17 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		}
 
 		clctrl.AwsClient = &awsinternal.Configuration{Config: conf}
+	case "azure":
+		azureClient, err := azureinternal.NewClient(
+			clctrl.AzureAuth.ClientID,
+			clctrl.AzureAuth.ClientSecret,
+			clctrl.AzureAuth.SubscriptionID,
+			clctrl.AzureAuth.TenantID,
+		)
+		if err != nil {
+			return fmt.Errorf("error creating azure client: %w", err)
+		}
+		clctrl.AzureClient = azureClient
 	case "google":
 		clctrl.GoogleClient = google.Configuration{
 			Context: context.Background(),
@@ -378,6 +418,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		KubefirstTeam:          clctrl.KubefirstTeam,
 		AkamaiAuth:             clctrl.AkamaiAuth,
 		AWSAuth:                clctrl.AWSAuth,
+		AzureAuth:              clctrl.AzureAuth,
 		CivoAuth:               clctrl.CivoAuth,
 		GoogleAuth:             clctrl.GoogleAuth,
 		DigitaloceanAuth:       clctrl.DigitaloceanAuth,
