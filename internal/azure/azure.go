@@ -17,6 +17,11 @@ var defaultTags = map[string]*string{
 	"ProvisionedBy": to.Ptr("kubefirst"),
 }
 
+type Keys struct {
+	Key1 string
+	Key2 string
+}
+
 type Client struct {
 	cred           *azidentity.DefaultAzureCredential
 	subscriptionID string
@@ -128,6 +133,34 @@ func (c *Client) CreateStorageAccount(ctx context.Context, location, resourceGro
 	}
 
 	return &resp.Account, nil
+}
+
+func (c *Client) GetStorageAccessKeys(ctx context.Context, resourceGroup, storageAccountName string) (*Keys, error) {
+	client, err := c.newStorageClientFactory()
+	if err != nil {
+		return nil, err
+	}
+
+	keys, err := client.NewAccountsClient().ListKeys(ctx, resourceGroup, storageAccountName, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve storage keys: %w", err)
+	}
+
+	// There should always be two keys set - this can be thought of as primary/secondary
+	// so one in-use so other can be regenerated without losing access to the service
+	s := make([]string, 0)
+	for i, key := range keys.Keys {
+		if k := key.Value; k != nil {
+			s = append(s, *k)
+		} else {
+			return nil, fmt.Errorf("storage access key %d not set", i)
+		}
+	}
+
+	return &Keys{
+		Key1: s[0],
+		Key2: s[1],
+	}, nil
 }
 
 func (c *Client) TestHostedZoneLiveness(ctx context.Context, domainName, resourceGroup string) (bool, error) {
