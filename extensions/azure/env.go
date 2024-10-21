@@ -28,6 +28,12 @@ func GetAzureTerraformEnvs(envs map[string]string, cl *pkgtypes.Cluster) map[str
 	envs["ARM_CLIENT_SECRET"] = cl.AzureAuth.ClientSecret
 	envs["ARM_TENANT_ID"] = cl.AzureAuth.TenantID
 	envs["ARM_SUBSCRIPTION_ID"] = cl.AzureAuth.SubscriptionID
+	envs["TF_VAR_arm_client_id"] = cl.AzureAuth.ClientID
+	envs["TF_VAR_arm_client_secret"] = cl.AzureAuth.ClientSecret
+	envs["TF_VAR_arm_tenant_id"] = cl.AzureAuth.TenantID
+	envs["TF_VAR_arm_subscription_id"] = cl.AzureAuth.SubscriptionID
+	envs["TF_VAR_azure_storage_account"] = cl.StateStoreCredentials.Name
+	envs["TF_VAR_azure_storage_access_key"] = cl.StateStoreCredentials.SecretAccessKey
 
 	return envs
 }
