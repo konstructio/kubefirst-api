@@ -100,7 +100,9 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				return fmt.Errorf(msg)
 			}
 
+			// Azure storage is not S3 compatible, but reusing this struct in a (roughly) synonymous way
 			stateStoreData = pkgtypes.StateStoreCredentials{
+				Name:            clctrl.KubefirstStateStoreBucketName,
 				SecretAccessKey: keys.Key1,
 			}
 
