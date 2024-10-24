@@ -21,6 +21,7 @@ import (
 	log "github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -211,6 +212,30 @@ func (clctrl *ClusterController) RestartPod(namespace string, podName string) er
 			return fmt.Errorf("failed to get Google container cluster auth: %w", err)
 		}
 	}
+
+	err = wait.PollImmediate(15*time.Second, 10*time.Minute, func() (bool, error) {
+		// Attempt to get the ServiceAccount from the 'argocd' namespace
+		_, err := kcfg.Clientset.CoreV1().ServiceAccounts("argocd").Get(context.Background(), "argocd-application-controller", metav1.GetOptions{})
+		// If there's an error (but it's not a "not found" error), return the error
+		if err != nil {
+			if errors.IsNotFound(err) {
+				// ServiceAccount not found, so continue polling
+				return false, nil
+			}
+			// Any other error, stop polling
+			return false, fmt.Errorf("error getting service account :%w", err)
+		}
+
+		// If we reach here, the ServiceAccount exists, so stop polling
+		return true, nil
+	})
+	if err != nil {
+		// Handle error here
+		return fmt.Errorf("failed to find ServiceAccount: %w", err)
+	}
+
+	// Move forward if the ServiceAccount is successfully created
+	log.Info().Msg("ServiceAccount 'argocd-application-controller' created.")
 
 	if err := DeletePod(context.Background(), kcfg.Clientset, namespace, podName); err != nil {
 		return fmt.Errorf("error deleting pod application controller :%w", err)
