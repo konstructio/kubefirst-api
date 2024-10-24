@@ -47,7 +47,7 @@ Note:
 
 --- Kubefirst Console
 ------------------------------------------------------------
-  URL: http://localhost:9094/services
+  URL: https://kubefirst.{{ .DomainName }}
 
 --- ArgoCD
 ------------------------------------------------------------
