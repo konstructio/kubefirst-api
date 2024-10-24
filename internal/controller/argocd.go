@@ -179,18 +179,15 @@ func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, name
 }
 
 func DeletePod(ctx context.Context, clienset kubernetes.Interface, namespace string, podName string) error {
-
 	err := clienset.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
 	if err != nil {
 		return fmt.Errorf("not able to delete pod %s : %w", podName, err)
 	}
 	log.Info().Msg("deleted pod")
 	return nil
-
 }
 
 func (clctrl *ClusterController) RestartPod(namespace string, podName string) error {
-
 	_, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
 	if err != nil {
 		return fmt.Errorf("failed to get cluster: %w", err)
@@ -215,7 +212,7 @@ func (clctrl *ClusterController) RestartPod(namespace string, podName string) er
 		}
 	}
 
-	if err := DeletePod(context.Background(), kcfg.Clientset, "argocd", "argocd-application-controller-0"); err != nil {
+	if err := DeletePod(context.Background(), kcfg.Clientset, namespace, podName); err != nil {
 		return fmt.Errorf("error deleting pod application controller :%w", err)
 	}
 	return nil

@@ -96,5 +96,4 @@ func TestDeletePod(t *testing.T) {
 	if podf != nil && len(podf.Name) != 0 {
 		t.Fatalf("error deleting pod")
 	}
-
 }
