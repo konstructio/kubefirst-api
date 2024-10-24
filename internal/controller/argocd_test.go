@@ -69,3 +69,32 @@ func TestRestartDeployment(t *testing.T) {
 		t.Fatalf("expected annotation restartedAt to be set within 1 second, got %v", t2.Sub(t1))
 	}
 }
+
+func TestDeletePod(t *testing.T) {
+	client := fake.NewSimpleClientset()
+	namespace := "default"
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "example-pod",
+			Namespace: namespace,
+		},
+		Spec: corev1.PodSpec{},
+	}
+
+	ctx := context.Background()
+
+	_, err := client.CoreV1().Pods(namespace).Create(ctx, pod, metav1.CreateOptions{})
+	if err != nil {
+		t.Fatalf("error creating pod: %v", err)
+	}
+
+	if err := DeletePod(ctx, client, namespace, pod.Name); err != nil {
+		t.Fatalf("error deleting pod: %v", err)
+	}
+
+	podf, _ := client.CoreV1().Pods(namespace).Get(ctx, pod.Name, metav1.GetOptions{})
+	if podf != nil && len(podf.Name) != 0 {
+		t.Fatalf("error deleting pod")
+	}
+
+}

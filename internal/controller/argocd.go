@@ -19,6 +19,7 @@ import (
 	"github.com/konstructio/kubefirst-api/internal/secrets"
 	"github.com/kubefirst/metrics-client/pkg/telemetry"
 	log "github.com/rs/zerolog/log"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -177,6 +178,49 @@ func RestartDeployment(ctx context.Context, clientset kubernetes.Interface, name
 	return nil
 }
 
+func DeletePod(ctx context.Context, clienset kubernetes.Interface, namespace string, podName string) error {
+
+	err := clienset.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
+	if err != nil {
+		return fmt.Errorf("not able to delete pod %s : %w", podName, err)
+	}
+	log.Info().Msg("deleted pod")
+	return nil
+
+}
+
+func (clctrl *ClusterController) RestartPod(namespace string, podName string) error {
+
+	_, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
+	if err != nil {
+		return fmt.Errorf("failed to get cluster: %w", err)
+	}
+
+	// if !cl.ArgoCDCreateRegistryCheck {
+	var kcfg *k8s.KubernetesClient
+
+	switch clctrl.CloudProvider {
+	case "aws":
+		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+	case "akamai", "civo", "digitalocean", "k3s", "vultr":
+		kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
+		if err != nil {
+			return fmt.Errorf("failed to create Kubernetes config: %w", err)
+		}
+	case "google":
+		var err error
+		kcfg, err = clctrl.GoogleClient.GetContainerClusterAuth(clctrl.ClusterName, []byte(clctrl.GoogleAuth.KeyFile))
+		if err != nil {
+			return fmt.Errorf("failed to get Google container cluster auth: %w", err)
+		}
+	}
+
+	if err := DeletePod(context.Background(), kcfg.Clientset, "argocd", "argocd-application-controller-0"); err != nil {
+		return fmt.Errorf("error deleting pod application controller :%w", err)
+	}
+	return nil
+}
+
 // DeployRegistryApplication
 func (clctrl *ClusterController) DeployRegistryApplication() error {
 	cl, err := secrets.GetCluster(clctrl.KubernetesClient, clctrl.ClusterName)
@@ -245,7 +289,7 @@ func (clctrl *ClusterController) DeployRegistryApplication() error {
 			log.Info().Msgf("Attempt #%d to create Argo CD application...", attempt)
 
 			app, err := argocdClient.ArgoprojV1alpha1().Applications("argocd").Create(context.Background(), registryApplicationObject, metav1.CreateOptions{})
-			if err != nil {
+			if err != nil && !errors.IsAlreadyExists(err) {
 				if attempt == retryAttempts {
 					return fmt.Errorf("failed to create Argo CD application on attempt #%d: %w", attempt, err)
 				}

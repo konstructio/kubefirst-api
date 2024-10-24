@@ -286,6 +286,10 @@ func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 		return fmt.Errorf("error waiting for argocd deployment to enter Ready state: %w", err)
 	}
 
+	if err := ctrl.RestartPod("argocd", "argocd-application-controller-0"); err != nil {
+		return fmt.Errorf("error restarting pod application controller: %w", err)
+	}
+
 	log.Info().Msg("cluster creation complete")
 	return nil
 }
