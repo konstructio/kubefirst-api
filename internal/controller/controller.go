@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	runtime "github.com/konstructio/kubefirst-api/internal"
@@ -332,6 +333,10 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	// Instantiate provider clients and copy cluster controller to cluster type
 	switch clctrl.CloudProvider {
 	case "aws":
+		os.Setenv("AWS_ACCESS_KEY_ID", clctrl.AWSAuth.AccessKeyID)
+		os.Setenv("AWS_SECRET_ACCESS_KEY", clctrl.AWSAuth.SecretAccessKey)
+		os.Setenv("AWS_SESSION_TOKEN", clctrl.AWSAuth.SessionToken)
+		os.Setenv("AWS_REGION", clctrl.CloudRegion)
 		conf, err := awsinternal.NewAwsV3(
 			clctrl.CloudRegion,
 			clctrl.AWSAuth.AccessKeyID,
