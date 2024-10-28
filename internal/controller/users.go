@@ -36,7 +36,10 @@ func (clctrl *ClusterController) RunUsersTerraform() error {
 
 		switch clctrl.CloudProvider {
 		case "aws":
-			kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+			kcfg, err = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+			if err != nil {
+				return fmt.Errorf("failed to create eks config: %w", err)
+			}
 		case "akamai", "civo", "digitalocean", "k3s", "vultr":
 			kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 			if err != nil {
