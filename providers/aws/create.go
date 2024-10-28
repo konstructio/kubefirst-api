@@ -108,6 +108,7 @@ func CreateAWSCluster(definition *pkgtypes.ClusterDefinition) error {
 	// for all cloud providers
 	ctrl.Kcfg, err = awsext.CreateEKSKubeconfig(&ctrl.AwsClient.Config, ctrl.ClusterName)
 	if err != nil {
+		ctrl.UpdateClusterOnError(err.Error())
 		return fmt.Errorf("failed to create eks config: %w", err)
 	}
 	if err := ctrl.WaitForClusterReady(); err != nil {
