@@ -21,7 +21,7 @@ import (
 )
 
 // CreateEKSKubeconfig
-func CreateEKSKubeconfig(awsConfig *aws.Config, clusterName string) *k8s.KubernetesClient {
+func CreateEKSKubeconfig(awsConfig *aws.Config, clusterName string) (*k8s.KubernetesClient, error) {
 	eksSvc := eks.NewFromConfig(*awsConfig)
 
 	clusterInput := &eks.DescribeClusterInput{
@@ -30,19 +30,19 @@ func CreateEKSKubeconfig(awsConfig *aws.Config, clusterName string) *k8s.Kuberne
 
 	eksClusterInfo, err := eksSvc.DescribeCluster(context.Background(), clusterInput)
 	if err != nil {
-		return &k8s.KubernetesClient{}
+		return nil, fmt.Errorf("error describing cluster: %w", err)
 	}
 
 	clientset, restConfig, err := newEKSConfig(eksClusterInfo.Cluster)
 	if err != nil {
-		return &k8s.KubernetesClient{}
+		return nil, fmt.Errorf("error creating EKS config: %w", err)
 	}
 
 	return &k8s.KubernetesClient{
 		Clientset:      clientset,
 		RestConfig:     restConfig,
 		KubeConfigPath: "",
-	}
+	}, nil
 }
 
 // newEKSConfig

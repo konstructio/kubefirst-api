@@ -154,8 +154,10 @@ func DeleteAWSCluster(cl *pkgtypes.Cluster, telemetryEvent telemetry.TelemetryEv
 			awsClient := &awsinternal.Configuration{
 				Config: conf,
 			}
-			kcfg := awsext.CreateEKSKubeconfig(&awsClient.Config, cl.ClusterName)
-
+			kcfg, err := awsext.CreateEKSKubeconfig(&awsClient.Config, cl.ClusterName)
+			if err != nil {
+				return fmt.Errorf("failed to create eks config: %w", err)
+			}
 			log.Info().Msg("destroying aws resources with terraform")
 
 			// Only port-forward to ArgoCD and delete registry if ArgoCD was installed

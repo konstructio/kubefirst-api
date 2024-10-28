@@ -294,7 +294,10 @@ func (clctrl *ClusterController) ClusterSecretsBootstrap() error {
 
 	switch clctrl.CloudProvider {
 	case "aws":
-		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+		kcfg, err = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+		if err != nil {
+			return fmt.Errorf("failed to create eks config: %w", err)
+		}
 	case "akamai", "civo", "digitalocean", "k3s", "vultr":
 		kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 		if err != nil {
@@ -393,7 +396,11 @@ func (clctrl *ClusterController) ContainerRegistryAuth() (string, error) {
 
 	switch clctrl.CloudProvider {
 	case "aws":
-		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+		var err error
+		kcfg, err = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+		if err != nil {
+			return "", fmt.Errorf("failed to create eks config: %w", err)
+		}
 
 		// Container registry authentication creation
 		containerRegistryAuth := gitShim.ContainerRegistryAuth{
@@ -451,7 +458,11 @@ func (clctrl *ClusterController) WaitForClusterReady() error {
 
 	switch clctrl.CloudProvider {
 	case "aws":
-		kcfg = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+		var err error
+		kcfg, err = awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+		if err != nil {
+			return fmt.Errorf("failed to create eks config: %w", err)
+		}
 	case "civo", "digitalocean", "vultr", "k3s":
 		var err error
 		kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
