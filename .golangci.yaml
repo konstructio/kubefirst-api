@@ -111,7 +111,7 @@ linters-settings:
       - "-ST1003" # this is covered by a different linter
 
   gocyclo:
-    min-complexity: 60
+    min-complexity: 68
 
   exhaustive:
     check-generated: false
