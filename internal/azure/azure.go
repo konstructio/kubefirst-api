@@ -171,7 +171,7 @@ func (c *Client) TestHostedZoneLiveness(ctx context.Context, domainName, resourc
 
 	_, err = client.NewZonesClient().Get(ctx, resourceGroup, domainName, nil)
 	if err != nil {
-		// We cannot tell the difference between a network failure or a missing DNS zone
+		//lint:ignore nilerr We cannot tell the difference between a network failure or a missing DNS zone
 		return false, nil
 	}
 

@@ -106,7 +106,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				useCloudflareOriginIssuer,
 			)
 			if err != nil {
-				return err
+				return fmt.Errorf("error preparing git repositories for Azure: %w", err)
 			}
 		case "civo":
 			err := providerConfigs.PrepareGitRepositories(

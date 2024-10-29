@@ -449,7 +449,7 @@ func PostCreateCluster(c *gin.Context) {
 		go func() {
 			err = azure.CreateAzureCluster(&clusterDefinition)
 			if err != nil {
-				log.Error().Msgf(err.Error())
+				log.Error().Msg(err.Error())
 			}
 		}()
 

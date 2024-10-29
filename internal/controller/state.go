@@ -77,9 +77,8 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			ctx := context.Background()
 
 			if _, err := clctrl.AzureClient.CreateResourceGroup(ctx, resourceGroup, location); err != nil {
-				msg := fmt.Sprintf("error creating azure storage resource group %s: %s", resourceGroup, err)
-				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, msg)
-				return fmt.Errorf(msg)
+				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, err.Error())
+				return fmt.Errorf("error creating azure storage resource group %s: %w", resourceGroup, err)
 			}
 
 			if _, err := clctrl.AzureClient.CreateStorageAccount(
@@ -88,16 +87,14 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				resourceGroup,
 				clctrl.KubefirstStateStoreBucketName,
 			); err != nil {
-				msg := fmt.Sprintf("error creating azure storage account %s: %s", clctrl.KubefirstStateStoreBucketName, err)
-				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, msg)
-				return fmt.Errorf(msg)
+				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, err.Error())
+				return fmt.Errorf("error creating azure storage account %s: %w", clctrl.KubefirstStateStoreBucketName, err)
 			}
 
 			keys, err := clctrl.AzureClient.GetStorageAccessKeys(ctx, resourceGroup, clctrl.KubefirstStateStoreBucketName)
 			if err != nil {
-				msg := fmt.Sprintf("error retrieving azure storage account keys %s: %s", clctrl.KubefirstStateStoreBucketName, err)
-				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, msg)
-				return fmt.Errorf(msg)
+				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, err.Error())
+				return fmt.Errorf("error retrieving azure storage account keys %s: %w", clctrl.KubefirstStateStoreBucketName, err)
 			}
 
 			// Azure storage is not S3 compatible, but reusing this struct in a (roughly) synonymous way
@@ -107,9 +104,8 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 			}
 
 			if _, err := clctrl.AzureClient.CreateBlobContainer(ctx, clctrl.KubefirstStateStoreBucketName, containerName); err != nil {
-				msg := fmt.Sprintf("error creating blob storage container %s: %s", clctrl.KubefirstStateStoreBucketName, err)
-				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, msg)
-				return fmt.Errorf(msg)
+				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, err.Error())
+				return fmt.Errorf("error creating blob storage container %s: %w", clctrl.KubefirstStateStoreBucketName, err)
 			}
 		case "civo":
 			civoConf := civo.Configuration{
