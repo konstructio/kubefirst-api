@@ -103,6 +103,7 @@ linters-settings:
       - G110 # Decompression bombs: we can check these manually when submitting code
       - G306 # Poor file permissions used when creating a directory: we can check these manually when submitting code
       - G404 # Use of weak random number generator (math/rand instead of crypto/rand): we can live with these
+      - G115 # No realistic way of avoiding this in Go when converting from int to uint
 
   stylecheck:
     checks:
