@@ -61,10 +61,10 @@ The API can be run locally for testing. It can be run by using `make build` and 
 
 ### Leverage `air` for Live Reloading Locally
 
-**Prerequsite** - Install [air](https://github.com/cosmtrek/air).
+**Prerequsite** - Install [air](https://github.com/air-verse/air).
 
 ```go
-go install github.com/cosmtrek/air@latest
+go install github.com/air-verse/air@latest
 ```
 
 Run `air` from the root of the repository. This will watch go files and live rebuild a local running instance of `kubefirst-api`.
