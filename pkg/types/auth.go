@@ -18,6 +18,14 @@ type AWSAuth struct {
 	SessionToken    string `bson:"session_token" json:"session_token"`
 }
 
+// AzureAuth holds necessary auth credentials for interacting with azure
+type AzureAuth struct {
+	ClientID       string `bson:"client_id" json:"client_id"`
+	ClientSecret   string `bson:"client_secret" json:"client_secret"`
+	TenantID       string `bson:"tenant_id" json:"tenant_id"`
+	SubscriptionID string `bson:"subscription_id" json:"subscription_id"`
+}
+
 // CivoAuth holds necessary auth credentials for interacting with civo
 type CivoAuth struct {
 	Token string `bson:"token" json:"token"`

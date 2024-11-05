@@ -72,7 +72,7 @@ func (clctrl *ClusterController) ExportClusterRecord() error {
 		if err != nil {
 			return fmt.Errorf("failed to create eks config: %w", err)
 		}
-	case "akamai", "civo", "digitalocean", "k3s", "vultr":
+	case "akamai", "azure", "civo", "digitalocean", "k3s", "vultr":
 		kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 		if err != nil {
 			return fmt.Errorf("failed to create Kubernetes config: %w", err)

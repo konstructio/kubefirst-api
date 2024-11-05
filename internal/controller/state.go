@@ -68,6 +68,45 @@ func (clctrl *ClusterController) StateStoreCredentials() error {
 				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCredentialsCreateFailed, err.Error())
 				return fmt.Errorf("failed to update cluster after creating AWS state store: %w", err)
 			}
+		case "azure":
+			// Azure storage is non-S3 compliant
+			location := clctrl.CloudRegion
+			resourceGroup := fmt.Sprintf("%s-state", clctrl.ClusterName)
+			containerName := azureTerraformContainer
+
+			ctx := context.Background()
+
+			if _, err := clctrl.AzureClient.CreateResourceGroup(ctx, resourceGroup, location); err != nil {
+				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, err.Error())
+				return fmt.Errorf("error creating azure storage resource group %s: %w", resourceGroup, err)
+			}
+
+			if _, err := clctrl.AzureClient.CreateStorageAccount(
+				ctx,
+				location,
+				resourceGroup,
+				clctrl.KubefirstStateStoreBucketName,
+			); err != nil {
+				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, err.Error())
+				return fmt.Errorf("error creating azure storage account %s: %w", clctrl.KubefirstStateStoreBucketName, err)
+			}
+
+			keys, err := clctrl.AzureClient.GetStorageAccessKeys(ctx, resourceGroup, clctrl.KubefirstStateStoreBucketName)
+			if err != nil {
+				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, err.Error())
+				return fmt.Errorf("error retrieving azure storage account keys %s: %w", clctrl.KubefirstStateStoreBucketName, err)
+			}
+
+			// Azure storage is not S3 compatible, but reusing this struct in a (roughly) synonymous way
+			stateStoreData = pkgtypes.StateStoreCredentials{
+				Name:            clctrl.KubefirstStateStoreBucketName,
+				SecretAccessKey: keys.Key1,
+			}
+
+			if _, err := clctrl.AzureClient.CreateBlobContainer(ctx, clctrl.KubefirstStateStoreBucketName, containerName); err != nil {
+				telemetry.SendEvent(clctrl.TelemetryEvent, telemetry.StateStoreCreateFailed, err.Error())
+				return fmt.Errorf("error creating blob storage container %s: %w", clctrl.KubefirstStateStoreBucketName, err)
+			}
 		case "civo":
 			civoConf := civo.Configuration{
 				Client:  civo.NewCivo(cl.CivoAuth.Token, cl.CloudRegion),

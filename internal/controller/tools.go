@@ -52,6 +52,19 @@ func (clctrl *ClusterController) DownloadTools(toolsDir string) error {
 				log.Error().Msgf("error downloading dependencies: %s", err)
 				return fmt.Errorf("failed to download tools for aws: %w", err)
 			}
+		case "azure":
+			err := utils.DownloadTools(
+				clctrl.ProviderConfig.KubectlClient,
+				providerConfigs.KubectlClientVersion,
+				providerConfigs.LocalhostOS,
+				providerConfigs.LocalhostArch,
+				providerConfigs.TerraformClientVersion,
+				toolsDir,
+			)
+			if err != nil {
+				log.Error().Msgf("error downloading dependencies: %s", err)
+				return fmt.Errorf("failed to download tools for azure: %w", err)
+			}
 		case "civo":
 			err := utils.DownloadTools(
 				clctrl.ProviderConfig.KubectlClient,

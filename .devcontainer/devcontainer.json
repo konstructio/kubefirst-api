@@ -25,6 +25,7 @@
       "K1_ACCESS_TOKEN": "feedkray",
       "K1_LOCAL_DEBUG": "true",
       "K1_LOCAL_KUBECONFIG_PATH": "/home/vscode/.config/k3d/kubeconfig-dev.yaml",
+      "KUBECONFIG": "/home/vscode/.config/k3d/kubeconfig-dev.yaml",
       "KUBEFIRST_TEAM": "true"
     }
 }

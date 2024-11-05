@@ -19,6 +19,7 @@ import (
 	vaultapi "github.com/hashicorp/vault/api"
 	akamaiext "github.com/konstructio/kubefirst-api/extensions/akamai"
 	awsext "github.com/konstructio/kubefirst-api/extensions/aws"
+	azureext "github.com/konstructio/kubefirst-api/extensions/azure"
 	civoext "github.com/konstructio/kubefirst-api/extensions/civo"
 	digitaloceanext "github.com/konstructio/kubefirst-api/extensions/digitalocean"
 	googleext "github.com/konstructio/kubefirst-api/extensions/google"
@@ -75,7 +76,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 			if err != nil {
 				return fmt.Errorf("failed to create eks config: %w", err)
 			}
-		case "akamai", "civo", "digitalocean", "k3s", "vultr":
+		case "akamai", "azure", "civo", "digitalocean", "k3s", "vultr":
 			kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 			if err != nil {
 				return fmt.Errorf("failed to create Kubernetes config for vault initialization: %w", err)
@@ -119,7 +120,7 @@ func (clctrl *ClusterController) InitializeVault() error {
 			if err != nil {
 				return fmt.Errorf("failed to create vault secret in Kubernetes: %w", err)
 			}
-		case "akamai", "civo", "digitalocean", "k3s", "vultr":
+		case "akamai", "azure", "civo", "digitalocean", "k3s", "vultr":
 			// Initialize and unseal Vault
 			// Build and apply manifests
 			yamlData, err := kcfg.KustomizeBuild(vaultHandlerPath)
@@ -175,7 +176,7 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 			if err != nil {
 				return fmt.Errorf("failed to create eks config: %w", err)
 			}
-		case "akamai", "civo", "digitalocean", "k3s", "vultr":
+		case "akamai", "azure", "civo", "digitalocean", "k3s", "vultr":
 			kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 			if err != nil {
 				return fmt.Errorf("failed to create Kubernetes config for vault terraform execution: %w", err)
@@ -223,6 +224,9 @@ func (clctrl *ClusterController) RunVaultTerraform() error {
 		case "aws":
 			tfEnvs = awsext.GetVaultTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
 			tfEnvs = awsext.GetAwsTerraformEnvs(tfEnvs, cl)
+		case "azure":
+			tfEnvs = azureext.GetVaultTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
+			tfEnvs = azureext.GetAzureTerraformEnvs(tfEnvs, cl)
 		case "civo":
 			tfEnvs = civoext.GetVaultTerraformEnvs(kcfg.Clientset, cl, tfEnvs)
 			tfEnvs = civoext.GetCivoTerraformEnvs(tfEnvs, cl)
@@ -296,9 +300,7 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 		externalDNSToken = cl.VultrAuth.Token
 	case "digitalocean":
 		externalDNSToken = cl.DigitaloceanAuth.Token
-	case "aws":
-		externalDNSToken = "implement with cluster management"
-	case "google":
+	case "aws", "azure", "google":
 		externalDNSToken = "implement with cluster management"
 	case "cloudflare":
 		externalDNSToken = cl.CloudflareAuth.APIToken
@@ -311,7 +313,7 @@ func (clctrl *ClusterController) WriteVaultSecrets() error {
 		if err != nil {
 			return fmt.Errorf("failed to create eks config: %w", err)
 		}
-	case "akamai", "civo", "digitalocean", "k3s", "vultr":
+	case "akamai", "azure", "civo", "digitalocean", "k3s", "vultr":
 		kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 		if err != nil {
 			return fmt.Errorf("failed to create Kubernetes config: %w", err)
@@ -399,7 +401,7 @@ func (clctrl *ClusterController) WaitForVault() error {
 		if err != nil {
 			return fmt.Errorf("failed to create eks config: %w", err)
 		}
-	case "akamai", "civo", "digitalocean", "k3s", "vultr":
+	case "akamai", "azure", "civo", "digitalocean", "k3s", "vultr":
 		var err error
 		kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 		if err != nil {
