@@ -434,7 +434,7 @@ func (clctrl *ClusterController) ContainerRegistryAuth() (string, error) {
 		}
 
 		return containerRegistryAuthToken, nil
-	case "civo", "digitalocean", "vultr", "k3s":
+	case "azure", "civo", "digitalocean", "vultr", "k3s":
 		var err error
 		kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 		if err != nil {
@@ -478,7 +478,7 @@ func (clctrl *ClusterController) WaitForClusterReady() error {
 		if err != nil {
 			return fmt.Errorf("failed to create eks config: %w", err)
 		}
-	case "civo", "digitalocean", "vultr", "k3s":
+	case "azure", "civo", "digitalocean", "vultr", "k3s":
 		var err error
 		kcfg, err = k8s.CreateKubeConfig(false, clctrl.ProviderConfig.Kubeconfig)
 		if err != nil {
@@ -495,7 +495,7 @@ func (clctrl *ClusterController) WaitForClusterReady() error {
 	var dnsDeployment *v1.Deployment
 	var err error
 	switch clctrl.CloudProvider {
-	case "aws", "civo", "digitalocean", "vultr", "k3s":
+	case "aws", "azure", "civo", "digitalocean", "vultr", "k3s":
 		dnsDeployment, err = k8s.ReturnDeploymentObject(
 			kcfg.Clientset,
 			"kubernetes.io/name",
