@@ -16,6 +16,7 @@ type InstanceSizesRequest struct {
 	CivoAuth         pkgtypes.CivoAuth         `json:"civo_auth,omitempty"`
 	AkamaiAuth       pkgtypes.AkamaiAuth       `json:"akamai_auth,omitempty"`
 	AWSAuth          pkgtypes.AWSAuth          `json:"aws_auth,omitempty"`
+	AzureAuth        pkgtypes.AzureAuth        `json:"azure_auth,omitempty"`
 	DigitaloceanAuth pkgtypes.DigitaloceanAuth `json:"do_auth,omitempty"`
 	VultrAuth        pkgtypes.VultrAuth        `json:"vultr_auth,omitempty"`
 	GoogleAuth       pkgtypes.GoogleAuth       `json:"google_auth,omitempty"`

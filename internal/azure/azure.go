@@ -7,6 +7,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
@@ -56,6 +57,14 @@ func (c *Client) newStorageClientFactory() (*armstorage.ClientFactory, error) {
 	client, err := armstorage.NewClientFactory(c.subscriptionID, c.cred, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create armstorage client: %w", err)
+	}
+	return client, nil
+}
+
+func (c *Client) newVirtualMachineSizesClient() (*armcompute.VirtualMachineSizesClient, error) {
+	client, err := armcompute.NewVirtualMachineSizesClient(c.subscriptionID, c.cred, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create virtualmachine client: %w", err)
 	}
 	return client, nil
 }
@@ -142,6 +151,30 @@ func (c *Client) CreateStorageAccount(ctx context.Context, location, resourceGro
 	}
 
 	return &resp.Account, nil
+}
+
+func (c *Client) GetInstanceSizes(ctx context.Context, location string) ([]string, error) {
+	client, err := c.newVirtualMachineSizesClient()
+	if err != nil {
+		return nil, err
+	}
+
+	var sizes []string
+
+	pager := client.NewListPager(location, nil)
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list instance sizes: %w", err)
+		}
+
+		for _, v := range page.Value {
+			sizes = append(sizes, *v.Name)
+		}
+	}
+
+	return sizes, nil
 }
 
 func (c *Client) GetRegions(ctx context.Context) ([]string, error) {
