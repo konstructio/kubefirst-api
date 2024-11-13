@@ -9,6 +9,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 )
@@ -39,6 +40,14 @@ func (c *Client) newResourceClientFactory() (*armresources.ClientFactory, error)
 	client, err := armresources.NewClientFactory(c.subscriptionID, c.cred, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create armresources client: %w", err)
+	}
+	return client, nil
+}
+
+func (c *Client) newSubscriptionClientFactory() (*armsubscriptions.ClientFactory, error) {
+	client, err := armsubscriptions.NewClientFactory(c.cred, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create armsubscriptions client: %w", err)
 	}
 	return client, nil
 }
@@ -133,6 +142,32 @@ func (c *Client) CreateStorageAccount(ctx context.Context, location, resourceGro
 	}
 
 	return &resp.Account, nil
+}
+
+func (c *Client) GetRegions(ctx context.Context) ([]string, error) {
+	client, err := c.newSubscriptionClientFactory()
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewClient().NewListLocationsPager(c.subscriptionID, &armsubscriptions.ClientListLocationsOptions{
+		IncludeExtendedLocations: to.Ptr(false),
+	})
+
+	var regions []string
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list regions: %w", err)
+		}
+
+		for _, v := range page.Value {
+			regions = append(regions, *v.Name)
+		}
+	}
+
+	return regions, nil
 }
 
 func (c *Client) GetStorageAccessKeys(ctx context.Context, resourceGroup, storageAccountName string) (*Keys, error) {

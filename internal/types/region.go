@@ -15,6 +15,7 @@ type RegionListRequest struct {
 	CloudRegion      string                    `json:"cloud_region,omitempty"`
 	AkamaiAuth       pkgtypes.AkamaiAuth       `json:"akamai_auth,omitempty"`
 	AWSAuth          pkgtypes.AWSAuth          `json:"aws_auth,omitempty"`
+	AzureAuth        pkgtypes.AzureAuth        `json:"azure_auth,omitempty"`
 	CivoAuth         pkgtypes.CivoAuth         `json:"civo_auth,omitempty"`
 	DigitaloceanAuth pkgtypes.DigitaloceanAuth `json:"do_auth,omitempty"`
 	VultrAuth        pkgtypes.VultrAuth        `json:"vultr_auth,omitempty"`
