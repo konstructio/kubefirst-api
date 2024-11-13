@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	awsinternal "github.com/konstructio/kubefirst-api/internal/aws"
+	"github.com/konstructio/kubefirst-api/internal/azure"
 	"github.com/konstructio/kubefirst-api/internal/civo"
 	"github.com/konstructio/kubefirst-api/internal/digitalocean"
 	"github.com/konstructio/kubefirst-api/internal/types"
@@ -108,7 +109,38 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 		instanceSizesResponse.InstanceSizes = instanceSizes
 		c.JSON(http.StatusOK, instanceSizesResponse)
 		return
+	case "azure":
+		if instanceSizesRequest.AzureAuth.ClientID == "" ||
+			instanceSizesRequest.AzureAuth.ClientSecret == "" ||
+			instanceSizesRequest.AzureAuth.SubscriptionID == "" ||
+			instanceSizesRequest.AzureAuth.TenantID == "" {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: "missing authentication credentials in request, please check and try again",
+			})
+			return
+		}
 
+		azureClient, err := azure.NewClient(
+			instanceSizesRequest.AzureAuth.ClientID,
+			instanceSizesRequest.AzureAuth.ClientSecret,
+			instanceSizesRequest.AzureAuth.SubscriptionID,
+			instanceSizesRequest.AzureAuth.TenantID,
+		)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+
+		instances, err := azureClient.GetInstanceSizes(context.Background(), instanceSizesRequest.CloudRegion)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+		instanceSizesResponse.InstanceSizes = instances
 	case "digitalocean":
 		if instanceSizesRequest.DigitaloceanAuth.Token == "" {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
