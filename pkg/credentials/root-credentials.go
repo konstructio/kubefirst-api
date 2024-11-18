@@ -73,7 +73,7 @@ func ParseAuthData(clientset kubernetes.Interface, cloudProvider string, domainN
 				fmt.Println("Cannot retrieve Vault token automatically. Please provide one here:")
 				fmt.Scanln(&vaultRootToken)
 			}
-			vault := vault.Configuration{}
+			vault := vault.Conf
 			kbotPassword, err = vault.GetUserPassword(
 				vaultURL,
 				vaultRootToken,
