@@ -1481,6 +1481,9 @@ const docTemplate = `{
                 "aws_auth": {
                     "$ref": "#/definitions/types.AWSAuth"
                 },
+                "azure_auth": {
+                    "$ref": "#/definitions/types.AzureAuth"
+                },
                 "civo_auth": {
                     "$ref": "#/definitions/types.CivoAuth"
                 },

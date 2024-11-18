@@ -231,6 +231,28 @@ func (c *Client) GetStorageAccessKeys(ctx context.Context, resourceGroup, storag
 	}, nil
 }
 
+func (c *Client) ListDomains(ctx context.Context) ([]*armdns.Zone, error) {
+	client, err := c.newDNSClientFactory()
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewZonesClient().NewListPager(&armdns.ZonesClientListOptions{})
+
+	var domains []*armdns.Zone
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list dns zones: %w", err)
+		}
+
+		domains = append(domains, page.Value...)
+	}
+
+	return domains, nil
+}
+
 func (c *Client) ListResourceGroups(ctx context.Context) ([]*armresources.ResourceGroup, error) {
 	client, err := c.newResourceClientFactory()
 	if err != nil {
