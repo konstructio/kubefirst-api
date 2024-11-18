@@ -14,6 +14,7 @@ import (
 	cloudflare_api "github.com/cloudflare/cloudflare-go"
 	"github.com/gin-gonic/gin"
 	awsinternal "github.com/konstructio/kubefirst-api/internal/aws"
+	"github.com/konstructio/kubefirst-api/internal/azure"
 	"github.com/konstructio/kubefirst-api/internal/civo"
 	cloudflare "github.com/konstructio/kubefirst-api/internal/cloudflare"
 	"github.com/konstructio/kubefirst-api/internal/digitalocean"
@@ -118,6 +119,40 @@ func PostDomains(c *gin.Context) {
 			})
 			return
 		}
+		domainListResponse.Domains = domains
+
+	case "azure":
+		if domainListRequest.AzureAuth.ClientID == "" ||
+			domainListRequest.AzureAuth.ClientSecret == "" ||
+			domainListRequest.AzureAuth.SubscriptionID == "" ||
+			domainListRequest.AzureAuth.TenantID == "" {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: "missing authentication credentials in request, please check and try again",
+			})
+			return
+		}
+
+		azureClient, err := azure.NewClient(
+			domainListRequest.AzureAuth.ClientID,
+			domainListRequest.AzureAuth.ClientSecret,
+			domainListRequest.AzureAuth.SubscriptionID,
+			domainListRequest.AzureAuth.TenantID,
+		)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+
+		domains, err := azureClient.GetDNSDomains(context.Background(), domainListRequest.ResourceGroup)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+
 		domainListResponse.Domains = domains
 	case "cloudflare":
 		// check for token, make sure it aint blank
