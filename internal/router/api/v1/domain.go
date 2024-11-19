@@ -74,7 +74,7 @@ func PostDomains(c *gin.Context) {
 
 		domains, err := client.ListDomains(context.Background(), &linodego.ListOptions{})
 		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
 				Message: err.Error(),
 			})
 			return
@@ -137,7 +137,7 @@ func PostDomains(c *gin.Context) {
 			domainListRequest.AzureAuth.TenantID,
 		)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
 				Message: err.Error(),
 			})
 			return
@@ -145,7 +145,7 @@ func PostDomains(c *gin.Context) {
 
 		domains, err := azureClient.GetDNSDomains(context.Background(), domainListRequest.ResourceGroup)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
 				Message: err.Error(),
 			})
 			return
@@ -163,7 +163,7 @@ func PostDomains(c *gin.Context) {
 
 		client, err := cloudflare_api.NewWithAPIToken(domainListRequest.CloudflareAuth.APIToken)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
 				Message: fmt.Sprintf("Could not create cloudflare client, %v", err),
 			})
 			return
@@ -176,7 +176,7 @@ func PostDomains(c *gin.Context) {
 
 		domains, err := cloudflareConf.GetDNSDomains()
 		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
 				Message: err.Error(),
 			})
 			return
@@ -198,7 +198,7 @@ func PostDomains(c *gin.Context) {
 
 		domains, err := civoConf.GetDNSDomains()
 		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
 				Message: err.Error(),
 			})
 			return
@@ -218,7 +218,7 @@ func PostDomains(c *gin.Context) {
 
 		domains, err := digitaloceanConf.GetDNSDomains()
 		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
 				Message: err.Error(),
 			})
 			return
@@ -238,7 +238,7 @@ func PostDomains(c *gin.Context) {
 
 		domains, err := vultrConf.GetDNSDomains()
 		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
 				Message: err.Error(),
 			})
 			return
@@ -261,7 +261,7 @@ func PostDomains(c *gin.Context) {
 
 		domains, err := googleConf.GetDNSDomains()
 		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
 				Message: err.Error(),
 			})
 			return
