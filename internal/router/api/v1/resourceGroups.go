@@ -20,6 +20,14 @@ func ListResourceGroups(c *gin.Context) {
 		return
 	}
 
+	err = resourceGroupsListRequest.AzureAuth.ValidateAuthCredentials()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+
 	azureClient, err := azure.NewClient(
 		resourceGroupsListRequest.AzureAuth.ClientID,
 		resourceGroupsListRequest.AzureAuth.ClientSecret,

@@ -122,12 +122,10 @@ func PostDomains(c *gin.Context) {
 		domainListResponse.Domains = domains
 
 	case "azure":
-		if domainListRequest.AzureAuth.ClientID == "" ||
-			domainListRequest.AzureAuth.ClientSecret == "" ||
-			domainListRequest.AzureAuth.SubscriptionID == "" ||
-			domainListRequest.AzureAuth.TenantID == "" {
+		err = domainListRequest.AzureAuth.ValidateAuthCredentials()
+		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-				Message: "missing authentication credentials in request, please check and try again",
+				Message: err.Error(),
 			})
 			return
 		}
