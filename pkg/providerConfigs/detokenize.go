@@ -94,8 +94,8 @@ func detokenizeGitops(tokens *GitopsDirectoryValues, gitProtocol string, useClou
 			}
 			newContents = strings.ReplaceAll(newContents, "<KUBEFIRST_STATE_STORE_RESOURCE_GROUP>", tokens.AzureStorageResourceGroup)
 			newContents = strings.ReplaceAll(newContents, "<KUBEFIRST_STATE_STORE_CONTAINER_NAME>", tokens.AzureStorageContainerName)
-			newContents = strings.ReplaceAll(newContents, "<AZURE_DNS_ZONE_RESOURCE_GROUP>", tokens.AzureDNSZoneResourceGroup)
-			newContents = strings.ReplaceAll(newContents, "<AZURE_DNS_ZONE_NAME>", azureDNSZoneName) // This is only set if using Azure for DNS
+			newContents = strings.ReplaceAll(newContents, "<AZURE_DNS_ZONE_RESOURCE_GROUP>", tokens.AzureDNSZoneResourceGroup) // This may or may not be set if using Azure for DNS
+			newContents = strings.ReplaceAll(newContents, "<AZURE_DNS_ZONE_NAME>", azureDNSZoneName)                           // This is only set if using Azure for DNS
 
 			// google
 			newContents = strings.ReplaceAll(newContents, "<GOOGLE_PROJECT>", tokens.GoogleProject)

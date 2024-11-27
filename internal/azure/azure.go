@@ -163,6 +163,50 @@ func (c *Client) GetStorageAccessKeys(ctx context.Context, resourceGroup, storag
 	}, nil
 }
 
+func (c *Client) ListResourceGroups(ctx context.Context) ([]*armresources.ResourceGroup, error) {
+	client, err := c.newResourceClientFactory()
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewResourceGroupsClient().NewListPager(nil)
+
+	var groups []*armresources.ResourceGroup
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list resource groups: %w", err)
+		}
+
+		groups = append(groups, page.Value...)
+	}
+
+	return groups, nil
+}
+
+func (c *Client) TestHostedZoneLivenessWildcard(ctx context.Context, domainName string) (bool, *string, error) {
+	groups, err := c.ListResourceGroups(ctx)
+	if err != nil {
+		return false, nil, err
+	}
+
+	// Search through resource groups and return true for first match
+	for _, resourceGroup := range groups {
+		name := resourceGroup.Name
+		hasDomain, err := c.TestHostedZoneLiveness(ctx, domainName, *name)
+		if err != nil {
+			return false, nil, err
+		}
+
+		if hasDomain {
+			return true, name, nil
+		}
+	}
+
+	return false, nil, nil
+}
+
 func (c *Client) TestHostedZoneLiveness(ctx context.Context, domainName, resourceGroup string) (bool, error) {
 	client, err := c.newDNSClientFactory()
 	if err != nil {
