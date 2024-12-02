@@ -41,7 +41,15 @@ func (clctrl *ClusterController) DomainLivenessTest() error {
 				return fmt.Errorf("domain liveness check failed for AWS: %w", err)
 			}
 		case "azure":
-			domainLiveness, err := clctrl.AzureClient.TestHostedZoneLiveness(context.Background(), clctrl.DomainName, clctrl.AzureDNSZoneResourceGroup)
+			var domainLiveness bool
+			ctx := context.Background()
+
+			if clctrl.AzureDNSZoneResourceGroup == "" {
+				domainLiveness, _, err = clctrl.AzureClient.TestHostedZoneLivenessWildcard(ctx, clctrl.DomainName)
+			} else {
+				domainLiveness, err = clctrl.AzureClient.TestHostedZoneLiveness(ctx, clctrl.DomainName, clctrl.AzureDNSZoneResourceGroup)
+			}
+
 			if err != nil {
 				return fmt.Errorf("domain liveness command failed for Azure: %w", err)
 			}
