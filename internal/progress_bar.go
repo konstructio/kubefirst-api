@@ -63,7 +63,7 @@ func SetupProgress(numTrackers int) {
 	pw = progress.NewWriter()
 	pw.SetAutoStop(false)
 	pw.SetTrackerLength(40)
-	pw.SetMessageWidth(39)
+	pw.SetMessageLength(39)
 	pw.SetNumTrackersExpected(numTrackers)
 	pw.SetSortBy(progress.SortByPercentDsc)
 	pw.SetStyle(progress.StyleDefault)

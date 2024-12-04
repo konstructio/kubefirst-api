@@ -8,6 +8,7 @@ package providerConfigs //nolint:revive,stylecheck // allowing temporarily for b
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -50,7 +51,7 @@ func removeAllWithLogger(path string) {
 
 func adjustGitOpsRepoForProvider(cloudProvider, gitProvider, gitopsRepoDir, clusterType, clusterName string, apexContentExists, isK3D bool) error {
 	opt := cp.Options{
-		Skip: func(src string) (bool, error) {
+		Skip: func(_ fs.FileInfo, src string, _ string) (bool, error) {
 			if strings.HasSuffix(src, ".git") {
 				return true, nil
 			} else if strings.Index(src, "/.terraform") > 0 {
@@ -191,7 +192,7 @@ func AdjustGitopsRepo(
 
 func copyContents(source, destination string, createPath bool) error {
 	opt := cp.Options{
-		Skip: func(src string) (bool, error) {
+		Skip: func(_ fs.FileInfo, src string, _ string) (bool, error) {
 			if strings.HasSuffix(src, ".git") {
 				return true, nil
 			} else if strings.Index(src, "/.terraform") > 0 {

@@ -10,21 +10,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"net"
-	"os"
 	"syscall"
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"golang.org/x/term"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/tools/remotecommand"
 )
 
 // CreateSecretV2 creates a Kubernetes Secret
@@ -92,84 +87,12 @@ func ReadService(kubeConfigPath, namespace, serviceName string) (*v1.Service, er
 	return service, nil
 }
 
-// PodExecSession executes a command against a Pod
-func PodExecSession(kubeConfigPath string, p *PodSessionOptions, silent bool) error {
-	// v1.PodExecOptions is passed to the rest client to form the req URL
-	podExecOptions := v1.PodExecOptions{
-		Stdin:   p.Stdin,
-		Stdout:  p.Stdout,
-		Stderr:  p.Stderr,
-		TTY:     p.TtyEnabled,
-		Command: p.Command,
-	}
-
-	err := podExec(kubeConfigPath, p, podExecOptions, silent)
-	if err != nil {
-		return fmt.Errorf("error executing command in Pod %q: %w", p.PodName, err)
-	}
-	return nil
-}
-
-// podExec performs kube-exec on a Pod with a given command
-func podExec(kubeConfigPath string, ps *PodSessionOptions, pe v1.PodExecOptions, silent bool) error {
-	clientset, err := GetClientSet(kubeConfigPath)
-	if err != nil {
-		return fmt.Errorf("error getting client set from kubeConfigPath %q: %w", kubeConfigPath, err)
-	}
-
-	config, err := GetClientConfig(kubeConfigPath)
-	if err != nil {
-		return fmt.Errorf("error getting client config from kubeConfigPath %q: %w", kubeConfigPath, err)
-	}
-
-	// Format the request to be sent to the API
-	req := clientset.CoreV1().RESTClient().Post().
-		Resource("pods").
-		Name(ps.PodName).
-		Namespace(ps.Namespace).
-		SubResource("exec")
-	req.VersionedParams(&pe, scheme.ParameterCodec)
-
-	// POST op against Kubernetes API to initiate remote command
-	exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
-	if err != nil {
-		log.Error().Msgf("error executing command on Pod %s in Namespace %s: %s", ps.PodName, ps.Namespace, err)
-		return fmt.Errorf("error executing command on Pod %q in Namespace %q: %w", ps.PodName, ps.Namespace, err)
-	}
-
-	// Put the terminal into raw mode to prevent it echoing characters twice
-	oldState, err := term.MakeRaw(0)
-	if err != nil {
-		log.Error().Msgf("error when attempting to start terminal: %s", err)
-		return fmt.Errorf("error when attempting to start terminal: %w", err)
-	}
-	defer term.Restore(0, oldState)
-
-	var showOutput io.Writer
-	if silent {
-		showOutput = io.Discard
-	} else {
-		showOutput = os.Stdout
-	}
-	err = exec.Stream(remotecommand.StreamOptions{
-		Stdin:  os.Stdin,
-		Stdout: showOutput,
-		Stderr: os.Stderr,
-		Tty:    ps.TtyEnabled,
-	})
-	if err != nil {
-		log.Error().Msgf("error streaming pod command in Pod %s: %s", ps.PodName, err)
-		return fmt.Errorf("error streaming pod command in Pod %q: %w", ps.PodName, err)
-	}
-	return nil
-}
-
 func ReturnDeploymentObject(client kubernetes.Interface, matchLabel string, matchLabelValue string, namespace string, timeoutSeconds int) (*appsv1.Deployment, error) {
 	timeout := time.Duration(timeoutSeconds) * time.Second
 	var deployment *appsv1.Deployment
 
-	err := wait.PollImmediate(15*time.Second, timeout, func() (bool, error) {
-		deployments, err := client.AppsV1().Deployments(namespace).List(context.Background(), metav1.ListOptions{
+	err := wait.PollUntilContextTimeout(context.Background(), 5*time.Second, timeout, true, func(ctx context.Context) (bool, error) {
+		deployments, err := client.AppsV1().Deployments(namespace).List(ctx, metav1.ListOptions{
 			LabelSelector: fmt.Sprintf("%s=%s", matchLabel, matchLabelValue),
 		})
 		if err != nil {
@@ -217,8 +140,8 @@ func ReturnPodObject(kubeConfigPath, matchLabel, matchLabelValue, namespace stri
 
 	var pod *v1.Pod
 
-	err = wait.PollImmediate(5*time.Second, time.Duration(timeoutSeconds)*time.Second, func() (bool, error) {
-		podList, err := clientset.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, time.Duration(timeoutSeconds)*time.Second, true, func(ctx context.Context) (bool, error) {
+		podList, err := clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{
 			LabelSelector: labelSelector,
 		})
 		if err != nil {
@@ -262,8 +185,8 @@ func ReturnStatefulSetObject(clientset kubernetes.Interface, matchLabel, matchLa
 
 	var statefulSet *appsv1.StatefulSet
 
-	err := wait.PollImmediate(5*time.Second, time.Duration(timeoutSeconds)*time.Second, func() (bool, error) {
-		statefulSets, err := clientset.AppsV1().StatefulSets(namespace).List(context.Background(), metav1.ListOptions{
+	err := wait.PollUntilContextTimeout(context.Background(), 5*time.Second, time.Duration(timeoutSeconds)*time.Second, true, func(ctx context.Context) (bool, error) {
+		statefulSets, err := clientset.AppsV1().StatefulSets(namespace).List(ctx, metav1.ListOptions{
 			LabelSelector: labelSelector,
 		})
 		if err != nil {
@@ -314,9 +237,9 @@ func WaitForDeploymentReady(clientset kubernetes.Interface, deployment *appsv1.D
 
 	log.Info().Msgf("waiting for deployment %q in namespace %q to be ready - this could take up to %v seconds", deploymentName, namespace, timeoutSeconds)
 
-	err := wait.PollImmediate(5*time.Second, time.Duration(timeoutSeconds)*time.Second, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(context.Background(), 5*time.Second, time.Duration(timeoutSeconds)*time.Second, true, func(ctx context.Context) (bool, error) {
 		// Get the latest Deployment object
-		currentDeployment, err := clientset.AppsV1().Deployments(namespace).Get(context.Background(), deploymentName, metav1.GetOptions{})
+		currentDeployment, err := clientset.AppsV1().Deployments(namespace).Get(ctx, deploymentName, metav1.GetOptions{})
 		if err != nil {
 			// If we couldn't connect, retry
 			if isNetworkingError(err) {
@@ -352,9 +275,9 @@ func WaitForPodReady(clientset kubernetes.Interface, pod *v1.Pod, timeoutSeconds
 
 	log.Info().Msgf("waiting for pod %q in namespace %q to be ready - this could take up to %v seconds", podName, namespace, timeoutSeconds)
 
-	err := wait.PollImmediate(5*time.Second, time.Duration(timeoutSeconds)*time.Second, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(context.Background(), 5*time.Second, time.Duration(timeoutSeconds)*time.Second, true, func(ctx context.Context) (bool, error) {
 		// Get the latest Pod object
-		currentPod, err := clientset.CoreV1().Pods(namespace).Get(context.Background(), podName, metav1.GetOptions{})
+		currentPod, err := clientset.CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
 		if err != nil {
 			// If we couldn't connect, retry
 			if isNetworkingError(err) {
@@ -397,9 +320,9 @@ func WaitForStatefulSetReady(clientset kubernetes.Interface, statefulset *appsv1
 
 	log.Info().Msgf("waiting for statefulset %q in namespace %q to be ready - this could take up to %v seconds", statefulSetName, namespace, timeoutSeconds)
 
-	err := wait.PollImmediate(5*time.Second, time.Duration(timeoutSeconds)*time.Second, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(context.Background(), 5*time.Second, time.Duration(timeoutSeconds)*time.Second, true, func(ctx context.Context) (bool, error) {
 		// Get the latest StatefulSet object
-		currentStatefulSet, err := clientset.AppsV1().StatefulSets(namespace).Get(context.Background(), statefulSetName, metav1.GetOptions{})
+		currentStatefulSet, err := clientset.AppsV1().StatefulSets(namespace).Get(ctx, statefulSetName, metav1.GetOptions{})
 		if err != nil {
 			// If we couldn't connect, retry
 			if isNetworkingError(err) {
@@ -418,7 +341,7 @@ func WaitForStatefulSetReady(clientset kubernetes.Interface, statefulset *appsv1
 				currentRevision := currentStatefulSet.Status.CurrentRevision
 
 				// Get Pods owned by the StatefulSet
-				pods, err := clientset.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{
+				pods, err := clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{
 					LabelSelector: fmt.Sprintf("controller-revision-hash=%s", currentRevision),
 				})
 				if err != nil {

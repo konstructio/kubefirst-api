@@ -33,7 +33,7 @@ func AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsRepoDir, gi
 
 	// * copy options
 	opt := cp.Options{
-		Skip: func(src string) (bool, error) {
+		Skip: func(_ os.FileInfo, src, _ string) (bool, error) {
 			if strings.HasSuffix(src, ".git") || strings.Index(src, "/.terraform") > 0 {
 				return true, nil
 			}
@@ -125,7 +125,7 @@ func AdjustMetaphorRepo(destinationMetaphorRepoGitURL, gitopsRepoDir, gitProvide
 
 	// * copy options
 	opt := cp.Options{
-		Skip: func(src string) (bool, error) {
+		Skip: func(_ os.FileInfo, src, _ string) (bool, error) {
 			if strings.HasSuffix(src, ".git") {
 				return true, nil
 			} else if strings.Index(src, "/.terraform") > 0 {
