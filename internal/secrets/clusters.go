@@ -130,10 +130,10 @@ func InsertCluster(clientSet kubernetes.Interface, cl pkgtypes.Cluster) error {
 		if err := UpsertSecretReference(clientSet, secretName, secretReference); err != nil {
 			return fmt.Errorf("when inserting cluster: error creating secret reference: %w", err)
 		}
-	}
-
-	if err := AddSecretReferenceItem(clientSet, secretName, cl.ClusterName); err != nil {
-		return fmt.Errorf("when inserting cluster: error adding secret reference item: %w", err)
+	} else {
+		if err := AddSecretReferenceItem(clientSet, secretName, cl.ClusterName); err != nil {
+			return fmt.Errorf("when inserting cluster: error adding secret reference item: %w", err)
+		}
 	}
 
 	bytes, err := json.Marshal(cl)
