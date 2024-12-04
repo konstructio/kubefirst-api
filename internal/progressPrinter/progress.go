@@ -67,7 +67,7 @@ func SetupProgress(numTrackers int, silentMode bool) {
 
 	instance.pw.SetAutoStop(false)
 	instance.pw.SetTrackerLength(40)
-	instance.pw.SetMessageWidth(39)
+	instance.pw.SetMessageLength(39)
 	instance.pw.SetNumTrackersExpected(numTrackers)
 	instance.pw.SetSortBy(progress.SortByPercentDsc)
 	instance.pw.SetStyle(progress.StyleDefault)

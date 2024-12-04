@@ -205,7 +205,7 @@ func (gl *Wrapper) DeleteUserSSHKey(keyTitle string) error {
 
 // GetUserSSHKeys
 func (gl *Wrapper) GetUserSSHKeys() ([]*gitlab.SSHKey, error) {
-	keys, _, err := gl.Client.Users.ListSSHKeys()
+	keys, _, err := gl.Client.Users.ListSSHKeys(nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not get user ssh keys: %w", err)
 	}

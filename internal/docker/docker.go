@@ -10,7 +10,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/rs/zerolog/log"
 )
@@ -26,7 +26,7 @@ func NewDockerClient() *client.Client {
 }
 
 func (docker ClientWrapper) ListContainers() {
-	containers, err := docker.Client.ContainerList(context.Background(), types.ContainerListOptions{})
+	containers, err := docker.Client.ContainerList(context.Background(), container.ListOptions{})
 	if err != nil {
 		log.Error().Msg(err.Error())
 	}

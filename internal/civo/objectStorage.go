@@ -125,16 +125,23 @@ var errNoCredsFound = errors.New("no object store credentials found")
 // checkKubefirstCredentials determines whether or not object store credentials exist
 func (c *Configuration) checkKubefirstCredentials(credentialName string) (*civogo.ObjectStoreCredential, error) {
 	log.Info().Msgf("looking for credential: %s", credentialName)
-	remoteCredentials, err := c.Client.ListObjectStoreCredentials()
-	if err != nil {
-		log.Error().Msg(err.Error())
-		return nil, fmt.Errorf("error fetching object store credentials: %w", err)
-	}
 
-	for i, cred := range remoteCredentials.Items {
-		if cred.Name == credentialName {
-			log.Info().Msgf("found credential: %s", credentialName)
-			return &remoteCredentials.Items[i], nil
+	for page := 1; ; page++ {
+		remoteCredentials, err := c.Client.ListObjectStoreCredentials(page, 100)
+		if err != nil {
+			log.Error().Msg(err.Error())
+			return nil, fmt.Errorf("error fetching object store credentials: %w", err)
+		}
+
+		if len(remoteCredentials.Items) == 0 || remoteCredentials.Pages == page {
+			break
+		}
+
+		for _, credential := range remoteCredentials.Items {
+			if credential.Name == credentialName {
+				log.Info().Msgf("found credential: %s", credentialName)
+				return &credential, nil
+			}
 		}
 	}
 
