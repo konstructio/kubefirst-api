@@ -25,13 +25,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func NewEnvironment(envDef types.Environment) (types.Environment, error) {
+func NewEnvironment(envDef types.Environment) (*types.Environment, error) {
 	// Create new environment
 	envDef.CreationTimestamp = fmt.Sprintf("%v", primitive.NewDateTimeFromTime(time.Now().UTC()))
 
 	kcfg := utils.GetKubernetesClient("TODO: Secrets")
 	newEnv, err := secrets.InsertEnvironment(kcfg.Clientset, envDef)
-	return newEnv, fmt.Errorf("error creating new environment in db: %w", err)
+	if err != nil {
+		return nil, fmt.Errorf("error creating new environment in db: %w", err)
+	}
+
+	return &newEnv, nil
 }
 
 func CreateDefaultClusters(mgmtCluster types.Cluster) error {
@@ -78,11 +82,12 @@ func CreateDefaultClusters(mgmtCluster types.Cluster) error {
 		}
 
 		var err error
-		vcluster.Environment, err = NewEnvironment(vcluster.Environment)
+		newEnv, err := NewEnvironment(vcluster.Environment)
 		if err != nil {
 			log.Error().Msgf("error creating default environment in db for env %s", err)
 			return fmt.Errorf("error creating default environment in db for environment %q: %w", clusterName, err)
 		}
+		vcluster.Environment = *newEnv
 		defaultClusters = append(defaultClusters, vcluster)
 	}
 
