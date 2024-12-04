@@ -266,27 +266,3 @@ func (c *Client) GetDNSDomains(ctx context.Context, resourceGroup string) ([]str
 
 	return domains, nil
 }
-
-func (c *Client) GetResourceGroups(ctx context.Context) ([]string, error) {
-	client, err := c.newResourceClientFactory()
-	if err != nil {
-		return nil, err
-	}
-
-	pager := client.NewResourceGroupsClient().NewListPager(nil)
-
-	var resourceGroups []string
-
-	for pager.More() {
-		page, err := pager.NextPage(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to list resource groups: %w", err)
-		}
-
-		for _, rg := range page.Value {
-			resourceGroups = append(resourceGroups, *rg.Name)
-		}
-	}
-
-	return resourceGroups, nil
-}
