@@ -187,7 +187,6 @@ func CreateCivoCluster(definition *pkgtypes.ClusterDefinition) error {
 	err = ctrl.WriteVaultSecrets()
 	if err != nil {
 		ctrl.UpdateClusterOnError(err.Error())
-
 		return fmt.Errorf("error writing vault secrets: %w", err)
 	}
 
