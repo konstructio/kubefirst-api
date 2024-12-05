@@ -110,12 +110,10 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 		c.JSON(http.StatusOK, instanceSizesResponse)
 		return
 	case "azure":
-		if instanceSizesRequest.AzureAuth.ClientID == "" ||
-			instanceSizesRequest.AzureAuth.ClientSecret == "" ||
-			instanceSizesRequest.AzureAuth.SubscriptionID == "" ||
-			instanceSizesRequest.AzureAuth.TenantID == "" {
+		err = instanceSizesRequest.AzureAuth.ValidateAuthCredentials()
+		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-				Message: "missing authentication credentials in request, please check and try again",
+				Message: err.Error(),
 			})
 			return
 		}
@@ -127,7 +125,7 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 			instanceSizesRequest.AzureAuth.TenantID,
 		)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
 				Message: err.Error(),
 			})
 			return
@@ -135,7 +133,7 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 
 		instances, err := azureClient.GetInstanceSizes(context.Background(), instanceSizesRequest.CloudRegion)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
 				Message: err.Error(),
 			})
 			return

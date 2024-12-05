@@ -101,12 +101,10 @@ func PostRegions(c *gin.Context) {
 		}
 		regionListResponse.Regions = regions
 	case "azure":
-		if regionListRequest.AzureAuth.ClientID == "" ||
-			regionListRequest.AzureAuth.ClientSecret == "" ||
-			regionListRequest.AzureAuth.SubscriptionID == "" ||
-			regionListRequest.AzureAuth.TenantID == "" {
+		err = regionListRequest.AzureAuth.ValidateAuthCredentials()
+		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
-				Message: "missing authentication credentials in request, please check and try again",
+				Message: err.Error(),
 			})
 			return
 		}
@@ -118,7 +116,7 @@ func PostRegions(c *gin.Context) {
 			regionListRequest.AzureAuth.TenantID,
 		)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
 				Message: err.Error(),
 			})
 			return
@@ -126,7 +124,7 @@ func PostRegions(c *gin.Context) {
 
 		regions, err := azureClient.GetRegions(context.Background())
 		if err != nil {
-			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
 				Message: err.Error(),
 			})
 			return
