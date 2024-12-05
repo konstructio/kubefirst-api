@@ -241,3 +241,28 @@ func NewClient(clientID, clientSecret, subscriptionID, tenantID string) (*Client
 		subscriptionID: subscriptionID,
 	}, nil
 }
+
+func (c *Client) GetDNSDomains(ctx context.Context, resourceGroup string) ([]string, error) {
+	client, err := c.newDNSClientFactory()
+	if err != nil {
+		return nil, err
+	}
+
+	var domains []string
+	pager := client.NewZonesClient().NewListByResourceGroupPager(resourceGroup, nil)
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list DNS zones: %w", err)
+		}
+
+		for _, zone := range page.Value {
+			if zone.Name != nil {
+				domains = append(domains, *zone.Name)
+			}
+		}
+	}
+
+	return domains, nil
+}

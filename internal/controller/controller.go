@@ -434,6 +434,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		NodeCount:              clctrl.NodeCount,
 		LogFileName:            def.LogFileName,
 		PostInstallCatalogApps: clctrl.PostInstallCatalogApps,
+		InstallKubefirstPro:    clctrl.InstallKubefirstPro,
 	}
 
 	if !recordExists {

@@ -126,6 +126,7 @@ type Cluster struct {
 	UseTelemetry bool `bson:"use_telemetry"`
 
 	// Checks
+	InstallKubefirstPro            bool              `bson:"install_kubefirst_pro,omitempty" json:"install_kubefirst_pro,omitempty"`
 	InstallToolsCheck              bool              `bson:"install_tools_check" json:"install_tools_check"`
 	DomainLivenessCheck            bool              `bson:"domain_liveness_check" json:"domain_liveness_check"`
 	StateStoreCredsCheck           bool              `bson:"state_store_creds_check" json:"state_store_creds_check"`
