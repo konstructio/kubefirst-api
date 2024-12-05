@@ -143,15 +143,20 @@ func PostDomains(c *gin.Context) {
 			return
 		}
 
-		domains, err := azureClient.GetDNSDomains(context.Background(), domainListRequest.ResourceGroup)
+		domains, err := azureClient.ListDomains(context.Background())
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
+			c.JSON(http.StatusServiceUnavailable, types.JSONFailureResponse{
 				Message: err.Error(),
 			})
 			return
 		}
 
-		domainListResponse.Domains = domains
+		domainList := make([]string, 0)
+		for _, d := range domains {
+			domainList = append(domainList, *d.Name)
+		}
+
+		domainListResponse.Domains = domainList
 	case "cloudflare":
 		// check for token, make sure it aint blank
 		if domainListRequest.CloudflareAuth.APIToken == "" {

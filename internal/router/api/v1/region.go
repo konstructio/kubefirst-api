@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	awsinternal "github.com/konstructio/kubefirst-api/internal/aws"
+	"github.com/konstructio/kubefirst-api/internal/azure"
 	"github.com/konstructio/kubefirst-api/internal/civo"
 	"github.com/konstructio/kubefirst-api/internal/digitalocean"
 	"github.com/konstructio/kubefirst-api/internal/types"
@@ -98,6 +99,37 @@ func PostRegions(c *gin.Context) {
 			})
 			return
 		}
+		regionListResponse.Regions = regions
+	case "azure":
+		err = regionListRequest.AzureAuth.ValidateAuthCredentials()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+
+		azureClient, err := azure.NewClient(
+			regionListRequest.AzureAuth.ClientID,
+			regionListRequest.AzureAuth.ClientSecret,
+			regionListRequest.AzureAuth.SubscriptionID,
+			regionListRequest.AzureAuth.TenantID,
+		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+
+		regions, err := azureClient.GetRegions(context.Background())
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, types.JSONFailureResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+
 		regionListResponse.Regions = regions
 	case "civo":
 		if regionListRequest.CivoAuth.Token == "" {

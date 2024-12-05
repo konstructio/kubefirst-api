@@ -7,8 +7,10 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 )
@@ -43,10 +45,26 @@ func (c *Client) newResourceClientFactory() (*armresources.ClientFactory, error)
 	return client, nil
 }
 
+func (c *Client) newSubscriptionClientFactory() (*armsubscriptions.ClientFactory, error) {
+	client, err := armsubscriptions.NewClientFactory(c.cred, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create armsubscriptions client: %w", err)
+	}
+	return client, nil
+}
+
 func (c *Client) newStorageClientFactory() (*armstorage.ClientFactory, error) {
 	client, err := armstorage.NewClientFactory(c.subscriptionID, c.cred, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create armstorage client: %w", err)
+	}
+	return client, nil
+}
+
+func (c *Client) newVirtualMachineSizesClient() (*armcompute.VirtualMachineSizesClient, error) {
+	client, err := armcompute.NewVirtualMachineSizesClient(c.subscriptionID, c.cred, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create virtualmachine client: %w", err)
 	}
 	return client, nil
 }
@@ -135,6 +153,56 @@ func (c *Client) CreateStorageAccount(ctx context.Context, location, resourceGro
 	return &resp.Account, nil
 }
 
+func (c *Client) GetInstanceSizes(ctx context.Context, location string) ([]string, error) {
+	client, err := c.newVirtualMachineSizesClient()
+	if err != nil {
+		return nil, err
+	}
+
+	var sizes []string
+
+	pager := client.NewListPager(location, nil)
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list instance sizes: %w", err)
+		}
+
+		for _, v := range page.Value {
+			sizes = append(sizes, *v.Name)
+		}
+	}
+
+	return sizes, nil
+}
+
+func (c *Client) GetRegions(ctx context.Context) ([]string, error) {
+	client, err := c.newSubscriptionClientFactory()
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewClient().NewListLocationsPager(c.subscriptionID, &armsubscriptions.ClientListLocationsOptions{
+		IncludeExtendedLocations: to.Ptr(false),
+	})
+
+	var regions []string
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list regions: %w", err)
+		}
+
+		for _, v := range page.Value {
+			regions = append(regions, *v.Name)
+		}
+	}
+
+	return regions, nil
+}
+
 func (c *Client) GetStorageAccessKeys(ctx context.Context, resourceGroup, storageAccountName string) (*Keys, error) {
 	client, err := c.newStorageClientFactory()
 	if err != nil {
@@ -161,6 +229,28 @@ func (c *Client) GetStorageAccessKeys(ctx context.Context, resourceGroup, storag
 		Key1: s[0],
 		Key2: s[1],
 	}, nil
+}
+
+func (c *Client) ListDomains(ctx context.Context) ([]*armdns.Zone, error) {
+	client, err := c.newDNSClientFactory()
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewZonesClient().NewListPager(&armdns.ZonesClientListOptions{})
+
+	var domains []*armdns.Zone
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list dns zones: %w", err)
+		}
+
+		domains = append(domains, page.Value...)
+	}
+
+	return domains, nil
 }
 
 func (c *Client) ListResourceGroups(ctx context.Context) ([]*armresources.ResourceGroup, error) {
@@ -240,29 +330,4 @@ func NewClient(clientID, clientSecret, subscriptionID, tenantID string) (*Client
 		cred:           cred,
 		subscriptionID: subscriptionID,
 	}, nil
-}
-
-func (c *Client) GetDNSDomains(ctx context.Context, resourceGroup string) ([]string, error) {
-	client, err := c.newDNSClientFactory()
-	if err != nil {
-		return nil, err
-	}
-
-	var domains []string
-	pager := client.NewZonesClient().NewListByResourceGroupPager(resourceGroup, nil)
-
-	for pager.More() {
-		page, err := pager.NextPage(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to list DNS zones: %w", err)
-		}
-
-		for _, zone := range page.Value {
-			if zone.Name != nil {
-				domains = append(domains, *zone.Name)
-			}
-		}
-	}
-
-	return domains, nil
 }
