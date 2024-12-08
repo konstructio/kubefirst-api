@@ -255,6 +255,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			gitopsTemplateTokens.Kubeconfig = clctrl.ProviderConfig.Kubeconfig
 			gitopsTemplateTokens.KubefirstArtifactsBucket = clctrl.KubefirstArtifactsBucketName
 			gitopsTemplateTokens.AtlantisWebhookURL = clctrl.AtlantisWebhookURL
+			gitopsTemplateTokens.AMIType = clctrl.AMIType
 
 			if clctrl.ECR {
 				gitopsTemplateTokens.ContainerRegistryURL = fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", *iamCaller.Account, clctrl.CloudRegion)
