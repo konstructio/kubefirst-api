@@ -46,7 +46,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 Selector labels
 */}}
 {{- define "kubefirst-api.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "kubefirst-api.name" . }}
+app.kubernetes.io/name: {{ include "kubefirst-api.fullname" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
