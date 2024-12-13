@@ -109,4 +109,5 @@ type MetaphorTokenValues struct {
 	MetaphorDevelopmentIngressURL string
 	MetaphorProductionIngressURL  string
 	MetaphorStagingIngressURL     string
+	OriginIssuerIsEnabled         bool
 }

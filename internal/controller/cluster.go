@@ -285,6 +285,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			MetaphorDevelopmentIngressURL: fmt.Sprintf("metaphor-development.%s", fullDomainName),
 			MetaphorStagingIngressURL:     fmt.Sprintf("metaphor-staging.%s", fullDomainName),
 			MetaphorProductionIngressURL:  fmt.Sprintf("metaphor-production.%s", fullDomainName),
+			OriginIssuerIsEnabled:         cl.CloudflareAuth.OriginCaIssuerKey != "",
 		}
 		return metaphorTemplateTokens
 	}

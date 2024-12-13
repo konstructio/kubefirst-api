@@ -327,6 +327,7 @@ func PostCreateCluster(c *gin.Context) {
 			clusterDefinition.GoogleAuth = cluster.GoogleAuth
 			clusterDefinition.K3sAuth = cluster.K3sAuth
 			clusterDefinition.GitAuth = cluster.GitAuth
+			clusterDefinition.CloudflareAuth = cluster.CloudflareAuth
 		}
 	}
 
