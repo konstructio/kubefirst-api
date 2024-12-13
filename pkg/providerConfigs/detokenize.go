@@ -303,6 +303,7 @@ func detokenizeGitopsMetaphor(tokens *MetaphorTokenValues) filepath.WalkFunc {
 			newContents = strings.ReplaceAll(newContents, "<METAPHOR_DEVELOPMENT_INGRESS_URL>", tokens.MetaphorDevelopmentIngressURL)
 			newContents = strings.ReplaceAll(newContents, "<METAPHOR_PRODUCTION_INGRESS_URL>", tokens.MetaphorProductionIngressURL)
 			newContents = strings.ReplaceAll(newContents, "<METAPHOR_STAGING_INGRESS_URL>", tokens.MetaphorStagingIngressURL)
+			newContents = strings.ReplaceAll(newContents, "<ORIGIN_ISSUER_IS_ENABLED>", fmt.Sprintf("%t", tokens.OriginIssuerIsEnabled))
 
 			err = os.WriteFile(path, []byte(newContents), 0)
 			if err != nil {
