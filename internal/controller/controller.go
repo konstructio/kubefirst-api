@@ -62,6 +62,7 @@ type ClusterController struct {
 	K3sAuth                types.K3sAuth
 	AwsAccessKeyID         string
 	AwsSecretAccessKey     string
+	AMIType                string
 	NodeType               string
 	NodeCount              int
 	PostInstallCatalogApps []types.GitopsCatalogApp
@@ -227,6 +228,9 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 
 	clctrl.ECR = def.ECR
 
+	if def.CloudProvider == "aws" {
+		clctrl.AMIType = def.AMIType
+	}
 	if def.GitopsTemplateBranch != "" {
 		clctrl.GitopsTemplateBranch = def.GitopsTemplateBranch
 	} else {

@@ -83,6 +83,7 @@ func detokenizeGitops(tokens *GitopsDirectoryValues, gitProtocol string, useClou
 			newContents = strings.ReplaceAll(newContents, "<NODE_COUNT>", strconv.Itoa(tokens.NodeCount))
 
 			// AWS
+			newContents = strings.ReplaceAll(newContents, "<AMI_TYPE>", tokens.AMIType)
 			newContents = strings.ReplaceAll(newContents, "<AWS_ACCOUNT_ID>", tokens.AwsAccountID)
 			newContents = strings.ReplaceAll(newContents, "<AWS_IAM_ARN_ACCOUNT_ROOT>", tokens.AwsIamArnAccountRoot)
 			newContents = strings.ReplaceAll(newContents, "<AWS_NODE_CAPACITY_TYPE>", tokens.AwsNodeCapacityType)

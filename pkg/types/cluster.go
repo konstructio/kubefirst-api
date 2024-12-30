@@ -36,7 +36,8 @@ type ClusterDefinition struct {
 	GitProtocol          string `json:"git_protocol" binding:"required,oneof=ssh https"`
 
 	// AWS
-	ECR bool `json:"ecr,omitempty"`
+	ECR     bool   `json:"ecr,omitempty"`
+	AMIType string `json:"ami_type" binding:"required"`
 
 	// Azure
 	AzureDNSZoneResourceGroup string `json:"azure_dns_zone_resource_group,omitempty"`
