@@ -37,7 +37,7 @@ type ClusterDefinition struct {
 
 	// AWS
 	ECR     bool   `json:"ecr,omitempty"`
-	AMIType string `json:"ami_type" binding:"required"`
+	AMIType string `json:"ami_type" binding:"required_if=CloudProvider aws"`
 
 	// Azure
 	AzureDNSZoneResourceGroup string `json:"azure_dns_zone_resource_group,omitempty"`
