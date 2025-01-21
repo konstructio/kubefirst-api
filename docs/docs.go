@@ -1226,8 +1226,11 @@ const docTemplate = `{
                 "in_progress": {
                     "type": "boolean"
                 },
-                "install_tools_check": {
+                "install_kubefirst_pro": {
                     "description": "Checks",
+                    "type": "boolean"
+                },
+                "install_tools_check": {
                     "type": "boolean"
                 },
                 "k3s_auth": {
@@ -1329,6 +1332,9 @@ const docTemplate = `{
                             "$ref": "#/definitions/types.AkamaiAuth"
                         }
                     ]
+                },
+                "ami_type": {
+                    "type": "string"
                 },
                 "aws_auth": {
                     "$ref": "#/definitions/types.AWSAuth"
@@ -1498,6 +1504,9 @@ const docTemplate = `{
                 },
                 "google_auth": {
                     "$ref": "#/definitions/types.GoogleAuth"
+                },
+                "resource_group": {
+                    "type": "string"
                 },
                 "vultr_auth": {
                     "$ref": "#/definitions/types.VultrAuth"

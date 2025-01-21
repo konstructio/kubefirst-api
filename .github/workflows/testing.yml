@@ -17,6 +17,12 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+      - name: Check for Swagger changes
+        run: |
+          go install github.com/swaggo/swag/cmd/swag@latest
+          swag init
+          swag fmt
+          git diff --quiet docs || (echo 'Swagger is not up to date - run "swag init" and "swag fmt" to update'; exit 1)
       - name: Run GolangCI-Lint
         uses: golangci/golangci-lint-action@v6
         with:

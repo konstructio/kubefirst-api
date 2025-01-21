@@ -157,8 +157,10 @@ definitions:
         $ref: '#/definitions/types.GoogleAuth'
       in_progress:
         type: boolean
-      install_tools_check:
+      install_kubefirst_pro:
         description: Checks
+        type: boolean
+      install_tools_check:
         type: boolean
       k3s_auth:
         $ref: '#/definitions/types.K3sAuth'
@@ -221,6 +223,8 @@ definitions:
         allOf:
         - $ref: '#/definitions/types.AkamaiAuth'
         description: Auth
+      ami_type:
+        type: string
       aws_auth:
         $ref: '#/definitions/types.AWSAuth'
       azure_auth:
@@ -348,6 +352,8 @@ definitions:
         $ref: '#/definitions/types.DigitaloceanAuth'
       google_auth:
         $ref: '#/definitions/types.GoogleAuth'
+      resource_group:
+        type: string
       vultr_auth:
         $ref: '#/definitions/types.VultrAuth'
     type: object
