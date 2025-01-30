@@ -66,6 +66,8 @@ definitions:
       alerts_email:
         description: Identifiers
         type: string
+      ami_type:
+        type: string
       argocd_auth_token:
         type: string
       argocd_create_registry_check:
