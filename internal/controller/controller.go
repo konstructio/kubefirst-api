@@ -208,6 +208,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 	clctrl.DNSProvider = def.DNSProvider
 	clctrl.ClusterType = def.Type
 	clctrl.Client = http.DefaultClient
+	clctrl.AMIType = def.AMIType
 	clctrl.NodeType = def.NodeType
 	clctrl.NodeCount = def.NodeCount
 	clctrl.PostInstallCatalogApps = def.PostInstallCatalogApps
@@ -434,6 +435,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 		VultrAuth:              clctrl.VultrAuth,
 		K3sAuth:                clctrl.K3sAuth,
 		CloudflareAuth:         clctrl.CloudflareAuth,
+		AMIType:                clctrl.AMIType,
 		NodeType:               clctrl.NodeType,
 		NodeCount:              clctrl.NodeCount,
 		LogFileName:            def.LogFileName,

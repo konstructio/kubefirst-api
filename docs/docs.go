@@ -1091,6 +1091,9 @@ const docTemplate = `{
                     "description": "Identifiers",
                     "type": "string"
                 },
+                "ami_type": {
+                    "type": "string"
+                },
                 "argocd_auth_token": {
                     "type": "string"
                 },
