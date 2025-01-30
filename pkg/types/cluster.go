@@ -101,6 +101,7 @@ type Cluster struct {
 	AtlantisWebhookSecret string `bson:"atlantis_webhook_secret" json:"atlantis_webhook_secret"`
 	AtlantisWebhookURL    string `bson:"atlantis_webhook_url" json:"atlantis_webhook_url"`
 	KubefirstTeam         string `bson:"kubefirst_team" json:"kubefirst_team"`
+	AMIType               string `bson:"ami_type,omitempty" json:"ami_type,omitempty"`
 	NodeType              string `bson:"node_type" json:"node_type" binding:"required"`
 	NodeCount             int    `bson:"node_count" json:"node_count" binding:"required"`
 	LogFileName           string `bson:"log_file,omitempty" json:"log_file,omitempty"`
