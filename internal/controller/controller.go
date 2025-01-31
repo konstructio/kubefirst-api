@@ -245,7 +245,7 @@ func (clctrl *ClusterController) InitController(def *types.ClusterDefinition) er
 			return fmt.Errorf("invalid GitOps template configuration: must supply branch when supplying a GitOps template URL")
 		}
 	} else {
-		clctrl.GitopsTemplateURL = "https://github.com/kubefirst/gitops-template.git"
+		clctrl.GitopsTemplateURL = "https://github.com/konstructio/gitops-template.git"
 	}
 	switch def.CloudProvider {
 	case "akamai":
