@@ -102,6 +102,9 @@ func CreateTracker(title string, total int64) *progress.Tracker {
 		Units:   progress.UnitsDefault,
 	}
 
+	if instance == nil {
+		instance = GetInstance()
+	}
 	instance.pw.AppendTracker(tracker)
 	return tracker
 }
