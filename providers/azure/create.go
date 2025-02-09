@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/konstructio/kubefirst-api/internal/constants"
 	"github.com/konstructio/kubefirst-api/internal/controller"
 	"github.com/konstructio/kubefirst-api/internal/secrets"
-	"github.com/konstructio/kubefirst-api/internal/services"
 	"github.com/konstructio/kubefirst-api/internal/ssl"
 	"github.com/konstructio/kubefirst-api/pkg/k8s"
 	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
@@ -209,107 +207,11 @@ func CreateAzureCluster(definition *pkgtypes.ClusterDefinition) error {
 		return fmt.Errorf("error running users terraform: %w", err)
 	}
 
-	// Wait for last sync wave app transition to Running
-	log.Info().Msg("waiting for final sync wave Deployment to transition to Running")
-	crossplaneDeployment, err := k8s.ReturnDeploymentObject(
-		kcfg.Clientset,
-		"app.kubernetes.io/instance",
-		"crossplane",
-		"crossplane-system",
-		3600,
-	)
-	if err != nil {
-		log.Error().Msgf("Error finding crossplane Deployment: %s", err)
+	if err := ctrl.FinalCheck(); err != nil {
+		log.Error().Msgf("error doing final check: %s", err)
 		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error finding crossplane Deployment: %w", err)
+		return fmt.Errorf("error doing final check: %w", err)
 	}
-	log.Info().Msg("waiting on dns, tls certificates from letsencrypt and remaining sync waves.\n this may take up to 60 minutes but regularly completes in under 20 minutes")
-	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, crossplaneDeployment, 3600)
-	if err != nil {
-		log.Error().Msgf("Error waiting for all Apps to sync ready state: %s", err)
-		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error waiting for all Apps to sync ready state: %w", err)
-	}
-
-	// * export and import cluster
-	log.Debug().Msg("exporting cluster record")
-	err = ctrl.ExportClusterRecord()
-	if err != nil {
-		log.Error().Msgf("Error exporting cluster record: %s", err)
-		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error exporting cluster record: %w", err)
-	}
-
-	// Create default service entries
-	log.Debug().Msg("getting cluster secrets")
-	cl, err := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
-	if err != nil {
-		log.Error().Msgf("error getting cluster %s: %s", ctrl.ClusterName, err)
-		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error getting cluster %s: %w", ctrl.ClusterName, err)
-	}
-
-	log.Debug().Msg("adding default services")
-	err = services.AddDefaultServices(cl)
-	if err != nil {
-		log.Error().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
-		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error adding default service entries for cluster %s: %w", cl.ClusterName, err)
-	}
-
-	if ctrl.InstallKubefirstPro {
-		log.Info().Msg("waiting for kubefirst-pro-api Deployment to transition to Running")
-		kubefirstProAPI, err := k8s.ReturnDeploymentObject(
-			kcfg.Clientset,
-			"app.kubernetes.io/name",
-			"kubefirst-pro-api",
-			"kubefirst",
-			1200,
-		)
-		if err != nil {
-			log.Error().Msgf("Error finding kubefirst-pro-api Deployment: %s", err)
-			ctrl.UpdateClusterOnError(err.Error())
-			return fmt.Errorf("error finding kubefirst-pro-api Deployment: %w", err)
-		}
-
-		_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, kubefirstProAPI, 300)
-		if err != nil {
-			log.Error().Msgf("Error waiting for kubefirst-pro-api to transition to Running: %s", err)
-			ctrl.UpdateClusterOnError(err.Error())
-			return fmt.Errorf("error waiting for kubefirst-pro-api to transition to Running: %w", err)
-		}
-	}
-
-	// Wait for last sync wave app transition to Running
-	log.Info().Msg("waiting for final sync wave Deployment to transition to Running")
-	argocdDeployment, err := k8s.ReturnDeploymentObject(
-		kcfg.Clientset,
-		"app.kubernetes.io/name",
-		"argocd-server",
-		"argocd",
-		3600,
-	)
-	if err != nil {
-		log.Error().Msgf("Error finding argocd Deployment: %s", err)
-		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error finding argocd Deployment: %w", err)
-	}
-	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, argocdDeployment, 3600)
-	if err != nil {
-		log.Error().Msgf("Error waiting for argocd deployment to enter Ready state: %s", err)
-		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error waiting for argocd deployment to enter Ready state: %w", err)
-	}
-
-	ctrl.Cluster.Status = constants.ClusterStatusProvisioned
-	ctrl.Cluster.InProgress = false
-	err = secrets.UpdateCluster(ctrl.KubernetesClient, ctrl.Cluster)
-	if err != nil {
-		log.Error().Msgf("error updating cluster status: %s", err)
-		return fmt.Errorf("error updating cluster status: %w", err)
-	}
-
-	log.Info().Msgf("Azure infrastructure successfully created: %s", definition.ClusterName)
 
 	return nil
 }
