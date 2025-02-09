@@ -14,7 +14,6 @@ import (
 	"github.com/konstructio/kubefirst-api/internal/controller"
 	"github.com/konstructio/kubefirst-api/internal/k8s"
 	"github.com/konstructio/kubefirst-api/internal/secrets"
-	"github.com/konstructio/kubefirst-api/internal/services"
 	"github.com/konstructio/kubefirst-api/internal/ssl"
 	pkgtypes "github.com/konstructio/kubefirst-api/pkg/types"
 	log "github.com/rs/zerolog/log"
@@ -235,67 +234,11 @@ func CreateAkamaiCluster(definition *pkgtypes.ClusterDefinition) error {
 		return fmt.Errorf("error updating cluster status after provisioning: %w", err)
 	}
 
-	log.Info().Msg("cluster creation complete")
-
-	// Create default service entries
-	cl, err := secrets.GetCluster(ctrl.KubernetesClient, ctrl.ClusterName)
-	if err != nil {
-		log.Error().Msgf("error getting cluster %s: %s", ctrl.ClusterName, err)
+	if err := ctrl.FinalCheck(); err != nil {
+		log.Error().Msgf("error doing final check: %s", err)
 		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error getting cluster %s: %w", ctrl.ClusterName, err)
+		return fmt.Errorf("error doing final check: %w", err)
 	}
 
-	err = services.AddDefaultServices(cl)
-	if err != nil {
-		log.Error().Msgf("error adding default service entries for cluster %s: %s", cl.ClusterName, err)
-		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error adding default service entries for cluster %s: %w", cl.ClusterName, err)
-	}
-
-	if ctrl.InstallKubefirstPro {
-		log.Info().Msg("waiting for kubefirst-pro-api Deployment to transition to Running")
-		kubefirstProAPI, err := k8s.ReturnDeploymentObject(
-			kcfg.Clientset,
-			"app.kubernetes.io/name",
-			"kubefirst-pro-api",
-			"kubefirst",
-			1200,
-		)
-		if err != nil {
-			log.Error().Msgf("error finding kubefirst-pro-api Deployment: %s", err)
-			ctrl.UpdateClusterOnError(err.Error())
-			return fmt.Errorf("error finding kubefirst-pro-api Deployment: %w", err)
-		}
-
-		_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, kubefirstProAPI, 300)
-		if err != nil {
-			log.Error().Msgf("error waiting for kubefirst-pro-api to transition to Running: %s", err)
-			ctrl.UpdateClusterOnError(err.Error())
-			return fmt.Errorf("error waiting for kubefirst-pro-api to transition to Running: %w", err)
-		}
-	}
-
-	// Wait for last sync wave app transition to Running
-	log.Info().Msg("waiting for final sync wave Deployment to transition to Running")
-	argocdDeployment, err := k8s.ReturnDeploymentObject(
-		kcfg.Clientset,
-		"app.kubernetes.io/name",
-		"argocd-server",
-		"argocd",
-		3600,
-	)
-	if err != nil {
-		log.Error().Msgf("error finding argocd Deployment: %s", err)
-		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error finding argocd Deployment: %w", err)
-	}
-	_, err = k8s.WaitForDeploymentReady(kcfg.Clientset, argocdDeployment, 3600)
-	if err != nil {
-		log.Error().Msgf("error waiting for argocd deployment to enter Ready state: %s", err)
-		ctrl.UpdateClusterOnError(err.Error())
-		return fmt.Errorf("error waiting for argocd deployment to enter Ready state: %w", err)
-	}
-
-	log.Info().Msg("cluster creation complete")
 	return nil
 }

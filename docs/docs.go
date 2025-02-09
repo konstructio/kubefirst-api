@@ -1190,6 +1190,9 @@ const docTemplate = `{
                     "description": "Container Registry and Secrets",
                     "type": "boolean"
                 },
+                "final_check": {
+                    "type": "boolean"
+                },
                 "git_auth": {
                     "$ref": "#/definitions/types.GitAuth"
                 },
