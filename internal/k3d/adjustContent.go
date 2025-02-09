@@ -21,8 +21,6 @@ import (
 )
 
 func AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsRepoDir, gitProvider string, removeAtlantis, installKubefirstPro bool) error {
-	log.Info().Msgf("gitops  directorty is %s", gitopsRepoDir)
-	log.Info().Msgf("cluster type is %s", clusterType)
 
 	// * clean up all other platforms
 	for _, platform := range pkg.SupportedPlatforms {
@@ -73,8 +71,6 @@ func AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsRepoDir, gi
 	if err := os.RemoveAll(fmt.Sprintf("%s/services", gitopsRepoDir)); err != nil {
 		log.Error().Msgf("Error removing %q: %s", fmt.Sprintf("%s/services", gitopsRepoDir), err.Error())
 	}
-
-	return nil
 
 	registryLocation := fmt.Sprintf("%s/registry/%s", gitopsRepoDir, clusterName)
 	if pkg.LocalhostARCH == "arm64" && cloudProvider == CloudProvider {
