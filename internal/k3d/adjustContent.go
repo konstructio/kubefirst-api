@@ -21,7 +21,6 @@ import (
 )
 
 func AdjustGitopsRepo(cloudProvider, clusterName, clusterType, gitopsRepoDir, gitProvider string, removeAtlantis, installKubefirstPro bool) error {
-
 	// * clean up all other platforms
 	for _, platform := range pkg.SupportedPlatforms {
 		if platform != fmt.Sprintf("%s-%s", CloudProvider, gitProvider) {
