@@ -11,7 +11,6 @@ import (
 )
 
 func (clctrl *ClusterController) FinalCheck() error {
-
 	cluster, err := clctrl.GetCurrentClusterRecord()
 	if err != nil {
 		return fmt.Errorf("failed to get current cluster record: %w", err)
