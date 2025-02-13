@@ -79,7 +79,7 @@ func (clctrl *ClusterController) RepositoryPrep() error {
 				clctrl.CreateTokens("gitops").(*providerConfigs.GitopsDirectoryValues), // tokens created on the fly
 				clctrl.ProviderConfig.MetaphorDir,
 				clctrl.CreateTokens("metaphor").(*providerConfigs.MetaphorTokenValues), // tokens created on the fly
-				civo.GetDomainApexContent(clctrl.DomainName),
+				false,
 				cl.GitProtocol,
 				useCloudflareOriginIssuer,
 			)
