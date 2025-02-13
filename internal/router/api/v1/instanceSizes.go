@@ -98,7 +98,7 @@ func ListInstanceSizesForRegion(c *gin.Context) {
 			awsConf = &awsinternal.Configuration{Config: conf}
 		}
 
-		instanceSizes, err := awsConf.ListInstanceSizesForRegion()
+		instanceSizes, err := awsConf.ListInstanceSizesForRegion(context.Background(), instanceSizesRequest.AMIType)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, types.JSONFailureResponse{
 				Message: err.Error(),

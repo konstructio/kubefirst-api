@@ -20,6 +20,7 @@ type InstanceSizesRequest struct {
 	DigitaloceanAuth pkgtypes.DigitaloceanAuth `json:"do_auth,omitempty"`
 	VultrAuth        pkgtypes.VultrAuth        `json:"vultr_auth,omitempty"`
 	GoogleAuth       pkgtypes.GoogleAuth       `json:"google_auth,omitempty"`
+	AMIType          string                    `json:"ami_type,omitempty"`
 }
 
 type InstanceSizesResponse struct {

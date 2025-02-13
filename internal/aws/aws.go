@@ -12,8 +12,11 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"slices"
 	"strconv"
 	"time"
+
+	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -21,6 +24,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	route53Types "github.com/aws/aws-sdk-go-v2/service/route53/types"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/konstructio/kubefirst-api/internal/constants"
 	"github.com/konstructio/kubefirst-api/internal/env"
 	"github.com/konstructio/kubefirst-api/internal/utils"
@@ -324,18 +328,102 @@ func (conf *Configuration) GetRegions() ([]string, error) {
 	return regionList, nil
 }
 
-func (conf *Configuration) ListInstanceSizesForRegion() ([]string, error) {
+var SSMTypes = map[string]string{
+	"AL2_x86_64":                 "/aws/service/eks/optimized-ami/1.29/amazon-linux-2/recommended/image_id",
+	"AL2_ARM_64":                 "/aws/service/eks/optimized-ami/1.29/amazon-linux-2-arm64/recommended/image_id",
+	"BOTTLEROCKET_ARM_64":        "/aws/service/bottlerocket/aws-k8s-1.29/arm64/latest/image_id",
+	"BOTTLEROCKET_x86_64":        "/aws/service/bottlerocket/aws-k8s-1.29/x86_64/latest/image_id",
+	"BOTTLEROCKET_ARM_64_NVIDIA": "/aws/service/bottlerocket/aws-k8s-1.29-nvidia/arm64/latest/image_id",
+	"BOTTLEROCKET_x86_64_NVIDIA": "/aws/service/bottlerocket/aws-k8s-1.29-nvidia/x86_64/latest/image_id",
+}
+
+func (conf *Configuration) ListInstanceSizesForRegion(ctx context.Context, amiType string) ([]string, error) {
 	ec2Client := ec2.NewFromConfig(conf.Config)
 
-	sizes, err := ec2Client.DescribeInstanceTypeOfferings(context.Background(), &ec2.DescribeInstanceTypeOfferingsInput{})
+	ssmClient := ssm.NewFromConfig(conf.Config)
+	paginator := ec2.NewDescribeInstanceTypesPaginator(ec2Client, &ec2.DescribeInstanceTypesInput{})
+
+	ssmParameterName, ok := SSMTypes[amiType]
+	if !ok {
+		return nil, fmt.Errorf("invalid ami type: %s", amiType)
+	}
+
+	amiID, err := getLatestAMIFromSSM(ctx, ssmClient, ssmParameterName)
 	if err != nil {
-		return nil, fmt.Errorf("error listing instance sizes: %w", err)
+		return nil, fmt.Errorf("failed to get AMI ID from SSM: %w", err)
 	}
 
-	instanceNames := make([]string, 0, len(sizes.InstanceTypeOfferings))
-	for _, size := range sizes.InstanceTypeOfferings {
-		instanceNames = append(instanceNames, string(size.InstanceType))
+	architecture, err := getAMIArchitecture(ctx, ec2Client, amiID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get AMI architecture: %w", err)
 	}
 
-	return instanceNames, nil
+	instanceTypes, err := getSupportedInstanceTypes(ctx, paginator, architecture)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get supported instance types: %w", err)
+	}
+
+	return instanceTypes, nil
+}
+
+type ssmClienter interface {
+	GetParameter(ctx context.Context, params *ssm.GetParameterInput, optFns ...func(*ssm.Options)) (*ssm.GetParameterOutput, error)
+}
+
+func getLatestAMIFromSSM(ctx context.Context, ssmClient ssmClienter, parameterName string) (string, error) {
+	input := &ssm.GetParameterInput{
+		Name: aws.String(parameterName),
+	}
+	output, err := ssmClient.GetParameter(ctx, input)
+	if err != nil {
+		return "", fmt.Errorf("failure when fetching parameters: %w", err)
+	}
+
+	if output == nil || output.Parameter == nil || output.Parameter.Value == nil {
+		return "", fmt.Errorf("invalid parameter value found for %q", parameterName)
+	}
+
+	return *output.Parameter.Value, nil
+}
+
+type ec2Clienter interface {
+	DescribeImages(ctx context.Context, params *ec2.DescribeImagesInput, optFns ...func(*ec2.Options)) (*ec2.DescribeImagesOutput, error)
+}
+
+func getAMIArchitecture(ctx context.Context, ec2Client ec2Clienter, amiID string) (string, error) {
+	input := &ec2.DescribeImagesInput{
+		ImageIds: []string{amiID},
+	}
+	output, err := ec2Client.DescribeImages(ctx, input)
+	if err != nil {
+		return "", fmt.Errorf("failed to describe images: %w", err)
+	}
+
+	if len(output.Images) == 0 {
+		return "", fmt.Errorf("no images found for AMI ID: %s", amiID)
+	}
+
+	return string(output.Images[0].Architecture), nil
+}
+
+type paginator interface {
+	HasMorePages() bool
+	NextPage(ctx context.Context, optFns ...func(*ec2.Options)) (*ec2.DescribeInstanceTypesOutput, error)
+}
+
+func getSupportedInstanceTypes(ctx context.Context, p paginator, architecture string) ([]string, error) {
+	var instanceTypes []string
+	for p.HasMorePages() {
+		page, err := p.NextPage(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load next pages for instance types: %w", err)
+		}
+
+		for _, instanceType := range page.InstanceTypes {
+			if slices.Contains(instanceType.ProcessorInfo.SupportedArchitectures, ec2Types.ArchitectureType(architecture)) {
+				instanceTypes = append(instanceTypes, string(instanceType.InstanceType))
+			}
+		}
+	}
+	return instanceTypes, nil
 }
