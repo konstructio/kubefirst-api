@@ -248,7 +248,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				return fmt.Errorf("error getting AWS caller identity while creating tokens: %w", err)
 			}
 
-			roleArn, err := clctrl.AwsClient.sourceIAMRoleARN(*iamCaller.Arn)
+			roleArn, err := clctrl.AwsClient.SourceIAMRoleARN(*iamCaller.Arn)
 			if err != nil {
 				return fmt.Errorf("error getting principals ARN: %w", err)
 			}

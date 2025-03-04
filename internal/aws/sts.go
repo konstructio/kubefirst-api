@@ -31,9 +31,9 @@ func (conf *Configuration) GetCallerIdentity() (*sts.GetCallerIdentityOutput, er
 	return iamCaller, err
 }
 
-// sourceIAMRoleARN Given an STS ARN returns the ARN for the source IAM role
+// SourceIAMRoleARN Given an STS ARN returns the ARN for the source IAM role
 // or returns User's arn
-func (conf *Configuration) sourceIAMRoleARN(rawARN string) (string, error) {
+func (conf *Configuration) SourceIAMRoleARN(rawARN string) (string, error) {
 	iamClient := iam.NewFromConfig(conf.Config)
 
 	parsedARN, err := arn.Parse(rawARN)
