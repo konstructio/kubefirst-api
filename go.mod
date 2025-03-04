@@ -88,6 +88,8 @@ require (
 	sigs.k8s.io/yaml v1.4.0
 )
 
+require github.com/YakDriver/regexache v0.24.0 // indirect
+
 require (
 	cel.dev/expr v0.16.1 // indirect
 	cloud.google.com/go v0.116.0 // indirect

@@ -248,6 +248,11 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 				return fmt.Errorf("error getting AWS caller identity while creating tokens: %w", err)
 			}
 
+			roleArn, err := clctrl.AwsClient.sourceIAMRoleARN(*iamCaller.Arn)
+			if err != nil {
+				return fmt.Errorf("error getting principals ARN: %w", err)
+			}
+
 			// to be added to general tokens struct
 			gitopsTemplateTokens.AwsIamArnAccountRoot = fmt.Sprintf("arn:aws:iam::%s:root", *iamCaller.Account)
 			gitopsTemplateTokens.AwsNodeCapacityType = "ON_DEMAND" // todo adopt cli flag
@@ -256,6 +261,7 @@ func (clctrl *ClusterController) CreateTokens(kind string) interface{} {
 			gitopsTemplateTokens.KubefirstArtifactsBucket = clctrl.KubefirstArtifactsBucketName
 			gitopsTemplateTokens.AtlantisWebhookURL = clctrl.AtlantisWebhookURL
 			gitopsTemplateTokens.AMIType = clctrl.AMIType
+			gitopsTemplateTokens.AwsCallerArn = roleArn
 
 			if clctrl.ECR {
 				gitopsTemplateTokens.ContainerRegistryURL = fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", *iamCaller.Account, clctrl.CloudRegion)

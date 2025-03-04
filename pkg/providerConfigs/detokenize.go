@@ -87,6 +87,7 @@ func detokenizeGitops(tokens *GitopsDirectoryValues, gitProtocol string, useClou
 			newContents = strings.ReplaceAll(newContents, "<AWS_ACCOUNT_ID>", tokens.AwsAccountID)
 			newContents = strings.ReplaceAll(newContents, "<AWS_IAM_ARN_ACCOUNT_ROOT>", tokens.AwsIamArnAccountRoot)
 			newContents = strings.ReplaceAll(newContents, "<AWS_NODE_CAPACITY_TYPE>", tokens.AwsNodeCapacityType)
+			newContents = strings.ReplaceAll(newContents, "<AWS_IAM_CALLER_ARN>", tokens.AwsCallerArn)
 
 			// Azure
 			azureDNSZoneName := ""
