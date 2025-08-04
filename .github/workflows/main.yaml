@@ -10,6 +10,7 @@ on:
   push:
     branches:
       - main
+      - token-refresh # todo: remove hotwire
 jobs:
   publish:
     runs-on: self-hosted
