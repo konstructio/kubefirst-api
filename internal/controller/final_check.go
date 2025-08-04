@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 
+	awsext "github.com/konstructio/kubefirst-api/extensions/aws"
 	"github.com/konstructio/kubefirst-api/internal/constants"
 	"github.com/konstructio/kubefirst-api/internal/k8s"
 	"github.com/konstructio/kubefirst-api/internal/secrets"
@@ -11,6 +12,16 @@ import (
 )
 
 func (clctrl *ClusterController) FinalCheck() error {
+	if clctrl.CloudProvider == "aws" {
+		// Regenerate EKS kubeconfig to get a fresh token, default only lasts 15 minutes
+		log.Info().Msg("regenerating EKS kubeconfig to get a fresh token")
+		kcfg, err := awsext.CreateEKSKubeconfig(&clctrl.AwsClient.Config, clctrl.ClusterName)
+		if err != nil {
+			return fmt.Errorf("failed to regenerate EKS kubeconfig: %w", err)
+		}
+		clctrl.Kcfg = kcfg
+	}
+
 	cluster, err := clctrl.GetCurrentClusterRecord()
 	if err != nil {
 		return fmt.Errorf("failed to get current cluster record: %w", err)
