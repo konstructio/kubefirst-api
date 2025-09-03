@@ -77,7 +77,6 @@ func detokenizeGitops(tokens *GitopsDirectoryValues, gitProtocol string, useClou
 			newContents = strings.ReplaceAll(newContents, "<KUBEFIRST_TEAM_INFO>", os.Getenv("KUBEFIRST_TEAM_INFO"))
 			newContents = strings.ReplaceAll(newContents, "<KUBEFIRST_VERSION>", tokens.KubefirstVersion)
 			newContents = strings.ReplaceAll(newContents, "<KUBEFIRST_STATE_STORE_BUCKET_HOSTNAME>", tokens.StateStoreBucketHostname)
-			newContents = strings.ReplaceAll(newContents, "<WORKLOAD_CLUSTER_TERRAFORM_MODULE_URL>", tokens.WorkloadClusterTerraformModuleURL)
 			newContents = strings.ReplaceAll(newContents, "<WORKLOAD_CLUSTER_BOOTSTRAP_TERRAFORM_MODULE_URL>", tokens.WorkloadClusterBootstrapTerraformModuleURL)
 			newContents = strings.ReplaceAll(newContents, "<NODE_TYPE>", tokens.NodeType)
 			newContents = strings.ReplaceAll(newContents, "<NODE_COUNT>", strconv.Itoa(tokens.NodeCount))
