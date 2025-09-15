@@ -66,17 +66,14 @@ func (c *Configuration) TestDomainLiveness(domainName, domainID string) bool {
 		log.Info().Msgf("%s", civoRecordName)
 		ips, err := net.LookupTXT(civoRecordName)
 		if err != nil {
+			log.Warn().Msgf("Error lookuping up txt record %s, error: %s", civoRecordName, err)
 			ips, err = dns.BackupResolver.LookupTXT(context.Background(), civoRecordName)
 		}
-
-		log.Info().Msgf("%s", ips)
-
 		if err != nil {
-			log.Warn().Msgf("Could not get record name %s - waiting 10 seconds and trying again: \nerror: %s", civoRecordName, err)
+			log.Warn().Msgf("Could not get record name %s - waiting 10 seconds and trying again", civoRecordName)
 			time.Sleep(10 * time.Second)
 		} else {
 			for _, ip := range ips {
-				// todo check ip against route53RecordValue in some capacity so we can pivot the value for testing
 				log.Info().Msgf("%s. in TXT record value: %s", civoRecordName, ip)
 				count = 101
 			}
