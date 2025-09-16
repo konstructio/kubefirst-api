@@ -70,7 +70,11 @@ func (c *Configuration) TestDomainLiveness(domainName string) bool {
 
 		if err != nil {
 			log.Warn().Msgf("Could not get record name %s - waiting 10 seconds and trying again: \nerror: %s", doRecordName, err)
-			time.Sleep(10 * time.Second)
+			// Keep stream alive with progress indicators
+			for i := 0; i < 10; i++ {
+				time.Sleep(1 * time.Second)
+				log.Info().Msgf("DNS propagation check retry in %d seconds...", 10-i-1)
+			}
 		} else {
 			for _, ip := range ips {
 				// todo check ip against route53RecordValue in some capacity so we can pivot the value for testing
