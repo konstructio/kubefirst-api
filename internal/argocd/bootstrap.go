@@ -90,7 +90,7 @@ func ApplyArgoCDKustomize(clientset kubernetes.Interface, argoCDInstallPath stri
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{{
 						Name:  "main",
-						Image: "bitnami/kubectl:1.28",
+						Image: "registry.k8s.io/kubectl:v1.28.0",
 						Command: []string{
 							"/bin/sh",
 							"-c",
