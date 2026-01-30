@@ -21,7 +21,7 @@ const (
 	DomainName           = "kubefirst.dev"
 	GithubHost           = "github.com"
 	GitlabHost           = "gitlab.com"
-	K3dVersion           = "v5.4.6"
+	K3dVersion           = "v5.8.3"
 	KubectlVersion       = "v1.25.7"
 	LocalhostARCH        = runtime.GOARCH
 	LocalhostOS          = runtime.GOOS

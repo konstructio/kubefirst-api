@@ -177,7 +177,7 @@ func ReadConfig() (*Config, error) {
 	config.ArgoCDInitValuesYamlPath = fmt.Sprintf("%s/argocd-init-values.yaml", config.K1FolderPath)
 	// todo adopt latest helmVersion := "v3.9.0"
 	config.HelmVersion = "v3.6.1"
-	config.K3dVersion = "v5.4.6"
+	config.K3dVersion = "v5.8.3"
 
 	//! cleanup below this line?
 	config.InstallerEmail = "kbot@kubefirst.com"
