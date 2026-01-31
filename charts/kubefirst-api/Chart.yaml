@@ -1,6 +1,6 @@
 apiVersion: v2
-appVersion: 5b2f162
+appVersion: b463e5f
 description: A Helm chart for Kubernetes
 name: kubefirst-api
 type: application
-version: 0.137.0
+version: 0.138.0
